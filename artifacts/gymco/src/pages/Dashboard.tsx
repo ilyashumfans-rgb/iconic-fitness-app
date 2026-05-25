@@ -24,22 +24,48 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-black tracking-tight">{dashboard.greeting}</h1>
-        <p className="text-muted-foreground mt-1">{dashboard.aiTip}</p>
-      </div>
+      {/* Premium Hero */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-3xl p-6 md:p-10 bg-gradient-brand text-white shadow-[0_20px_60px_-20px_hsl(18_100%_55%/0.55)]"
+      >
+        <div className="absolute -top-24 -right-16 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-black/30 blur-3xl" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+          <div>
+            <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-white/70 mb-2">
+              Welcome back
+            </div>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.05]">
+              {dashboard.greeting}
+            </h1>
+            <p className="text-white/85 mt-3 max-w-lg text-[15px] leading-relaxed">
+              {dashboard.aiTip}
+            </p>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="text-right">
+              <div className="text-[11px] font-bold uppercase tracking-widest text-white/70">Fitness Score</div>
+              <div className="text-5xl font-black leading-none mt-1">{dashboard.fitnessScore}</div>
+            </div>
+            <div className="h-16 w-16 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center ring-1 ring-white/30">
+              <Trophy className="h-8 w-8" />
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Main Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.1 }}>
-          <Card className="bg-primary text-primary-foreground border-none shadow-lg">
+          <Card className="bg-card border-border/60 hover:border-primary/40 transition-colors">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <Trophy className="h-6 w-6 opacity-80" />
-                <span className="text-xs font-bold uppercase tracking-wider opacity-80">Score</span>
+              <div className="flex items-center justify-between mb-4 text-primary">
+                <Zap className="h-6 w-6" />
+                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Score</span>
               </div>
-              <div className="text-4xl font-black">{dashboard.fitnessScore}</div>
+              <div className="text-4xl font-black text-gradient-brand">{dashboard.fitnessScore}</div>
             </CardContent>
           </Card>
         </motion.div>

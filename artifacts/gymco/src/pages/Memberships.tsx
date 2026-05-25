@@ -13,8 +13,11 @@ export default function Memberships() {
   return (
     <div className="space-y-12 animate-in fade-in duration-500">
       <div>
-        <h1 className="text-3xl font-black tracking-tight">Memberships</h1>
-        <p className="text-muted-foreground mt-1">One pass to rule them all.</p>
+        <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary/80 mb-2">GYMCO Pass</div>
+        <h1 className="text-4xl md:text-5xl font-black tracking-tight">
+          One pass. <span className="text-gradient-brand">Every gym.</span>
+        </h1>
+        <p className="text-muted-foreground mt-2 text-lg">Premium memberships built for the way you train.</p>
       </div>
 
       {/* Current Membership Panel */}
@@ -23,8 +26,9 @@ export default function Memberships() {
         {loadingMyMembership ? (
           <Skeleton className="h-48 w-full rounded-2xl" />
         ) : myMembership ? (
-          <Card className="bg-primary text-primary-foreground border-none shadow-xl overflow-hidden relative">
-            <div className="absolute right-0 top-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+          <Card className="bg-gradient-brand text-primary-foreground border-none shadow-[0_24px_60px_-20px_hsl(18_100%_55%/0.55)] overflow-hidden relative rounded-3xl">
+            <div className="absolute right-0 top-0 w-72 h-72 bg-white/15 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4" />
+            <div className="absolute left-0 bottom-0 w-72 h-72 bg-black/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
             <CardContent className="p-6 md:p-8 relative z-10">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
@@ -72,10 +76,10 @@ export default function Memberships() {
           {loadingPlans ? (
             Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-96 rounded-2xl" />)
           ) : plans?.map(plan => (
-            <Card key={plan.id} className={`relative flex flex-col border-none shadow-lg ${plan.popular ? 'bg-sidebar border-2 border-primary ring-2 ring-primary/20 scale-105 z-10' : 'bg-card'}`}>
+            <Card key={plan.id} className={`relative flex flex-col border-none shadow-2xl rounded-2xl ${plan.popular ? 'bg-card ring-glow-brand scale-105 z-10' : 'bg-card/80 backdrop-blur-sm border border-border/60'}`}>
               {plan.popular && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                  <Badge className="bg-primary text-primary-foreground font-black px-3 py-1 text-sm tracking-widest shadow-md">MOST POPULAR</Badge>
+                  <Badge className="bg-gradient-brand text-primary-foreground font-black px-4 py-1.5 text-xs tracking-[0.18em] shadow-lg border-none">MOST POPULAR</Badge>
                 </div>
               )}
               {plan.badge && !plan.popular && (
@@ -117,7 +121,10 @@ export default function Memberships() {
                 </ul>
               </CardContent>
               <CardFooter>
-                <Button className="w-full h-12 text-lg font-black tracking-wide" variant={plan.popular ? "default" : "secondary"}>
+                <Button
+                  className={`w-full h-12 text-base font-black tracking-[0.12em] ${plan.popular ? 'bg-gradient-brand border-none text-white shadow-[0_10px_30px_-10px_hsl(18_100%_55%/0.7)] hover:opacity-95' : ''}`}
+                  variant={plan.popular ? "default" : "secondary"}
+                >
                   {myMembership?.planId === plan.id ? "CURRENT PLAN" : "SELECT PLAN"}
                 </Button>
               </CardFooter>
