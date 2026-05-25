@@ -1,6 +1,9 @@
-import { Link } from "wouter";
+import { useState } from "react";
+import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useListFeaturedGyms } from "@workspace/api-client-react";
 import {
   ArrowRight,
   MapPin,
@@ -16,8 +19,20 @@ import {
   PlayCircle,
   Quote,
   Star,
+  Search,
+  Clock,
+  Crown,
 } from "lucide-react";
 import logoUrl from "@assets/Go_To_Any_Gym._(2)_1779712879770.png";
+
+const popularCities = [
+  "Bangalore",
+  "Mumbai",
+  "Delhi NCR",
+  "Hyderabad",
+  "Pune",
+  "Chennai",
+];
 
 const heroImage =
   "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1600&q=80";
@@ -126,6 +141,7 @@ const plans = [
   {
     name: "Lite",
     price: "1,499",
+    strikethrough: "1,999",
     tagline: "Try the network",
     perks: ["Access to 80+ gyms", "6 classes / month", "Cancel anytime"],
     cta: "Start with Lite",
@@ -134,6 +150,7 @@ const plans = [
   {
     name: "Pro",
     price: "2,999",
+    strikethrough: "3,999",
     tagline: "Most popular",
     perks: [
       "Access to 350+ gyms",
@@ -147,6 +164,7 @@ const plans = [
   {
     name: "Elite",
     price: "4,999",
+    strikethrough: "6,499",
     tagline: "Unlimited everything",
     perks: [
       "All 500+ gyms",
@@ -205,6 +223,19 @@ function TopNav() {
 }
 
 function Hero() {
+  const [, navigate] = useLocation();
+  const [query, setQuery] = useState("");
+  const [city, setCity] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    if (city) params.set("city", city);
+    const qs = params.toString();
+    navigate(`/explore${qs ? `?${qs}` : ""}`);
+  };
+
   return (
     <section className="relative pt-32 md:pt-40 pb-20 md:pb-32 overflow-hidden">
       {/* Background image */}
@@ -247,7 +278,64 @@ function Hero() {
             QR. From sunrise yoga to midnight MMA.
           </p>
 
-          <div className="mt-10 flex flex-col sm:flex-row gap-3">
+          {/* Search bar — the killer hero feature */}
+          <motion.form
+            onSubmit={handleSearch}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25, duration: 0.6 }}
+            className="mt-10 max-w-3xl"
+          >
+            <div className="rounded-2xl bg-white/10 backdrop-blur-2xl border border-white/15 p-2 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)] flex flex-col md:flex-row gap-2">
+              <div className="flex-1 flex items-center gap-3 px-4 py-2 bg-background/40 rounded-xl">
+                <Search className="h-5 w-5 text-primary shrink-0" />
+                <Input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search gym or activity..."
+                  className="border-0 bg-transparent h-10 text-base text-white placeholder:text-white/50 focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+                />
+              </div>
+              <div className="flex-1 flex items-center gap-3 px-4 py-2 bg-background/40 rounded-xl md:max-w-[260px]">
+                <MapPin className="h-5 w-5 text-primary shrink-0" />
+                <Input
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  placeholder="City or location..."
+                  className="border-0 bg-transparent h-10 text-base text-white placeholder:text-white/50 focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+                />
+              </div>
+              <Button
+                type="submit"
+                size="lg"
+                className="bg-gradient-brand text-white border-none h-14 px-8 text-base font-black tracking-wide shadow-[0_10px_30px_-10px_hsl(18_100%_55%/0.8)] hover:opacity-95 rounded-xl"
+              >
+                <Search className="h-5 w-5 mr-2" /> Search
+              </Button>
+            </div>
+
+            {/* Popular city pills */}
+            <div className="mt-4 flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold uppercase tracking-wider text-white/50 mr-1">
+                Popular:
+              </span>
+              {popularCities.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => {
+                    setCity(c);
+                    navigate(`/explore?city=${encodeURIComponent(c)}`);
+                  }}
+                  className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/80 hover:bg-white/15 hover:text-white hover:border-primary/40 transition-colors"
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </motion.form>
+
+          <div className="mt-8 flex flex-col sm:flex-row gap-3">
             <Link href="/memberships">
               <Button
                 size="lg"
@@ -331,6 +419,119 @@ function PartnerStrip() {
             </div>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+function FeaturedGyms() {
+  const { data: gyms, isLoading } = useListFeaturedGyms();
+  const items = (gyms ?? []).slice(0, 6);
+
+  return (
+    <section id="gyms-list" className="py-24 md:py-32 relative">
+      <div className="max-w-7xl mx-auto px-4 md:px-8">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12 gap-4">
+          <div className="max-w-2xl">
+            <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary mb-3">
+              Featured gyms
+            </div>
+            <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-[1.05]">
+              Handpicked studios.{" "}
+              <span className="text-gradient-brand">All on one pass.</span>
+            </h2>
+          </div>
+          <Link href="/explore">
+            <Button variant="ghost" className="font-semibold">
+              Browse all gyms <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </Link>
+        </div>
+
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="aspect-[4/3] rounded-2xl bg-card/40 animate-pulse"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {items.map((gym, i) => (
+              <motion.div
+                key={gym.id}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ delay: i * 0.06 }}
+              >
+                <Link href={`/gyms/${gym.id}`}>
+                  <div className="group relative rounded-2xl overflow-hidden border border-white/10 bg-card/60 backdrop-blur-sm hover:border-primary/40 hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                    <div className="relative aspect-[16/10] overflow-hidden">
+                      <img
+                        src={gym.heroImage}
+                        alt={gym.name}
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                      {gym.isPremium && (
+                        <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-brand text-white text-[10px] font-black tracking-wider uppercase shadow-lg">
+                          <Crown className="h-3 w-3" /> Premium
+                        </div>
+                      )}
+                      {gym.openNow && (
+                        <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 backdrop-blur-md border border-emerald-400/40 text-emerald-300 text-[10px] font-bold tracking-wider uppercase">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          Open
+                        </div>
+                      )}
+                      <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
+                        <div>
+                          <h3 className="text-xl font-black text-white leading-tight">
+                            {gym.name}
+                          </h3>
+                          <div className="flex items-center gap-1.5 text-xs text-white/80 mt-1">
+                            <MapPin className="h-3 w-3" />
+                            {gym.area}, {gym.city}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 bg-black/50 backdrop-blur px-2 py-1 rounded-full text-white text-xs font-bold">
+                          <Star className="h-3 w-3 fill-primary text-primary" />
+                          {gym.rating.toFixed(1)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 flex items-center justify-between">
+                      <div className="flex flex-wrap gap-1.5">
+                        {gym.categories.slice(0, 2).map((c) => (
+                          <span
+                            key={c}
+                            className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-white/5 border border-white/10 text-white/70"
+                          >
+                            {c}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                          from
+                        </div>
+                        <div className="text-base font-black text-gradient-brand">
+                          ₹{gym.priceFrom.toLocaleString("en-IN")}
+                          <span className="text-xs text-muted-foreground font-bold">
+                            /mo
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
@@ -600,16 +801,26 @@ function Pricing() {
                   {plan.tagline}
                 </p>
               </div>
-              <div className="flex items-end gap-1 mb-6 pb-6 border-b border-white/10">
-                <span className="text-base font-bold text-muted-foreground mb-2">
-                  ₹
-                </span>
-                <span className="text-5xl font-black tracking-tight">
-                  {plan.price}
-                </span>
-                <span className="text-sm font-bold text-muted-foreground mb-2">
-                  /mo
-                </span>
+              <div className="mb-6 pb-6 border-b border-white/10">
+                <div className="flex items-end gap-1">
+                  <span className="text-base font-bold text-muted-foreground mb-2">
+                    ₹
+                  </span>
+                  <span className="text-5xl font-black tracking-tight">
+                    {plan.price}
+                  </span>
+                  <span className="text-sm font-bold text-muted-foreground mb-2">
+                    /mo
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <span className="text-sm text-muted-foreground line-through">
+                    ₹{plan.strikethrough}
+                  </span>
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    Save 25%
+                  </span>
+                </div>
               </div>
               <ul className="space-y-3 mb-8 flex-1">
                 {plan.perks.map((p) => (
@@ -718,6 +929,7 @@ export default function Landing() {
       <TopNav />
       <Hero />
       <PartnerStrip />
+      <FeaturedGyms />
       <HowItWorks />
       <Categories />
       <FeatureBlock />
