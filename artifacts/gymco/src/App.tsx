@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/Layout";
+import { PublicLayout } from "@/components/PublicLayout";
 import NotFound from "@/pages/not-found";
 
 import Landing from "@/pages/Landing";
@@ -21,16 +22,33 @@ import Profile from "@/pages/Profile";
 
 const queryClient = new QueryClient();
 
+// Public browsable routes use a top-nav shell (no member sidebar / profile)
+const PUBLIC_ROUTES = [
+  "/explore",
+  "/gyms/",
+  "/classes",
+  "/trainers",
+  "/memberships",
+];
+
+function isPublicPath(path: string) {
+  return PUBLIC_ROUTES.some(
+    (p) => path === p || path === p.replace(/\/$/, "") || path.startsWith(p),
+  );
+}
+
 function AppShell() {
   const [location] = useLocation();
 
-  // Landing page is fully standalone (no sidebar)
+  // Landing page is fully standalone (no shell)
   if (location === "/") {
     return <Landing />;
   }
 
+  const Shell = isPublicPath(location) ? PublicLayout : Layout;
+
   return (
-    <Layout>
+    <Shell>
       <Switch>
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/explore" component={Explore} />
@@ -46,7 +64,7 @@ function AppShell() {
         <Route path="/profile" component={Profile} />
         <Route component={NotFound} />
       </Switch>
-    </Layout>
+    </Shell>
   );
 }
 
