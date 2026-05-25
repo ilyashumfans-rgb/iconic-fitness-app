@@ -8,10 +8,19 @@ import {
   Wallet,
   Dumbbell,
   Crown,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
+import { toast } from "sonner";
 import logoUrl from "@assets/Go_To_Any_Gym._(2)_1779712879770.png";
+
+export function handleSignOut(navigate: (path: string) => void) {
+  toast.success("Signed out", {
+    description: "See you next workout.",
+  });
+  setTimeout(() => navigate("/"), 400);
+}
 
 function BrandMark({ className }: { className?: string }) {
   return (
@@ -34,11 +43,11 @@ function BrandMark({ className }: { className?: string }) {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const { data: user } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
 
   const navItems = [
-    { href: "/", label: "Home", icon: Home },
+    { href: "/dashboard", label: "Home", icon: Home },
     { href: "/explore", label: "Explore", icon: MapPin },
     { href: "/checkin", label: "Check-in", icon: QrCode },
     { href: "/bookings", label: "Bookings", icon: Calendar },
@@ -80,19 +89,30 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </nav>
 
         {user && (
-          <div className="mt-auto pt-6 border-t border-sidebar-border flex items-center gap-3">
-            <div className="h-11 w-11 rounded-full overflow-hidden ring-2 ring-primary/40 ring-offset-2 ring-offset-sidebar">
-              {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />
-              ) : (
-                <div className="h-full w-full flex items-center justify-center bg-gradient-brand text-primary-foreground font-bold">
-                  {user.name.charAt(0)}
-                </div>
-              )}
-            </div>
-            <div className="min-w-0">
-              <p className="font-semibold text-sm truncate">{user.name}</p>
-              <p className="text-xs text-muted-foreground truncate">{user.city}</p>
+          <div className="mt-auto pt-6 border-t border-sidebar-border space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="h-11 w-11 rounded-full overflow-hidden ring-2 ring-primary/40 ring-offset-2 ring-offset-sidebar shrink-0">
+                {user.avatarUrl ? (
+                  <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center bg-gradient-brand text-primary-foreground font-bold">
+                    {user.name.charAt(0)}
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-sm truncate">{user.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{user.city}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleSignOut(navigate)}
+                aria-label="Sign out"
+                title="Sign out"
+                className="h-9 w-9 shrink-0 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
             </div>
           </div>
         )}
@@ -104,8 +124,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <header className="md:hidden flex items-center justify-between p-4 border-b border-border bg-background/70 backdrop-blur-xl sticky top-0 z-10">
           <BrandMark />
           {user && (
-            <div className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-gradient-brand-soft border border-primary/20">
-              {user.city}
+            <div className="flex items-center gap-2">
+              <div className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-gradient-brand-soft border border-primary/20">
+                {user.city}
+              </div>
+              <button
+                type="button"
+                onClick={() => handleSignOut(navigate)}
+                aria-label="Sign out"
+                className="h-9 w-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
             </div>
           )}
         </header>

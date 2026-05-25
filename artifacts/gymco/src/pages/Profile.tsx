@@ -7,11 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { toast } from "sonner";
-import { User, Target, Activity, Edit2, Check } from "lucide-react";
+import { User, Target, Activity, Edit2, Check, LogOut } from "lucide-react";
+import { handleSignOut } from "@/components/Layout";
 
 export default function Profile() {
   const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
   const { data: user, isLoading } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
   const updateMe = useUpdateMe();
   
@@ -194,6 +197,26 @@ export default function Profile() {
                 Body metrics sync automatically from connected health devices.
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-none shadow-sm md:col-span-2">
+          <CardContent className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="font-bold text-lg flex items-center gap-2">
+                <LogOut className="h-5 w-5 text-primary" /> Sign out
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                You'll be returned to the GYMCO home page.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => handleSignOut(navigate)}
+              className="border-primary/30 text-primary hover:bg-primary/10 hover:text-primary font-bold"
+            >
+              <LogOut className="h-4 w-4 mr-2" /> Sign out
+            </Button>
           </CardContent>
         </Card>
       </div>

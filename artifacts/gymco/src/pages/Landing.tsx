@@ -148,7 +148,7 @@ const plans = [
     price: "1,499",
     strikethrough: "1,999",
     tagline: "Try the network",
-    perks: ["Access to 80+ gyms", "6 classes / month", "Cancel anytime"],
+    perks: ["Access to 80+ gyms", "6 classes / month", "Pause anytime"],
     cta: "Start with Lite",
     popular: false,
   },
@@ -811,7 +811,7 @@ function Pricing() {
             Pricing
           </div>
           <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-[1.05]">
-            Pick a pass. <span className="text-gradient-brand">Cancel anytime.</span>
+            Pick a pass. <span className="text-gradient-brand">Train your way.</span>
           </h2>
           <p className="text-muted-foreground mt-4 text-lg">
             All plans include city-wide access, the trainer marketplace, and the
