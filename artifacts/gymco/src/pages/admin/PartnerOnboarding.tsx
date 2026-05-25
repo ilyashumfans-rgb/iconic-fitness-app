@@ -12,6 +12,7 @@ export default function AdminPartnerOnboarding() {
     city: "",
     password: "",
     notes: "",
+    kind: "gym" as "gym" | "vendor" | "both",
   });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -92,6 +93,34 @@ export default function AdminPartnerOnboarding() {
                 onChange={(e) => setForm({ ...form, city: e.target.value })}
                 placeholder="Bengaluru"
               />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+                Account type
+              </label>
+              <select
+                className={inputCls}
+                value={form.kind}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    kind: e.target.value as "gym" | "vendor" | "both",
+                  })
+                }
+              >
+                <option value="gym">Gym partner (partner portal only)</option>
+                <option value="vendor">
+                  Store vendor (vendor portal only)
+                </option>
+                <option value="both">
+                  Both — gym partner + store vendor
+                </option>
+              </select>
+              <div className="text-[11px] text-slate-500 mt-1">
+                Vendors sign in at <code>/vendor/login</code> to manage store
+                products, stock and bills. Gym partners sign in at{" "}
+                <code>/partner/login</code>.
+              </div>
             </div>
             <div className="sm:col-span-2">
               <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">

@@ -216,6 +216,9 @@ export const partnersTable = pgTable("partners", {
   status: text("status").notNull().default("pending"),
   city: text("city").notNull(),
   notes: text("notes").notNull().default(""),
+  // kind = "gym" → gym operator (default), "vendor" → store seller,
+  // "both"   → can sign in to both the partner portal and the vendor portal.
+  kind: text("kind").notNull().default("gym"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

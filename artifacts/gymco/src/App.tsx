@@ -35,6 +35,11 @@ import PartnerCheckins from "@/pages/partner/Checkins";
 import PartnerClasses from "@/pages/partner/Classes";
 import PartnerProducts from "@/pages/partner/PartnerProducts";
 import PartnerSettings from "@/pages/partner/Settings";
+import VendorLogin from "@/pages/vendor/Login";
+import VendorDashboard from "@/pages/vendor/Dashboard";
+import VendorProducts from "@/pages/vendor/Products";
+import VendorOrders from "@/pages/vendor/Orders";
+import VendorSettings from "@/pages/vendor/Settings";
 import Store from "@/pages/Store";
 import StoreDetail from "@/pages/StoreDetail";
 import Cart from "@/pages/Cart";
@@ -224,6 +229,19 @@ function AppShell() {
     );
   }
 
+  if (location.startsWith("/vendor")) {
+    return (
+      <Switch>
+        <Route path="/vendor/login" component={VendorLogin} />
+        <Route path="/vendor" component={VendorDashboard} />
+        <Route path="/vendor/products" component={VendorProducts} />
+        <Route path="/vendor/orders" component={VendorOrders} />
+        <Route path="/vendor/settings" component={VendorSettings} />
+        <Route component={NotFound} />
+      </Switch>
+    );
+  }
+
   if (location.startsWith("/admin")) {
     return (
       <Switch>
@@ -255,7 +273,11 @@ function ClerkRouterBridge({ children }: { children: React.ReactNode }) {
   // Partner portal is fully isolated from Clerk. Admin portal optionally uses
   // Clerk only for Google sign-in on /admin/login + /admin/sso-callback; when
   // no Clerk key is present, admin still works via the password form.
-  if (location.startsWith("/partner") || !clerkPubKey) {
+  if (
+    location.startsWith("/partner") ||
+    location.startsWith("/vendor") ||
+    !clerkPubKey
+  ) {
     return <>{children}</>;
   }
   return (

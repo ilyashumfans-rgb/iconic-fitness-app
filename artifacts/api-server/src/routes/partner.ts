@@ -48,6 +48,13 @@ router.post(
       });
       return;
     }
+    if (partner.kind === "vendor") {
+      res.status(403).json({
+        error:
+          "This account is a store vendor. Please sign in at the vendor portal (/vendor/login).",
+      });
+      return;
+    }
     const ok = await verifyPassword(password, partner.passwordHash);
     if (!ok) {
       res.status(401).json({ error: "Invalid credentials" });
@@ -63,9 +70,104 @@ router.post(
       phone: partner.phone,
       city: partner.city,
       status: partner.status,
+      kind: partner.kind,
     });
   },
 );
+
+// ─── Vendor (store) auth ─────────────────────────────────────────────────────
+// Vendors share the `partners` table but have `kind` in ("vendor", "both"). The
+// vendor portal lives at /vendor and only exposes store-related screens. We
+// reuse the partner session, but the dedicated /vendor/login endpoint refuses
+// any partner whose kind is "gym" so gym operators can't accidentally land in
+// the vendor portal.
+router.post(
+  "/vendor/login",
+  async (req: Request, res: Response): Promise<void> => {
+    const { email, password } = (req.body ?? {}) as {
+      email?: string;
+      password?: string;
+    };
+    if (!email || !password) {
+      res.status(400).json({ error: "Email and password required" });
+      return;
+    }
+    const [partner] = await db
+      .select()
+      .from(partnersTable)
+      .where(eq(partnersTable.email, email.toLowerCase().trim()));
+    if (!partner) {
+      res.status(401).json({ error: "Invalid credentials" });
+      return;
+    }
+    if (partner.status === "suspended") {
+      res.status(403).json({
+        error: "Your vendor account is suspended. Contact GYMCO support.",
+      });
+      return;
+    }
+    if (partner.kind !== "vendor" && partner.kind !== "both") {
+      res.status(403).json({
+        error: "This account is not registered as a store vendor.",
+      });
+      return;
+    }
+    const ok = await verifyPassword(password, partner.passwordHash);
+    if (!ok) {
+      res.status(401).json({ error: "Invalid credentials" });
+      return;
+    }
+    req.session.partnerId = partner.id;
+    req.session.partnerEmail = partner.email;
+    req.session.partnerName = partner.name;
+    res.json({
+      id: partner.id,
+      email: partner.email,
+      name: partner.name,
+      phone: partner.phone,
+      city: partner.city,
+      status: partner.status,
+      kind: partner.kind,
+    });
+  },
+);
+
+router.get(
+  "/vendor/me",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const [partner] = await db
+      .select()
+      .from(partnersTable)
+      .where(eq(partnersTable.id, req.session.partnerId!));
+    if (!partner) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    if (partner.kind !== "vendor" && partner.kind !== "both") {
+      res.status(403).json({ error: "Not a vendor account" });
+      return;
+    }
+    res.json({
+      id: partner.id,
+      email: partner.email,
+      name: partner.name,
+      phone: partner.phone,
+      city: partner.city,
+      status: partner.status,
+      kind: partner.kind,
+      notes: partner.notes,
+      createdAt: partner.createdAt,
+    });
+  },
+);
+
+router.post("/vendor/logout", (req: Request, res: Response): void => {
+  delete req.session.partnerId;
+  delete req.session.partnerEmail;
+  delete req.session.partnerName;
+  res.json({ ok: true });
+});
 
 router.post("/partner/logout", (req: Request, res: Response): void => {
   // Only kill partner session keys; keep admin session intact in case both exist.
@@ -87,6 +189,10 @@ router.get(
       res.status(404).json({ error: "Not found" });
       return;
     }
+    if (partner.kind === "vendor") {
+      res.status(403).json({ error: "Not a gym partner account" });
+      return;
+    }
     res.json({
       id: partner.id,
       email: partner.email,
@@ -94,6 +200,7 @@ router.get(
       phone: partner.phone,
       city: partner.city,
       status: partner.status,
+      kind: partner.kind,
       notes: partner.notes,
       createdAt: partner.createdAt,
     });

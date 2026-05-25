@@ -284,28 +284,34 @@ router.get(
         status: p.status,
         city: p.city,
         notes: p.notes,
+        kind: p.kind,
         createdAt: p.createdAt,
       })),
     );
   },
 );
 
+const VALID_KINDS = new Set(["gym", "vendor", "both"]);
+
 router.post(
   "/admin/partners",
   requireAdmin,
   async (req: Request, res: Response): Promise<void> => {
-    const { name, email, phone, city, password, notes } = (req.body ?? {}) as {
-      name?: string;
-      email?: string;
-      phone?: string;
-      city?: string;
-      password?: string;
-      notes?: string;
-    };
+    const { name, email, phone, city, password, notes, kind } =
+      (req.body ?? {}) as {
+        name?: string;
+        email?: string;
+        phone?: string;
+        city?: string;
+        password?: string;
+        notes?: string;
+        kind?: string;
+      };
     if (!name || !email || !phone || !city || !password) {
       res.status(400).json({ error: "name, email, phone, city, password required" });
       return;
     }
+    const partnerKind = kind && VALID_KINDS.has(kind) ? kind : "gym";
     const passwordHash = await hashPassword(password);
     const [created] = await db
       .insert(partnersTable)
@@ -315,6 +321,7 @@ router.post(
         phone,
         city,
         notes: notes ?? "",
+        kind: partnerKind,
         passwordHash,
       })
       .returning();
@@ -326,6 +333,7 @@ router.post(
       status: created.status,
       city: created.city,
       notes: created.notes,
+      kind: created.kind,
       createdAt: created.createdAt,
     });
   },
@@ -336,7 +344,7 @@ router.patch(
   requireAdmin,
   async (req: Request, res: Response): Promise<void> => {
     const id = Number(req.params.id);
-    const { name, phone, status, city, notes } = (req.body ?? {}) as Record<
+    const { name, phone, status, city, notes, kind } = (req.body ?? {}) as Record<
       string,
       string | undefined
     >;
@@ -348,6 +356,7 @@ router.patch(
         ...(status !== undefined && { status }),
         ...(city !== undefined && { city }),
         ...(notes !== undefined && { notes }),
+        ...(kind !== undefined && VALID_KINDS.has(kind) && { kind }),
       })
       .where(eq(partnersTable.id, id))
       .returning();

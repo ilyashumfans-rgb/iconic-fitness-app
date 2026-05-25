@@ -1,0 +1,374 @@
+import { useEffect, useState } from "react";
+import { VendorLayout, VendorCard } from "@/components/vendor/VendorLayout";
+import { vendorApi, type VendorProduct } from "@/lib/vendorApi";
+import { Plus, Trash2, X, Package, Pencil } from "lucide-react";
+
+const INPUT =
+  "w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
+
+type FormState = {
+  name: string;
+  description: string;
+  category: string;
+  priceInr: number;
+  originalPriceInr: number;
+  imageUrl: string;
+  stock: number;
+  status: string;
+};
+
+const blank = (): FormState => ({
+  name: "",
+  description: "",
+  category: "apparel",
+  priceInr: 0,
+  originalPriceInr: 0,
+  imageUrl: "",
+  stock: 0,
+  status: "active",
+});
+
+export default function VendorProducts() {
+  const [rows, setRows] = useState<VendorProduct[]>([]);
+  const [editing, setEditing] = useState<VendorProduct | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState<FormState>(blank());
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const load = () => {
+    vendorApi.products.list().then(setRows).catch(() => setRows([]));
+  };
+  useEffect(load, []);
+
+  const inr = new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  });
+
+  const openCreate = () => {
+    setForm(blank());
+    setEditing(null);
+    setCreating(true);
+    setErr(null);
+  };
+  const openEdit = (p: VendorProduct) => {
+    setForm({
+      name: p.name,
+      description: p.description,
+      category: p.category,
+      priceInr: p.priceInr,
+      originalPriceInr: p.originalPriceInr,
+      imageUrl: p.imageUrl,
+      stock: p.stock,
+      status: p.status,
+    });
+    setEditing(p);
+    setCreating(false);
+    setErr(null);
+  };
+  const close = () => {
+    setCreating(false);
+    setEditing(null);
+  };
+
+  const save = async () => {
+    setBusy(true);
+    setErr(null);
+    try {
+      if (editing) {
+        await vendorApi.products.update(editing.id, form);
+      } else {
+        await vendorApi.products.create(form);
+      }
+      close();
+      load();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Save failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async (id: number) => {
+    if (!confirm("Delete this product?")) return;
+    await vendorApi.products.remove(id);
+    load();
+  };
+
+  const isOpen = creating || editing !== null;
+
+  return (
+    <VendorLayout
+      title="Products & Stock"
+      actions={
+        <button
+          onClick={openCreate}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-semibold shadow-md shadow-orange-500/20"
+        >
+          <Plus className="h-4 w-4" />
+          New product
+        </button>
+      }
+    >
+      <VendorCard className="overflow-hidden">
+        <div className="px-5 py-4 border-b border-orange-100 flex items-center gap-2">
+          <Package className="h-4 w-4 text-orange-500" />
+          <div className="text-sm font-bold">Your catalog</div>
+          <div className="text-xs text-slate-500">({rows.length})</div>
+        </div>
+        {rows.length === 0 ? (
+          <div className="p-12 text-center text-sm text-slate-500">
+            No products yet. Add your first product to start selling.
+          </div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs uppercase tracking-wide text-slate-400 border-b border-orange-100">
+                <th className="px-5 py-3">Product</th>
+                <th className="px-5 py-3">Category</th>
+                <th className="px-5 py-3">Price</th>
+                <th className="px-5 py-3">Stock</th>
+                <th className="px-5 py-3">Status</th>
+                <th className="px-5 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((p) => (
+                <tr
+                  key={p.id}
+                  className="border-b border-orange-100/60 hover:bg-orange-50/50"
+                >
+                  <td className="px-5 py-3">
+                    <div className="flex items-center gap-3">
+                      {p.imageUrl ? (
+                        <img
+                          src={p.imageUrl}
+                          alt={p.name}
+                          className="h-10 w-10 rounded-md object-cover border border-orange-100"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-md bg-orange-50 border border-orange-100" />
+                      )}
+                      <div className="min-w-0">
+                        <div className="font-semibold truncate">{p.name}</div>
+                        <div className="text-xs text-slate-500 truncate">
+                          {p.slug}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-5 py-3 capitalize text-slate-600">
+                    {p.category}
+                  </td>
+                  <td className="px-5 py-3">
+                    <div className="font-bold">{inr.format(p.priceInr)}</div>
+                    {p.originalPriceInr > p.priceInr && (
+                      <div className="text-[11px] text-slate-400 line-through">
+                        {inr.format(p.originalPriceInr)}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-5 py-3">
+                    <span
+                      className={`text-xs font-bold px-2 py-1 rounded-md ${
+                        p.stock === 0
+                          ? "bg-red-50 text-red-600 border border-red-200"
+                          : p.stock < 5
+                            ? "bg-amber-50 text-amber-700 border border-amber-200"
+                            : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                      }`}
+                    >
+                      {p.stock}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3">
+                    <span
+                      className={`text-xs px-2 py-1 rounded uppercase tracking-wide font-bold ${
+                        p.status === "active"
+                          ? "bg-orange-100 text-orange-700"
+                          : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {p.status}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3 text-right">
+                    <button
+                      onClick={() => openEdit(p)}
+                      className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 mr-1"
+                    >
+                      <Pencil className="h-3.5 w-3.5" /> Edit
+                    </button>
+                    <button
+                      onClick={() => remove(p.id)}
+                      className="p-1.5 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </VendorCard>
+
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="bg-white border border-orange-100 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="px-5 py-4 border-b border-orange-100 flex items-center justify-between">
+              <div className="text-sm font-bold">
+                {editing ? "Edit product" : "New product"}
+              </div>
+              <button
+                onClick={close}
+                className="p-1.5 rounded-md hover:bg-orange-50 text-slate-500"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5 font-bold">
+                    Name
+                  </label>
+                  <input
+                    className={INPUT}
+                    value={form.name}
+                    onChange={(e) =>
+                      setForm({ ...form, name: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5 font-bold">
+                    Category
+                  </label>
+                  <select
+                    className={INPUT}
+                    value={form.category}
+                    onChange={(e) =>
+                      setForm({ ...form, category: e.target.value })
+                    }
+                  >
+                    <option value="apparel">Apparel</option>
+                    <option value="equipment">Equipment</option>
+                    <option value="supplements">Supplements</option>
+                    <option value="accessories">Accessories</option>
+                    <option value="wellness">Wellness</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5 font-bold">
+                    Status
+                  </label>
+                  <select
+                    className={INPUT}
+                    value={form.status}
+                    onChange={(e) =>
+                      setForm({ ...form, status: e.target.value })
+                    }
+                  >
+                    <option value="active">Active</option>
+                    <option value="draft">Draft</option>
+                    <option value="archived">Archived</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5 font-bold">
+                    Price (INR)
+                  </label>
+                  <input
+                    type="number"
+                    className={INPUT}
+                    value={form.priceInr}
+                    onChange={(e) =>
+                      setForm({ ...form, priceInr: Number(e.target.value) })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5 font-bold">
+                    Original Price (INR)
+                  </label>
+                  <input
+                    type="number"
+                    className={INPUT}
+                    value={form.originalPriceInr}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        originalPriceInr: Number(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5 font-bold">
+                    Stock
+                  </label>
+                  <input
+                    type="number"
+                    className={INPUT}
+                    value={form.stock}
+                    onChange={(e) =>
+                      setForm({ ...form, stock: Number(e.target.value) })
+                    }
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5 font-bold">
+                    Image URL
+                  </label>
+                  <input
+                    className={INPUT}
+                    value={form.imageUrl}
+                    onChange={(e) =>
+                      setForm({ ...form, imageUrl: e.target.value })
+                    }
+                    placeholder="https://…"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5 font-bold">
+                    Description
+                  </label>
+                  <textarea
+                    className={`${INPUT} h-24 resize-none`}
+                    value={form.description}
+                    onChange={(e) =>
+                      setForm({ ...form, description: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+              {err && (
+                <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
+                  {err}
+                </div>
+              )}
+            </div>
+            <div className="px-5 py-4 border-t border-orange-100 flex items-center justify-end gap-2">
+              <button
+                onClick={close}
+                className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-orange-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={save}
+                disabled={busy}
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-semibold shadow-md shadow-orange-500/20 disabled:opacity-60"
+              >
+                {busy ? "Saving…" : editing ? "Save changes" : "Create product"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </VendorLayout>
+  );
+}
