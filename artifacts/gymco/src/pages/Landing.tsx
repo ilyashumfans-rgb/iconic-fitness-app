@@ -267,28 +267,51 @@ const HERO_VIDEO_SRC = `${import.meta.env.BASE_URL}media/hero.mp4`;
 // Twinkling-lights background layer for the hero. Renders dozens of small
 // pulsing dots in brand colors, two slow breathing radial blooms, a soft
 // diagonal light sweep, and a drifting grid — all CSS-only, GPU-friendly.
-const HERO_LIGHTS = Array.from({ length: 56 }).map((_, i) => {
+const HERO_LIGHTS = Array.from({ length: 120 }).map((_, i) => {
   const palette = [
     "hsl(18 100% 60%)",   // orange
     "hsl(268 90% 68%)",   // purple
     "hsl(330 95% 65%)",   // pink
     "hsl(48 100% 65%)",   // amber
     "hsl(200 95% 70%)",   // cyan accent
+    "hsl(155 95% 65%)",   // mint
   ];
   // deterministic pseudo-random so SSR/CSR match and layout is stable
   const r = (n: number) => {
     const x = Math.sin((i + 1) * n) * 10000;
     return x - Math.floor(x);
   };
+  const size = 2 + Math.floor(r(3) * 6);
   return {
     left: `${(r(1) * 100).toFixed(2)}%`,
     top: `${(r(2) * 100).toFixed(2)}%`,
-    size: 2 + Math.floor(r(3) * 5),
+    size,
     color: palette[i % palette.length]!,
-    delay: `${(r(4) * 4).toFixed(2)}s`,
-    duration: `${(2.2 + r(5) * 3.8).toFixed(2)}s`,
+    delay: `${(r(4) * 5).toFixed(2)}s`,
+    duration: `${(1.6 + r(5) * 4.2).toFixed(2)}s`,
   };
 });
+
+// Shooting stars across the hero
+const HERO_SHOOTS = Array.from({ length: 6 }).map((_, i) => {
+  const r = (n: number) => {
+    const x = Math.sin((i + 1) * n + 7.3) * 10000;
+    return x - Math.floor(x);
+  };
+  return {
+    top: `${(8 + r(1) * 60).toFixed(2)}%`,
+    delay: `${(i * 1.7 + r(2) * 2).toFixed(2)}s`,
+    duration: `${(4.5 + r(3) * 3.5).toFixed(2)}s`,
+    hue: i % 2 === 0 ? "18 100% 70%" : "268 95% 78%",
+  };
+});
+
+// Lightning bolt flashes
+const HERO_BOLTS = Array.from({ length: 3 }).map((_, i) => ({
+  left: `${20 + i * 30}%`,
+  delay: `${(i * 2.3).toFixed(2)}s`,
+  duration: `${(6 + i * 1.5).toFixed(2)}s`,
+}));
 
 function HeroBlinkingLights({ active }: { active: boolean }) {
   return (
@@ -298,12 +321,26 @@ function HeroBlinkingLights({ active }: { active: boolean }) {
       }`}
       aria-hidden="true"
     >
+      {/* Rotating aurora conic — gives a slow color wheel beneath everything */}
+      <div
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[140%] w-[140%] hero-aurora mix-blend-screen"
+        style={{
+          background:
+            "conic-gradient(from 0deg, hsl(18 100% 55% / 0.35), hsl(330 95% 60% / 0.3), hsl(268 90% 65% / 0.4), hsl(200 95% 60% / 0.3), hsl(155 95% 60% / 0.25), hsl(18 100% 55% / 0.35))",
+          filter: "blur(80px)",
+          maskImage:
+            "radial-gradient(ellipse 60% 60% at 50% 50%, black 20%, transparent 75%)",
+          WebkitMaskImage:
+            "radial-gradient(ellipse 60% 60% at 50% 50%, black 20%, transparent 75%)",
+        }}
+      />
+
       {/* Drifting grid */}
       <div
-        className="absolute inset-0 hero-grid-drift opacity-[0.18] dark:opacity-25"
+        className="absolute inset-0 hero-grid-drift opacity-[0.22] dark:opacity-30"
         style={{
           backgroundImage:
-            "linear-gradient(hsl(18 100% 60% / 0.18) 1px, transparent 1px), linear-gradient(90deg, hsl(268 90% 68% / 0.18) 1px, transparent 1px)",
+            "linear-gradient(hsl(18 100% 60% / 0.22) 1px, transparent 1px), linear-gradient(90deg, hsl(268 90% 68% / 0.22) 1px, transparent 1px)",
           backgroundSize: "44px 44px",
           maskImage:
             "radial-gradient(ellipse 75% 70% at 50% 45%, black 30%, transparent 85%)",
@@ -312,18 +349,36 @@ function HeroBlinkingLights({ active }: { active: boolean }) {
         }}
       />
 
-      {/* Breathing brand blooms */}
+      {/* Breathing brand blooms — bigger, brighter, color-shifting */}
       <div
-        className="absolute left-[18%] top-[28%] h-[22rem] w-[22rem] rounded-full blur-[120px] hero-breathe"
-        style={{ background: "hsl(18 100% 55% / 0.55)" }}
+        className="absolute left-[14%] top-[22%] h-[30rem] w-[30rem] rounded-full blur-[140px] hero-breathe mix-blend-screen"
+        style={{ background: "hsl(18 100% 55% / 0.85)" }}
       />
       <div
-        className="absolute right-[14%] top-[20%] h-[24rem] w-[24rem] rounded-full blur-[140px] hero-breathe-slow"
-        style={{ background: "hsl(268 76% 58% / 0.55)" }}
+        className="absolute right-[10%] top-[14%] h-[32rem] w-[32rem] rounded-full blur-[150px] hero-breathe-slow mix-blend-screen"
+        style={{ background: "hsl(268 80% 60% / 0.85)" }}
       />
       <div
-        className="absolute left-[40%] bottom-[8%] h-[18rem] w-[18rem] rounded-full blur-[120px] hero-breathe"
-        style={{ background: "hsl(330 90% 60% / 0.45)", animationDelay: "2.4s" }}
+        className="absolute left-[36%] bottom-[4%] h-[24rem] w-[24rem] rounded-full blur-[130px] hero-breathe mix-blend-screen"
+        style={{ background: "hsl(330 95% 60% / 0.7)", animationDelay: "2.4s" }}
+      />
+      <div
+        className="absolute right-[28%] bottom-[12%] h-[20rem] w-[20rem] rounded-full blur-[120px] hero-breathe-slow mix-blend-screen"
+        style={{ background: "hsl(200 95% 60% / 0.55)", animationDelay: "3.6s" }}
+      />
+
+      {/* Lens flare core — rotating multi-spike star */}
+      <div
+        className="absolute left-1/2 top-[34%] -translate-x-1/2 -translate-y-1/2 h-[26rem] w-[26rem] hero-flare mix-blend-screen"
+        style={{
+          background:
+            "conic-gradient(from 0deg, transparent 0deg, hsl(18 100% 70% / 0.6) 6deg, transparent 12deg, transparent 90deg, hsl(268 95% 75% / 0.6) 96deg, transparent 102deg, transparent 180deg, hsl(330 95% 70% / 0.55) 186deg, transparent 192deg, transparent 270deg, hsl(48 100% 70% / 0.55) 276deg, transparent 282deg)",
+          filter: "blur(14px)",
+          maskImage:
+            "radial-gradient(circle at 50% 50%, black 0%, transparent 70%)",
+          WebkitMaskImage:
+            "radial-gradient(circle at 50% 50%, black 0%, transparent 70%)",
+        }}
       />
 
       {/* Diagonal light sweep */}
@@ -331,16 +386,66 @@ function HeroBlinkingLights({ active }: { active: boolean }) {
         className="absolute -top-1/2 -left-1/2 h-[200%] w-[60%] hero-sweep mix-blend-screen"
         style={{
           background:
-            "linear-gradient(90deg, transparent 0%, hsl(18 100% 70% / 0.18) 45%, hsl(268 90% 75% / 0.22) 55%, transparent 100%)",
+            "linear-gradient(90deg, transparent 0%, hsl(18 100% 70% / 0.35) 45%, hsl(268 90% 75% / 0.4) 55%, transparent 100%)",
           filter: "blur(28px)",
         }}
       />
 
-      {/* Twinkling lights */}
+      {/* Scan line */}
+      <div
+        className="absolute inset-x-0 top-0 h-32 hero-scan mix-blend-screen"
+        style={{
+          background:
+            "linear-gradient(180deg, transparent 0%, hsl(18 100% 70% / 0.18) 45%, hsl(268 90% 75% / 0.22) 55%, transparent 100%)",
+          filter: "blur(20px)",
+        }}
+      />
+
+      {/* Shooting stars */}
+      {HERO_SHOOTS.map((s, i) => (
+        <span
+          key={`shoot-${i}`}
+          className="absolute hero-shoot mix-blend-screen"
+          style={
+            {
+              top: s.top,
+              left: 0,
+              width: "22vw",
+              height: "2px",
+              background: `linear-gradient(90deg, transparent, hsl(${s.hue} / 0.95), white)`,
+              boxShadow: `0 0 18px 3px hsl(${s.hue} / 0.9)`,
+              borderRadius: "9999px",
+              "--dur": s.duration,
+              "--delay": s.delay,
+            } as React.CSSProperties
+          }
+        />
+      ))}
+
+      {/* Lightning bolt flashes — full-column white-hot glow */}
+      {HERO_BOLTS.map((b, i) => (
+        <span
+          key={`bolt-${i}`}
+          className="absolute top-0 bottom-0 hero-bolt mix-blend-screen"
+          style={
+            {
+              left: b.left,
+              width: "2px",
+              background:
+                "linear-gradient(180deg, transparent 0%, white 40%, hsl(268 95% 80%) 60%, transparent 100%)",
+              boxShadow: "0 0 60px 10px hsl(268 95% 80% / 0.9), 0 0 120px 30px hsl(18 100% 65% / 0.5)",
+              "--dur": b.duration,
+              "--delay": b.delay,
+            } as React.CSSProperties
+          }
+        />
+      ))}
+
+      {/* Twinkling lights — denser, brighter halo */}
       {HERO_LIGHTS.map((l, i) => (
         <span
           key={i}
-          className="absolute rounded-full hero-twinkle"
+          className="absolute rounded-full hero-twinkle mix-blend-screen"
           style={
             {
               left: l.left,
@@ -348,7 +453,7 @@ function HeroBlinkingLights({ active }: { active: boolean }) {
               width: l.size,
               height: l.size,
               background: l.color,
-              boxShadow: `0 0 ${l.size * 3}px ${l.size}px ${l.color}`,
+              boxShadow: `0 0 ${l.size * 4}px ${l.size * 1.4}px ${l.color}, 0 0 ${l.size * 10}px ${l.size * 2}px ${l.color}`,
               "--dur": l.duration,
               "--delay": l.delay,
             } as React.CSSProperties
