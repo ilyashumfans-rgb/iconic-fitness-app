@@ -34,10 +34,7 @@ const popularCities = [
   "Chennai",
 ];
 
-const heroVideo =
-  "https://assets.mixkit.co/videos/preview/mixkit-young-woman-doing-jumping-jacks-in-a-gym-39888-large.mp4";
-const heroVideoFallback =
-  "https://assets.mixkit.co/videos/preview/mixkit-girl-doing-squats-in-a-gym-39895-large.mp4";
+const heroVideo = `${import.meta.env.BASE_URL}media/hero-gym.mp4`;
 const heroPoster =
   "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=85";
 
@@ -262,7 +259,6 @@ function Hero() {
             className="absolute inset-0 h-full w-full object-cover"
           >
             <source src={heroVideo} type="video/mp4" />
-            <source src={heroVideoFallback} type="video/mp4" />
           </video>
         ) : (
           <img
