@@ -196,17 +196,20 @@ function TopNav() {
           </span>
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-          <a href="#how" className="hover:text-foreground transition-colors">
-            How it works
-          </a>
-          <a href="#gyms" className="hover:text-foreground transition-colors">
-            Gyms
-          </a>
-          <a href="#classes" className="hover:text-foreground transition-colors">
+          <Link href="/explore" className="hover:text-foreground transition-colors">
+            Browse Gyms
+          </Link>
+          <Link href="/classes" className="hover:text-foreground transition-colors">
             Classes
-          </a>
+          </Link>
+          <Link href="/trainers" className="hover:text-foreground transition-colors">
+            Trainers
+          </Link>
           <a href="#pricing" className="hover:text-foreground transition-colors">
             Pricing
+          </a>
+          <a href="#how" className="hover:text-foreground transition-colors">
+            How it works
           </a>
         </nav>
         <div className="flex items-center gap-2">
@@ -772,7 +775,7 @@ function Categories() {
 
 function FeatureBlock() {
   return (
-    <section id="gyms" className="py-24 md:py-32 relative">
+    <section id="features" className="py-24 md:py-32 relative">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="max-w-2xl mb-14">
           <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary mb-3">
