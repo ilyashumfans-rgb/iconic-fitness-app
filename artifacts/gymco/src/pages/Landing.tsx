@@ -29,6 +29,10 @@ import {
   Zap,
   Sun,
   Moon,
+  Pause,
+  Play,
+  VolumeX,
+  Volume2,
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 
@@ -258,10 +262,25 @@ function TopNav() {
   );
 }
 
+const HERO_VIDEO_SRC = `${import.meta.env.BASE_URL}media/hero.mp4`;
+
 function Hero() {
   const [, navigate] = useLocation();
   const [query, setQuery] = useState("");
   const [city, setCity] = useState("");
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [videoOn, setVideoOn] = useState(true);
+  const [muted, setMuted] = useState(true);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (videoOn) {
+      v.play().catch(() => {});
+    } else {
+      v.pause();
+    }
+  }, [videoOn]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -274,12 +293,48 @@ function Hero() {
 
   return (
     <section className="relative pt-28 md:pt-36 pb-20 md:pb-28 overflow-hidden">
+      {/* Video background */}
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+        <video
+          ref={videoRef}
+          src={HERO_VIDEO_SRC}
+          autoPlay
+          loop
+          muted={muted}
+          playsInline
+          preload="auto"
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
+            videoOn ? "opacity-90 dark:opacity-60" : "opacity-0"
+          }`}
+        />
+        {/* Tint + readability overlays on top of video */}
+        <div
+          className={`absolute inset-0 transition-opacity duration-700 ${
+            videoOn
+              ? "bg-gradient-to-b from-background/30 via-background/55 to-background"
+              : "opacity-0"
+          }`}
+        />
+      </div>
+
       {/* Layered decorative background */}
       <div className="pointer-events-none absolute inset-0 z-0">
         {/* Conic mesh blobs */}
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[44rem] w-[80rem] rounded-full bg-[conic-gradient(from_120deg_at_50%_50%,hsl(18_100%_55%/0.22),hsl(268_76%_58%/0.22),hsl(330_90%_60%/0.18),hsl(18_100%_55%/0.22))] blur-[140px] opacity-90" />
-        <div className="absolute top-1/3 -left-32 h-[28rem] w-[28rem] rounded-full bg-primary/20 blur-[160px]" />
-        <div className="absolute top-1/4 -right-24 h-[30rem] w-[30rem] rounded-full bg-[hsl(268_76%_58%/0.22)] blur-[170px]" />
+        <div
+          className={`absolute -top-40 left-1/2 -translate-x-1/2 h-[44rem] w-[80rem] rounded-full bg-[conic-gradient(from_120deg_at_50%_50%,hsl(18_100%_55%/0.22),hsl(268_76%_58%/0.22),hsl(330_90%_60%/0.18),hsl(18_100%_55%/0.22))] blur-[140px] transition-opacity duration-700 ${
+            videoOn ? "opacity-40" : "opacity-90"
+          }`}
+        />
+        <div
+          className={`absolute top-1/3 -left-32 h-[28rem] w-[28rem] rounded-full bg-primary/20 blur-[160px] transition-opacity duration-700 ${
+            videoOn ? "opacity-50" : "opacity-100"
+          }`}
+        />
+        <div
+          className={`absolute top-1/4 -right-24 h-[30rem] w-[30rem] rounded-full bg-[hsl(268_76%_58%/0.22)] blur-[170px] transition-opacity duration-700 ${
+            videoOn ? "opacity-50" : "opacity-100"
+          }`}
+        />
 
         {/* Dot grid */}
         <div
@@ -464,6 +519,39 @@ function Hero() {
             </div>
           ))}
         </motion.div>
+      </div>
+
+      {/* Video controls — top-right floating pill (visible inside hero viewport) */}
+      <div className="absolute top-24 right-4 md:top-28 md:right-8 z-20 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setVideoOn((v) => !v)}
+          aria-pressed={videoOn}
+          aria-label={videoOn ? "Pause background video" : "Play background video"}
+          className="h-11 w-11 rounded-full bg-card/85 backdrop-blur-xl border border-border shadow-lg flex items-center justify-center text-foreground hover:bg-card transition-colors"
+          data-testid="hero-video-toggle"
+        >
+          {videoOn ? (
+            <Pause className="h-4 w-4" />
+          ) : (
+            <Play className="h-4 w-4 ml-0.5" />
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={() => setMuted((m) => !m)}
+          disabled={!videoOn}
+          aria-pressed={!muted}
+          aria-label={muted ? "Unmute video" : "Mute video"}
+          className="h-11 w-11 rounded-full bg-card/85 backdrop-blur-xl border border-border shadow-lg flex items-center justify-center text-foreground hover:bg-card transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          data-testid="hero-video-mute"
+        >
+          {muted ? (
+            <VolumeX className="h-4 w-4" />
+          ) : (
+            <Volume2 className="h-4 w-4" />
+          )}
+        </button>
       </div>
     </section>
   );
