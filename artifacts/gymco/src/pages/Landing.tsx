@@ -182,7 +182,7 @@ const plans = [
 
 function TopNav() {
   return (
-    <header className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-background/70 backdrop-blur-xl">
+    <header className="fixed top-0 inset-x-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5">
           <img
@@ -245,190 +245,223 @@ function Hero() {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-28 md:pt-32 pb-20 md:pb-28 overflow-hidden">
-      {/* Background video (falls back to poster image when reduced-motion or load fails) */}
-      <div className="absolute inset-0 z-0">
-        {showVideo ? (
-          <video
-            key="hero-video"
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="metadata"
-            poster={heroPoster}
-            onError={() => setVideoFailed(true)}
-            className="absolute inset-0 h-full w-full object-cover"
-          >
-            <source src={heroVideo} type="video/mp4" />
-          </video>
-        ) : (
-          <img
-            src={heroPoster}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-        )}
-        {/* Overlays — let the video breathe while keeping text readable */}
-        <div className="absolute inset-0 bg-black/45" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-background" />
-        <div className="absolute -top-32 -left-32 h-[28rem] w-[28rem] rounded-full bg-primary/25 blur-[140px] mix-blend-screen" />
-        <div className="absolute -top-20 right-0 h-[32rem] w-[32rem] rounded-full bg-[hsl(268_76%_58%/0.3)] blur-[160px] mix-blend-screen" />
-        <div className="absolute bottom-0 left-1/3 h-[24rem] w-[24rem] rounded-full bg-[hsl(330_90%_55%/0.25)] blur-[140px] mix-blend-screen" />
+    <section className="relative pt-28 md:pt-36 pb-20 md:pb-28 overflow-hidden">
+      {/* Soft brand glow accents */}
+      <div className="pointer-events-none absolute inset-0 z-0">
+        <div className="absolute -top-32 -left-32 h-[32rem] w-[32rem] rounded-full bg-primary/15 blur-[160px]" />
+        <div className="absolute -top-20 right-0 h-[34rem] w-[34rem] rounded-full bg-[hsl(268_76%_58%/0.18)] blur-[180px]" />
+        <div className="absolute top-1/2 left-1/3 h-[22rem] w-[22rem] rounded-full bg-[hsl(330_90%_60%/0.12)] blur-[140px]" />
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 md:px-8 relative z-10 w-full">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          className="flex flex-col items-center text-center"
-        >
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-md mb-8">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <span className="text-xs font-bold uppercase tracking-[0.18em] text-white/90">
-              Now live in 12 Indian cities
-            </span>
-          </div>
-
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[5.5rem] font-black tracking-[-0.04em] leading-[0.92] text-white drop-shadow-[0_8px_40px_rgba(0,0,0,0.85)] uppercase">
-            <motion.span
-              initial={{ opacity: 0, y: 30, filter: "blur(12px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              className="block"
-            >
-              One Membership.
-            </motion.span>
-            <motion.span
-              initial={{ opacity: 0, y: 30, filter: "blur(12px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-              className="block text-gradient-brand drop-shadow-[0_0_60px_rgba(255,107,26,0.45)]"
-            >
-              Unlimited Gyms.
-            </motion.span>
-          </h1>
-
-          <p className="mt-8 text-lg md:text-xl text-white/80 max-w-2xl leading-relaxed">
-            Access India's best gyms and studios on a single pass. Book any
-            class, walk in with a QR — from sunrise yoga to midnight MMA.
-          </p>
-
-          {/* Search bar — the killer hero feature */}
-          <motion.form
-            onSubmit={handleSearch}
-            initial={{ opacity: 0, y: 12 }}
+      <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 items-center">
+          {/* Left column — text + search */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25, duration: 0.6 }}
-            className="mt-10 w-full max-w-3xl mx-auto"
+            transition={{ duration: 0.7 }}
+            className="lg:col-span-7"
           >
-            <div className="rounded-2xl bg-white/10 backdrop-blur-2xl border border-white/15 p-2 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)] flex flex-col md:flex-row gap-2">
-              <div className="flex-1 flex items-center gap-3 px-4 py-2 bg-background/40 rounded-xl">
-                <Search className="h-5 w-5 text-primary shrink-0" />
-                <Input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search gym or activity..."
-                  className="border-0 bg-transparent h-10 text-base text-white placeholder:text-white/50 focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
-                />
-              </div>
-              <div className="flex-1 flex items-center gap-3 px-4 py-2 bg-background/40 rounded-xl md:max-w-[260px]">
-                <MapPin className="h-5 w-5 text-primary shrink-0" />
-                <Input
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="City or location..."
-                  className="border-0 bg-transparent h-10 text-base text-white placeholder:text-white/50 focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
-                />
-              </div>
-              <Button
-                type="submit"
-                size="lg"
-                className="bg-gradient-brand text-white border-none h-14 px-8 text-base font-black tracking-wide shadow-[0_10px_30px_-10px_hsl(18_100%_55%/0.8)] hover:opacity-95 rounded-xl"
-              >
-                <Search className="h-5 w-5 mr-2" /> Search
-              </Button>
-            </div>
-
-            {/* Popular city pills */}
-            <div className="mt-4 flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-bold uppercase tracking-wider text-white/50 mr-1">
-                Popular:
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-7">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <span className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
+                Now live in 12 Indian cities
               </span>
-              {popularCities.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => {
-                    setCity(c);
-                    navigate(`/explore?city=${encodeURIComponent(c)}`);
-                  }}
-                  className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/80 hover:bg-white/15 hover:text-white hover:border-primary/40 transition-colors"
-                >
-                  {c}
-                </button>
-              ))}
             </div>
-          </motion.form>
 
-          <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/memberships">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl xl:text-[5.5rem] font-black tracking-[-0.04em] leading-[0.95] uppercase text-foreground">
+              <motion.span
+                initial={{ opacity: 0, y: 30, filter: "blur(12px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                className="block"
+              >
+                One Membership.
+              </motion.span>
+              <motion.span
+                initial={{ opacity: 0, y: 30, filter: "blur(12px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                className="block text-gradient-brand"
+              >
+                Unlimited Gyms.
+              </motion.span>
+            </h1>
+
+            <p className="mt-7 text-lg md:text-xl text-muted-foreground max-w-2xl leading-relaxed">
+              Access India's best gyms and studios on a single pass. Book any
+              class, walk in with a QR — from sunrise yoga to midnight MMA.
+            </p>
+
+            {/* Search bar */}
+            <motion.form
+              onSubmit={handleSearch}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25, duration: 0.6 }}
+              className="mt-9 w-full max-w-2xl"
+            >
+              <div className="rounded-2xl bg-card border border-border p-2 shadow-[0_20px_50px_-25px_rgba(0,0,0,0.18)] flex flex-col md:flex-row gap-2">
+                <div className="flex-1 flex items-center gap-3 px-4 py-2 bg-secondary rounded-xl">
+                  <Search className="h-5 w-5 text-primary shrink-0" />
+                  <Input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search gym or activity..."
+                    className="border-0 bg-transparent h-10 text-base focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+                  />
+                </div>
+                <div className="flex-1 flex items-center gap-3 px-4 py-2 bg-secondary rounded-xl md:max-w-[240px]">
+                  <MapPin className="h-5 w-5 text-primary shrink-0" />
+                  <Input
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="City or location..."
+                    className="border-0 bg-transparent h-10 text-base focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="bg-gradient-brand text-white border-none h-14 px-8 text-base font-black tracking-wide shadow-[0_10px_30px_-10px_hsl(18_100%_55%/0.8)] hover:opacity-95 rounded-xl"
+                >
+                  <Search className="h-5 w-5 mr-2" /> Search
+                </Button>
+              </div>
+
+              <div className="mt-4 flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground mr-1">
+                  Popular:
+                </span>
+                {popularCities.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => {
+                      setCity(c);
+                      navigate(`/explore?city=${encodeURIComponent(c)}`);
+                    }}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-full bg-secondary border border-border text-foreground/80 hover:border-primary/40 hover:text-primary transition-colors"
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </motion.form>
+
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              <Link href="/memberships">
+                <Button
+                  size="lg"
+                  className="bg-gradient-brand text-white border-none h-14 px-8 text-base font-black tracking-wide shadow-[0_16px_50px_-12px_hsl(18_100%_55%/0.6)] hover:opacity-95 w-full sm:w-auto"
+                >
+                  Get GYMCO Pass <ArrowRight className="h-5 w-5 ml-2" />
+                </Button>
+              </Link>
               <Button
                 size="lg"
-                className="bg-gradient-brand text-white border-none h-14 px-8 text-base font-black tracking-wide shadow-[0_16px_50px_-12px_hsl(18_100%_55%/0.8)] hover:opacity-95 w-full sm:w-auto"
+                variant="outline"
+                className="h-14 px-8 text-base font-bold w-full sm:w-auto"
               >
-                Get GYMCO Pass <ArrowRight className="h-5 w-5 ml-2" />
+                <PlayCircle className="h-5 w-5 mr-2" /> Watch the film
               </Button>
-            </Link>
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-14 px-8 text-base font-bold bg-white/5 border-white/15 text-white hover:bg-white/10 w-full sm:w-auto"
-            >
-              <PlayCircle className="h-5 w-5 mr-2" /> Watch the film
-            </Button>
-          </div>
+            </div>
 
-          {/* Trust strip */}
-          <div className="mt-12 flex items-center gap-6 flex-wrap justify-center">
-            <div className="flex -space-x-3">
-              {testimonials.map((t) => (
-                <img
-                  key={t.name}
-                  src={t.avatar}
-                  alt=""
-                  className="h-10 w-10 rounded-full object-cover ring-2 ring-background"
-                />
-              ))}
-            </div>
-            <div>
-              <div className="flex items-center gap-1 text-primary">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-current" />
+            {/* Trust strip */}
+            <div className="mt-10 flex items-center gap-5 flex-wrap">
+              <div className="flex -space-x-3">
+                {testimonials.map((t) => (
+                  <img
+                    key={t.name}
+                    src={t.avatar}
+                    alt=""
+                    className="h-10 w-10 rounded-full object-cover ring-2 ring-background"
+                  />
                 ))}
-                <span className="text-white text-sm font-bold ml-1.5">4.9</span>
               </div>
-              <div className="text-xs text-white/60 mt-0.5">
-                Loved by 40,000+ members
+              <div>
+                <div className="flex items-center gap-1 text-primary">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-current" />
+                  ))}
+                  <span className="text-foreground text-sm font-bold ml-1.5">4.9</span>
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  Loved by 40,000+ members
+                </div>
               </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+
+          {/* Right column — contained video card */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            className="lg:col-span-5 relative"
+          >
+            <div className="absolute -inset-6 bg-gradient-brand opacity-25 blur-3xl -z-10" />
+            <div className="relative rounded-[2rem] overflow-hidden ring-1 ring-border shadow-[0_30px_80px_-30px_rgba(0,0,0,0.25)] aspect-[4/5]">
+              {showVideo ? (
+                <video
+                  key="hero-video"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="metadata"
+                  poster={heroPoster}
+                  onError={() => setVideoFailed(true)}
+                  className="absolute inset-0 h-full w-full object-cover"
+                >
+                  <source src={heroVideo} type="video/mp4" />
+                </video>
+              ) : (
+                <img
+                  src={heroPoster}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+
+              {/* Floating live card */}
+              <div className="absolute top-5 left-5 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur border border-white text-foreground shadow-lg">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[11px] font-black uppercase tracking-wider">
+                  124 live now in Bangalore
+                </span>
+              </div>
+
+              <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between">
+                <div className="text-white">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/80">
+                    Featured studio
+                  </div>
+                  <div className="text-xl font-black mt-1">Iron & Oak — Indiranagar</div>
+                </div>
+                <div className="flex items-center gap-1 bg-black/50 backdrop-blur px-2.5 py-1 rounded-full text-white text-xs font-bold">
+                  <Star className="h-3 w-3 fill-primary text-primary" />
+                  4.9
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
 
         {/* Floating Stats */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.7 }}
-          className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-px rounded-2xl overflow-hidden bg-white/10 border border-white/10 backdrop-blur-xl"
+          className="mt-16 md:mt-20 grid grid-cols-2 md:grid-cols-4 gap-px rounded-2xl overflow-hidden bg-border border border-border"
         >
           {stats.map((s) => (
-            <div key={s.label} className="bg-background/70 p-6 md:p-8">
+            <div key={s.label} className="bg-card p-6 md:p-8">
               <div className="text-3xl md:text-4xl font-black text-gradient-brand">
                 {s.value}
               </div>
-              <div className="text-xs md:text-sm font-bold uppercase tracking-wider text-white/60 mt-1">
+              <div className="text-xs md:text-sm font-bold uppercase tracking-wider text-muted-foreground mt-1">
                 {s.label}
               </div>
             </div>
@@ -441,16 +474,16 @@ function Hero() {
 
 function PartnerStrip() {
   return (
-    <section className="border-y border-white/5 bg-background/50 py-8">
+    <section className="border-y border-border bg-secondary/30 py-8">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <div className="text-center text-[11px] font-bold uppercase tracking-[0.3em] text-white/40 mb-6">
+        <div className="text-center text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground mb-6">
           Trusted by India's best fitness brands
         </div>
         <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4">
           {partnerGyms.map((g) => (
             <div
               key={g.name}
-              className="text-lg md:text-xl font-black tracking-wider text-white/40 hover:text-white transition-colors"
+              className="text-lg md:text-xl font-black tracking-wider text-muted-foreground hover:text-foreground transition-colors"
             >
               {g.letters}
             </div>
@@ -505,7 +538,7 @@ function FeaturedGyms() {
                 transition={{ delay: i * 0.06 }}
               >
                 <Link href={`/gyms/${gym.id}`}>
-                  <div className="group relative rounded-2xl overflow-hidden border border-white/10 bg-card/60 backdrop-blur-sm hover:border-primary/40 hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                  <div className="group relative rounded-2xl overflow-hidden border border-border bg-card hover:border-primary/40 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 cursor-pointer">
                     <div className="relative aspect-[16/10] overflow-hidden">
                       <img
                         src={gym.heroImage}
@@ -545,7 +578,7 @@ function FeaturedGyms() {
                         {gym.categories.slice(0, 2).map((c) => (
                           <span
                             key={c}
-                            className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-white/5 border border-white/10 text-white/70"
+                            className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-secondary border border-border text-foreground/70"
                           >
                             {c}
                           </span>
@@ -598,10 +631,10 @@ function HowItWorks() {
               transition={{ delay: i * 0.1 }}
               className="relative group"
             >
-              <div className="relative h-full rounded-2xl border border-white/10 bg-card/60 backdrop-blur-sm p-8 overflow-hidden transition-all hover:border-primary/40 hover:-translate-y-1 duration-300">
+              <div className="relative h-full rounded-2xl border border-border bg-card p-8 overflow-hidden transition-all hover:border-primary/40 hover:-translate-y-1 hover:shadow-xl duration-300">
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-brand-soft" />
                 <div className="relative">
-                  <div className="text-7xl font-black text-white/5 absolute -top-4 -right-2 select-none">
+                  <div className="text-7xl font-black text-foreground/[0.04] absolute -top-4 -right-2 select-none">
                     0{i + 1}
                   </div>
                   <div className="h-14 w-14 rounded-2xl bg-gradient-brand flex items-center justify-center mb-6 shadow-[0_10px_30px_-10px_hsl(18_100%_55%/0.7)]">
@@ -727,13 +760,13 @@ function FeatureBlock() {
 
         <div className="relative">
           <div className="absolute -inset-8 bg-gradient-brand opacity-30 blur-3xl -z-10" />
-          <div className="relative rounded-3xl overflow-hidden ring-1 ring-white/10 shadow-2xl">
+          <div className="relative rounded-3xl overflow-hidden ring-1 ring-border shadow-2xl">
             <img
               src="https://images.unsplash.com/photo-1571388208497-71bedc66e932?w=1200&q=80"
               alt="Train anywhere"
               className="w-full aspect-[4/5] object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
             <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between">
               <div>
                 <div className="text-xs font-bold uppercase tracking-wider text-primary mb-1">
@@ -773,7 +806,7 @@ function Testimonials() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
               transition={{ delay: i * 0.1 }}
-              className="rounded-2xl bg-card/70 backdrop-blur-sm border border-white/10 p-8 relative"
+              className="rounded-2xl bg-card border border-border shadow-sm p-8 relative"
             >
               <Quote className="absolute top-6 right-6 h-8 w-8 text-primary/30" />
               <p className="text-lg leading-relaxed text-foreground/90 mb-8">
@@ -823,7 +856,7 @@ function Pricing() {
           <div
             role="tablist"
             aria-label="Billing cycle"
-            className="relative inline-flex items-center p-1 rounded-full bg-card/70 border border-white/10 backdrop-blur-md"
+            className="relative inline-flex items-center p-1 rounded-full bg-secondary border border-border"
           >
             {(["monthly", "annual"] as BillingCycle[]).map((c) => {
               const active = cycle === c;
@@ -869,7 +902,7 @@ function Pricing() {
                 className={`relative rounded-3xl p-8 flex flex-col ${
                   plan.popular
                     ? "bg-card ring-glow-brand scale-[1.03] z-10"
-                    : "bg-card/70 border border-white/10"
+                    : "bg-card border border-border shadow-sm"
                 }`}
               >
                 {plan.popular && (
@@ -885,7 +918,7 @@ function Pricing() {
                     {plan.tagline}
                   </p>
                 </div>
-                <div className="mb-6 pb-6 border-b border-white/10">
+                <div className="mb-6 pb-6 border-b border-border">
                   <div className="flex items-end gap-1">
                     <span className="text-base font-bold text-muted-foreground mb-2">
                       ₹
@@ -992,7 +1025,7 @@ function CTA() {
 
 function Footer() {
   return (
-    <footer className="border-t border-white/5 py-12">
+    <footer className="border-t border-border py-12">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2.5">
