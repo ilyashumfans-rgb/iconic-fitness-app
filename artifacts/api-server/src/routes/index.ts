@@ -9,6 +9,7 @@ import bookingsRouter from "./bookings";
 import checkinsRouter from "./checkins";
 import trainersRouter from "./trainers";
 import walletRouter from "./wallet";
+import adminRouter from "./admin";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(bookingsRouter);
 router.use(checkinsRouter);
 router.use(trainersRouter);
 router.use(walletRouter);
+router.use(adminRouter);
 
 export default router;

@@ -21,6 +21,19 @@ import TrainerDetail from "@/pages/TrainerDetail";
 import Wallet from "@/pages/Wallet";
 import Profile from "@/pages/Profile";
 
+import AdminLogin from "@/pages/admin/Login";
+import AdminDashboard from "@/pages/admin/Dashboard";
+import AdminPartners from "@/pages/admin/Partners";
+import AdminPartnerOnboarding from "@/pages/admin/PartnerOnboarding";
+import AdminResetPartnerPassword from "@/pages/admin/ResetPartnerPassword";
+import AdminGymManagement from "@/pages/admin/GymManagement";
+import AdminFeaturedGyms from "@/pages/admin/FeaturedGyms";
+import AdminGymVerification from "@/pages/admin/GymVerification";
+import AdminUsers from "@/pages/admin/Users";
+import AdminUserManagement from "@/pages/admin/UserManagement";
+import AdminMemberships from "@/pages/admin/Memberships";
+import AdminMembershipManagement from "@/pages/admin/MembershipManagement";
+
 const queryClient = new QueryClient();
 
 // Public browsable routes use a top-nav shell (no member sidebar / profile)
@@ -44,6 +57,27 @@ function AppShell() {
   // Landing page is fully standalone (no shell)
   if (location === "/") {
     return <Landing />;
+  }
+
+  // Admin portal is fully standalone (its own dark layout)
+  if (location.startsWith("/admin")) {
+    return (
+      <Switch>
+        <Route path="/admin/login" component={AdminLogin} />
+        <Route path="/admin" component={AdminDashboard} />
+        <Route path="/admin/partners" component={AdminPartners} />
+        <Route path="/admin/partner-onboarding" component={AdminPartnerOnboarding} />
+        <Route path="/admin/reset-partner-password" component={AdminResetPartnerPassword} />
+        <Route path="/admin/gyms" component={AdminGymManagement} />
+        <Route path="/admin/featured-gyms" component={AdminFeaturedGyms} />
+        <Route path="/admin/gym-verification" component={AdminGymVerification} />
+        <Route path="/admin/users" component={AdminUsers} />
+        <Route path="/admin/user-management" component={AdminUserManagement} />
+        <Route path="/admin/memberships" component={AdminMemberships} />
+        <Route path="/admin/membership-management" component={AdminMembershipManagement} />
+        <Route component={NotFound} />
+      </Switch>
+    );
   }
 
   const Shell = isPublicPath(location) ? PublicLayout : Layout;
