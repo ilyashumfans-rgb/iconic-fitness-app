@@ -1,10 +1,11 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/Layout";
 import NotFound from "@/pages/not-found";
 
+import Landing from "@/pages/Landing";
 import Dashboard from "@/pages/Dashboard";
 import Explore from "@/pages/Explore";
 import GymDetail from "@/pages/GymDetail";
@@ -20,11 +21,18 @@ import Profile from "@/pages/Profile";
 
 const queryClient = new QueryClient();
 
-function Router() {
+function AppShell() {
+  const [location] = useLocation();
+
+  // Landing page is fully standalone (no sidebar)
+  if (location === "/") {
+    return <Landing />;
+  }
+
   return (
     <Layout>
       <Switch>
-        <Route path="/" component={Dashboard} />
+        <Route path="/dashboard" component={Dashboard} />
         <Route path="/explore" component={Explore} />
         <Route path="/gyms/:gymId" component={GymDetail} />
         <Route path="/classes" component={Classes} />
@@ -47,7 +55,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
+          <AppShell />
         </WouterRouter>
         <Toaster />
       </TooltipProvider>
