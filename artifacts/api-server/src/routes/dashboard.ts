@@ -9,16 +9,16 @@ import {
   trainersTable,
 } from "@workspace/db";
 import { GetDashboardResponse } from "@workspace/api-zod";
-import { CURRENT_USER_ID } from "../lib/currentUser";
+import { requireUser } from "../lib/currentUser";
 import { buildSessionDtos } from "./classes";
 
 const router: IRouter = Router();
 
-router.get("/dashboard", async (_req, res): Promise<void> => {
+router.get("/dashboard", requireUser, async (req, res): Promise<void> => {
   const [user] = await db
     .select()
     .from(usersTable)
-    .where(eq(usersTable.id, CURRENT_USER_ID));
+    .where(eq(usersTable.id, req.userId!));
   if (!user) {
     res.status(404).json({ error: "User not found" });
     return;
@@ -28,7 +28,7 @@ router.get("/dashboard", async (_req, res): Promise<void> => {
   const bookings = await db
     .select()
     .from(bookingsTable)
-    .where(eq(bookingsTable.userId, CURRENT_USER_ID));
+    .where(eq(bookingsTable.userId, req.userId!));
 
   // next booking
   const upcomingBookings = await Promise.all(

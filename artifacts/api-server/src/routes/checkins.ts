@@ -7,15 +7,15 @@ import {
   CreateCheckinBody,
   GetCheckinQrResponse,
 } from "@workspace/api-zod";
-import { CURRENT_USER_ID } from "../lib/currentUser";
+import { requireUser } from "../lib/currentUser";
 
 const router: IRouter = Router();
 
-router.get("/checkins", async (_req, res): Promise<void> => {
+router.get("/checkins", requireUser, async (req, res): Promise<void> => {
   const rows = await db
     .select()
     .from(checkinsTable)
-    .where(eq(checkinsTable.userId, CURRENT_USER_ID))
+    .where(eq(checkinsTable.userId, req.userId!))
     .orderBy(desc(checkinsTable.checkedInAt))
     .limit(20);
   const gyms = await db.select().from(gymsTable);
@@ -29,7 +29,7 @@ router.get("/checkins", async (_req, res): Promise<void> => {
   res.json(ListCheckinsResponse.parse(out));
 });
 
-router.post("/checkins", async (req, res): Promise<void> => {
+router.post("/checkins", requireUser, async (req, res): Promise<void> => {
   const parsed = CreateCheckinBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -46,7 +46,7 @@ router.post("/checkins", async (req, res): Promise<void> => {
   const [c] = await db
     .insert(checkinsTable)
     .values({
-      userId: CURRENT_USER_ID,
+      userId: req.userId!,
       gymId: parsed.data.gymId,
       method: parsed.data.method ?? "qr",
     })
@@ -60,11 +60,11 @@ router.post("/checkins", async (req, res): Promise<void> => {
   });
 });
 
-router.get("/checkins/qr", async (_req, res): Promise<void> => {
+router.get("/checkins/qr", requireUser, async (req, res): Promise<void> => {
   const [user] = await db
     .select()
     .from(usersTable)
-    .where(eq(usersTable.id, CURRENT_USER_ID));
+    .where(eq(usersTable.id, req.userId!));
   // rotates every 60s
   const nowSlot = Math.floor(Date.now() / 60000);
   const token = `GYMCO|${user?.memberCode ?? "MEMBER"}|${nowSlot}|${randomBytes(4).toString("hex").toUpperCase()}`;

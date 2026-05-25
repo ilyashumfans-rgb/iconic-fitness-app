@@ -13,12 +13,18 @@ import {
 import { cn } from "@/lib/utils";
 import { useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 import { toast } from "sonner";
+import { useClerk } from "@clerk/react";
 
-export function handleSignOut(navigate: (path: string) => void) {
-  toast.success("Signed out", {
-    description: "See you next workout.",
-  });
-  setTimeout(() => navigate("/"), 400);
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+export function useSignOut() {
+  const { signOut } = useClerk();
+  return () => {
+    toast.success("Signed out", {
+      description: "See you next workout.",
+    });
+    void signOut({ redirectUrl: basePath || "/" });
+  };
 }
 
 function BrandMark({ className }: { className?: string }) {
@@ -35,8 +41,9 @@ function BrandMark({ className }: { className?: string }) {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const [location, navigate] = useLocation();
+  const [location] = useLocation();
   const { data: user } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
+  const signOut = useSignOut();
 
   const navItems = [
     { href: "/dashboard", label: "Home", icon: Home },
@@ -98,7 +105,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
               <button
                 type="button"
-                onClick={() => handleSignOut(navigate)}
+                onClick={signOut}
                 aria-label="Sign out"
                 title="Sign out"
                 className="h-9 w-9 shrink-0 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
@@ -122,7 +129,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
               <button
                 type="button"
-                onClick={() => handleSignOut(navigate)}
+                onClick={signOut}
                 aria-label="Sign out"
                 className="h-9 w-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
               >

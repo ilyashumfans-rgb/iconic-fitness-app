@@ -5,7 +5,7 @@ import {
   ListMembershipsResponse,
   GetMyMembershipResponse,
 } from "@workspace/api-zod";
-import { CURRENT_USER_ID } from "../lib/currentUser";
+import { requireUser } from "../lib/currentUser";
 
 const router: IRouter = Router();
 
@@ -14,11 +14,11 @@ router.get("/memberships", async (_req, res): Promise<void> => {
   res.json(ListMembershipsResponse.parse(rows));
 });
 
-router.get("/memberships/mine", async (_req, res): Promise<void> => {
+router.get("/memberships/mine", requireUser, async (req, res): Promise<void> => {
   const [um] = await db
     .select()
     .from(userMembershipsTable)
-    .where(eq(userMembershipsTable.userId, CURRENT_USER_ID));
+    .where(eq(userMembershipsTable.userId, req.userId!));
   if (!um) {
     res.json(null);
     return;

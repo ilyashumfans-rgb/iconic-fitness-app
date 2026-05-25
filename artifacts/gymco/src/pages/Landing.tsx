@@ -246,14 +246,14 @@ function TopNav() {
         </nav>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Link href="/dashboard">
+          <Link href="/sign-in">
             <Button variant="ghost" className="text-sm font-semibold hidden sm:inline-flex">
               Sign in
             </Button>
           </Link>
-          <Link href="/dashboard">
+          <Link href="/sign-up">
             <Button className="bg-gradient-brand text-white border-none font-bold shadow-[0_8px_24px_-8px_hsl(18_100%_55%/0.7)] hover:opacity-95">
-              Open app <ArrowRight className="h-4 w-4 ml-1" />
+              Get started <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </Link>
         </div>

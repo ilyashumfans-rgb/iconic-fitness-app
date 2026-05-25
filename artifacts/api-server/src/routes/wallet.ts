@@ -2,19 +2,19 @@ import { Router, type IRouter } from "express";
 import { desc, eq } from "drizzle-orm";
 import { db, walletsTable, walletTransactionsTable } from "@workspace/db";
 import { GetWalletResponse } from "@workspace/api-zod";
-import { CURRENT_USER_ID } from "../lib/currentUser";
+import { requireUser } from "../lib/currentUser";
 
 const router: IRouter = Router();
 
-router.get("/wallet", async (_req, res): Promise<void> => {
+router.get("/wallet", requireUser, async (req, res): Promise<void> => {
   const [w] = await db
     .select()
     .from(walletsTable)
-    .where(eq(walletsTable.userId, CURRENT_USER_ID));
+    .where(eq(walletsTable.userId, req.userId!));
   const txns = await db
     .select()
     .from(walletTransactionsTable)
-    .where(eq(walletTransactionsTable.userId, CURRENT_USER_ID))
+    .where(eq(walletTransactionsTable.userId, req.userId!))
     .orderBy(desc(walletTransactionsTable.createdAt))
     .limit(20);
   res.json(

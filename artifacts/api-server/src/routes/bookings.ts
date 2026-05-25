@@ -15,7 +15,7 @@ import {
   CancelBookingParams,
   CancelBookingResponse,
 } from "@workspace/api-zod";
-import { CURRENT_USER_ID } from "../lib/currentUser";
+import { requireUser } from "../lib/currentUser";
 
 const router: IRouter = Router();
 
@@ -45,7 +45,7 @@ async function toBookingDto(b: typeof bookingsTable.$inferSelect) {
   };
 }
 
-router.get("/bookings", async (req, res): Promise<void> => {
+router.get("/bookings", requireUser, async (req, res): Promise<void> => {
   const parsed = ListMyBookingsQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -54,7 +54,7 @@ router.get("/bookings", async (req, res): Promise<void> => {
   const rows = await db
     .select()
     .from(bookingsTable)
-    .where(eq(bookingsTable.userId, CURRENT_USER_ID))
+    .where(eq(bookingsTable.userId, req.userId!))
     .orderBy(desc(bookingsTable.createdAt));
   const dtos = await Promise.all(rows.map(toBookingDto));
   const now = new Date();
@@ -68,7 +68,7 @@ router.get("/bookings", async (req, res): Promise<void> => {
   res.json(ListMyBookingsResponse.parse(filtered));
 });
 
-router.post("/bookings", async (req, res): Promise<void> => {
+router.post("/bookings", requireUser, async (req, res): Promise<void> => {
   const parsed = CreateBookingBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -87,7 +87,7 @@ router.post("/bookings", async (req, res): Promise<void> => {
     .from(bookingsTable)
     .where(
       and(
-        eq(bookingsTable.userId, CURRENT_USER_ID),
+        eq(bookingsTable.userId, req.userId!),
         eq(bookingsTable.classId, parsed.data.classId),
       ),
     );
@@ -100,7 +100,7 @@ router.post("/bookings", async (req, res): Promise<void> => {
   const [b] = await db
     .insert(bookingsTable)
     .values({
-      userId: CURRENT_USER_ID,
+      userId: req.userId!,
       classId: parsed.data.classId,
       status: "confirmed",
       qrCode: qr,
@@ -110,7 +110,7 @@ router.post("/bookings", async (req, res): Promise<void> => {
   res.status(201).json(dto);
 });
 
-router.delete("/bookings/:bookingId", async (req, res): Promise<void> => {
+router.delete("/bookings/:bookingId", requireUser, async (req, res): Promise<void> => {
   const params = CancelBookingParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -122,7 +122,7 @@ router.delete("/bookings/:bookingId", async (req, res): Promise<void> => {
     .where(
       and(
         eq(bookingsTable.id, params.data.bookingId),
-        eq(bookingsTable.userId, CURRENT_USER_ID),
+        eq(bookingsTable.userId, req.userId!),
       ),
     )
     .returning();

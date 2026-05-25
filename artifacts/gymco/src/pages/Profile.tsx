@@ -10,11 +10,12 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { User, Target, Activity, Edit2, Check, LogOut } from "lucide-react";
-import { handleSignOut } from "@/components/Layout";
+import { useSignOut } from "@/components/Layout";
 
 export default function Profile() {
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
+  const signOut = useSignOut();
   const { data: user, isLoading } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
   const updateMe = useUpdateMe();
   
@@ -212,7 +213,7 @@ export default function Profile() {
             </div>
             <Button
               variant="outline"
-              onClick={() => handleSignOut(navigate)}
+              onClick={signOut}
               className="border-primary/30 text-primary hover:bg-primary/10 hover:text-primary font-bold"
             >
               <LogOut className="h-4 w-4 mr-2" /> Sign out

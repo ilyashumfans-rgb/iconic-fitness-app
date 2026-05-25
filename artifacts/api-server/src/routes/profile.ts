@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { and, eq, gte } from "drizzle-orm";
 import { db, usersTable, bookingsTable, classSessionsTable, gymsTable } from "@workspace/db";
 import { GetMeResponse, UpdateMeBody, UpdateMeResponse } from "@workspace/api-zod";
-import { CURRENT_USER_ID } from "../lib/currentUser";
+import { requireUser } from "../lib/currentUser";
 
 const router: IRouter = Router();
 
@@ -66,8 +66,8 @@ async function loadProfile(userId: number) {
   };
 }
 
-router.get("/me", async (_req, res): Promise<void> => {
-  const data = await loadProfile(CURRENT_USER_ID);
+router.get("/me", requireUser, async (req, res): Promise<void> => {
+  const data = await loadProfile(req.userId!);
   if (!data) {
     res.status(404).json({ error: "User not found" });
     return;
@@ -75,14 +75,14 @@ router.get("/me", async (_req, res): Promise<void> => {
   res.json(GetMeResponse.parse(data));
 });
 
-router.patch("/me", async (req, res): Promise<void> => {
+router.patch("/me", requireUser, async (req, res): Promise<void> => {
   const parsed = UpdateMeBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  await db.update(usersTable).set(parsed.data).where(eq(usersTable.id, CURRENT_USER_ID));
-  const data = await loadProfile(CURRENT_USER_ID);
+  await db.update(usersTable).set(parsed.data).where(eq(usersTable.id, req.userId!));
+  const data = await loadProfile(req.userId!);
   res.json(UpdateMeResponse.parse(data));
 });
 
