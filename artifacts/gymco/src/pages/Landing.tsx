@@ -293,10 +293,23 @@ function Hero() {
             </span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.75rem] font-semibold tracking-[-0.02em] leading-[1.05] text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.7)]">
-            One Membership.
-            <br />
-            <span className="text-gradient-brand font-medium italic">Unlimited Gyms.</span>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[5.5rem] font-black tracking-[-0.04em] leading-[0.92] text-white drop-shadow-[0_8px_40px_rgba(0,0,0,0.85)] uppercase">
+            <motion.span
+              initial={{ opacity: 0, y: 30, filter: "blur(12px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="block"
+            >
+              One Membership.
+            </motion.span>
+            <motion.span
+              initial={{ opacity: 0, y: 30, filter: "blur(12px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+              className="block text-gradient-brand drop-shadow-[0_0_60px_rgba(255,107,26,0.45)]"
+            >
+              Unlimited Gyms.
+            </motion.span>
           </h1>
 
           <p className="mt-8 text-lg md:text-xl text-white/80 max-w-2xl leading-relaxed">
