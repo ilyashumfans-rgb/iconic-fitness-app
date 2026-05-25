@@ -57,10 +57,12 @@ router.post("/admin/login", async (req: Request, res: Response): Promise<void> =
 });
 
 router.post("/admin/logout", (req: Request, res: Response): void => {
-  req.session.destroy(() => {
-    res.clearCookie("gymco.admin.sid");
-    res.json({ ok: true });
-  });
+  // Only clear admin keys so a separately signed-in partner on the same
+  // browser session stays signed in (and vice versa).
+  delete req.session.adminId;
+  delete req.session.adminEmail;
+  delete req.session.adminName;
+  res.json({ ok: true });
 });
 
 router.get("/admin/me", async (req: Request, res: Response): Promise<void> => {
@@ -354,6 +356,10 @@ router.post(
         lat: Number(b.lat ?? 12.97),
         lng: Number(b.lng ?? 77.59),
         featured: Boolean(b.featured ?? false),
+        ownerPartnerId:
+          b.ownerPartnerId === undefined || b.ownerPartnerId === null || b.ownerPartnerId === ""
+            ? null
+            : Number(b.ownerPartnerId),
       })
       .returning();
     res.status(201).json(created);
@@ -387,6 +393,12 @@ router.patch(
     }
     for (const k of ["categories", "amenities", "gallery"]) {
       if (Array.isArray(b[k])) patch[k] = b[k] as string[];
+    }
+    if (b.ownerPartnerId !== undefined) {
+      patch.ownerPartnerId =
+        b.ownerPartnerId === null || b.ownerPartnerId === ""
+          ? null
+          : Number(b.ownerPartnerId);
     }
     const [updated] = await db
       .update(gymsTable)

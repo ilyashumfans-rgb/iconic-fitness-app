@@ -55,6 +55,7 @@ export const gymsTable = pgTable("gyms", {
   lat: real("lat").notNull(),
   lng: real("lng").notNull(),
   featured: boolean("featured").notNull().default(false),
+  ownerPartnerId: integer("owner_partner_id"),
 });
 
 export const trainersTable = pgTable("trainers", {

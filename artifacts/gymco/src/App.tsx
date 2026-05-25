@@ -27,6 +27,13 @@ import SignInPage from "@/pages/SignInPage";
 import SignUpPage from "@/pages/SignUpPage";
 
 import AdminLogin from "@/pages/admin/Login";
+import PartnerLogin from "@/pages/partner/Login";
+import PartnerDashboard from "@/pages/partner/Dashboard";
+import PartnerGyms from "@/pages/partner/Gyms";
+import PartnerBookings from "@/pages/partner/Bookings";
+import PartnerCheckins from "@/pages/partner/Checkins";
+import PartnerClasses from "@/pages/partner/Classes";
+import PartnerSettings from "@/pages/partner/Settings";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminPartners from "@/pages/admin/Partners";
 import AdminPartnerOnboarding from "@/pages/admin/PartnerOnboarding";
@@ -186,6 +193,21 @@ function AppShell() {
     );
   }
 
+  if (location.startsWith("/partner")) {
+    return (
+      <Switch>
+        <Route path="/partner/login" component={PartnerLogin} />
+        <Route path="/partner" component={PartnerDashboard} />
+        <Route path="/partner/gyms" component={PartnerGyms} />
+        <Route path="/partner/bookings" component={PartnerBookings} />
+        <Route path="/partner/checkins" component={PartnerCheckins} />
+        <Route path="/partner/classes" component={PartnerClasses} />
+        <Route path="/partner/settings" component={PartnerSettings} />
+        <Route component={NotFound} />
+      </Switch>
+    );
+  }
+
   if (location.startsWith("/admin")) {
     return (
       <Switch>
@@ -212,7 +234,7 @@ function AppShell() {
 function ClerkRouterBridge({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   // Admin portal is fully isolated from Clerk so admin auth never depends on member-auth env.
-  if (location.startsWith("/admin") || !clerkPubKey) {
+  if (location.startsWith("/admin") || location.startsWith("/partner") || !clerkPubKey) {
     return <>{children}</>;
   }
   return (
