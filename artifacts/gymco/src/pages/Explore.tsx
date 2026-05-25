@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useListGymCategories, useListFeaturedGyms, useListGyms, getListGymCategoriesQueryKey, getListFeaturedGymsQueryKey, getListGymsQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,11 +6,22 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, MapPin, Star, ChevronRight } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 
 export default function Explore() {
+  const queryString = useSearch();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
+
+  // Sync URL params (?city=..., ?q=..., ?category=...) into local filter state
+  useEffect(() => {
+    const params = new URLSearchParams(queryString);
+    const city = params.get("city");
+    const q = params.get("q");
+    const category = params.get("category");
+    if (q ?? city) setSearch(q ?? city ?? "");
+    if (category) setSelectedCategory(category);
+  }, [queryString]);
   
   const { data: categories, isLoading: loadingCategories } = useListGymCategories({ query: { queryKey: getListGymCategoriesQueryKey() } });
   const { data: featuredGyms, isLoading: loadingFeatured } = useListFeaturedGyms({ query: { queryKey: getListFeaturedGymsQueryKey() } });

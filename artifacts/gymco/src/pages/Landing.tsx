@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useListFeaturedGyms } from "@workspace/api-client-react";
+import { SiteFooter as Footer } from "@/components/SiteFooter";
 import {
   ArrowRight,
   MapPin,
@@ -1020,33 +1021,6 @@ function CTA() {
         </div>
       </div>
     </section>
-  );
-}
-
-function Footer() {
-  return (
-    <footer className="border-t border-border py-12">
-      <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2.5">
-            <img src={logoUrl} alt="GYMCO" className="h-8 w-8 object-contain" />
-            <span className="text-lg font-black tracking-tight text-gradient-brand">
-              GYMCO
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
-            <a href="#" className="hover:text-foreground">About</a>
-            <a href="#" className="hover:text-foreground">Partners</a>
-            <a href="#" className="hover:text-foreground">Careers</a>
-            <a href="#" className="hover:text-foreground">Privacy</a>
-            <a href="#" className="hover:text-foreground">Terms</a>
-          </div>
-          <div className="text-xs text-muted-foreground">
-            © 2026 GYMCO India · Made in Bangalore
-          </div>
-        </div>
-      </div>
-    </footer>
   );
 }
 

@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { SiteFooter } from "@/components/SiteFooter";
 
 const logoUrl = `${import.meta.env.BASE_URL}media/gymco-logo.png`;
 
@@ -48,26 +49,6 @@ function PublicNav() {
   );
 }
 
-function PublicFooter() {
-  return (
-    <footer className="border-t border-border py-12 mt-16">
-      <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2.5">
-            <img src={logoUrl} alt="GYMCO" className="h-8 w-8 object-contain" />
-            <span className="text-lg font-black tracking-tight text-gradient-brand">
-              GYMCO
-            </span>
-          </div>
-          <div className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} GYMCO. Built in India for India.
-          </div>
-        </div>
-      </div>
-    </footer>
-  );
-}
-
 export function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
@@ -75,7 +56,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-12">
         {children}
       </main>
-      <PublicFooter />
+      <SiteFooter />
     </div>
   );
 }
