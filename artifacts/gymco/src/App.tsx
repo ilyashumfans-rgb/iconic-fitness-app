@@ -52,6 +52,7 @@ import AdminMemberships from "@/pages/admin/Memberships";
 import AdminMembershipManagement from "@/pages/admin/MembershipManagement";
 import AdminProducts from "@/pages/admin/Products";
 import AdminOrders from "@/pages/admin/Orders";
+import AdminSsoCallback from "@/pages/admin/SsoCallback";
 
 const queryClient = new QueryClient();
 
@@ -227,6 +228,7 @@ function AppShell() {
     return (
       <Switch>
         <Route path="/admin/login" component={AdminLogin} />
+        <Route path="/admin/sso-callback" component={AdminSsoCallback} />
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/admin/partners" component={AdminPartners} />
         <Route path="/admin/partner-onboarding" component={AdminPartnerOnboarding} />
@@ -250,8 +252,10 @@ function AppShell() {
 
 function ClerkRouterBridge({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
-  // Admin portal is fully isolated from Clerk so admin auth never depends on member-auth env.
-  if (location.startsWith("/admin") || location.startsWith("/partner") || !clerkPubKey) {
+  // Partner portal is fully isolated from Clerk. Admin portal optionally uses
+  // Clerk only for Google sign-in on /admin/login + /admin/sso-callback; when
+  // no Clerk key is present, admin still works via the password form.
+  if (location.startsWith("/partner") || !clerkPubKey) {
     return <>{children}</>;
   }
   return (

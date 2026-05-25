@@ -39,6 +39,8 @@ export const adminApi = {
       method: "POST",
       body: JSON.stringify({ email, password }),
     }),
+  googleLogin: () =>
+    request<AdminUser>("/admin/google-login", { method: "POST" }),
   logout: () => request<{ ok: true }>("/admin/logout", { method: "POST" }),
   me: () => request<AdminUser>("/admin/me"),
   stats: () =>

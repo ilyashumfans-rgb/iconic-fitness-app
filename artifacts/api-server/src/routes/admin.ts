@@ -21,6 +21,19 @@ import {
   requireAdmin,
   verifyPassword,
 } from "../lib/adminAuth";
+import { getAuth, clerkClient } from "@clerk/express";
+
+// Hard-coded admin allowlist for Google sign-in, plus an optional
+// comma-separated env override (ADMIN_GOOGLE_ALLOWLIST).
+const ADMIN_GOOGLE_ALLOWLIST: ReadonlySet<string> = new Set(
+  [
+    "ilyashumfans@gmail.com",
+    ...(process.env.ADMIN_GOOGLE_ALLOWLIST ?? "")
+      .split(",")
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean),
+  ].map((e) => e.toLowerCase()),
+);
 
 const router: IRouter = Router();
 
@@ -58,6 +71,83 @@ router.post("/admin/login", async (req: Request, res: Response): Promise<void> =
     role: admin.role,
   });
 });
+
+// Google (Clerk) sign-in for admins. Requires a verified Clerk session;
+// looks up the user's primary email and admits them only if it appears in
+// the admin allowlist. JIT-provisions an admins row on first login so the
+// existing /admin/me + requireAdmin flow keeps working unchanged.
+router.post(
+  "/admin/google-login",
+  async (req: Request, res: Response): Promise<void> => {
+    const auth = getAuth(req);
+    const clerkUserId = auth?.userId;
+    if (!clerkUserId) {
+      res.status(401).json({ error: "Sign in with Google first" });
+      return;
+    }
+    let email = "";
+    let verified = false;
+    let name = "Admin";
+    try {
+      const u = await clerkClient.users.getUser(clerkUserId);
+      const primaryId = u.primaryEmailAddressId;
+      const primary =
+        u.emailAddresses.find((e) => e.id === primaryId) ?? u.emailAddresses[0];
+      email = (primary?.emailAddress ?? "").toLowerCase().trim();
+      verified = primary?.verification?.status === "verified";
+      const full = `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim();
+      name = full || u.username || email.split("@")[0] || "Admin";
+    } catch (err) {
+      req.log?.error({ err }, "Clerk user lookup failed in admin google-login");
+      res.status(502).json({ error: "Could not verify Google account" });
+      return;
+    }
+    if (!email || !verified) {
+      res.status(403).json({ error: "Email not verified by Google" });
+      return;
+    }
+    if (!ADMIN_GOOGLE_ALLOWLIST.has(email)) {
+      res
+        .status(403)
+        .json({ error: "This Google account is not authorized for admin access" });
+      return;
+    }
+    // Find or create the admin row. We don't store a usable password for
+    // Google-only admins — set a random unguessable hash so the password
+    // login path can never accidentally accept them. Use an upsert (do
+    // nothing on conflict) + re-select to be race-safe across concurrent
+    // first-time logins for the same email.
+    const randomHash = await hashPassword(
+      `google:${clerkUserId}:${Date.now()}:${Math.random()}`,
+    );
+    await db
+      .insert(adminsTable)
+      .values({
+        email,
+        passwordHash: randomHash,
+        name,
+        role: "admin",
+      })
+      .onConflictDoNothing({ target: adminsTable.email });
+    const [admin] = await db
+      .select()
+      .from(adminsTable)
+      .where(eq(adminsTable.email, email));
+    if (!admin) {
+      res.status(500).json({ error: "Admin provisioning failed" });
+      return;
+    }
+    req.session.adminId = admin.id;
+    req.session.adminEmail = admin.email;
+    req.session.adminName = admin.name;
+    res.json({
+      id: admin.id,
+      email: admin.email,
+      name: admin.name,
+      role: admin.role,
+    });
+  },
+);
 
 router.post("/admin/logout", (req: Request, res: Response): void => {
   // Only clear admin keys so a separately signed-in partner on the same
