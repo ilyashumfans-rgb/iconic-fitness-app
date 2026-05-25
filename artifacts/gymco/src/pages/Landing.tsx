@@ -234,8 +234,8 @@ function TopNav() {
           <Link href="/classes" className="hover:text-foreground transition-colors">
             Classes
           </Link>
-          <Link href="/trainers" className="hover:text-foreground transition-colors">
-            Trainers
+          <Link href="/store" className="hover:text-foreground transition-colors">
+            Store
           </Link>
           <a href="#pricing" className="hover:text-foreground transition-colors">
             Pricing

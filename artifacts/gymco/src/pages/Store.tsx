@@ -2,7 +2,16 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { storeApi, type Product, type Vendor } from "@/lib/storeApi";
 import { useCart } from "@/lib/cart";
-import { ShoppingCart, Search, Store as StoreIcon } from "lucide-react";
+import {
+  ShoppingCart,
+  Search,
+  Sparkles,
+  ShieldCheck,
+  Truck,
+  Flame,
+  ArrowRight,
+  Tag,
+} from "lucide-react";
 
 const CATEGORIES = [
   { value: "", label: "All" },
@@ -20,23 +29,54 @@ export default function Store() {
   const [vendorId, setVendorId] = useState<number | "">("");
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const cart = useCart();
 
+  // Vendors are stable — fetch once on mount.
   useEffect(() => {
+    let cancelled = false;
+    storeApi
+      .listVendors()
+      .then((vs) => {
+        if (!cancelled) setVendors(vs);
+      })
+      .catch(() => {
+        // Vendor list is decorative for filtering; ignore failures silently.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Products re-fetch when filters change; use a request token so stale
+  // responses from a slower earlier request can't overwrite newer ones.
+  useEffect(() => {
+    let cancelled = false;
     setLoading(true);
-    Promise.all([
-      storeApi.listProducts({
+    setError(null);
+    storeApi
+      .listProducts({
         category: category || undefined,
         vendorId: vendorId || undefined,
         q: q || undefined,
-      }),
-      storeApi.listVendors(),
-    ])
-      .then(([ps, vs]) => {
-        setProducts(ps);
-        setVendors(vs);
       })
-      .finally(() => setLoading(false));
+      .then((ps) => {
+        if (!cancelled) setProducts(ps);
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) {
+          setError(
+            e instanceof Error ? e.message : "Could not load products",
+          );
+          setProducts([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [category, vendorId, q]);
 
   const vendorById = useMemo(() => {
@@ -45,65 +85,216 @@ export default function Store() {
     return m;
   }, [vendors]);
 
+  const featured = useMemo(() => {
+    return [...products]
+      .filter((p) => p.originalPriceInr > p.priceInr && p.stock > 0)
+      .sort(
+        (a, b) =>
+          (b.originalPriceInr - b.priceInr) / b.originalPriceInr -
+          (a.originalPriceInr - a.priceInr) / a.originalPriceInr,
+      )
+      .slice(0, 1)[0];
+  }, [products]);
+
   return (
-    <div>
-      <div className="flex items-end justify-between gap-4 flex-wrap mb-6">
-        <div>
-          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground font-bold mb-1">
-            <StoreIcon className="h-3.5 w-3.5" /> GYMCO Store
+    <div className="-mt-6">
+      {/* ───────────────────────────── Hero ───────────────────────────── */}
+      <section className="relative overflow-hidden rounded-[28px] border border-border bg-gradient-to-br from-orange-500 via-orange-500 to-amber-500 text-white">
+        <div className="absolute inset-0 opacity-40 mix-blend-overlay [background-image:radial-gradient(1200px_500px_at_-10%_-20%,#fff,transparent),radial-gradient(900px_400px_at_110%_120%,#fff,transparent)]" />
+        <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-white/30 blur-3xl animate-pulse" />
+        <div className="absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-amber-200/40 blur-3xl" />
+        <div className="absolute inset-0 [background-image:linear-gradient(transparent_31px,rgba(255,255,255,0.08)_32px),linear-gradient(90deg,transparent_31px,rgba(255,255,255,0.08)_32px)] [background-size:32px_32px] opacity-30" />
+
+        <div className="relative grid lg:grid-cols-[1.3fr_1fr] gap-10 p-8 md:p-12 lg:p-14 items-center">
+          <div>
+            <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] font-bold bg-white/15 backdrop-blur px-3 py-1.5 rounded-full border border-white/25">
+              <Sparkles className="h-3.5 w-3.5" /> GYMCO Store · India
+            </div>
+            <h1 className="mt-5 text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[0.95]">
+              Train hard.
+              <br />
+              <span className="bg-gradient-to-r from-white via-amber-100 to-yellow-200 bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)]">
+                Shop harder.
+              </span>
+            </h1>
+            <p className="mt-5 text-base md:text-lg text-white/90 max-w-xl">
+              Apparel, supplements, equipment and recovery — curated from{" "}
+              <span className="font-bold">{vendors.length}</span> verified
+              vendors across India. Free shipping over ₹999. COD available.
+            </p>
+
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <Link
+                href="/cart"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white text-orange-600 font-black tracking-wide shadow-[0_12px_30px_-10px_rgba(0,0,0,0.35)] hover:bg-amber-50 transition"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                View cart
+                {cart.count > 0 && (
+                  <span className="ml-1 px-2 py-0.5 rounded-full bg-orange-600 text-white text-xs">
+                    {cart.count}
+                  </span>
+                )}
+              </Link>
+              <a
+                href="#grid"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-black/20 backdrop-blur text-white font-bold border border-white/30 hover:bg-black/30 transition"
+              >
+                Shop all <ArrowRight className="h-4 w-4" />
+              </a>
+            </div>
+
+            {/* Trust strip */}
+            <div className="mt-8 grid grid-cols-3 gap-3 max-w-lg">
+              {[
+                { Icon: Truck, k: "Free shipping", v: "over ₹999" },
+                { Icon: ShieldCheck, k: "Authentic", v: "100% verified" },
+                { Icon: Flame, k: "Lowest", v: "price promise" },
+              ].map(({ Icon, k, v }) => (
+                <div
+                  key={k}
+                  className="rounded-xl bg-white/12 backdrop-blur border border-white/20 px-3 py-2.5"
+                >
+                  <Icon className="h-4 w-4 mb-1" />
+                  <div className="text-[11px] font-black uppercase tracking-wider">
+                    {k}
+                  </div>
+                  <div className="text-[11px] text-white/85">{v}</div>
+                </div>
+              ))}
+            </div>
           </div>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight">
-            Shop fitness gear
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Curated from {vendors.length} verified vendors across India.
-          </p>
-        </div>
-        <Link
-          href="/cart"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-brand text-white font-bold shadow-[0_8px_24px_-8px_hsl(18_100%_55%/0.7)] hover:opacity-95"
-        >
-          <ShoppingCart className="h-4 w-4" />
-          Cart
-          {cart.count > 0 && (
-            <span className="ml-1 px-2 py-0.5 rounded-full bg-white/25 text-xs">
-              {cart.count}
-            </span>
+
+          {/* Hero feature card */}
+          {featured ? (
+            <Link
+              href={`/store/${featured.slug}`}
+              className="group relative block rounded-3xl overflow-hidden border border-white/30 bg-white/10 backdrop-blur-xl shadow-[0_30px_80px_-30px_rgba(0,0,0,0.5)] hover:-translate-y-1 transition-transform"
+            >
+              <div className="aspect-[4/5] overflow-hidden bg-amber-100/20">
+                <img
+                  src={featured.imageUrl}
+                  alt={featured.name}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  loading="lazy"
+                />
+              </div>
+              <div className="absolute top-4 left-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500 text-white text-[11px] font-black uppercase tracking-wider shadow-lg">
+                <Tag className="h-3.5 w-3.5" />
+                {Math.round(
+                  ((featured.originalPriceInr - featured.priceInr) /
+                    featured.originalPriceInr) *
+                    100,
+                )}
+                % off · Top deal
+              </div>
+              <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+                <div className="text-[11px] uppercase tracking-wider text-white/80 font-bold">
+                  Featured today
+                </div>
+                <div className="text-xl font-black text-white mt-1 line-clamp-1">
+                  {featured.name}
+                </div>
+                <div className="mt-1 flex items-baseline gap-2 text-white">
+                  <span className="text-2xl font-black">
+                    ₹{featured.priceInr.toLocaleString("en-IN")}
+                  </span>
+                  <span className="text-sm line-through text-white/70">
+                    ₹{featured.originalPriceInr.toLocaleString("en-IN")}
+                  </span>
+                </div>
+              </div>
+            </Link>
+          ) : (
+            <div className="relative rounded-3xl overflow-hidden border border-white/30 bg-white/10 backdrop-blur-xl aspect-[4/5] flex items-center justify-center text-white/80">
+              <div className="text-center px-6">
+                <Sparkles className="h-8 w-8 mx-auto mb-2" />
+                <div className="font-black text-lg">Fresh drops coming soon</div>
+                <div className="text-sm text-white/75 mt-1">
+                  Vendors are uploading new gear right now.
+                </div>
+              </div>
+            </div>
           )}
-        </Link>
+        </div>
+      </section>
+
+      {/* ───────────────────────────── Stats strip ───────────────────────────── */}
+      <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { k: "Products", v: products.length.toString() },
+          { k: "Vendors", v: vendors.length.toString() },
+          { k: "Cities served", v: new Set(vendors.map((v) => v.city)).size.toString() },
+          { k: "COD", v: "Pan-India" },
+        ].map((s) => (
+          <div
+            key={s.k}
+            className="rounded-2xl border border-border bg-card p-4 hover:border-orange-500/50 transition-colors"
+          >
+            <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground">
+              {s.k}
+            </div>
+            <div className="mt-1 text-2xl md:text-3xl font-black tracking-tight text-gradient-brand">
+              {s.v}
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 mb-6 p-4 rounded-2xl bg-card border border-border">
+      {/* ───────────────────────────── Filter bar ───────────────────────────── */}
+      <div
+        id="grid"
+        className="mt-8 flex flex-wrap items-center gap-3 p-4 rounded-2xl bg-card border border-border sticky top-16 z-30 backdrop-blur supports-[backdrop-filter]:bg-card/85"
+      >
         <div className="relative flex-1 min-w-[220px]">
+          <label htmlFor="store-search" className="sr-only">
+            Search store
+          </label>
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
+            id="store-search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search products…"
-            className="w-full pl-9 pr-3 py-2 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+            placeholder="Search products, vendors, categories…"
+            aria-label="Search store"
+            className="w-full pl-9 pr-3 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/60"
           />
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          {CATEGORIES.map((c) => (
-            <button
-              key={c.value}
-              onClick={() => setCategory(c.value)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
-                category === c.value
-                  ? "bg-gradient-brand text-white border-transparent"
-                  : "bg-background text-muted-foreground border-border hover:text-foreground"
-              }`}
-            >
-              {c.label}
-            </button>
-          ))}
+        <div
+          className="flex flex-wrap gap-1.5"
+          role="group"
+          aria-label="Filter by category"
+        >
+          {CATEGORIES.map((c) => {
+            const active = category === c.value;
+            return (
+              <button
+                key={c.value}
+                type="button"
+                onClick={() => setCategory(c.value)}
+                aria-pressed={active}
+                className={`px-3.5 py-2 rounded-full text-xs font-bold uppercase tracking-wider border transition-all ${
+                  active
+                    ? "bg-gradient-brand text-white border-transparent shadow-[0_6px_20px_-6px_hsl(18_100%_55%/0.6)]"
+                    : "bg-background text-muted-foreground border-border hover:text-foreground hover:border-orange-500/40"
+                }`}
+              >
+                {c.label}
+              </button>
+            );
+          })}
         </div>
+        <label htmlFor="store-vendor" className="sr-only">
+          Filter by vendor
+        </label>
         <select
+          id="store-vendor"
           value={vendorId}
           onChange={(e) =>
             setVendorId(e.target.value === "" ? "" : Number(e.target.value))
           }
-          className="px-3 py-2 rounded-lg bg-background border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+          aria-label="Filter by vendor"
+          className="px-3 py-2.5 rounded-lg bg-background border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/60"
         >
           <option value="">All vendors</option>
           {vendors.map((v) => (
@@ -114,69 +305,119 @@ export default function Store() {
         </select>
       </div>
 
-      {loading ? (
-        <div className="text-center py-20 text-muted-foreground">Loading products…</div>
-      ) : products.length === 0 ? (
-        <div className="text-center py-20 text-muted-foreground">
-          No products match these filters yet.
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-          {products.map((p) => {
-            const v = vendorById.get(p.vendorPartnerId);
-            const disc =
-              p.originalPriceInr > p.priceInr
-                ? Math.round(
-                    ((p.originalPriceInr - p.priceInr) / p.originalPriceInr) * 100,
-                  )
-                : 0;
-            return (
-              <Link
-                key={p.id}
-                href={`/store/${p.slug}`}
-                className="group block bg-card border border-border rounded-2xl overflow-hidden hover:shadow-[0_16px_48px_-16px_hsl(18_100%_55%/0.4)] transition-all hover:-translate-y-0.5"
+      {/* ───────────────────────────── Grid ───────────────────────────── */}
+      <div className="mt-6">
+        {loading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div
+                key={i}
+                className="rounded-2xl border border-border bg-card overflow-hidden animate-pulse"
               >
-                <div className="aspect-square bg-muted overflow-hidden relative">
-                  <img
-                    src={p.imageUrl}
-                    alt={p.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                  />
-                  {disc > 0 && (
-                    <span className="absolute top-2 left-2 text-[10px] font-bold uppercase px-2 py-1 rounded bg-emerald-500/95 text-white">
-                      {disc}% off
-                    </span>
-                  )}
-                  {p.stock <= 0 && (
-                    <span className="absolute top-2 right-2 text-[10px] font-bold uppercase px-2 py-1 rounded bg-slate-900/90 text-white">
-                      Out of stock
-                    </span>
-                  )}
+                <div className="aspect-square bg-muted" />
+                <div className="p-3 space-y-2">
+                  <div className="h-3 w-1/3 bg-muted rounded" />
+                  <div className="h-4 w-3/4 bg-muted rounded" />
+                  <div className="h-5 w-1/2 bg-muted rounded" />
                 </div>
-                <div className="p-3">
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    {v ? `${v.name} · ${v.city}` : p.category}
-                  </div>
-                  <div className="mt-0.5 font-bold text-foreground truncate">
-                    {p.name}
-                  </div>
-                  <div className="mt-1 flex items-baseline gap-2">
-                    <span className="text-lg font-extrabold text-foreground">
-                      ₹{p.priceInr.toLocaleString("en-IN")}
-                    </span>
-                    {p.originalPriceInr > p.priceInr && (
-                      <span className="text-xs text-muted-foreground line-through">
-                        ₹{p.originalPriceInr.toLocaleString("en-IN")}
+              </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div
+            role="alert"
+            className="text-center py-24 rounded-2xl border border-dashed border-red-500/40 bg-red-500/5"
+          >
+            <Sparkles className="h-8 w-8 mx-auto text-red-500 mb-2" />
+            <div className="text-lg font-bold">Couldn't load products</div>
+            <div className="text-sm text-muted-foreground mt-1">{error}</div>
+            <button
+              type="button"
+              onClick={() => setQ((s) => s)}
+              className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-brand text-white text-sm font-bold"
+            >
+              Try again
+            </button>
+          </div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-24 rounded-2xl border border-dashed border-border bg-card/50">
+            <Sparkles className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+            <div className="text-lg font-bold">Nothing matches yet</div>
+            <div className="text-sm text-muted-foreground mt-1">
+              Try clearing filters or searching for something else.
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            {products.map((p) => {
+              const v = vendorById.get(p.vendorPartnerId);
+              const disc =
+                p.originalPriceInr > p.priceInr
+                  ? Math.round(
+                      ((p.originalPriceInr - p.priceInr) /
+                        p.originalPriceInr) *
+                        100,
+                    )
+                  : 0;
+              return (
+                <Link
+                  key={p.id}
+                  href={`/store/${p.slug}`}
+                  className="group relative block bg-card border border-border rounded-2xl overflow-hidden hover:shadow-[0_20px_60px_-20px_hsl(18_100%_55%/0.55)] hover:border-orange-500/40 transition-all hover:-translate-y-1"
+                >
+                  <div className="aspect-square bg-muted overflow-hidden relative">
+                    <img
+                      src={p.imageUrl}
+                      alt={p.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    {disc > 0 && (
+                      <span className="absolute top-2.5 left-2.5 text-[10px] font-black uppercase px-2.5 py-1 rounded-full bg-emerald-500 text-white shadow-md">
+                        {disc}% off
+                      </span>
+                    )}
+                    {p.stock <= 0 && (
+                      <span className="absolute top-2.5 right-2.5 text-[10px] font-black uppercase px-2.5 py-1 rounded-full bg-slate-900/90 text-white">
+                        Sold out
+                      </span>
+                    )}
+                    {p.stock > 0 && p.stock <= 5 && (
+                      <span className="absolute top-2.5 right-2.5 text-[10px] font-black uppercase px-2.5 py-1 rounded-full bg-orange-500 text-white shadow-md">
+                        Only {p.stock} left
                       </span>
                     )}
                   </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      )}
+                  <div className="p-3.5">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold truncate">
+                      {v ? `${v.name} · ${v.city}` : p.category}
+                    </div>
+                    <div className="mt-1 font-bold text-foreground truncate group-hover:text-orange-500 transition-colors">
+                      {p.name}
+                    </div>
+                    <div className="mt-2 flex items-baseline justify-between gap-2">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-lg font-black text-foreground">
+                          ₹{p.priceInr.toLocaleString("en-IN")}
+                        </span>
+                        {p.originalPriceInr > p.priceInr && (
+                          <span className="text-xs text-muted-foreground line-through">
+                            ₹{p.originalPriceInr.toLocaleString("en-IN")}
+                          </span>
+                        )}
+                      </div>
+                      <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-secondary text-foreground group-hover:bg-gradient-brand group-hover:text-white transition-all">
+                        <ArrowRight className="h-4 w-4" />
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

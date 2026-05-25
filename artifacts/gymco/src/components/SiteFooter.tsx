@@ -22,7 +22,7 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
     links: [
       { label: "Browse gyms", href: "/explore" },
       { label: "Classes", href: "/classes" },
-      { label: "Trainers", href: "/trainers" },
+      { label: "Store", href: "/store" },
       { label: "Memberships", href: "/memberships" },
       { label: "GYMCO Wallet", href: "/wallet" },
       { label: "Corporate plans", href: "#" },
