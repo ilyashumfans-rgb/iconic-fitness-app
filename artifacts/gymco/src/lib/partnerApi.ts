@@ -7,6 +7,8 @@ export type Partner = {
   phone: string;
   city: string;
   status: string;
+  avatarUrl?: string;
+  kind?: "gym" | "vendor" | "both";
   notes?: string;
   createdAt?: string;
 };
@@ -47,6 +49,28 @@ export type PartnerGym = {
   featured: boolean;
   ownerPartnerId: number | null;
   gallery: string[];
+  logoUrl?: string;
+};
+
+export type PartnerTrainer = {
+  id: number;
+  name: string;
+  specialty: string;
+  gymId: number | null;
+};
+
+export type PartnerClassInput = {
+  title: string;
+  category: string;
+  gymId: number;
+  trainerId: number;
+  startsAt: string; // ISO
+  durationMin: number;
+  capacity: number;
+  intensity: "low" | "medium" | "high";
+  coverImage?: string;
+  description?: string;
+  calorieEstimate?: number;
 };
 
 export type PartnerBooking = {
@@ -81,7 +105,11 @@ export type PartnerClass = {
   intensity: string;
   gymId: number;
   gymName: string;
+  trainerId: number;
   trainerName: string | null;
+  coverImage: string;
+  description: string;
+  calorieEstimate: number;
 };
 
 async function request<T>(
@@ -118,7 +146,9 @@ export const partnerApi = {
     }),
   logout: () => request<{ ok: true }>("/partner/logout", { method: "POST" }),
   me: () => request<Partner>("/partner/me"),
-  updateMe: (body: Partial<Pick<Partner, "name" | "phone" | "city">>) =>
+  updateMe: (
+    body: Partial<Pick<Partner, "name" | "phone" | "city" | "avatarUrl">>,
+  ) =>
     request<Partner>("/partner/me", {
       method: "PATCH",
       body: JSON.stringify(body),
@@ -139,7 +169,22 @@ export const partnerApi = {
   },
   bookings: () => request<PartnerBooking[]>("/partner/bookings"),
   checkins: () => request<PartnerCheckin[]>("/partner/checkins"),
-  classes: () => request<PartnerClass[]>("/partner/classes"),
+  trainers: () => request<PartnerTrainer[]>("/partner/trainers"),
+  classes: {
+    list: () => request<PartnerClass[]>("/partner/classes"),
+    create: (body: PartnerClassInput) =>
+      request<any>("/partner/classes", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: number, body: Partial<PartnerClassInput>) =>
+      request<any>(`/partner/classes/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: number) =>
+      request<{ ok: true }>(`/partner/classes/${id}`, { method: "DELETE" }),
+  },
   products: {
     list: () => request<any[]>("/partner/products"),
     create: (body: Record<string, unknown>) =>

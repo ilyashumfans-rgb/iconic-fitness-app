@@ -1,13 +1,14 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { PartnerLayout, PartnerCard } from "@/components/partner/PartnerLayout";
 import { partnerApi, type Partner } from "@/lib/partnerApi";
-import { Loader2, Save, KeyRound, UserCog } from "lucide-react";
+import { Loader2, Save, KeyRound, UserCog, ImageIcon } from "lucide-react";
 
 export default function PartnerSettings() {
   const [partner, setPartner] = useState<Partner | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [profileMsg, setProfileMsg] = useState<{
     type: "ok" | "err";
     text: string;
@@ -28,6 +29,7 @@ export default function PartnerSettings() {
       setName(p.name);
       setPhone(p.phone);
       setCity(p.city);
+      setAvatarUrl(p.avatarUrl ?? "");
     });
   }, []);
 
@@ -36,7 +38,12 @@ export default function PartnerSettings() {
     setProfileBusy(true);
     setProfileMsg(null);
     try {
-      const updated = await partnerApi.updateMe({ name, phone, city });
+      const updated = await partnerApi.updateMe({
+        name,
+        phone,
+        city,
+        avatarUrl,
+      });
       setPartner(updated);
       setProfileMsg({ type: "ok", text: "Profile updated." });
     } catch (e) {
@@ -86,6 +93,34 @@ export default function PartnerSettings() {
             <h2 className="text-lg font-semibold text-white">Account profile</h2>
           </div>
           <form onSubmit={saveProfile} className="space-y-4">
+            <div className="flex items-center gap-4 p-3 rounded-xl bg-slate-800/40 border border-slate-800">
+              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 overflow-hidden flex items-center justify-center text-white text-2xl font-extrabold shrink-0">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="Profile preview"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  (name?.[0] ?? "P").toUpperCase()
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <label className="text-xs uppercase tracking-wide text-slate-400 font-medium mb-1.5 block flex items-center gap-1.5">
+                  <ImageIcon className="h-3.5 w-3.5" />
+                  Profile picture URL
+                </label>
+                <input
+                  value={avatarUrl}
+                  onChange={(e) => setAvatarUrl(e.target.value)}
+                  placeholder="https://…/avatar.jpg"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                />
+                <div className="text-[11px] text-slate-500 mt-1">
+                  Shown next to your name in the partner portal.
+                </div>
+              </div>
+            </div>
             <Field label="Business / partner name" value={name} onChange={setName} />
             <Field
               label="Email (read-only)"

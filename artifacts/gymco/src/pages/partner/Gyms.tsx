@@ -117,6 +117,10 @@ function EditGymModal({
   const [about, setAbout] = useState(gym.about);
   const [hours, setHours] = useState(gym.hours);
   const [heroImage, setHeroImage] = useState(gym.heroImage);
+  const [logoUrl, setLogoUrl] = useState(gym.logoUrl ?? "");
+  const [galleryText, setGalleryText] = useState(
+    (gym.gallery ?? []).join("\n"),
+  );
   const [priceFrom, setPriceFrom] = useState(String(gym.priceFrom));
   const [openNow, setOpenNow] = useState(gym.openNow);
   const [busy, setBusy] = useState(false);
@@ -126,6 +130,10 @@ function EditGymModal({
     setBusy(true);
     setErr(null);
     try {
+      const gallery = galleryText
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean);
       await partnerApi.gyms.update(gym.id, {
         name,
         address,
@@ -134,6 +142,8 @@ function EditGymModal({
         about,
         hours,
         heroImage,
+        logoUrl,
+        gallery,
         priceFrom: Number(priceFrom) || 0,
         openNow,
       });
@@ -144,6 +154,11 @@ function EditGymModal({
       setBusy(false);
     }
   };
+
+  const galleryList = galleryText
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean);
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
@@ -159,7 +174,90 @@ function EditGymModal({
         </div>
         <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Name" value={name} onChange={setName} className="sm:col-span-2" />
-          <Field label="Hero image URL" value={heroImage} onChange={setHeroImage} className="sm:col-span-2" />
+
+          <div className="sm:col-span-2 rounded-xl border border-slate-800 p-4 bg-slate-950/40">
+            <div className="text-xs uppercase tracking-wide text-orange-500 font-bold mb-3">
+              Media assets
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs uppercase tracking-wide text-slate-400 font-medium mb-1.5 block">
+                  Gym logo URL
+                </label>
+                <input
+                  value={logoUrl}
+                  onChange={(e) => setLogoUrl(e.target.value)}
+                  placeholder="https://…/logo.png"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                />
+                <div className="mt-2 h-24 w-24 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center">
+                  {logoUrl ? (
+                    <img
+                      src={logoUrl}
+                      alt="Logo preview"
+                      className="h-full w-full object-contain"
+                    />
+                  ) : (
+                    <span className="text-[10px] text-slate-500">
+                      Logo preview
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div>
+                <label className="text-xs uppercase tracking-wide text-slate-400 font-medium mb-1.5 block">
+                  Hero / profile image URL
+                </label>
+                <input
+                  value={heroImage}
+                  onChange={(e) => setHeroImage(e.target.value)}
+                  placeholder="https://…/hero.jpg"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                />
+                <div className="mt-2 h-24 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden">
+                  {heroImage && (
+                    <img
+                      src={heroImage}
+                      alt="Hero preview"
+                      className="h-full w-full object-cover"
+                    />
+                  )}
+                </div>
+              </div>
+              <div className="sm:col-span-2">
+                <label className="text-xs uppercase tracking-wide text-slate-400 font-medium mb-1.5 block">
+                  Gallery (one image URL per line)
+                </label>
+                <textarea
+                  value={galleryText}
+                  onChange={(e) => setGalleryText(e.target.value)}
+                  rows={4}
+                  placeholder="https://…/photo-1.jpg&#10;https://…/photo-2.jpg"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60 font-mono"
+                />
+                {galleryList.length > 0 && (
+                  <div className="mt-2 grid grid-cols-4 sm:grid-cols-6 gap-2">
+                    {galleryList.slice(0, 12).map((src, i) => (
+                      <div
+                        key={`${src}-${i}`}
+                        className="aspect-square rounded-lg bg-slate-800 border border-slate-700 overflow-hidden"
+                      >
+                        <img
+                          src={src}
+                          alt={`Gallery ${i + 1}`}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="text-[11px] text-slate-500 mt-2">
+                  Paste public image URLs (e.g. from your CDN or image host).
+                </div>
+              </div>
+            </div>
+          </div>
+
           <Field label="Area" value={area} onChange={setArea} />
           <Field label="City" value={city} onChange={setCity} />
           <Field label="Address" value={address} onChange={setAddress} className="sm:col-span-2" />

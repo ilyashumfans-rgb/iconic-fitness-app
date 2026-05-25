@@ -41,6 +41,7 @@ export const gymsTable = pgTable("gyms", {
   area: text("area").notNull(),
   address: text("address").notNull(),
   heroImage: text("hero_image").notNull(),
+  logoUrl: text("logo_url").notNull().default(""),
   rating: real("rating").notNull(),
   reviewsCount: integer("reviews_count").notNull(),
   priceFrom: integer("price_from").notNull(),
@@ -216,6 +217,7 @@ export const partnersTable = pgTable("partners", {
   status: text("status").notNull().default("pending"),
   city: text("city").notNull(),
   notes: text("notes").notNull().default(""),
+  avatarUrl: text("avatar_url").notNull().default(""),
   // kind = "gym" → gym operator (default), "vendor" → store seller,
   // "both"   → can sign in to both the partner portal and the vendor portal.
   kind: text("kind").notNull().default("gym"),

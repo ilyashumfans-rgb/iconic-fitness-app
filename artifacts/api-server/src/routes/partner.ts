@@ -201,6 +201,7 @@ router.get(
       city: partner.city,
       status: partner.status,
       kind: partner.kind,
+      avatarUrl: partner.avatarUrl,
       notes: partner.notes,
       createdAt: partner.createdAt,
     });
@@ -247,7 +248,7 @@ router.patch(
   "/partner/me",
   requirePartner,
   async (req: Request, res: Response): Promise<void> => {
-    const { name, phone, city } = (req.body ?? {}) as Record<
+    const { name, phone, city, avatarUrl } = (req.body ?? {}) as Record<
       string,
       string | undefined
     >;
@@ -257,6 +258,7 @@ router.patch(
         ...(name !== undefined && { name }),
         ...(phone !== undefined && { phone }),
         ...(city !== undefined && { city }),
+        ...(avatarUrl !== undefined && { avatarUrl }),
       })
       .where(eq(partnersTable.id, req.session.partnerId!))
       .returning();
@@ -272,6 +274,8 @@ router.patch(
       phone: updated.phone,
       city: updated.city,
       status: updated.status,
+      avatarUrl: updated.avatarUrl,
+      kind: updated.kind,
     });
   },
 );
@@ -316,6 +320,7 @@ router.patch(
       "about",
       "hours",
       "heroImage",
+      "logoUrl",
     ]) {
       if (b[k] !== undefined) patch[k] = String(b[k]);
     }
@@ -572,7 +577,11 @@ router.get(
         intensity: classSessionsTable.intensity,
         gymId: classSessionsTable.gymId,
         gymName: gymsTable.name,
+        trainerId: classSessionsTable.trainerId,
         trainerName: trainersTable.name,
+        coverImage: classSessionsTable.coverImage,
+        description: classSessionsTable.description,
+        calorieEstimate: classSessionsTable.calorieEstimate,
       })
       .from(classSessionsTable)
       .innerJoin(gymsTable, eq(classSessionsTable.gymId, gymsTable.id))
@@ -584,6 +593,195 @@ router.get(
       .orderBy(desc(classSessionsTable.startsAt))
       .limit(200);
     res.json(rows);
+  },
+);
+
+// ─── Trainers (read-only list scoped to partner's gyms) ───────────────────
+
+router.get(
+  "/partner/trainers",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const gymIds = await ownedGymIds(req.session.partnerId!);
+    if (gymIds.length === 0) {
+      res.json([]);
+      return;
+    }
+    const rows = await db
+      .select({
+        id: trainersTable.id,
+        name: trainersTable.name,
+        specialty: trainersTable.specialty,
+        gymId: trainersTable.gymId,
+      })
+      .from(trainersTable)
+      .where(inArray(trainersTable.gymId, gymIds));
+    res.json(rows);
+  },
+);
+
+// ─── Class session CRUD (partner-scoped) ──────────────────────────────────
+
+async function ensureOwnsGym(
+  partnerId: number,
+  gymId: number,
+): Promise<boolean> {
+  const [row] = await db
+    .select({ id: gymsTable.id })
+    .from(gymsTable)
+    .where(
+      and(eq(gymsTable.id, gymId), eq(gymsTable.ownerPartnerId, partnerId)),
+    );
+  return !!row;
+}
+
+async function trainerBelongsToGym(
+  trainerId: number,
+  gymId: number,
+): Promise<boolean> {
+  const [row] = await db
+    .select({ id: trainersTable.id })
+    .from(trainersTable)
+    .where(
+      and(eq(trainersTable.id, trainerId), eq(trainersTable.gymId, gymId)),
+    );
+  return !!row;
+}
+
+router.post(
+  "/partner/classes",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const partnerId = req.session.partnerId!;
+    const b = (req.body ?? {}) as Record<string, any>;
+    const gymId = Number(b.gymId);
+    const trainerId = Number(b.trainerId);
+    if (!b.title || !b.category || !gymId || !trainerId || !b.startsAt) {
+      res.status(400).json({
+        error: "title, category, gymId, trainerId, startsAt required",
+      });
+      return;
+    }
+    if (!(await ensureOwnsGym(partnerId, gymId))) {
+      res.status(403).json({ error: "You don't own this gym" });
+      return;
+    }
+    if (!(await trainerBelongsToGym(trainerId, gymId))) {
+      res.status(400).json({
+        error: "That trainer isn't attached to this gym.",
+      });
+      return;
+    }
+    const [row] = await db
+      .insert(classSessionsTable)
+      .values({
+        title: String(b.title),
+        category: String(b.category),
+        gymId,
+        trainerId,
+        startsAt: new Date(String(b.startsAt)),
+        durationMin: Number(b.durationMin ?? 60),
+        capacity: Number(b.capacity ?? 20),
+        intensity: String(b.intensity ?? "medium"),
+        coverImage: String(b.coverImage ?? ""),
+        description: String(b.description ?? ""),
+        equipmentNeeded: Array.isArray(b.equipmentNeeded)
+          ? b.equipmentNeeded.map(String)
+          : [],
+        calorieEstimate: Number(b.calorieEstimate ?? 0),
+      })
+      .returning();
+    res.json(row);
+  },
+);
+
+router.patch(
+  "/partner/classes/:id",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const partnerId = req.session.partnerId!;
+    const id = Number(req.params.id);
+    const b = (req.body ?? {}) as Record<string, any>;
+    const [existing] = await db
+      .select()
+      .from(classSessionsTable)
+      .where(eq(classSessionsTable.id, id));
+    if (!existing) {
+      res.status(404).json({ error: "Class not found" });
+      return;
+    }
+    if (!(await ensureOwnsGym(partnerId, existing.gymId))) {
+      res.status(403).json({ error: "Not allowed" });
+      return;
+    }
+    const patch: Record<string, unknown> = {};
+    for (const k of [
+      "title",
+      "category",
+      "intensity",
+      "coverImage",
+      "description",
+    ]) {
+      if (b[k] !== undefined) patch[k] = String(b[k]);
+    }
+    for (const k of ["durationMin", "capacity", "calorieEstimate"]) {
+      if (b[k] !== undefined) patch[k] = Number(b[k]);
+    }
+    if (b.startsAt !== undefined) patch.startsAt = new Date(String(b.startsAt));
+    let effectiveGymId = existing.gymId;
+    if (b.gymId !== undefined) {
+      const newGymId = Number(b.gymId);
+      if (!(await ensureOwnsGym(partnerId, newGymId))) {
+        res.status(403).json({ error: "You don't own the target gym" });
+        return;
+      }
+      patch.gymId = newGymId;
+      effectiveGymId = newGymId;
+    }
+    if (b.trainerId !== undefined) {
+      const newTrainerId = Number(b.trainerId);
+      if (!(await trainerBelongsToGym(newTrainerId, effectiveGymId))) {
+        res.status(400).json({
+          error: "That trainer isn't attached to this gym.",
+        });
+        return;
+      }
+      patch.trainerId = newTrainerId;
+    }
+    if (Array.isArray(b.equipmentNeeded)) {
+      patch.equipmentNeeded = b.equipmentNeeded.map(String);
+    }
+    const [row] = await db
+      .update(classSessionsTable)
+      .set(patch)
+      .where(eq(classSessionsTable.id, id))
+      .returning();
+    res.json(row);
+  },
+);
+
+router.delete(
+  "/partner/classes/:id",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const partnerId = req.session.partnerId!;
+    const id = Number(req.params.id);
+    const [existing] = await db
+      .select()
+      .from(classSessionsTable)
+      .where(eq(classSessionsTable.id, id));
+    if (!existing) {
+      res.status(404).json({ error: "Class not found" });
+      return;
+    }
+    if (!(await ensureOwnsGym(partnerId, existing.gymId))) {
+      res.status(403).json({ error: "Not allowed" });
+      return;
+    }
+    await db
+      .delete(classSessionsTable)
+      .where(eq(classSessionsTable.id, id));
+    res.json({ ok: true });
   },
 );
 
