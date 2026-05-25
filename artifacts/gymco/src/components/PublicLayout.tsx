@@ -3,8 +3,6 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { SiteFooter } from "@/components/SiteFooter";
 
-const logoUrl = `${import.meta.env.BASE_URL}media/gymco-logo.png`;
-
 function PublicNav() {
   const links = [
     { href: "/explore", label: "Browse Gyms" },
@@ -15,11 +13,11 @@ function PublicNav() {
   return (
     <header className="sticky top-0 inset-x-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5">
-          <img src={logoUrl} alt="GYMCO" className="h-9 w-9 object-contain" />
-          <span className="text-xl font-black tracking-tight text-gradient-brand">
-            GYMCO
-          </span>
+        <Link
+          href="/"
+          className="text-2xl font-black tracking-tight text-gradient-brand"
+        >
+          GYMCO
         </Link>
         <nav className="hidden md:flex items-center gap-7">
           {links.map((l) => (

@@ -13,7 +13,6 @@ import {
 import { cn } from "@/lib/utils";
 import { useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 import { toast } from "sonner";
-const logoUrl = `${import.meta.env.BASE_URL}media/gymco-logo.png`;
 
 export function handleSignOut(navigate: (path: string) => void) {
   toast.success("Signed out", {
@@ -24,20 +23,13 @@ export function handleSignOut(navigate: (path: string) => void) {
 
 function BrandMark({ className }: { className?: string }) {
   return (
-    <Link href="/" className={cn("flex items-center gap-2.5 group", className)}>
-      <img
-        src={logoUrl}
-        alt="GYMCO"
-        className="h-9 w-9 object-contain drop-shadow-[0_0_12px_rgba(255,107,26,0.45)] transition-transform group-hover:scale-105"
-      />
-      <div className="flex flex-col leading-none">
-        <span className="text-[9px] uppercase tracking-[0.22em] font-bold text-muted-foreground">
-          Go to any gym
-        </span>
-        <span className="text-2xl font-black tracking-tight text-gradient-brand">
-          GYMCO
-        </span>
-      </div>
+    <Link href="/" className={cn("flex flex-col leading-none group", className)}>
+      <span className="text-[9px] uppercase tracking-[0.22em] font-bold text-muted-foreground">
+        Go to any gym
+      </span>
+      <span className="text-2xl font-black tracking-tight text-gradient-brand transition-transform group-hover:scale-[1.02] origin-left">
+        GYMCO
+      </span>
     </Link>
   );
 }

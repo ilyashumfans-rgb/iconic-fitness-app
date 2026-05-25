@@ -15,7 +15,6 @@ import {
   Smartphone,
 } from "lucide-react";
 
-const logoUrl = `${import.meta.env.BASE_URL}media/gymco-logo.png`;
 
 const columns: { title: string; links: { label: string; href: string }[] }[] = [
   {
@@ -127,20 +126,13 @@ export function SiteFooter() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10">
           {/* Brand column */}
           <div className="col-span-2">
-            <Link href="/" className="flex items-center gap-2.5 mb-5">
-              <img
-                src={logoUrl}
-                alt="GYMCO"
-                className="h-10 w-10 object-contain"
-              />
-              <div className="flex flex-col leading-none">
-                <span className="text-[9px] uppercase tracking-[0.22em] font-bold text-muted-foreground">
-                  Go to any gym
-                </span>
-                <span className="text-2xl font-black tracking-tight text-gradient-brand">
-                  GYMCO
-                </span>
-              </div>
+            <Link href="/" className="flex flex-col leading-none mb-5">
+              <span className="text-[9px] uppercase tracking-[0.22em] font-bold text-muted-foreground">
+                Go to any gym
+              </span>
+              <span className="text-2xl font-black tracking-tight text-gradient-brand">
+                GYMCO
+              </span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
               One membership, unlimited gyms across India. Built for people who

@@ -31,7 +31,6 @@ import {
   Moon,
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
-const logoUrl = `${import.meta.env.BASE_URL}media/gymco-logo.png`;
 
 const popularCities = [
   "Bangalore",
@@ -218,15 +217,11 @@ function TopNav() {
   return (
     <header className="fixed top-0 inset-x-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5">
-          <img
-            src={logoUrl}
-            alt="GYMCO"
-            className="h-9 w-9 object-contain drop-shadow-[0_0_12px_rgba(255,107,26,0.5)]"
-          />
-          <span className="text-xl font-black tracking-tight text-gradient-brand">
-            GYMCO
-          </span>
+        <Link
+          href="/"
+          className="text-2xl font-black tracking-tight text-gradient-brand"
+        >
+          GYMCO
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
           <Link href="/explore" className="hover:text-foreground transition-colors">
@@ -1299,11 +1294,9 @@ function CTA() {
           <div className="absolute -top-32 -left-32 h-80 w-80 rounded-full bg-white/15 blur-3xl" />
           <div className="absolute -bottom-32 -right-32 h-80 w-80 rounded-full bg-black/30 blur-3xl" />
           <div className="relative max-w-3xl mx-auto">
-            <img
-              src={logoUrl}
-              alt=""
-              className="h-20 w-20 object-contain mx-auto mb-6 drop-shadow-2xl"
-            />
+            <div className="text-white text-3xl md:text-4xl font-black tracking-[0.18em] mb-6 drop-shadow-2xl">
+              GYMCO
+            </div>
             <h2 className="text-4xl md:text-6xl font-black tracking-tight text-white leading-[1.05] mb-6">
               Your next workout is one tap away.
             </h2>
