@@ -27,7 +27,10 @@ import {
   Users,
   Smartphone,
   Zap,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { useTheme } from "@/lib/theme";
 const logoUrl = `${import.meta.env.BASE_URL}media/gymco-logo.png`;
 
 const popularCities = [
@@ -181,6 +184,36 @@ const plans = [
   },
 ];
 
+function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === "dark";
+  return (
+    <button
+      type="button"
+      onClick={toggleTheme}
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-pressed={isDark}
+      title={isDark ? "Light mode" : "Dark mode"}
+      className="relative h-9 w-9 inline-flex items-center justify-center rounded-full border border-border bg-card/70 backdrop-blur hover:border-primary/40 hover:text-primary transition-colors"
+    >
+      <Sun
+        className={`h-4 w-4 absolute transition-all duration-300 ${
+          isDark
+            ? "opacity-0 rotate-90 scale-50"
+            : "opacity-100 rotate-0 scale-100"
+        }`}
+      />
+      <Moon
+        className={`h-4 w-4 absolute transition-all duration-300 ${
+          isDark
+            ? "opacity-100 rotate-0 scale-100"
+            : "opacity-0 -rotate-90 scale-50"
+        }`}
+      />
+    </button>
+  );
+}
+
 function TopNav() {
   return (
     <header className="fixed top-0 inset-x-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
@@ -213,6 +246,7 @@ function TopNav() {
           </a>
         </nav>
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <Link href="/dashboard">
             <Button variant="ghost" className="text-sm font-semibold hidden sm:inline-flex">
               Sign in
