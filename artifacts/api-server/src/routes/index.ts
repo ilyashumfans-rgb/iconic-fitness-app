@@ -11,6 +11,7 @@ import trainersRouter from "./trainers";
 import walletRouter from "./wallet";
 import adminRouter from "./admin";
 import partnerRouter from "./partner";
+import storeRouter from "./store";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(trainersRouter);
 router.use(walletRouter);
 router.use(adminRouter);
 router.use(partnerRouter);
+router.use(storeRouter);
 
 export default router;

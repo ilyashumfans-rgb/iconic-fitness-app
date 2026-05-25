@@ -84,6 +84,29 @@ export const adminApi = {
     remove: (id: number) =>
       request<{ ok: true }>(`/admin/partners/${id}`, { method: "DELETE" }),
   },
+  products: {
+    list: () => request<any[]>("/admin/products"),
+    create: (body: Record<string, unknown>) =>
+      request<any>("/admin/products", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: number, body: Record<string, unknown>) =>
+      request<any>(`/admin/products/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: number) =>
+      request<{ ok: true }>(`/admin/products/${id}`, { method: "DELETE" }),
+  },
+  orders: {
+    list: () => request<any[]>("/admin/orders"),
+    update: (id: number, body: Record<string, unknown>) =>
+      request<any>(`/admin/orders/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+  },
   gyms: {
     list: () => request<any[]>("/admin/gyms"),
     create: (body: Record<string, unknown>) =>

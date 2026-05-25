@@ -1,0 +1,178 @@
+import { Router, type IRouter, type Request, type Response } from "express";
+import { and, desc, eq, inArray } from "drizzle-orm";
+import {
+  db,
+  productsTable,
+  productOrdersTable,
+  productOrderItemsTable,
+  partnersTable,
+} from "@workspace/db";
+
+const router: IRouter = Router();
+
+// ── Public storefront ──
+
+router.get(
+  "/store/products",
+  async (req: Request, res: Response): Promise<void> => {
+    const { category, q, vendorId } = req.query as Record<string, string | undefined>;
+    const all = await db
+      .select()
+      .from(productsTable)
+      .where(eq(productsTable.status, "active"))
+      .orderBy(desc(productsTable.id));
+    const filtered = all.filter((p) => {
+      if (category && p.category !== category) return false;
+      if (vendorId && p.vendorPartnerId !== Number(vendorId)) return false;
+      if (q && !`${p.name} ${p.description}`.toLowerCase().includes(q.toLowerCase()))
+        return false;
+      return true;
+    });
+    res.json(filtered);
+  },
+);
+
+router.get(
+  "/store/products/:slug",
+  async (req: Request, res: Response): Promise<void> => {
+    const slug = String(req.params.slug);
+    const [p] = await db
+      .select()
+      .from(productsTable)
+      .where(eq(productsTable.slug, slug));
+    if (!p) {
+      res.status(404).json({ error: "Product not found" });
+      return;
+    }
+    const [vendor] = await db
+      .select({
+        id: partnersTable.id,
+        name: partnersTable.name,
+        city: partnersTable.city,
+      })
+      .from(partnersTable)
+      .where(eq(partnersTable.id, p.vendorPartnerId));
+    res.json({ ...p, vendor: vendor ?? null });
+  },
+);
+
+router.get(
+  "/store/vendors",
+  async (_req: Request, res: Response): Promise<void> => {
+    // Vendors that have at least one active product
+    const products = await db
+      .select({ vendorId: productsTable.vendorPartnerId })
+      .from(productsTable)
+      .where(eq(productsTable.status, "active"));
+    const ids = Array.from(new Set(products.map((p) => p.vendorId)));
+    if (ids.length === 0) {
+      res.json([]);
+      return;
+    }
+    const rows = await db
+      .select({
+        id: partnersTable.id,
+        name: partnersTable.name,
+        city: partnersTable.city,
+      })
+      .from(partnersTable)
+      .where(inArray(partnersTable.id, ids));
+    res.json(rows);
+  },
+);
+
+// ── Checkout (Cash on Delivery) ──
+
+router.post(
+  "/store/checkout",
+  async (req: Request, res: Response): Promise<void> => {
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const customerName = String(b.customerName ?? "").trim();
+    const customerEmail = String(b.customerEmail ?? "").trim();
+    const customerPhone = String(b.customerPhone ?? "").trim();
+    const shippingAddress = String(b.shippingAddress ?? "").trim();
+    const shippingCity = String(b.shippingCity ?? "").trim();
+    const shippingPincode = String(b.shippingPincode ?? "").trim();
+    const items = Array.isArray(b.items) ? (b.items as Array<{ productId: number; qty: number }>) : [];
+    if (
+      !customerName ||
+      !customerEmail ||
+      !customerPhone ||
+      !shippingAddress ||
+      !shippingCity ||
+      !shippingPincode ||
+      items.length === 0
+    ) {
+      res.status(400).json({ error: "Missing required fields or empty cart" });
+      return;
+    }
+    const ids = items.map((i) => Number(i.productId)).filter((n) => Number.isInteger(n) && n > 0);
+    if (ids.length === 0) {
+      res.status(400).json({ error: "Invalid items" });
+      return;
+    }
+    const products = await db
+      .select()
+      .from(productsTable)
+      .where(inArray(productsTable.id, ids));
+    if (products.length !== ids.length) {
+      res.status(400).json({ error: "Some products no longer available" });
+      return;
+    }
+    // Compute server-side total — never trust client prices.
+    let total = 0;
+    const lineItems: Array<{
+      productId: number;
+      vendorPartnerId: number;
+      productName: string;
+      unitPriceInr: number;
+      qty: number;
+    }> = [];
+    for (const i of items) {
+      const p = products.find((x) => x.id === Number(i.productId));
+      if (!p) {
+        res.status(400).json({ error: "Invalid product in cart" });
+        return;
+      }
+      const qty = Math.max(1, Math.min(99, Number(i.qty) || 1));
+      total += p.priceInr * qty;
+      lineItems.push({
+        productId: p.id,
+        vendorPartnerId: p.vendorPartnerId,
+        productName: p.name,
+        unitPriceInr: p.priceInr,
+        qty,
+      });
+    }
+
+    const [order] = await db
+      .insert(productOrdersTable)
+      .values({
+        customerName,
+        customerEmail,
+        customerPhone,
+        shippingAddress,
+        shippingCity,
+        shippingPincode,
+        totalInr: total,
+        paymentMethod: "cod",
+        status: "placed",
+      })
+      .returning();
+    await db.insert(productOrderItemsTable).values(
+      lineItems.map((li) => ({ ...li, orderId: order!.id })),
+    );
+    res.json({ ok: true, orderId: order!.id, total });
+  },
+);
+
+// NOTE: a public order-lookup endpoint was removed intentionally.
+// Looking up by enumerable integer id would leak customer PII to anyone.
+// If order tracking is added later, use an unguessable opaque token and
+// return status-only fields.
+
+// Suppress unused import warning
+void and;
+void productOrderItemsTable;
+
+export default router;

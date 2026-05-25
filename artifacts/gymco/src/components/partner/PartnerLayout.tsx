@@ -6,6 +6,7 @@ import {
   Calendar,
   CheckCircle2,
   Dumbbell,
+  Package,
   Settings,
   LogOut,
   RefreshCcw,
@@ -21,6 +22,7 @@ const NAV: Item[] = [
   { label: "Bookings", href: "/partner/bookings", icon: <Calendar className="h-4 w-4" /> },
   { label: "Check-ins", href: "/partner/checkins", icon: <CheckCircle2 className="h-4 w-4" /> },
   { label: "Classes", href: "/partner/classes", icon: <Dumbbell className="h-4 w-4" /> },
+  { label: "Products", href: "/partner/products", icon: <Package className="h-4 w-4" /> },
   { label: "Settings", href: "/partner/settings", icon: <Settings className="h-4 w-4" /> },
 ];
 

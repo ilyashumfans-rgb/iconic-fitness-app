@@ -12,6 +12,9 @@ import {
   usersTable,
   bookingsTable,
   checkinsTable,
+  productsTable,
+  productOrdersTable,
+  productOrderItemsTable,
 } from "@workspace/db";
 import {
   hashPassword,
@@ -808,6 +811,146 @@ router.patch(
       return;
     }
     res.json(updated);
+  },
+);
+
+// ───────────────────────────── Products (admin) ─────────────────────────────
+
+function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
+router.get(
+  "/admin/products",
+  requireAdmin,
+  async (_req: Request, res: Response): Promise<void> => {
+    const rows = await db
+      .select()
+      .from(productsTable)
+      .orderBy(desc(productsTable.id));
+    res.json(rows);
+  },
+);
+
+router.post(
+  "/admin/products",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const b = (req.body ?? {}) as Record<string, any>;
+    if (!b.name || !b.vendorPartnerId || !b.priceInr || !b.imageUrl) {
+      res.status(400).json({ error: "Missing required fields" });
+      return;
+    }
+    const slug = b.slug ? slugify(String(b.slug)) : `${slugify(String(b.name))}-${Date.now().toString(36)}`;
+    const [row] = await db
+      .insert(productsTable)
+      .values({
+        vendorPartnerId: Number(b.vendorPartnerId),
+        name: String(b.name),
+        slug,
+        description: String(b.description ?? ""),
+        category: String(b.category ?? "apparel"),
+        priceInr: Number(b.priceInr),
+        originalPriceInr: Number(b.originalPriceInr ?? b.priceInr),
+        imageUrl: String(b.imageUrl),
+        gallery: Array.isArray(b.gallery) ? b.gallery.map(String) : [],
+        stock: Number(b.stock ?? 0),
+        status: String(b.status ?? "active"),
+      })
+      .returning();
+    res.json(row);
+  },
+);
+
+router.patch(
+  "/admin/products/:id",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const b = (req.body ?? {}) as Record<string, any>;
+    const patch: Record<string, unknown> = {};
+    if (b.name !== undefined) patch.name = String(b.name);
+    if (b.slug !== undefined) patch.slug = slugify(String(b.slug));
+    if (b.description !== undefined) patch.description = String(b.description);
+    if (b.category !== undefined) patch.category = String(b.category);
+    if (b.priceInr !== undefined) patch.priceInr = Number(b.priceInr);
+    if (b.originalPriceInr !== undefined)
+      patch.originalPriceInr = Number(b.originalPriceInr);
+    if (b.imageUrl !== undefined) patch.imageUrl = String(b.imageUrl);
+    if (b.stock !== undefined) patch.stock = Number(b.stock);
+    if (b.status !== undefined) patch.status = String(b.status);
+    if (b.vendorPartnerId !== undefined)
+      patch.vendorPartnerId = Number(b.vendorPartnerId);
+    const [row] = await db
+      .update(productsTable)
+      .set(patch)
+      .where(eq(productsTable.id, id))
+      .returning();
+    if (!row) {
+      res.status(404).json({ error: "Product not found" });
+      return;
+    }
+    res.json(row);
+  },
+);
+
+router.delete(
+  "/admin/products/:id",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    await db.delete(productsTable).where(eq(productsTable.id, id));
+    res.json({ ok: true });
+  },
+);
+
+// ───────────────────────────── Orders (admin) ─────────────────────────────
+
+router.get(
+  "/admin/orders",
+  requireAdmin,
+  async (_req: Request, res: Response): Promise<void> => {
+    const orders = await db
+      .select()
+      .from(productOrdersTable)
+      .orderBy(desc(productOrdersTable.id));
+    if (orders.length === 0) {
+      res.json([]);
+      return;
+    }
+    const items = await db.select().from(productOrderItemsTable);
+    const byOrder = new Map<number, typeof items>();
+    for (const it of items) {
+      const list = byOrder.get(it.orderId) ?? [];
+      list.push(it);
+      byOrder.set(it.orderId, list);
+    }
+    res.json(orders.map((o) => ({ ...o, items: byOrder.get(o.id) ?? [] })));
+  },
+);
+
+router.patch(
+  "/admin/orders/:id",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const b = (req.body ?? {}) as Record<string, any>;
+    const patch: Record<string, unknown> = {};
+    if (b.status !== undefined) patch.status = String(b.status);
+    const [row] = await db
+      .update(productOrdersTable)
+      .set(patch)
+      .where(eq(productOrdersTable.id, id))
+      .returning();
+    if (!row) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+    res.json(row);
   },
 );
 

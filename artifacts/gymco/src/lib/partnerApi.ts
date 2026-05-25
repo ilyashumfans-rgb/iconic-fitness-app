@@ -140,4 +140,20 @@ export const partnerApi = {
   bookings: () => request<PartnerBooking[]>("/partner/bookings"),
   checkins: () => request<PartnerCheckin[]>("/partner/checkins"),
   classes: () => request<PartnerClass[]>("/partner/classes"),
+  products: {
+    list: () => request<any[]>("/partner/products"),
+    create: (body: Record<string, unknown>) =>
+      request<any>("/partner/products", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: number, body: Record<string, unknown>) =>
+      request<any>(`/partner/products/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: number) =>
+      request<{ ok: true }>(`/partner/products/${id}`, { method: "DELETE" }),
+  },
+  orders: () => request<any[]>("/partner/orders"),
 };

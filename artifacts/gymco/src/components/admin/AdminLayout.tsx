@@ -11,6 +11,8 @@ import {
   UserCog,
   CreditCard,
   Settings2,
+  Package,
+  ShoppingBag,
   LogOut,
   RefreshCcw,
 } from "lucide-react";
@@ -101,6 +103,21 @@ const SECTIONS: Section[] = [
         label: "Membership Management",
         href: "/admin/membership-management",
         icon: <Settings2 className="h-4 w-4" />,
+      },
+    ],
+  },
+  {
+    title: "Store Management",
+    items: [
+      {
+        label: "Products",
+        href: "/admin/products",
+        icon: <Package className="h-4 w-4" />,
+      },
+      {
+        label: "Orders",
+        href: "/admin/orders",
+        icon: <ShoppingBag className="h-4 w-4" />,
       },
     ],
   },

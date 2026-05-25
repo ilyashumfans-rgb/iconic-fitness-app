@@ -33,7 +33,12 @@ import PartnerGyms from "@/pages/partner/Gyms";
 import PartnerBookings from "@/pages/partner/Bookings";
 import PartnerCheckins from "@/pages/partner/Checkins";
 import PartnerClasses from "@/pages/partner/Classes";
+import PartnerProducts from "@/pages/partner/PartnerProducts";
 import PartnerSettings from "@/pages/partner/Settings";
+import Store from "@/pages/Store";
+import StoreDetail from "@/pages/StoreDetail";
+import Cart from "@/pages/Cart";
+import Checkout from "@/pages/Checkout";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminPartners from "@/pages/admin/Partners";
 import AdminPartnerOnboarding from "@/pages/admin/PartnerOnboarding";
@@ -45,6 +50,8 @@ import AdminUsers from "@/pages/admin/Users";
 import AdminUserManagement from "@/pages/admin/UserManagement";
 import AdminMemberships from "@/pages/admin/Memberships";
 import AdminMembershipManagement from "@/pages/admin/MembershipManagement";
+import AdminProducts from "@/pages/admin/Products";
+import AdminOrders from "@/pages/admin/Orders";
 
 const queryClient = new QueryClient();
 
@@ -130,6 +137,9 @@ const PUBLIC_ROUTES = [
   "/classes",
   "/trainers",
   "/memberships",
+  "/store",
+  "/cart",
+  "/checkout",
 ];
 
 function isPublicPath(path: string) {
@@ -171,6 +181,10 @@ function MemberShellRoutes() {
         <Route path="/trainers/:trainerId" component={TrainerDetail} />
         <Route path="/wallet" component={Wallet} />
         <Route path="/profile" component={Profile} />
+        <Route path="/store" component={Store} />
+        <Route path="/store/:slug" component={StoreDetail} />
+        <Route path="/cart" component={Cart} />
+        <Route path="/checkout" component={Checkout} />
         <Route component={NotFound} />
       </Switch>
     </Shell>
@@ -202,6 +216,7 @@ function AppShell() {
         <Route path="/partner/bookings" component={PartnerBookings} />
         <Route path="/partner/checkins" component={PartnerCheckins} />
         <Route path="/partner/classes" component={PartnerClasses} />
+        <Route path="/partner/products" component={PartnerProducts} />
         <Route path="/partner/settings" component={PartnerSettings} />
         <Route component={NotFound} />
       </Switch>
@@ -223,6 +238,8 @@ function AppShell() {
         <Route path="/admin/user-management" component={AdminUserManagement} />
         <Route path="/admin/memberships" component={AdminMemberships} />
         <Route path="/admin/membership-management" component={AdminMembershipManagement} />
+        <Route path="/admin/products" component={AdminProducts} />
+        <Route path="/admin/orders" component={AdminOrders} />
         <Route component={NotFound} />
       </Switch>
     );

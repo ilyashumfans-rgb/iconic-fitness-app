@@ -9,6 +9,9 @@ import {
   checkinsTable,
   usersTable,
   trainersTable,
+  productsTable,
+  productOrdersTable,
+  productOrderItemsTable,
 } from "@workspace/db";
 import {
   hashPassword,
@@ -474,6 +477,152 @@ router.get(
       .orderBy(desc(classSessionsTable.startsAt))
       .limit(200);
     res.json(rows);
+  },
+);
+
+// ─── Partner products (multi-vendor) ───
+
+function slugifyP(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
+router.get(
+  "/partner/products",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const partnerId = req.session.partnerId!;
+    const rows = await db
+      .select()
+      .from(productsTable)
+      .where(eq(productsTable.vendorPartnerId, partnerId))
+      .orderBy(desc(productsTable.id));
+    res.json(rows);
+  },
+);
+
+router.post(
+  "/partner/products",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const partnerId = req.session.partnerId!;
+    const b = (req.body ?? {}) as Record<string, any>;
+    if (!b.name || !b.priceInr || !b.imageUrl) {
+      res.status(400).json({ error: "Missing required fields" });
+      return;
+    }
+    const slug = b.slug
+      ? slugifyP(String(b.slug))
+      : `${slugifyP(String(b.name))}-${Date.now().toString(36)}`;
+    const [row] = await db
+      .insert(productsTable)
+      .values({
+        vendorPartnerId: partnerId, // always self — vendor scope is enforced server-side
+        name: String(b.name),
+        slug,
+        description: String(b.description ?? ""),
+        category: String(b.category ?? "apparel"),
+        priceInr: Number(b.priceInr),
+        originalPriceInr: Number(b.originalPriceInr ?? b.priceInr),
+        imageUrl: String(b.imageUrl),
+        gallery: Array.isArray(b.gallery) ? b.gallery.map(String) : [],
+        stock: Number(b.stock ?? 0),
+        status: String(b.status ?? "active"),
+      })
+      .returning();
+    res.json(row);
+  },
+);
+
+router.patch(
+  "/partner/products/:id",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const partnerId = req.session.partnerId!;
+    const id = Number(req.params.id);
+    const b = (req.body ?? {}) as Record<string, any>;
+    const patch: Record<string, unknown> = {};
+    if (b.name !== undefined) patch.name = String(b.name);
+    if (b.description !== undefined) patch.description = String(b.description);
+    if (b.category !== undefined) patch.category = String(b.category);
+    if (b.priceInr !== undefined) patch.priceInr = Number(b.priceInr);
+    if (b.originalPriceInr !== undefined)
+      patch.originalPriceInr = Number(b.originalPriceInr);
+    if (b.imageUrl !== undefined) patch.imageUrl = String(b.imageUrl);
+    if (b.stock !== undefined) patch.stock = Number(b.stock);
+    if (b.status !== undefined) patch.status = String(b.status);
+    // vendorPartnerId is NOT patchable — locks ownership to the authenticated partner.
+    const [row] = await db
+      .update(productsTable)
+      .set(patch)
+      .where(
+        and(
+          eq(productsTable.id, id),
+          eq(productsTable.vendorPartnerId, partnerId),
+        ),
+      )
+      .returning();
+    if (!row) {
+      res.status(404).json({ error: "Product not found" });
+      return;
+    }
+    res.json(row);
+  },
+);
+
+router.delete(
+  "/partner/products/:id",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const partnerId = req.session.partnerId!;
+    const id = Number(req.params.id);
+    const deleted = await db
+      .delete(productsTable)
+      .where(
+        and(
+          eq(productsTable.id, id),
+          eq(productsTable.vendorPartnerId, partnerId),
+        ),
+      )
+      .returning();
+    if (deleted.length === 0) {
+      res.status(404).json({ error: "Product not found" });
+      return;
+    }
+    res.json({ ok: true });
+  },
+);
+
+router.get(
+  "/partner/orders",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const partnerId = req.session.partnerId!;
+    const myItems = await db
+      .select()
+      .from(productOrderItemsTable)
+      .where(eq(productOrderItemsTable.vendorPartnerId, partnerId));
+    if (myItems.length === 0) {
+      res.json([]);
+      return;
+    }
+    const orderIds = Array.from(new Set(myItems.map((i) => i.orderId)));
+    const orders = await db
+      .select()
+      .from(productOrdersTable)
+      .where(inArray(productOrdersTable.id, orderIds))
+      .orderBy(desc(productOrdersTable.id));
+    const byOrder = new Map<number, typeof myItems>();
+    for (const it of myItems) {
+      const list = byOrder.get(it.orderId) ?? [];
+      list.push(it);
+      byOrder.set(it.orderId, list);
+    }
+    // Only return this vendor's items (not other vendors' items in the same order)
+    res.json(orders.map((o) => ({ ...o, items: byOrder.get(o.id) ?? [] })));
   },
 );
 

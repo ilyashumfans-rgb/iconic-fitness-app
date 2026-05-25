@@ -7,7 +7,7 @@ function PublicNav() {
   const links = [
     { href: "/explore", label: "Browse Gyms" },
     { href: "/classes", label: "Classes" },
-    { href: "/trainers", label: "Trainers" },
+    { href: "/store", label: "Store" },
     { href: "/memberships", label: "Pricing" },
   ];
   return (

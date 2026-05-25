@@ -6,8 +6,8 @@ import {
   Calendar,
   User,
   Wallet,
-  Dumbbell,
   Crown,
+  ShoppingBag,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -56,7 +56,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const desktopNavItems = [
     ...navItems,
     { href: "/wallet", label: "Wallet", icon: Wallet },
-    { href: "/trainers", label: "Trainers", icon: Dumbbell },
+    { href: "/store", label: "Store", icon: ShoppingBag },
     { href: "/memberships", label: "Memberships", icon: Crown },
   ];
 

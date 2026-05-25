@@ -163,6 +163,50 @@ export const adminsTable = pgTable("admins", {
     .defaultNow(),
 });
 
+export const productsTable = pgTable("products", {
+  id: serial("id").primaryKey(),
+  vendorPartnerId: integer("vendor_partner_id").notNull(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull(),
+  description: text("description").notNull().default(""),
+  category: text("category").notNull().default("apparel"),
+  priceInr: integer("price_inr").notNull(),
+  originalPriceInr: integer("original_price_inr").notNull(),
+  imageUrl: text("image_url").notNull(),
+  gallery: text("gallery").array().notNull().default([]),
+  stock: integer("stock").notNull().default(0),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const productOrdersTable = pgTable("product_orders", {
+  id: serial("id").primaryKey(),
+  customerName: text("customer_name").notNull(),
+  customerEmail: text("customer_email").notNull(),
+  customerPhone: text("customer_phone").notNull(),
+  shippingAddress: text("shipping_address").notNull(),
+  shippingCity: text("shipping_city").notNull(),
+  shippingPincode: text("shipping_pincode").notNull(),
+  totalInr: integer("total_inr").notNull(),
+  paymentMethod: text("payment_method").notNull().default("cod"),
+  status: text("status").notNull().default("placed"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const productOrderItemsTable = pgTable("product_order_items", {
+  id: serial("id").primaryKey(),
+  orderId: integer("order_id").notNull(),
+  productId: integer("product_id").notNull(),
+  vendorPartnerId: integer("vendor_partner_id").notNull(),
+  productName: text("product_name").notNull(),
+  unitPriceInr: integer("unit_price_inr").notNull(),
+  qty: integer("qty").notNull(),
+});
+
 export const partnersTable = pgTable("partners", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),

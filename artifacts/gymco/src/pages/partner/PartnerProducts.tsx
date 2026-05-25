@@ -1,0 +1,307 @@
+import { useEffect, useState } from "react";
+import { PartnerLayout } from "@/components/partner/PartnerLayout";
+import { partnerApi } from "@/lib/partnerApi";
+import { Plus, Trash2, X, Package } from "lucide-react";
+
+type Product = {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  category: string;
+  priceInr: number;
+  originalPriceInr: number;
+  imageUrl: string;
+  stock: number;
+  status: string;
+};
+
+const INPUT =
+  "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
+
+const blank = () => ({
+  name: "",
+  description: "",
+  category: "apparel",
+  priceInr: 0,
+  originalPriceInr: 0,
+  imageUrl: "",
+  stock: 0,
+  status: "active",
+});
+
+export default function PartnerProducts() {
+  const [rows, setRows] = useState<Product[]>([]);
+  const [editing, setEditing] = useState<Product | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState(blank());
+  const [err, setErr] = useState<string | null>(null);
+
+  const load = () => {
+    partnerApi.products.list().then((r) => setRows(r as Product[]));
+  };
+  useEffect(load, []);
+
+  const startEdit = (p: Product) => {
+    setEditing(p);
+    setCreating(false);
+    setForm({
+      name: p.name,
+      description: p.description,
+      category: p.category,
+      priceInr: p.priceInr,
+      originalPriceInr: p.originalPriceInr,
+      imageUrl: p.imageUrl,
+      stock: p.stock,
+      status: p.status,
+    });
+    setErr(null);
+  };
+  const startCreate = () => {
+    setCreating(true);
+    setEditing(null);
+    setForm(blank());
+    setErr(null);
+  };
+  const cancel = () => {
+    setEditing(null);
+    setCreating(false);
+    setErr(null);
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErr(null);
+    try {
+      if (creating) await partnerApi.products.create(form);
+      else if (editing) await partnerApi.products.update(editing.id, form);
+      load();
+      cancel();
+    } catch (e: any) {
+      setErr(e?.message ?? String(e));
+    }
+  };
+
+  const remove = async (id: number) => {
+    if (!confirm("Delete this product?")) return;
+    await partnerApi.products.remove(id);
+    load();
+  };
+
+  const showForm = creating || !!editing;
+
+  return (
+    <PartnerLayout
+      title="My Products"
+      actions={
+        <button
+          onClick={startCreate}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-medium shadow"
+        >
+          <Plus className="h-3.5 w-3.5" /> New Product
+        </button>
+      }
+    >
+      <div className="mb-4 text-xs text-slate-400 bg-slate-900/60 border border-slate-800 rounded-lg p-3">
+        Products you add here appear on the public GYMCO Store with your vendor
+        name. You receive orders for your products only.
+      </div>
+
+      {showForm && (
+        <div className="p-5 mb-5 rounded-xl bg-slate-900/60 border border-slate-800">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-white">
+              {creating ? "Add product" : `Edit: ${editing?.name}`}
+            </h3>
+            <button onClick={cancel} className="text-slate-400 hover:text-white">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          {err && (
+            <div className="mb-3 text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg p-2">
+              {err}
+            </div>
+          )}
+          <form onSubmit={submit} className="grid md:grid-cols-2 gap-4">
+            <label className="block">
+              <span className="text-xs text-slate-400">Name</span>
+              <input
+                required
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                className={INPUT + " mt-1"}
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs text-slate-400">Category</span>
+              <select
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                className={INPUT + " mt-1"}
+              >
+                <option value="apparel">Apparel</option>
+                <option value="supplements">Supplements</option>
+                <option value="equipment">Equipment</option>
+                <option value="accessories">Accessories</option>
+                <option value="wellness">Wellness</option>
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-xs text-slate-400">Price (₹)</span>
+              <input
+                required
+                type="number"
+                value={form.priceInr}
+                onChange={(e) =>
+                  setForm({ ...form, priceInr: Number(e.target.value) })
+                }
+                className={INPUT + " mt-1"}
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs text-slate-400">MRP (₹)</span>
+              <input
+                type="number"
+                value={form.originalPriceInr}
+                onChange={(e) =>
+                  setForm({ ...form, originalPriceInr: Number(e.target.value) })
+                }
+                className={INPUT + " mt-1"}
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs text-slate-400">Stock</span>
+              <input
+                type="number"
+                value={form.stock}
+                onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })}
+                className={INPUT + " mt-1"}
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs text-slate-400">Status</span>
+              <select
+                value={form.status}
+                onChange={(e) => setForm({ ...form, status: e.target.value })}
+                className={INPUT + " mt-1"}
+              >
+                <option value="active">Active</option>
+                <option value="draft">Draft</option>
+                <option value="archived">Archived</option>
+              </select>
+            </label>
+            <label className="block md:col-span-2">
+              <span className="text-xs text-slate-400">Image URL</span>
+              <input
+                required
+                value={form.imageUrl}
+                onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                className={INPUT + " mt-1"}
+                placeholder="https://…"
+              />
+            </label>
+            <label className="block md:col-span-2">
+              <span className="text-xs text-slate-400">Description</span>
+              <textarea
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                rows={3}
+                className={INPUT + " mt-1 resize-none"}
+              />
+            </label>
+            <div className="md:col-span-2 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={cancel}
+                className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-sm text-slate-200"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-semibold"
+              >
+                {creating ? "Create" : "Save"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {rows.length === 0 ? (
+        <div className="p-12 text-center text-slate-500 rounded-xl bg-slate-900/40 border border-slate-800">
+          <Package className="h-8 w-8 mx-auto mb-2 opacity-40" />
+          No products yet. Click "New Product" to start selling.
+        </div>
+      ) : (
+        <div className="rounded-xl bg-slate-900/40 border border-slate-800 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs uppercase tracking-wide text-slate-500 border-b border-slate-800">
+                <th className="px-5 py-3">Product</th>
+                <th className="px-5 py-3">Category</th>
+                <th className="px-5 py-3">Price</th>
+                <th className="px-5 py-3">Stock</th>
+                <th className="px-5 py-3">Status</th>
+                <th className="px-5 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((p) => (
+                <tr
+                  key={p.id}
+                  className="border-b border-slate-800/60 hover:bg-slate-800/30"
+                >
+                  <td className="px-5 py-3">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={p.imageUrl}
+                        alt=""
+                        className="w-10 h-10 rounded object-cover bg-slate-800"
+                      />
+                      <div>
+                        <div className="font-medium text-white">{p.name}</div>
+                        <div className="text-xs text-slate-500">{p.slug}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-5 py-3 text-slate-400">{p.category}</td>
+                  <td className="px-5 py-3 text-slate-300">
+                    ₹{p.priceInr.toLocaleString("en-IN")}
+                  </td>
+                  <td className="px-5 py-3 text-slate-300">{p.stock}</td>
+                  <td className="px-5 py-3">
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full ${
+                        p.status === "active"
+                          ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
+                          : "bg-slate-700/40 text-slate-300 border border-slate-600/40"
+                      }`}
+                    >
+                      {p.status}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3 text-right">
+                    <button
+                      onClick={() => startEdit(p)}
+                      className="text-xs px-2 py-1 rounded bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 mr-1"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => remove(p.id)}
+                      className="p-1.5 rounded-md text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                      title="Delete"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </PartnerLayout>
+  );
+}
