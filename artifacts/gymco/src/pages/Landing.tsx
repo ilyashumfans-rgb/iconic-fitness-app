@@ -138,11 +138,13 @@ const testimonials = [
   },
 ];
 
+type BillingCycle = "monthly" | "annual";
+
 const plans = [
   {
     name: "Lite",
-    price: "1,499",
-    strikethrough: "1,999",
+    monthly: { price: "1,499", strikethrough: "1,999" },
+    annual: { price: "1,124", strikethrough: "1,999", billedAs: "₹13,488 billed yearly" },
     tagline: "Try the network",
     perks: ["Access to 80+ gyms", "6 classes / month", "Pause anytime"],
     cta: "Start with Lite",
@@ -150,8 +152,8 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "2,999",
-    strikethrough: "3,999",
+    monthly: { price: "2,999", strikethrough: "3,999" },
+    annual: { price: "2,249", strikethrough: "3,999", billedAs: "₹26,988 billed yearly" },
     tagline: "Most popular",
     perks: [
       "Access to 350+ gyms",
@@ -164,8 +166,8 @@ const plans = [
   },
   {
     name: "Elite",
-    price: "4,999",
-    strikethrough: "6,499",
+    monthly: { price: "4,999", strikethrough: "6,499" },
+    annual: { price: "3,749", strikethrough: "6,499", billedAs: "₹44,988 billed yearly" },
     tagline: "Unlimited everything",
     perks: [
       "All 500+ gyms",
@@ -797,10 +799,13 @@ function Testimonials() {
 }
 
 function Pricing() {
+  const [cycle, setCycle] = useState<BillingCycle>("monthly");
+  const isAnnual = cycle === "annual";
+
   return (
     <section id="pricing" className="py-24 md:py-32 relative">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-16">
+        <div className="text-center max-w-2xl mx-auto mb-10">
           <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary mb-3">
             Pricing
           </div>
@@ -813,72 +818,126 @@ function Pricing() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {plans.map((plan) => (
-            <div
-              key={plan.name}
-              className={`relative rounded-3xl p-8 flex flex-col ${
-                plan.popular
-                  ? "bg-card ring-glow-brand scale-[1.03] z-10"
-                  : "bg-card/70 border border-white/10"
-              }`}
-            >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="bg-gradient-brand text-white text-[10px] font-black tracking-[0.18em] px-4 py-1.5 rounded-full shadow-lg">
-                    MOST POPULAR
-                  </span>
-                </div>
-              )}
-              <div className="mb-6">
-                <h3 className="text-2xl font-black">GYMCO {plan.name}</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {plan.tagline}
-                </p>
-              </div>
-              <div className="mb-6 pb-6 border-b border-white/10">
-                <div className="flex items-end gap-1">
-                  <span className="text-base font-bold text-muted-foreground mb-2">
-                    ₹
-                  </span>
-                  <span className="text-5xl font-black tracking-tight">
-                    {plan.price}
-                  </span>
-                  <span className="text-sm font-bold text-muted-foreground mb-2">
-                    /mo
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <span className="text-sm text-muted-foreground line-through">
-                    ₹{plan.strikethrough}
-                  </span>
-                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                    Save 25%
-                  </span>
-                </div>
-              </div>
-              <ul className="space-y-3 mb-8 flex-1">
-                {plan.perks.map((p) => (
-                  <li key={p} className="flex items-start gap-3 text-sm">
-                    <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                    <span>{p}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link href="/memberships">
-                <Button
-                  className={`w-full h-12 font-black tracking-wide ${
-                    plan.popular
-                      ? "bg-gradient-brand text-white border-none shadow-[0_10px_30px_-10px_hsl(18_100%_55%/0.7)] hover:opacity-95"
-                      : ""
+        {/* Billing cycle toggle */}
+        <div className="flex justify-center mb-14">
+          <div
+            role="tablist"
+            aria-label="Billing cycle"
+            className="relative inline-flex items-center p-1 rounded-full bg-card/70 border border-white/10 backdrop-blur-md"
+          >
+            {(["monthly", "annual"] as BillingCycle[]).map((c) => {
+              const active = cycle === c;
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setCycle(c)}
+                  className={`relative z-10 px-6 md:px-7 h-10 rounded-full text-sm font-bold uppercase tracking-[0.14em] transition-colors ${
+                    active ? "text-white" : "text-muted-foreground hover:text-foreground"
                   }`}
-                  variant={plan.popular ? "default" : "secondary"}
                 >
-                  {plan.cta}
-                </Button>
-              </Link>
-            </div>
-          ))}
+                  {c === "monthly" ? "Monthly" : "Annual"}
+                  {c === "annual" && (
+                    <span className="ml-2 inline-flex items-center text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 align-middle">
+                      -25%
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+            <motion.div
+              layout
+              transition={{ type: "spring", stiffness: 400, damping: 32 }}
+              className="absolute top-1 bottom-1 rounded-full bg-gradient-brand shadow-[0_8px_24px_-8px_hsl(18_100%_55%/0.7)]"
+              style={
+                isAnnual
+                  ? { left: "50%", right: "0.25rem" }
+                  : { left: "0.25rem", right: "50%" }
+              }
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {plans.map((plan) => {
+            const tier = isAnnual ? plan.annual : plan.monthly;
+            return (
+              <div
+                key={plan.name}
+                className={`relative rounded-3xl p-8 flex flex-col ${
+                  plan.popular
+                    ? "bg-card ring-glow-brand scale-[1.03] z-10"
+                    : "bg-card/70 border border-white/10"
+                }`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <span className="bg-gradient-brand text-white text-[10px] font-black tracking-[0.18em] px-4 py-1.5 rounded-full shadow-lg">
+                      MOST POPULAR
+                    </span>
+                  </div>
+                )}
+                <div className="mb-6">
+                  <h3 className="text-2xl font-black">GYMCO {plan.name}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {plan.tagline}
+                  </p>
+                </div>
+                <div className="mb-6 pb-6 border-b border-white/10">
+                  <div className="flex items-end gap-1">
+                    <span className="text-base font-bold text-muted-foreground mb-2">
+                      ₹
+                    </span>
+                    <motion.span
+                      key={tier.price}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="text-5xl font-black tracking-tight"
+                    >
+                      {tier.price}
+                    </motion.span>
+                    <span className="text-sm font-bold text-muted-foreground mb-2">
+                      /mo
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <span className="text-sm text-muted-foreground line-through">
+                      ₹{tier.strikethrough}
+                    </span>
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                      Save 25%
+                    </span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-2 min-h-[1rem]">
+                    {isAnnual ? plan.annual.billedAs : "Billed monthly"}
+                  </div>
+                </div>
+                <ul className="space-y-3 mb-8 flex-1">
+                  {plan.perks.map((p) => (
+                    <li key={p} className="flex items-start gap-3 text-sm">
+                      <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                      <span>{p}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/memberships">
+                  <Button
+                    className={`w-full h-12 font-black tracking-wide ${
+                      plan.popular
+                        ? "bg-gradient-brand text-white border-none shadow-[0_10px_30px_-10px_hsl(18_100%_55%/0.7)] hover:opacity-95"
+                        : ""
+                    }`}
+                    variant={plan.popular ? "default" : "secondary"}
+                  >
+                    {plan.cta}
+                  </Button>
+                </Link>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -965,11 +1024,11 @@ export default function Landing() {
       <Hero />
       <PartnerStrip />
       <FeaturedGyms />
+      <Pricing />
       <HowItWorks />
       <Categories />
       <FeatureBlock />
       <Testimonials />
-      <Pricing />
       <CTA />
       <Footer />
     </div>
