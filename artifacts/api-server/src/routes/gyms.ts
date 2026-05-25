@@ -1,0 +1,189 @@
+import { Router, type IRouter } from "express";
+import { and, eq, sql, asc, desc } from "drizzle-orm";
+import {
+  db,
+  gymsTable,
+  classSessionsTable,
+  trainersTable,
+} from "@workspace/db";
+import {
+  ListGymsQueryParams,
+  ListGymsResponse,
+  ListFeaturedGymsResponse,
+  ListGymCategoriesResponse,
+  GetGymParams,
+  GetGymResponse,
+  ListGymClassesParams,
+  ListGymClassesResponse,
+} from "@workspace/api-zod";
+
+const router: IRouter = Router();
+
+router.get("/gyms", async (req, res): Promise<void> => {
+  const parsed = ListGymsQueryParams.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const { q, city, category, amenity, sort } = parsed.data;
+  let rows = await db.select().from(gymsTable);
+  if (q) {
+    const ql = q.toLowerCase();
+    rows = rows.filter(
+      (g) =>
+        g.name.toLowerCase().includes(ql) ||
+        g.area.toLowerCase().includes(ql) ||
+        g.city.toLowerCase().includes(ql),
+    );
+  }
+  if (city) rows = rows.filter((g) => g.city.toLowerCase() === city.toLowerCase());
+  if (category)
+    rows = rows.filter((g) =>
+      g.categories.map((c) => c.toLowerCase()).includes(category.toLowerCase()),
+    );
+  if (amenity)
+    rows = rows.filter((g) =>
+      g.amenities.map((a) => a.toLowerCase()).includes(amenity.toLowerCase()),
+    );
+  if (sort === "rating") rows.sort((a, b) => b.rating - a.rating);
+  else if (sort === "price") rows.sort((a, b) => a.priceFrom - b.priceFrom);
+  else rows.sort((a, b) => a.distanceKm - b.distanceKm);
+  res.json(ListGymsResponse.parse(rows));
+});
+
+router.get("/gyms/featured", async (_req, res): Promise<void> => {
+  const rows = await db
+    .select()
+    .from(gymsTable)
+    .where(eq(gymsTable.featured, true));
+  res.json(ListFeaturedGymsResponse.parse(rows));
+});
+
+router.get("/gyms/categories", async (_req, res): Promise<void> => {
+  const rows = await db.select().from(gymsTable);
+  const counts = new Map<string, number>();
+  for (const g of rows) {
+    for (const c of g.categories) {
+      counts.set(c, (counts.get(c) ?? 0) + 1);
+    }
+  }
+  const iconMap: Record<string, string> = {
+    gym: "Dumbbell",
+    yoga: "Flower2",
+    crossfit: "Flame",
+    pilates: "Sparkles",
+    mma: "Swords",
+    swimming: "Waves",
+    zumba: "Music2",
+    boxing: "Swords",
+    cycling: "Bike",
+    functional: "Activity",
+  };
+  const list = Array.from(counts.entries())
+    .map(([category, count]) => ({
+      category,
+      count,
+      icon: iconMap[category.toLowerCase()] ?? "Dumbbell",
+    }))
+    .sort((a, b) => b.count - a.count);
+  res.json(ListGymCategoriesResponse.parse(list));
+});
+
+router.get("/gyms/:gymId", async (req, res): Promise<void> => {
+  const params = GetGymParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const [gym] = await db
+    .select()
+    .from(gymsTable)
+    .where(eq(gymsTable.id, params.data.gymId));
+  if (!gym) {
+    res.status(404).json({ error: "Gym not found" });
+    return;
+  }
+  const trainers = await db
+    .select()
+    .from(trainersTable)
+    .where(eq(trainersTable.gymId, gym.id));
+  const upcoming = await db
+    .select()
+    .from(classSessionsTable)
+    .where(eq(classSessionsTable.gymId, gym.id))
+    .orderBy(asc(classSessionsTable.startsAt))
+    .limit(6);
+  const upcomingClasses = await Promise.all(
+    upcoming.map(async (c) => {
+      const trainer = trainers.find((t) => t.id === c.trainerId);
+      const booked = await db.$count(
+        sql`(select 1 from bookings where class_id = ${c.id})`,
+      );
+      return {
+        id: c.id,
+        title: c.title,
+        category: c.category,
+        gymId: gym.id,
+        gymName: gym.name,
+        gymCity: gym.city,
+        trainerName: trainer?.name ?? "GYMCO Coach",
+        startsAt: c.startsAt,
+        durationMin: c.durationMin,
+        capacity: c.capacity,
+        booked: Number(booked) || 0,
+        intensity: c.intensity,
+        coverImage: c.coverImage,
+      };
+    }),
+  );
+  res.json(
+    GetGymResponse.parse({
+      ...gym,
+      trainers,
+      upcomingClasses,
+    }),
+  );
+});
+
+router.get("/gyms/:gymId/classes", async (req, res): Promise<void> => {
+  const params = ListGymClassesParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const [gym] = await db
+    .select()
+    .from(gymsTable)
+    .where(eq(gymsTable.id, params.data.gymId));
+  if (!gym) {
+    res.status(404).json({ error: "Gym not found" });
+    return;
+  }
+  const rows = await db
+    .select()
+    .from(classSessionsTable)
+    .where(eq(classSessionsTable.gymId, gym.id))
+    .orderBy(asc(classSessionsTable.startsAt));
+  const trainers = await db.select().from(trainersTable);
+  const out = rows.map((c) => {
+    const trainer = trainers.find((t) => t.id === c.trainerId);
+    return {
+      id: c.id,
+      title: c.title,
+      category: c.category,
+      gymId: gym.id,
+      gymName: gym.name,
+      gymCity: gym.city,
+      trainerName: trainer?.name ?? "GYMCO Coach",
+      startsAt: c.startsAt,
+      durationMin: c.durationMin,
+      capacity: c.capacity,
+      booked: Math.floor(c.capacity * 0.6),
+      intensity: c.intensity,
+      coverImage: c.coverImage,
+    };
+  });
+  res.json(ListGymClassesResponse.parse(out));
+});
+
+export default router;

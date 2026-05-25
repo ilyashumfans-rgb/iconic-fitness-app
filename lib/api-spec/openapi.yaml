@@ -3,34 +3,679 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: GYMCO customer API — multi-gym memberships, classes, bookings, check-ins, and fitness tracking.
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: profile
+  - name: gyms
+  - name: classes
+  - name: bookings
+  - name: memberships
+  - name: checkins
+  - name: trainers
+  - name: wallet
+  - name: dashboard
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
           content:
             application/json:
+              schema: { $ref: "#/components/schemas/HealthStatus" }
+
+  /me:
+    get:
+      operationId: getMe
+      tags: [profile]
+      summary: Get the current user profile + fitness stats
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserProfile" }
+    patch:
+      operationId: updateMe
+      tags: [profile]
+      summary: Update the current user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UserProfileUpdate" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserProfile" }
+
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Personalized home dashboard summary
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardSummary" }
+
+  /gyms:
+    get:
+      operationId: listGyms
+      tags: [gyms]
+      summary: Search and filter gyms
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: city
+          schema: { type: string }
+        - in: query
+          name: category
+          schema: { type: string, description: "e.g. gym, yoga, crossfit, pilates, mma, swimming, zumba" }
+        - in: query
+          name: amenity
+          schema: { type: string }
+        - in: query
+          name: sort
+          schema: { type: string, enum: [distance, rating, price] }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
               schema:
-                $ref: "#/components/schemas/HealthStatus"
+                type: array
+                items: { $ref: "#/components/schemas/Gym" }
+  /gyms/featured:
+    get:
+      operationId: listFeaturedGyms
+      tags: [gyms]
+      summary: Curated featured gyms for the homepage
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Gym" }
+  /gyms/categories:
+    get:
+      operationId: listGymCategories
+      tags: [gyms]
+      summary: Categories with counts (for filter chips)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CategoryCount" }
+  /gyms/{gymId}:
+    get:
+      operationId: getGym
+      tags: [gyms]
+      summary: Get a single gym with full details
+      parameters:
+        - in: path
+          name: gymId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GymDetail" }
+  /gyms/{gymId}/classes:
+    get:
+      operationId: listGymClasses
+      tags: [classes]
+      summary: List upcoming class sessions at a gym
+      parameters:
+        - in: path
+          name: gymId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ClassSession" }
+
+  /classes:
+    get:
+      operationId: listClasses
+      tags: [classes]
+      summary: Browse upcoming class sessions across all gyms
+      parameters:
+        - in: query
+          name: category
+          schema: { type: string }
+        - in: query
+          name: city
+          schema: { type: string }
+        - in: query
+          name: date
+          schema: { type: string, description: "ISO date (YYYY-MM-DD)" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ClassSession" }
+  /classes/trending:
+    get:
+      operationId: listTrendingClasses
+      tags: [classes]
+      summary: Trending classes (booked the most this week)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ClassSession" }
+  /classes/{classId}:
+    get:
+      operationId: getClass
+      tags: [classes]
+      summary: Get a single class session
+      parameters:
+        - in: path
+          name: classId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ClassSessionDetail" }
+
+  /memberships:
+    get:
+      operationId: listMemberships
+      tags: [memberships]
+      summary: List available membership plans
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/MembershipPlan" }
+  /memberships/mine:
+    get:
+      operationId: getMyMembership
+      tags: [memberships]
+      summary: Get the user's current active membership (null if none)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/MyMembership"
+                  - type: "null"
+
+  /bookings:
+    get:
+      operationId: listMyBookings
+      tags: [bookings]
+      summary: List the user's bookings
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, enum: [upcoming, past, cancelled] }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Booking" }
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Book a class session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BookingInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Booking" }
+  /bookings/{bookingId}:
+    delete:
+      operationId: cancelBooking
+      tags: [bookings]
+      summary: Cancel a booking
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Booking" }
+
+  /checkins:
+    get:
+      operationId: listCheckins
+      tags: [checkins]
+      summary: Recent QR check-in history
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Checkin" }
+    post:
+      operationId: createCheckin
+      tags: [checkins]
+      summary: Perform a QR check-in at a gym
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CheckinInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Checkin" }
+  /checkins/qr:
+    get:
+      operationId: getCheckinQr
+      tags: [checkins]
+      summary: Get the user's rotating QR check-in token
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/QrToken" }
+
+  /trainers:
+    get:
+      operationId: listTrainers
+      tags: [trainers]
+      summary: Browse trainers in the marketplace
+      parameters:
+        - in: query
+          name: specialty
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Trainer" }
+  /trainers/{trainerId}:
+    get:
+      operationId: getTrainer
+      tags: [trainers]
+      summary: Trainer profile
+      parameters:
+        - in: path
+          name: trainerId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Trainer" }
+
+  /wallet:
+    get:
+      operationId: getWallet
+      tags: [wallet]
+      summary: Wallet balance and recent transactions
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Wallet" }
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
-        status:
-          type: string
-      required:
-        - status
+        status: { type: string }
 
+    UserProfile:
+      type: object
+      required:
+        [
+          id, name, email, mobile, gender, age, heightCm, weightKg,
+          fitnessGoal, avatarUrl, city, bmi, fitnessScore,
+          dailyCalories, dailyWaterMl, dailySleepHours, restingHr,
+          streakDays, weeklyWorkouts, weeklyGoal, joinedAt
+        ]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string }
+        mobile: { type: string }
+        gender: { type: string }
+        age: { type: integer }
+        heightCm: { type: number }
+        weightKg: { type: number }
+        fitnessGoal: { type: string }
+        avatarUrl: { type: string }
+        city: { type: string }
+        bmi: { type: number }
+        fitnessScore: { type: integer, description: "0-100 composite AI score" }
+        dailyCalories: { type: integer }
+        dailyWaterMl: { type: integer }
+        dailySleepHours: { type: number }
+        restingHr: { type: integer }
+        streakDays: { type: integer }
+        weeklyWorkouts: { type: integer }
+        weeklyGoal: { type: integer }
+        joinedAt: { type: string, format: date-time }
+    UserProfileUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        mobile: { type: string }
+        gender: { type: string }
+        age: { type: integer }
+        heightCm: { type: number }
+        weightKg: { type: number }
+        fitnessGoal: { type: string }
+        city: { type: string }
+        weeklyGoal: { type: integer }
+
+    Gym:
+      type: object
+      required:
+        [
+          id, name, slug, city, area, address, heroImage, rating,
+          reviewsCount, priceFrom, categories, amenities, distanceKm,
+          isPremium, openNow
+        ]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        slug: { type: string }
+        city: { type: string }
+        area: { type: string }
+        address: { type: string }
+        heroImage: { type: string }
+        rating: { type: number }
+        reviewsCount: { type: integer }
+        priceFrom: { type: integer, description: "Monthly price in INR" }
+        categories:
+          type: array
+          items: { type: string }
+        amenities:
+          type: array
+          items: { type: string }
+        distanceKm: { type: number }
+        isPremium: { type: boolean }
+        openNow: { type: boolean }
+    GymDetail:
+      allOf:
+        - $ref: "#/components/schemas/Gym"
+        - type: object
+          required: [about, gallery, hours, lat, lng, trainers, upcomingClasses]
+          properties:
+            about: { type: string }
+            gallery:
+              type: array
+              items: { type: string }
+            hours: { type: string }
+            lat: { type: number }
+            lng: { type: number }
+            trainers:
+              type: array
+              items: { $ref: "#/components/schemas/Trainer" }
+            upcomingClasses:
+              type: array
+              items: { $ref: "#/components/schemas/ClassSession" }
+
+    CategoryCount:
+      type: object
+      required: [category, count, icon]
+      properties:
+        category: { type: string }
+        count: { type: integer }
+        icon: { type: string, description: "lucide icon name hint" }
+
+    ClassSession:
+      type: object
+      required:
+        [
+          id, title, category, gymId, gymName, gymCity, trainerName,
+          startsAt, durationMin, capacity, booked, intensity, coverImage
+        ]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        category: { type: string }
+        gymId: { type: integer }
+        gymName: { type: string }
+        gymCity: { type: string }
+        trainerName: { type: string }
+        startsAt: { type: string, format: date-time }
+        durationMin: { type: integer }
+        capacity: { type: integer }
+        booked: { type: integer }
+        intensity: { type: string, enum: [low, medium, high] }
+        coverImage: { type: string }
+    ClassSessionDetail:
+      allOf:
+        - $ref: "#/components/schemas/ClassSession"
+        - type: object
+          required: [description, equipmentNeeded, calorieEstimate]
+          properties:
+            description: { type: string }
+            equipmentNeeded:
+              type: array
+              items: { type: string }
+            calorieEstimate: { type: integer }
+
+    MembershipPlan:
+      type: object
+      required:
+        [
+          id, name, tagline, billingPeriod, priceInr, originalPriceInr,
+          gymsIncluded, classesPerMonth, perks, badge, popular
+        ]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        tagline: { type: string }
+        billingPeriod: { type: string, enum: [monthly, quarterly, annual] }
+        priceInr: { type: integer }
+        originalPriceInr: { type: integer }
+        gymsIncluded: { type: integer }
+        classesPerMonth: { type: integer }
+        perks:
+          type: array
+          items: { type: string }
+        badge: { type: string }
+        popular: { type: boolean }
+    MyMembership:
+      type: object
+      required: [planId, planName, renewsOn, classesUsed, classesIncluded, gymsAccessed, status]
+      properties:
+        planId: { type: integer }
+        planName: { type: string }
+        renewsOn: { type: string, format: date-time }
+        classesUsed: { type: integer }
+        classesIncluded: { type: integer }
+        gymsAccessed: { type: integer }
+        status: { type: string, enum: [active, paused, expired] }
+
+    Booking:
+      type: object
+      required:
+        [
+          id, classId, classTitle, gymName, gymCity, startsAt, durationMin,
+          status, trainerName, coverImage, qrCode
+        ]
+      properties:
+        id: { type: integer }
+        classId: { type: integer }
+        classTitle: { type: string }
+        gymName: { type: string }
+        gymCity: { type: string }
+        startsAt: { type: string, format: date-time }
+        durationMin: { type: integer }
+        status: { type: string, enum: [confirmed, attended, cancelled, waitlist] }
+        trainerName: { type: string }
+        coverImage: { type: string }
+        qrCode: { type: string }
+    BookingInput:
+      type: object
+      required: [classId]
+      properties:
+        classId: { type: integer }
+
+    Checkin:
+      type: object
+      required: [id, gymId, gymName, checkedInAt, method]
+      properties:
+        id: { type: integer }
+        gymId: { type: integer }
+        gymName: { type: string }
+        checkedInAt: { type: string, format: date-time }
+        method: { type: string, enum: [qr, nfc, face] }
+    CheckinInput:
+      type: object
+      required: [gymId]
+      properties:
+        gymId: { type: integer }
+        method:
+          type: string
+          enum: [qr, nfc, face]
+    QrToken:
+      type: object
+      required: [token, expiresAt, userName, memberCode]
+      properties:
+        token: { type: string }
+        expiresAt: { type: string, format: date-time }
+        userName: { type: string }
+        memberCode: { type: string }
+
+    Trainer:
+      type: object
+      required:
+        [
+          id, name, specialty, bio, photoUrl, rating, sessionsCount,
+          pricePerSession, certifications, city
+        ]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        specialty: { type: string }
+        bio: { type: string }
+        photoUrl: { type: string }
+        rating: { type: number }
+        sessionsCount: { type: integer }
+        pricePerSession: { type: integer }
+        certifications:
+          type: array
+          items: { type: string }
+        city: { type: string }
+
+    Wallet:
+      type: object
+      required: [balanceInr, rewardPoints, transactions]
+      properties:
+        balanceInr: { type: integer }
+        rewardPoints: { type: integer }
+        transactions:
+          type: array
+          items: { $ref: "#/components/schemas/WalletTransaction" }
+    WalletTransaction:
+      type: object
+      required: [id, label, amountInr, kind, createdAt]
+      properties:
+        id: { type: integer }
+        label: { type: string }
+        amountInr: { type: integer, description: "Positive = credit, negative = debit" }
+        kind: { type: string, enum: [cashback, referral, refund, debit, topup] }
+        createdAt: { type: string, format: date-time }
+
+    DashboardSummary:
+      type: object
+      required:
+        [
+          greeting, fitnessScore, streakDays, weeklyWorkouts, weeklyGoal,
+          caloriesToday, waterMl, sleepHours, nextBooking, recommendedClasses,
+          nearbyGyms, weeklyActivity, aiTip
+        ]
+      properties:
+        greeting: { type: string }
+        fitnessScore: { type: integer }
+        streakDays: { type: integer }
+        weeklyWorkouts: { type: integer }
+        weeklyGoal: { type: integer }
+        caloriesToday: { type: integer }
+        waterMl: { type: integer }
+        sleepHours: { type: number }
+        nextBooking:
+          oneOf:
+            - $ref: "#/components/schemas/Booking"
+            - type: "null"
+        recommendedClasses:
+          type: array
+          items: { $ref: "#/components/schemas/ClassSession" }
+        nearbyGyms:
+          type: array
+          items: { $ref: "#/components/schemas/Gym" }
+        weeklyActivity:
+          type: array
+          items: { $ref: "#/components/schemas/DayActivity" }
+        aiTip: { type: string }
+    DayActivity:
+      type: object
+      required: [day, calories, minutes]
+      properties:
+        day: { type: string, description: "Mon..Sun" }
+        calories: { type: integer }
+        minutes: { type: integer }
