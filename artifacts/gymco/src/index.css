@@ -108,8 +108,8 @@
   /* GYMCO Orange — taken from logo */
   --primary: 18 100% 55%;
   --primary-foreground: 0 0% 100%;
-  /* GYMCO Purple — taken from logo */
-  --brand-purple: 268 76% 52%;
+  /* GYMCO accent — warm amber (companion to primary orange) */
+  --brand-purple: 32 100% 50%;
   --brand-purple-foreground: 0 0% 100%;
   
   --secondary: 240 4.8% 95.9%;
@@ -127,7 +127,7 @@
   --input: 240 5.9% 90%;
   --ring: 18 100% 55%;
   --chart-1: 18 100% 55%;
-  --chart-2: 268 76% 52%;
+  --chart-2: 32 100% 50%;
   --chart-3: 290 70% 60%;
   --chart-4: 32 96% 60%;
   --chart-5: 250 65% 60%;
@@ -210,7 +210,7 @@
   
   --primary: 18 100% 55%;
   --primary-foreground: 0 0% 100%;
-  --brand-purple: 268 76% 58%;
+  --brand-purple: 32 100% 55%;
   --brand-purple-foreground: 0 0% 100%;
   
   --secondary: 260 14% 14%;
@@ -219,7 +219,7 @@
   --muted: 260 14% 14%;
   --muted-foreground: 240 5% 70%;
   
-  --accent: 268 76% 58%;
+  --accent: 32 100% 55%;
   --accent-foreground: 0 0% 100%;
   
   --destructive: 0 70% 50%;
@@ -228,7 +228,7 @@
   --input: 260 14% 16%;
   --ring: 18 100% 55%;
   --chart-1: 18 100% 55%;
-  --chart-2: 268 76% 58%;
+  --chart-2: 32 100% 55%;
   --chart-3: 290 70% 65%;
   --chart-4: 32 96% 62%;
   --chart-5: 250 65% 65%;
@@ -251,14 +251,14 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
     background-image:
-      radial-gradient(at 8% 4%, hsl(268 76% 58% / 0.07) 0px, transparent 50%),
+      radial-gradient(at 8% 4%, hsl(32 100% 58% / 0.07) 0px, transparent 50%),
       radial-gradient(at 92% 2%, hsl(18 100% 55% / 0.06) 0px, transparent 50%),
       radial-gradient(at 50% 100%, hsl(290 70% 60% / 0.04) 0px, transparent 60%);
     background-attachment: fixed;
   }
   .dark body {
     background-image:
-      radial-gradient(at 12% 6%, hsl(268 76% 58% / 0.14) 0px, transparent 55%),
+      radial-gradient(at 12% 6%, hsl(32 100% 58% / 0.14) 0px, transparent 55%),
       radial-gradient(at 88% 0%, hsl(18 100% 55% / 0.12) 0px, transparent 55%),
       radial-gradient(at 50% 100%, hsl(290 70% 50% / 0.08) 0px, transparent 60%);
   }
@@ -266,22 +266,22 @@
 
 @layer utilities {
   .text-gradient-brand {
-    background-image: linear-gradient(95deg, hsl(18 100% 60%) 0%, hsl(330 90% 60%) 45%, hsl(268 90% 65%) 100%);
+    background-image: linear-gradient(95deg, hsl(14 100% 52%) 0%, hsl(22 100% 55%) 50%, hsl(38 100% 58%) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
   .bg-gradient-brand {
-    background-image: linear-gradient(135deg, hsl(18 100% 55%) 0%, hsl(330 85% 55%) 50%, hsl(268 76% 58%) 100%);
+    background-image: linear-gradient(135deg, hsl(14 100% 50%) 0%, hsl(22 100% 55%) 50%, hsl(36 100% 55%) 100%);
   }
   .bg-gradient-brand-soft {
-    background-image: linear-gradient(135deg, hsl(18 100% 55% / 0.18) 0%, hsl(268 76% 58% / 0.18) 100%);
+    background-image: linear-gradient(135deg, hsl(18 100% 55% / 0.18) 0%, hsl(36 100% 55% / 0.18) 100%);
   }
   .ring-glow-brand {
     box-shadow:
       0 0 0 1px hsl(18 100% 55% / 0.3),
       0 10px 40px -10px hsl(18 100% 55% / 0.4),
-      0 20px 60px -20px hsl(268 76% 58% / 0.35);
+      0 20px 60px -20px hsl(36 100% 55% / 0.45);
   }
   .border-gradient-brand {
     position: relative;
@@ -293,7 +293,7 @@
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(135deg, hsl(18 100% 55%), hsl(268 76% 58%));
+    background: linear-gradient(135deg, hsl(18 100% 55%), hsl(32 100% 58%));
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
             mask-composite: exclude;

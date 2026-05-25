@@ -78,7 +78,7 @@ export function SiteFooter() {
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-16 pb-12">
         <div className="relative overflow-hidden rounded-3xl bg-card border border-border p-8 md:p-12 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.18)]">
           <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/15 blur-3xl" />
-          <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-[hsl(268_76%_58%/0.18)] blur-3xl" />
+          <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-[hsl(32_100%_55%/0.18)] blur-3xl" />
           <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             <div>
               <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary mb-3">

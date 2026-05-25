@@ -270,7 +270,7 @@ const HERO_VIDEO_SRC = `${import.meta.env.BASE_URL}media/hero.mp4`;
 const HERO_LIGHTS = Array.from({ length: 120 }).map((_, i) => {
   const palette = [
     "hsl(18 100% 60%)",   // orange
-    "hsl(268 90% 68%)",   // purple
+    "hsl(34 100% 68%)",   // purple
     "hsl(330 95% 65%)",   // pink
     "hsl(48 100% 65%)",   // amber
     "hsl(200 95% 70%)",   // cyan accent
@@ -302,7 +302,7 @@ const HERO_SHOOTS = Array.from({ length: 6 }).map((_, i) => {
     top: `${(8 + r(1) * 60).toFixed(2)}%`,
     delay: `${(i * 1.7 + r(2) * 2).toFixed(2)}s`,
     duration: `${(4.5 + r(3) * 3.5).toFixed(2)}s`,
-    hue: i % 2 === 0 ? "18 100% 70%" : "268 95% 78%",
+    hue: i % 2 === 0 ? "18 100% 70%" : "38 100% 72%",
   };
 });
 
@@ -326,7 +326,7 @@ function HeroBlinkingLights({ active }: { active: boolean }) {
         className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[140%] w-[140%] hero-aurora mix-blend-screen"
         style={{
           background:
-            "conic-gradient(from 0deg, hsl(18 100% 55% / 0.35), hsl(330 95% 60% / 0.3), hsl(268 90% 65% / 0.4), hsl(200 95% 60% / 0.3), hsl(155 95% 60% / 0.25), hsl(18 100% 55% / 0.35))",
+            "conic-gradient(from 0deg, hsl(18 100% 55% / 0.35), hsl(330 95% 60% / 0.3), hsl(34 100% 65% / 0.4), hsl(200 95% 60% / 0.3), hsl(155 95% 60% / 0.25), hsl(18 100% 55% / 0.35))",
           filter: "blur(80px)",
           maskImage:
             "radial-gradient(ellipse 60% 60% at 50% 50%, black 20%, transparent 75%)",
@@ -340,7 +340,7 @@ function HeroBlinkingLights({ active }: { active: boolean }) {
         className="absolute inset-0 hero-grid-drift opacity-[0.22] dark:opacity-30"
         style={{
           backgroundImage:
-            "linear-gradient(hsl(18 100% 60% / 0.22) 1px, transparent 1px), linear-gradient(90deg, hsl(268 90% 68% / 0.22) 1px, transparent 1px)",
+            "linear-gradient(hsl(18 100% 60% / 0.22) 1px, transparent 1px), linear-gradient(90deg, hsl(34 100% 68% / 0.22) 1px, transparent 1px)",
           backgroundSize: "44px 44px",
           maskImage:
             "radial-gradient(ellipse 75% 70% at 50% 45%, black 30%, transparent 85%)",
@@ -356,7 +356,7 @@ function HeroBlinkingLights({ active }: { active: boolean }) {
       />
       <div
         className="absolute right-[10%] top-[14%] h-[32rem] w-[32rem] rounded-full blur-[150px] hero-breathe-slow mix-blend-screen"
-        style={{ background: "hsl(268 80% 60% / 0.85)" }}
+        style={{ background: "hsl(30 100% 60% / 0.85)" }}
       />
       <div
         className="absolute left-[36%] bottom-[4%] h-[24rem] w-[24rem] rounded-full blur-[130px] hero-breathe mix-blend-screen"
@@ -372,7 +372,7 @@ function HeroBlinkingLights({ active }: { active: boolean }) {
         className="absolute left-1/2 top-[34%] -translate-x-1/2 -translate-y-1/2 h-[26rem] w-[26rem] hero-flare mix-blend-screen"
         style={{
           background:
-            "conic-gradient(from 0deg, transparent 0deg, hsl(18 100% 70% / 0.6) 6deg, transparent 12deg, transparent 90deg, hsl(268 95% 75% / 0.6) 96deg, transparent 102deg, transparent 180deg, hsl(330 95% 70% / 0.55) 186deg, transparent 192deg, transparent 270deg, hsl(48 100% 70% / 0.55) 276deg, transparent 282deg)",
+            "conic-gradient(from 0deg, transparent 0deg, hsl(18 100% 70% / 0.6) 6deg, transparent 12deg, transparent 90deg, hsl(38 100% 75% / 0.6) 96deg, transparent 102deg, transparent 180deg, hsl(330 95% 70% / 0.55) 186deg, transparent 192deg, transparent 270deg, hsl(48 100% 70% / 0.55) 276deg, transparent 282deg)",
           filter: "blur(14px)",
           maskImage:
             "radial-gradient(circle at 50% 50%, black 0%, transparent 70%)",
@@ -386,7 +386,7 @@ function HeroBlinkingLights({ active }: { active: boolean }) {
         className="absolute -top-1/2 -left-1/2 h-[200%] w-[60%] hero-sweep mix-blend-screen"
         style={{
           background:
-            "linear-gradient(90deg, transparent 0%, hsl(18 100% 70% / 0.35) 45%, hsl(268 90% 75% / 0.4) 55%, transparent 100%)",
+            "linear-gradient(90deg, transparent 0%, hsl(18 100% 70% / 0.35) 45%, hsl(34 100% 75% / 0.4) 55%, transparent 100%)",
           filter: "blur(28px)",
         }}
       />
@@ -396,7 +396,7 @@ function HeroBlinkingLights({ active }: { active: boolean }) {
         className="absolute inset-x-0 top-0 h-32 hero-scan mix-blend-screen"
         style={{
           background:
-            "linear-gradient(180deg, transparent 0%, hsl(18 100% 70% / 0.18) 45%, hsl(268 90% 75% / 0.22) 55%, transparent 100%)",
+            "linear-gradient(180deg, transparent 0%, hsl(18 100% 70% / 0.18) 45%, hsl(34 100% 75% / 0.22) 55%, transparent 100%)",
           filter: "blur(20px)",
         }}
       />
@@ -432,8 +432,8 @@ function HeroBlinkingLights({ active }: { active: boolean }) {
               left: b.left,
               width: "2px",
               background:
-                "linear-gradient(180deg, transparent 0%, white 40%, hsl(268 95% 80%) 60%, transparent 100%)",
-              boxShadow: "0 0 60px 10px hsl(268 95% 80% / 0.9), 0 0 120px 30px hsl(18 100% 65% / 0.5)",
+                "linear-gradient(180deg, transparent 0%, white 40%, hsl(38 100% 80%) 60%, transparent 100%)",
+              boxShadow: "0 0 60px 10px hsl(38 100% 80% / 0.9), 0 0 120px 30px hsl(18 100% 65% / 0.5)",
               "--dur": b.duration,
               "--delay": b.delay,
             } as React.CSSProperties
@@ -524,7 +524,7 @@ function Hero() {
       <div className="pointer-events-none absolute inset-0 z-0">
         {/* Conic mesh blobs */}
         <div
-          className={`absolute -top-40 left-1/2 -translate-x-1/2 h-[44rem] w-[80rem] rounded-full bg-[conic-gradient(from_120deg_at_50%_50%,hsl(18_100%_55%/0.22),hsl(268_76%_58%/0.22),hsl(330_90%_60%/0.18),hsl(18_100%_55%/0.22))] blur-[140px] transition-opacity duration-700 ${
+          className={`absolute -top-40 left-1/2 -translate-x-1/2 h-[44rem] w-[80rem] rounded-full bg-[conic-gradient(from_120deg_at_50%_50%,hsl(18_100%_55%/0.22),hsl(32_100%_55%/0.22),hsl(330_90%_60%/0.18),hsl(18_100%_55%/0.22))] blur-[140px] transition-opacity duration-700 ${
             videoOn ? "opacity-40" : "opacity-90"
           }`}
         />
@@ -534,7 +534,7 @@ function Hero() {
           }`}
         />
         <div
-          className={`absolute top-1/4 -right-24 h-[30rem] w-[30rem] rounded-full bg-[hsl(268_76%_58%/0.22)] blur-[170px] transition-opacity duration-700 ${
+          className={`absolute top-1/4 -right-24 h-[30rem] w-[30rem] rounded-full bg-[hsl(32_100%_55%/0.22)] blur-[170px] transition-opacity duration-700 ${
             videoOn ? "opacity-50" : "opacity-100"
           }`}
         />
@@ -1117,7 +1117,7 @@ function FeatureBlock() {
             className="md:col-span-3 md:row-span-2 relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-secondary/40 p-8 md:p-10"
           >
             <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
-            <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-[hsl(268_76%_58%/0.22)] blur-3xl" />
+            <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-[hsl(32_100%_55%/0.22)] blur-3xl" />
             <div className="relative">
               <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 mb-4">
                 <Smartphone className="h-3 w-3 text-primary" />
@@ -1335,7 +1335,7 @@ function FeatureBlock() {
           >
             <div className="absolute inset-0 opacity-30 pointer-events-none">
               <div className="absolute -top-20 right-10 h-60 w-60 rounded-full bg-primary/40 blur-3xl" />
-              <div className="absolute -bottom-20 left-10 h-60 w-60 rounded-full bg-[hsl(268_76%_58%/0.5)] blur-3xl" />
+              <div className="absolute -bottom-20 left-10 h-60 w-60 rounded-full bg-[hsl(32_100%_55%/0.5)] blur-3xl" />
             </div>
             <div className="relative flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-8">
               <div className="flex-1">
