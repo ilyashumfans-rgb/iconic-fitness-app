@@ -592,7 +592,134 @@ router.get(
       .where(inArray(classSessionsTable.gymId, gymIds))
       .orderBy(desc(classSessionsTable.startsAt))
       .limit(200);
+
+    // Per-class booking counts (active = not cancelled).
+    const classIds = rows.map((r) => r.id);
+    const counts = classIds.length
+      ? await db
+          .select({
+            classId: bookingsTable.classId,
+            total: sql<number>`count(*)::int`,
+            active: sql<number>`sum(case when ${bookingsTable.status} <> 'cancelled' then 1 else 0 end)::int`,
+            completed: sql<number>`sum(case when ${bookingsTable.status} = 'completed' then 1 else 0 end)::int`,
+          })
+          .from(bookingsTable)
+          .where(inArray(bookingsTable.classId, classIds))
+          .groupBy(bookingsTable.classId)
+      : [];
+    const byClass = new Map(counts.map((c) => [c.classId, c]));
+    res.json(
+      rows.map((r) => {
+        const c = byClass.get(r.id);
+        return {
+          ...r,
+          bookedCount: c?.active ?? 0,
+          completedCount: c?.completed ?? 0,
+          totalBookings: c?.total ?? 0,
+        };
+      }),
+    );
+  },
+);
+
+// Attendees for a single class (partner must own the class's gym).
+router.get(
+  "/partner/classes/:id/attendees",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const partnerId = req.session.partnerId!;
+    const id = Number(req.params.id);
+    const [cls] = await db
+      .select()
+      .from(classSessionsTable)
+      .where(eq(classSessionsTable.id, id));
+    if (!cls) {
+      res.status(404).json({ error: "Class not found" });
+      return;
+    }
+    if (!(await ensureOwnsGym(partnerId, cls.gymId))) {
+      res.status(403).json({ error: "Not allowed" });
+      return;
+    }
+    const rows = await db
+      .select({
+        id: bookingsTable.id,
+        status: bookingsTable.status,
+        createdAt: bookingsTable.createdAt,
+        userId: usersTable.id,
+        userName: usersTable.name,
+        userEmail: usersTable.email,
+        userPhone: usersTable.mobile,
+        userAvatar: usersTable.avatarUrl,
+      })
+      .from(bookingsTable)
+      .innerJoin(usersTable, eq(bookingsTable.userId, usersTable.id))
+      .where(eq(bookingsTable.classId, id))
+      .orderBy(desc(bookingsTable.createdAt));
     res.json(rows);
+  },
+);
+
+// Partner updates a booking status (confirmed / completed / cancelled).
+router.patch(
+  "/partner/bookings/:id",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const partnerId = req.session.partnerId!;
+    const id = Number(req.params.id);
+    const status = String((req.body ?? {}).status ?? "");
+    if (!["confirmed", "completed", "cancelled"].includes(status)) {
+      res.status(400).json({ error: "Invalid status" });
+      return;
+    }
+    const [booking] = await db
+      .select({
+        id: bookingsTable.id,
+        classId: bookingsTable.classId,
+        currentStatus: bookingsTable.status,
+        gymId: classSessionsTable.gymId,
+        capacity: classSessionsTable.capacity,
+      })
+      .from(bookingsTable)
+      .innerJoin(
+        classSessionsTable,
+        eq(bookingsTable.classId, classSessionsTable.id),
+      )
+      .where(eq(bookingsTable.id, id));
+    if (!booking) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+    if (!(await ensureOwnsGym(partnerId, booking.gymId))) {
+      res.status(403).json({ error: "Not allowed" });
+      return;
+    }
+    // Block over-booking when moving back into an active state.
+    const wasActive = booking.currentStatus !== "cancelled";
+    const willBeActive = status !== "cancelled";
+    if (!wasActive && willBeActive) {
+      const [count] = await db
+        .select({ c: sql<number>`count(*)::int` })
+        .from(bookingsTable)
+        .where(
+          and(
+            eq(bookingsTable.classId, booking.classId),
+            sql`${bookingsTable.status} <> 'cancelled'`,
+          ),
+        );
+      if ((count?.c ?? 0) >= booking.capacity) {
+        res
+          .status(409)
+          .json({ error: "Class is full — cannot restore this booking." });
+        return;
+      }
+    }
+    const [updated] = await db
+      .update(bookingsTable)
+      .set({ status })
+      .where(eq(bookingsTable.id, id))
+      .returning();
+    res.json(updated);
   },
 );
 

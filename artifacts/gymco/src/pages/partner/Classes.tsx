@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { PartnerLayout, PartnerCard } from "@/components/partner/PartnerLayout";
 import {
   partnerApi,
+  type PartnerAttendee,
   type PartnerClass,
   type PartnerClassInput,
   type PartnerGym,
@@ -16,6 +17,10 @@ import {
   Trash2,
   X,
   Calendar,
+  CheckCircle2,
+  Ban,
+  Mail,
+  Phone,
 } from "lucide-react";
 
 const INPUT =
@@ -76,6 +81,38 @@ export default function PartnerClasses() {
   const [err, setErr] = useState<string | null>(null);
   const [editing, setEditing] = useState<EditState | null>(null);
   const [filter, setFilter] = useState<"all" | "upcoming" | "past">("upcoming");
+  const [attendeesFor, setAttendeesFor] = useState<PartnerClass | null>(null);
+  const [attendees, setAttendees] = useState<PartnerAttendee[]>([]);
+  const [attendeesBusy, setAttendeesBusy] = useState(false);
+
+  const openAttendees = async (c: PartnerClass) => {
+    setAttendeesFor(c);
+    setAttendees([]);
+    setAttendeesBusy(true);
+    try {
+      const rows = await partnerApi.classes.attendees(c.id);
+      setAttendees(rows);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not load attendees");
+    } finally {
+      setAttendeesBusy(false);
+    }
+  };
+
+  const setBookingStatus = async (
+    bookingId: number,
+    status: "confirmed" | "completed" | "cancelled",
+  ) => {
+    try {
+      await partnerApi.updateBookingStatus(bookingId, status);
+      setAttendees((prev) =>
+        prev.map((a) => (a.id === bookingId ? { ...a, status } : a)),
+      );
+      load();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Update failed");
+    }
+  };
 
   const load = () => {
     Promise.all([
@@ -256,31 +293,168 @@ export default function PartnerClasses() {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Users className="h-3.5 w-3.5" />
-                  {c.capacity} cap · {c.durationMin}m
+                  {c.bookedCount}/{c.capacity} booked · {c.durationMin}m
                 </div>
               </div>
+              <CapacityBar
+                booked={c.bookedCount}
+                capacity={c.capacity}
+              />
               {c.trainerName && (
                 <div className="mt-3 text-xs text-slate-500">
                   Trainer:{" "}
                   <span className="text-slate-300">{c.trainerName}</span>
                 </div>
               )}
-              <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+              <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
                 <button
-                  onClick={() => openEdit(c)}
-                  className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-slate-800 text-slate-200 hover:bg-slate-700"
+                  onClick={() => openAttendees(c)}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded bg-orange-500/10 text-orange-400 hover:bg-orange-500/20"
                 >
-                  <Pencil className="h-3.5 w-3.5" /> Edit
+                  <Users className="h-3.5 w-3.5" />
+                  Attendees ({c.bookedCount})
                 </button>
-                <button
-                  onClick={() => remove(c.id)}
-                  className="p-1.5 rounded-md text-slate-400 hover:text-red-400 hover:bg-red-500/10"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => openEdit(c)}
+                    className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-slate-800 text-slate-200 hover:bg-slate-700"
+                  >
+                    <Pencil className="h-3.5 w-3.5" /> Edit
+                  </button>
+                  <button
+                    onClick={() => remove(c.id)}
+                    className="p-1.5 rounded-md text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </PartnerCard>
           ))}
+        </div>
+      )}
+
+      {attendeesFor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between sticky top-0 bg-slate-900 z-10">
+              <div className="min-w-0">
+                <div className="text-xs uppercase tracking-wide text-orange-500 font-semibold">
+                  {attendeesFor.category} ·{" "}
+                  {new Date(attendeesFor.startsAt).toLocaleString([], {
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </div>
+                <h3 className="text-lg font-semibold text-white truncate">
+                  Attendees · {attendeesFor.title}
+                </h3>
+                <div className="text-xs text-slate-500 mt-0.5">
+                  {attendees.filter((a) => a.status !== "cancelled").length}/
+                  {attendeesFor.capacity} booked · {attendeesFor.gymName}
+                </div>
+              </div>
+              <button
+                onClick={() => setAttendeesFor(null)}
+                className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-4">
+              {attendeesBusy ? (
+                <div className="p-10 text-center text-sm text-slate-400">
+                  Loading attendees…
+                </div>
+              ) : attendees.length === 0 ? (
+                <div className="p-10 text-center">
+                  <Users className="h-10 w-10 text-slate-600 mx-auto mb-3" />
+                  <div className="text-slate-400 text-sm">
+                    No one has booked this class yet.
+                  </div>
+                </div>
+              ) : (
+                <ul className="divide-y divide-slate-800">
+                  {attendees.map((a) => (
+                    <li
+                      key={a.id}
+                      className="py-3 flex items-center gap-3"
+                    >
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 overflow-hidden shrink-0 flex items-center justify-center text-white text-sm font-bold">
+                        {a.userAvatar ? (
+                          <img
+                            src={a.userAvatar}
+                            alt={a.userName}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          a.userName?.[0]?.toUpperCase() ?? "U"
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <div className="text-white font-medium truncate">
+                            {a.userName}
+                          </div>
+                          <StatusBadge status={a.status} />
+                        </div>
+                        <div className="text-xs text-slate-500 flex items-center gap-3 mt-0.5">
+                          <span className="inline-flex items-center gap-1">
+                            <Mail className="h-3 w-3" />
+                            {a.userEmail}
+                          </span>
+                          {a.userPhone && (
+                            <span className="inline-flex items-center gap-1">
+                              <Phone className="h-3 w-3" />
+                              {a.userPhone}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {a.status !== "completed" && (
+                          <button
+                            onClick={() =>
+                              setBookingStatus(a.id, "completed")
+                            }
+                            className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                            title="Mark attended"
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Attended
+                          </button>
+                        )}
+                        {a.status !== "cancelled" && (
+                          <button
+                            onClick={() =>
+                              setBookingStatus(a.id, "cancelled")
+                            }
+                            className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                            title="Cancel booking"
+                          >
+                            <Ban className="h-3.5 w-3.5" />
+                            Cancel
+                          </button>
+                        )}
+                        {a.status === "cancelled" && (
+                          <button
+                            onClick={() =>
+                              setBookingStatus(a.id, "confirmed")
+                            }
+                            className="text-xs px-2.5 py-1.5 rounded bg-slate-800 text-slate-200 hover:bg-slate-700"
+                          >
+                            Restore
+                          </button>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -508,5 +682,45 @@ function Label({ children }: { children: React.ReactNode }) {
     <label className="text-xs uppercase tracking-wide text-slate-400 font-medium mb-1.5 block">
       {children}
     </label>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const tone =
+    status === "completed"
+      ? "bg-emerald-500/15 text-emerald-300"
+      : status === "cancelled"
+        ? "bg-red-500/15 text-red-300"
+        : "bg-orange-500/15 text-orange-300";
+  return (
+    <span
+      className={`text-[10px] uppercase tracking-wide font-bold px-2 py-0.5 rounded ${tone}`}
+    >
+      {status}
+    </span>
+  );
+}
+
+function CapacityBar({
+  booked,
+  capacity,
+}: {
+  booked: number;
+  capacity: number;
+}) {
+  const pct = capacity > 0 ? Math.min(100, (booked / capacity) * 100) : 0;
+  const tone =
+    pct >= 100
+      ? "bg-red-500"
+      : pct >= 75
+        ? "bg-amber-500"
+        : "bg-emerald-500";
+  return (
+    <div className="mt-2 h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+      <div
+        className={`h-full ${tone} transition-all`}
+        style={{ width: `${pct}%` }}
+      />
+    </div>
   );
 }

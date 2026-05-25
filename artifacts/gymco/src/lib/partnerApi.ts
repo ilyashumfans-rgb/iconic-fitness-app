@@ -110,6 +110,20 @@ export type PartnerClass = {
   coverImage: string;
   description: string;
   calorieEstimate: number;
+  bookedCount: number;
+  completedCount: number;
+  totalBookings: number;
+};
+
+export type PartnerAttendee = {
+  id: number;
+  status: "confirmed" | "completed" | "cancelled" | string;
+  createdAt: string;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  userPhone: string;
+  userAvatar: string;
 };
 
 async function request<T>(
@@ -184,7 +198,17 @@ export const partnerApi = {
       }),
     remove: (id: number) =>
       request<{ ok: true }>(`/partner/classes/${id}`, { method: "DELETE" }),
+    attendees: (id: number) =>
+      request<PartnerAttendee[]>(`/partner/classes/${id}/attendees`),
   },
+  updateBookingStatus: (
+    id: number,
+    status: "confirmed" | "completed" | "cancelled",
+  ) =>
+    request<any>(`/partner/bookings/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    }),
   products: {
     list: () => request<any[]>("/partner/products"),
     create: (body: Record<string, unknown>) =>
