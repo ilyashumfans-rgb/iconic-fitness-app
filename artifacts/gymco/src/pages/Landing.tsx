@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useListFeaturedGyms } from "@workspace/api-client-react";
@@ -34,8 +34,13 @@ const popularCities = [
   "Chennai",
 ];
 
-const heroImage =
-  "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1600&q=80";
+const heroSlides = [
+  "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=85",
+  "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1920&q=85",
+  "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1920&q=85",
+  "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1920&q=85",
+  "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1920&q=85",
+];
 
 const partnerGyms = [
   { name: "Cult.fit", letters: "CULT" },
@@ -226,6 +231,14 @@ function Hero() {
   const [, navigate] = useLocation();
   const [query, setQuery] = useState("");
   const [city, setCity] = useState("");
+  const [slideIdx, setSlideIdx] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setSlideIdx((i) => (i + 1) % heroSlides.length);
+    }, 5000);
+    return () => clearInterval(id);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -237,45 +250,73 @@ function Hero() {
   };
 
   return (
-    <section className="relative pt-32 md:pt-40 pb-20 md:pb-32 overflow-hidden">
-      {/* Background image */}
-      <div className="absolute inset-0 -z-10">
-        <img
-          src={heroImage}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover opacity-30"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/80 to-background" />
-        <div className="absolute -top-32 -left-32 h-[28rem] w-[28rem] rounded-full bg-primary/30 blur-[140px]" />
-        <div className="absolute -top-20 right-0 h-[32rem] w-[32rem] rounded-full bg-[hsl(268_76%_58%/0.35)] blur-[160px]" />
-        <div className="absolute bottom-0 left-1/3 h-[24rem] w-[24rem] rounded-full bg-[hsl(330_90%_55%/0.25)] blur-[140px]" />
+    <section className="relative min-h-screen flex items-center justify-center pt-28 md:pt-32 pb-20 md:pb-28 overflow-hidden">
+      {/* Background slider */}
+      <div className="absolute inset-0 z-0">
+        <AnimatePresence mode="sync">
+          <motion.div
+            key={slideIdx}
+            initial={{ opacity: 0, scale: 1.08 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.02 }}
+            transition={{ opacity: { duration: 1.6 }, scale: { duration: 6, ease: "linear" } }}
+            className="absolute inset-0"
+          >
+            <img
+              src={heroSlides[slideIdx]}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          </motion.div>
+        </AnimatePresence>
+        {/* Overlays — let the slider breathe while keeping text readable */}
+        <div className="absolute inset-0 bg-black/35" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-transparent to-background" />
+        <div className="absolute -top-32 -left-32 h-[28rem] w-[28rem] rounded-full bg-primary/25 blur-[140px] mix-blend-screen" />
+        <div className="absolute -top-20 right-0 h-[32rem] w-[32rem] rounded-full bg-[hsl(268_76%_58%/0.3)] blur-[160px] mix-blend-screen" />
+        <div className="absolute bottom-0 left-1/3 h-[24rem] w-[24rem] rounded-full bg-[hsl(330_90%_55%/0.25)] blur-[140px] mix-blend-screen" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-8 relative">
+      {/* Slide indicator dots */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+        {heroSlides.map((_, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => setSlideIdx(i)}
+            aria-label={`Slide ${i + 1}`}
+            className={`h-1.5 rounded-full transition-all duration-500 ${
+              i === slideIdx
+                ? "w-10 bg-gradient-brand shadow-[0_0_12px_hsl(18_100%_55%/0.8)]"
+                : "w-1.5 bg-white/40 hover:bg-white/70"
+            }`}
+          />
+        ))}
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 md:px-8 relative z-10 w-full">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          className="max-w-4xl"
+          className="flex flex-col items-center text-center"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-md mb-8">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <span className="text-xs font-bold uppercase tracking-[0.18em] text-white/80">
+            <span className="text-xs font-bold uppercase tracking-[0.18em] text-white/90">
               Now live in 12 Indian cities
             </span>
           </div>
 
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-[-0.03em] leading-[0.95] text-white">
-            One pass.{" "}
-            <span className="text-gradient-brand">Every gym.</span>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-[-0.03em] leading-[1] text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.6)]">
+            One Membership
             <br />
-            Every class.
+            <span className="text-gradient-brand">Unlimited Gyms</span>
           </h1>
 
-          <p className="mt-8 text-lg md:text-xl text-white/70 max-w-2xl leading-relaxed">
-            GYMCO is the premium membership for people who refuse to settle for
-            one gym. Train across 500+ studios, book any class, walk in with a
-            QR. From sunrise yoga to midnight MMA.
+          <p className="mt-8 text-lg md:text-xl text-white/80 max-w-2xl leading-relaxed">
+            Access India's best gyms and studios on a single pass. Book any
+            class, walk in with a QR — from sunrise yoga to midnight MMA.
           </p>
 
           {/* Search bar — the killer hero feature */}
@@ -284,7 +325,7 @@ function Hero() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25, duration: 0.6 }}
-            className="mt-10 max-w-3xl"
+            className="mt-10 w-full max-w-3xl mx-auto"
           >
             <div className="rounded-2xl bg-white/10 backdrop-blur-2xl border border-white/15 p-2 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)] flex flex-col md:flex-row gap-2">
               <div className="flex-1 flex items-center gap-3 px-4 py-2 bg-background/40 rounded-xl">
@@ -335,7 +376,7 @@ function Hero() {
             </div>
           </motion.form>
 
-          <div className="mt-8 flex flex-col sm:flex-row gap-3">
+          <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/memberships">
               <Button
                 size="lg"
@@ -354,7 +395,7 @@ function Hero() {
           </div>
 
           {/* Trust strip */}
-          <div className="mt-12 flex items-center gap-6 flex-wrap">
+          <div className="mt-12 flex items-center gap-6 flex-wrap justify-center">
             <div className="flex -space-x-3">
               {testimonials.map((t) => (
                 <img
