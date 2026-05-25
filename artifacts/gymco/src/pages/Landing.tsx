@@ -23,7 +23,7 @@ import {
   Clock,
   Crown,
 } from "lucide-react";
-import logoUrl from "@assets/Go_To_Any_Gym._(2)_1779712879770.png";
+const logoUrl = `${import.meta.env.BASE_URL}media/gymco-logo.png`;
 
 const popularCities = [
   "Bangalore",

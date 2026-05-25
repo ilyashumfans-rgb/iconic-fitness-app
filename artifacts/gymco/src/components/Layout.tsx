@@ -13,7 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 import { toast } from "sonner";
-import logoUrl from "@assets/Go_To_Any_Gym._(2)_1779712879770.png";
+const logoUrl = `${import.meta.env.BASE_URL}media/gymco-logo.png`;
 
 export function handleSignOut(navigate: (path: string) => void) {
   toast.success("Signed out", {
