@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useListFeaturedGyms } from "@workspace/api-client-react";
@@ -34,13 +34,12 @@ const popularCities = [
   "Chennai",
 ];
 
-const heroSlides = [
-  "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=85",
-  "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1920&q=85",
-  "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1920&q=85",
-  "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1920&q=85",
-  "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1920&q=85",
-];
+const heroVideo =
+  "https://assets.mixkit.co/videos/preview/mixkit-young-woman-doing-jumping-jacks-in-a-gym-39888-large.mp4";
+const heroVideoFallback =
+  "https://assets.mixkit.co/videos/preview/mixkit-girl-doing-squats-in-a-gym-39895-large.mp4";
+const heroPoster =
+  "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=85";
 
 const partnerGyms = [
   { name: "Cult.fit", letters: "CULT" },
@@ -231,14 +230,11 @@ function Hero() {
   const [, navigate] = useLocation();
   const [query, setQuery] = useState("");
   const [city, setCity] = useState("");
-  const [slideIdx, setSlideIdx] = useState(0);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setSlideIdx((i) => (i + 1) % heroSlides.length);
-    }, 5000);
-    return () => clearInterval(id);
-  }, []);
+  const [videoFailed, setVideoFailed] = useState(false);
+  const prefersReducedMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  const showVideo = !prefersReducedMotion && !videoFailed;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,47 +247,36 @@ function Hero() {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-28 md:pt-32 pb-20 md:pb-28 overflow-hidden">
-      {/* Background slider */}
+      {/* Background video (falls back to poster image when reduced-motion or load fails) */}
       <div className="absolute inset-0 z-0">
-        <AnimatePresence mode="sync">
-          <motion.div
-            key={slideIdx}
-            initial={{ opacity: 0, scale: 1.08 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.02 }}
-            transition={{ opacity: { duration: 1.6 }, scale: { duration: 6, ease: "linear" } }}
-            className="absolute inset-0"
+        {showVideo ? (
+          <video
+            key="hero-video"
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            poster={heroPoster}
+            onError={() => setVideoFailed(true)}
+            className="absolute inset-0 h-full w-full object-cover"
           >
-            <img
-              src={heroSlides[slideIdx]}
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          </motion.div>
-        </AnimatePresence>
-        {/* Overlays — let the slider breathe while keeping text readable */}
-        <div className="absolute inset-0 bg-black/35" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-transparent to-background" />
+            <source src={heroVideo} type="video/mp4" />
+            <source src={heroVideoFallback} type="video/mp4" />
+          </video>
+        ) : (
+          <img
+            src={heroPoster}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
+        {/* Overlays — let the video breathe while keeping text readable */}
+        <div className="absolute inset-0 bg-black/45" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-background" />
         <div className="absolute -top-32 -left-32 h-[28rem] w-[28rem] rounded-full bg-primary/25 blur-[140px] mix-blend-screen" />
         <div className="absolute -top-20 right-0 h-[32rem] w-[32rem] rounded-full bg-[hsl(268_76%_58%/0.3)] blur-[160px] mix-blend-screen" />
         <div className="absolute bottom-0 left-1/3 h-[24rem] w-[24rem] rounded-full bg-[hsl(330_90%_55%/0.25)] blur-[140px] mix-blend-screen" />
-      </div>
-
-      {/* Slide indicator dots */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
-        {heroSlides.map((_, i) => (
-          <button
-            key={i}
-            type="button"
-            onClick={() => setSlideIdx(i)}
-            aria-label={`Slide ${i + 1}`}
-            className={`h-1.5 rounded-full transition-all duration-500 ${
-              i === slideIdx
-                ? "w-10 bg-gradient-brand shadow-[0_0_12px_hsl(18_100%_55%/0.8)]"
-                : "w-1.5 bg-white/40 hover:bg-white/70"
-            }`}
-          />
-        ))}
       </div>
 
       <div className="max-w-5xl mx-auto px-4 md:px-8 relative z-10 w-full">
