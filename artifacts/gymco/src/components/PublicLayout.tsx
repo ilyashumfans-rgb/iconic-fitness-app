@@ -7,7 +7,7 @@ const logoUrl = `${import.meta.env.BASE_URL}media/gymco-logo.png`;
 
 function PublicNav() {
   const links = [
-    { href: "/explore", label: "Gyms" },
+    { href: "/explore", label: "Browse Gyms" },
     { href: "/classes", label: "Classes" },
     { href: "/trainers", label: "Trainers" },
     { href: "/memberships", label: "Pricing" },
