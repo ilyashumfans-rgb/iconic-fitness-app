@@ -82,7 +82,7 @@ export default function PartnerSettings() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PartnerCard className="p-6">
           <div className="flex items-center gap-2 mb-5">
-            <UserCog className="h-5 w-5 text-purple-400" />
+            <UserCog className="h-5 w-5 text-orange-600" />
             <h2 className="text-lg font-semibold text-white">Account profile</h2>
           </div>
           <form onSubmit={saveProfile} className="space-y-4">
@@ -101,7 +101,7 @@ export default function PartnerSettings() {
             <button
               type="submit"
               disabled={profileBusy}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-orange-500 text-white text-sm font-semibold disabled:opacity-60"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-semibold disabled:opacity-60"
             >
               {profileBusy ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -115,7 +115,7 @@ export default function PartnerSettings() {
 
         <PartnerCard className="p-6">
           <div className="flex items-center gap-2 mb-5">
-            <KeyRound className="h-5 w-5 text-purple-400" />
+            <KeyRound className="h-5 w-5 text-orange-600" />
             <h2 className="text-lg font-semibold text-white">
               Change password
             </h2>
@@ -143,7 +143,7 @@ export default function PartnerSettings() {
             <button
               type="submit"
               disabled={pwBusy}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-orange-500 text-white text-sm font-semibold disabled:opacity-60"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-semibold disabled:opacity-60"
             >
               {pwBusy ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -182,7 +182,7 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className={`w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/60 ${
+        className={`w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60 ${
           disabled
             ? "bg-slate-800/40 border-slate-800 text-slate-500"
             : "bg-slate-800 border-slate-700 text-white"

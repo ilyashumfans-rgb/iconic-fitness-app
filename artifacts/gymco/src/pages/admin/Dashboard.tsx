@@ -46,7 +46,7 @@ const STAT_DEFS: {
     key: "totalGyms",
     label: "Total Gyms",
     hint: "Gym locations",
-    iconBg: "bg-purple-500",
+    iconBg: "bg-orange-500",
     icon: <Building2 className="h-5 w-5 text-white" />,
     growth: "+15.3% this month",
   },
@@ -83,7 +83,7 @@ const STAT_DEFS: {
   },
 ];
 
-const PIE_COLORS = ["#3b82f6", "#7c3aed", "#fb923c", "#10b981", "#ec4899"];
+const PIE_COLORS = ["#f97316", "#fb923c", "#f59e0b", "#fbbf24", "#fdba74"];
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
@@ -155,8 +155,8 @@ export default function AdminDashboard() {
                     <stop offset="100%" stopColor="#fb923c" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="grad-b" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#7c3aed" stopOpacity={0.6} />
-                    <stop offset="100%" stopColor="#7c3aed" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#f97316" stopOpacity={0.6} />
+                    <stop offset="100%" stopColor="#f97316" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
@@ -181,7 +181,7 @@ export default function AdminDashboard() {
                 <Area
                   type="monotone"
                   dataKey="bookings"
-                  stroke="#7c3aed"
+                  stroke="#f97316"
                   strokeWidth={2}
                   fill="url(#grad-b)"
                   name="Bookings"

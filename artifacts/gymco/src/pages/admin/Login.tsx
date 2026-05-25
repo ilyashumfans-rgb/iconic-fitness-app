@@ -121,36 +121,36 @@ export default function AdminLogin() {
   }, [clerkAvailable, isSignedInToClerk]);
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 shadow-lg shadow-orange-500/20">
+          <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 shadow-lg shadow-orange-500/30">
             <ShieldCheck className="h-7 w-7 text-white" />
           </div>
-          <div className="mt-4 text-3xl font-extrabold tracking-tight bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent">
+          <div className="mt-4 text-3xl font-extrabold tracking-tight bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
             GYMCO
           </div>
-          <div className="text-xs uppercase tracking-[0.25em] text-orange-400 font-semibold mt-1">
+          <div className="text-xs uppercase tracking-[0.25em] text-orange-600 font-bold mt-1">
             Admin Portal
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-7 space-y-5 shadow-xl">
+        <div className="bg-white border border-orange-100 rounded-2xl p-7 space-y-5 shadow-[0_20px_60px_-20px_rgba(249,115,22,0.25)]">
           {clerkAvailable && (
             <>
               {isSignedInToClerk ? (
                 <div className="space-y-3">
-                  <div className="text-sm text-slate-400">
+                  <div className="text-sm text-slate-500">
                     Signed in to Google as
                   </div>
-                  <div className="text-white font-semibold break-all">
+                  <div className="text-slate-900 font-semibold break-all">
                     {clerkEmail || "your Google account"}
                   </div>
                   <button
                     type="button"
                     onClick={continueAsClerkUser}
                     disabled={googleBusy}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-white text-slate-900 font-semibold hover:bg-slate-100 transition disabled:opacity-60"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-white text-slate-900 font-semibold border border-slate-200 hover:bg-orange-50 hover:border-orange-300 transition disabled:opacity-60"
                   >
                     {googleBusy ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -162,7 +162,7 @@ export default function AdminLogin() {
                   <button
                     type="button"
                     onClick={() => clerk?.signOut()}
-                    className="w-full text-xs text-slate-400 hover:text-slate-200"
+                    className="w-full text-xs text-slate-500 hover:text-orange-600"
                   >
                     Use a different Google account
                   </button>
@@ -172,7 +172,7 @@ export default function AdminLogin() {
                   type="button"
                   onClick={startGoogle}
                   disabled={googleBusy}
-                  className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg bg-white text-slate-900 font-semibold hover:bg-slate-100 transition disabled:opacity-60"
+                  className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg bg-white text-slate-900 font-semibold border border-slate-200 hover:bg-orange-50 hover:border-orange-300 transition disabled:opacity-60"
                 >
                   {googleBusy ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -183,38 +183,38 @@ export default function AdminLogin() {
                 </button>
               )}
 
-              <div className="flex items-center gap-3 text-[11px] uppercase tracking-wider text-slate-500">
-                <div className="h-px flex-1 bg-slate-800" />
+              <div className="flex items-center gap-3 text-[11px] uppercase tracking-wider text-slate-400 font-bold">
+                <div className="h-px flex-1 bg-slate-200" />
                 or use password
-                <div className="h-px flex-1 bg-slate-800" />
+                <div className="h-px flex-1 bg-slate-200" />
               </div>
             </>
           )}
 
           <form onSubmit={onSubmit} className="space-y-5">
             <div>
-              <label className="text-sm font-medium text-slate-300 mb-2 block">
+              <label className="text-sm font-medium text-slate-700 mb-2 block">
                 Email
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60 focus:border-orange-500/60"
+                className="w-full px-4 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/60 focus:border-orange-500/60"
                 placeholder="you@gymco.in"
                 autoComplete="username"
                 required
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-slate-300 mb-2 block">
+              <label className="text-sm font-medium text-slate-700 mb-2 block">
                 Password
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60 focus:border-orange-500/60"
+                className="w-full px-4 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/60 focus:border-orange-500/60"
                 placeholder="••••••••"
                 autoComplete="current-password"
                 required
@@ -222,7 +222,7 @@ export default function AdminLogin() {
             </div>
 
             {err && (
-              <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
                 {err}
               </div>
             )}
@@ -237,7 +237,7 @@ export default function AdminLogin() {
             </button>
           </form>
 
-          <div className="text-xs text-slate-500 text-center pt-2 border-t border-slate-800">
+          <div className="text-xs text-slate-500 text-center pt-2 border-t border-slate-100">
             Restricted access. Contact your administrator for credentials.
           </div>
         </div>

@@ -79,7 +79,7 @@ export default function PartnerDashboard() {
               value={String(stats.totalGyms)}
               hint="Locations under your account"
               icon={<Building2 className="h-5 w-5 text-white" />}
-              iconBg="bg-purple-500"
+              iconBg="bg-orange-500"
             />
             <Stat
               label="Classes"
@@ -123,8 +123,8 @@ export default function PartnerDashboard() {
                   <AreaChart data={stats.activitySeries}>
                     <defs>
                       <linearGradient id="cIn" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#a855f7" stopOpacity={0.5} />
-                        <stop offset="100%" stopColor="#a855f7" stopOpacity={0} />
+                        <stop offset="0%" stopColor="#f97316" stopOpacity={0.5} />
+                        <stop offset="100%" stopColor="#f97316" stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="bk" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor="#fb923c" stopOpacity={0.5} />
@@ -145,7 +145,7 @@ export default function PartnerDashboard() {
                     <Area
                       type="monotone"
                       dataKey="checkins"
-                      stroke="#a855f7"
+                      stroke="#f97316"
                       fill="url(#cIn)"
                       strokeWidth={2}
                       name="Check-ins"
@@ -179,7 +179,7 @@ export default function PartnerDashboard() {
                       className="flex items-center justify-between gap-3"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-600 to-orange-500 flex items-center justify-center text-white text-xs font-bold">
+                        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white text-xs font-bold">
                           {i + 1}
                         </div>
                         <div className="min-w-0">
@@ -191,7 +191,7 @@ export default function PartnerDashboard() {
                           </div>
                         </div>
                       </div>
-                      <div className="text-sm font-semibold text-purple-300">
+                      <div className="text-sm font-semibold text-orange-700">
                         {g.checkins}
                       </div>
                     </li>

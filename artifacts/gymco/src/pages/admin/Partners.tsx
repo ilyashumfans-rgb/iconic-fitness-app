@@ -172,7 +172,7 @@ export default function AdminPartners() {
                         ? "Suspended partners cannot be signed in"
                         : "Sign in as this partner in a new tab"
                     }
-                    className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-purple-500/15 text-purple-200 border border-purple-500/30 hover:bg-purple-500/25 mr-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-orange-500/15 text-orange-700 border border-orange-500/30 hover:bg-orange-500/25 mr-1 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <LogIn className="h-3.5 w-3.5" /> Sign in as
                   </button>

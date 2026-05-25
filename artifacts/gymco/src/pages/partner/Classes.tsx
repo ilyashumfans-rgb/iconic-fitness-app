@@ -31,7 +31,7 @@ export default function PartnerClasses() {
             <PartnerCard key={c.id} className="p-5">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <div className="text-xs uppercase tracking-wide text-purple-400 font-semibold">
+                  <div className="text-xs uppercase tracking-wide text-orange-600 font-semibold">
                     {c.category}
                   </div>
                   <h3 className="text-white font-semibold mt-1 truncate">

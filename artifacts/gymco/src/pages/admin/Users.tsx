@@ -61,7 +61,7 @@ export default function AdminUsers() {
                 <td className="px-5 py-3 text-slate-400">{u.city}</td>
                 <td className="px-5 py-3">
                   {u.planName ? (
-                    <span className="text-xs px-2 py-1 rounded bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                    <span className="text-xs px-2 py-1 rounded bg-orange-500/15 text-orange-700 border border-orange-500/30">
                       {u.planName}
                     </span>
                   ) : (

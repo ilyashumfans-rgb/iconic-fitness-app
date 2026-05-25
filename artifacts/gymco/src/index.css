@@ -493,3 +493,83 @@
     .hero-flare, .hero-scan { animation: none !important; }
   }
 }
+/* ───────────────────────── Admin + Partner portal theme override ─────────────────────────
+   These rules repaint Tailwind's `slate-*` utilities to a white + orange palette
+   inside any subtree wrapped with `.theme-portal` (AdminLayout / PartnerLayout).
+   Inner admin/partner pages inherit the new theme without per-file rewrites.
+   Scope is strictly `.theme-portal`, so the public app is untouched.                       */
+
+/* Backgrounds: dark slate → white / orange-50 / orange-100 */
+.theme-portal .bg-slate-950,
+.theme-portal .bg-slate-900 { background-color: #ffffff !important; }
+.theme-portal .bg-slate-900\/40,
+.theme-portal .bg-slate-900\/60,
+.theme-portal .bg-slate-900\/70,
+.theme-portal .bg-slate-900\/80 { background-color: rgba(255, 255, 255, 0.9) !important; }
+.theme-portal .bg-slate-800,
+.theme-portal .bg-slate-800\/30,
+.theme-portal .bg-slate-800\/40,
+.theme-portal .bg-slate-800\/60,
+.theme-portal .bg-slate-800\/70 { background-color: #fff7ed !important; }
+.theme-portal .bg-slate-700,
+.theme-portal .bg-slate-700\/40 { background-color: #ffedd5 !important; }
+.theme-portal .hover\:bg-slate-700:hover,
+.theme-portal .hover\:bg-slate-800:hover,
+.theme-portal .hover\:bg-slate-800\/30:hover,
+.theme-portal .hover\:bg-slate-800\/40:hover,
+.theme-portal .hover\:bg-slate-800\/70:hover { background-color: #ffedd5 !important; }
+
+/* Text: light slate → readable dark. `.text-white` is repainted to dark by default
+   because most uses were on dark slate cards that are now white. We then restore
+   white text on the same element when it also carries a brand-coloured background
+   (orange / amber / red / green gradient pills, badges, and buttons). The compound
+   selector `.theme-portal [class*="..."]​.text-white` beats the plain `.text-white`
+   rule on specificity, so it wins even though both use !important.                         */
+.theme-portal .text-white,
+.theme-portal .text-slate-100,
+.theme-portal .text-slate-200,
+.theme-portal .hover\:text-white:hover { color: #0f172a !important; }
+.theme-portal .text-slate-300 { color: #334155 !important; }
+.theme-portal .text-slate-400,
+.theme-portal .text-slate-500 { color: #64748b !important; }
+
+/* Restore white text on brand-coloured surfaces. Covers both same-element
+   (`<button class="bg-orange-500 text-white">`) and descendant patterns
+   (`<div class="bg-orange-500"><Icon class="text-white"/></div>` — common
+   for stat-tile icons in Dashboard pages). */
+.theme-portal [class*="from-orange-"].text-white,
+.theme-portal [class*="from-amber-"].text-white,
+.theme-portal [class*="from-red-"].text-white,
+.theme-portal [class*="from-green-"].text-white,
+.theme-portal [class*="from-emerald-"].text-white,
+.theme-portal [class*="from-blue-"].text-white,
+.theme-portal [class*="bg-orange-"].text-white,
+.theme-portal [class*="bg-amber-"].text-white,
+.theme-portal [class*="bg-red-"].text-white,
+.theme-portal [class*="bg-green-"].text-white,
+.theme-portal [class*="bg-emerald-"].text-white,
+.theme-portal [class*="bg-blue-"].text-white,
+.theme-portal .bg-gradient-brand.text-white,
+.theme-portal [class*="from-orange-"] .text-white,
+.theme-portal [class*="from-amber-"] .text-white,
+.theme-portal [class*="from-red-"] .text-white,
+.theme-portal [class*="from-green-"] .text-white,
+.theme-portal [class*="from-emerald-"] .text-white,
+.theme-portal [class*="from-blue-"] .text-white,
+.theme-portal [class*="bg-orange-"] .text-white,
+.theme-portal [class*="bg-amber-"] .text-white,
+.theme-portal [class*="bg-red-"] .text-white,
+.theme-portal [class*="bg-green-"] .text-white,
+.theme-portal [class*="bg-emerald-"] .text-white,
+.theme-portal [class*="bg-blue-"] .text-white,
+.theme-portal .bg-gradient-brand .text-white { color: #ffffff !important; }
+
+/* Borders: dark slate → soft orange */
+.theme-portal .border-slate-800,
+.theme-portal .border-slate-800\/60,
+.theme-portal .border-slate-700,
+.theme-portal .border-slate-600,
+.theme-portal .border-slate-600\/40 { border-color: #fed7aa !important; }
+
+/* Focus rings that referenced purple in old portal code now glow orange. */
+.theme-portal .focus\:ring-purple-500\/60:focus { --tw-ring-color: rgb(249 115 22 / 0.6) !important; }
