@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
 import { adminApi } from "@/lib/adminApi";
-import { Plus, Trash2, X } from "lucide-react";
+import { Check, Plus, Tag, Trash2, X } from "lucide-react";
 
 const inputCls =
   "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
@@ -121,6 +121,82 @@ function Field({
   );
 }
 
+function InlinePrice({
+  plan,
+  onSaved,
+}: {
+  plan: any;
+  onSaved: () => void;
+}) {
+  const [price, setPrice] = useState<number>(plan.priceInr);
+  const [orig, setOrig] = useState<number>(plan.originalPriceInr);
+  const [busy, setBusy] = useState(false);
+  const [ok, setOk] = useState(false);
+  const dirty = price !== plan.priceInr || orig !== plan.originalPriceInr;
+  const discount =
+    orig > 0 && price < orig
+      ? Math.round(((orig - price) / orig) * 100)
+      : 0;
+
+  const save = async () => {
+    if (!dirty) return;
+    setBusy(true);
+    setOk(false);
+    try {
+      await adminApi.memberships.update(plan.id, {
+        priceInr: Number(price),
+        originalPriceInr: Number(orig),
+      });
+      setOk(true);
+      onSaved();
+      setTimeout(() => setOk(false), 1500);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mt-3 p-3 rounded-lg bg-slate-900/70 border border-slate-800">
+      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-slate-500 mb-2">
+        <Tag className="h-3 w-3" /> Quick price
+        {discount > 0 && (
+          <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+            {discount}% off
+          </span>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <label className="text-[10px] text-slate-500">
+          Sell ₹
+          <input
+            type="number"
+            value={price}
+            onChange={(e) => setPrice(Number(e.target.value))}
+            className="w-full mt-1 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+          />
+        </label>
+        <label className="text-[10px] text-slate-500">
+          MRP ₹
+          <input
+            type="number"
+            value={orig}
+            onChange={(e) => setOrig(Number(e.target.value))}
+            className="w-full mt-1 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+          />
+        </label>
+      </div>
+      <button
+        onClick={save}
+        disabled={!dirty || busy}
+        className="mt-2 w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-semibold disabled:opacity-40"
+      >
+        {ok ? <Check className="h-3.5 w-3.5" /> : null}
+        {busy ? "Saving…" : ok ? "Saved" : "Save price"}
+      </button>
+    </div>
+  );
+}
+
 export default function AdminMemberships() {
   const [rows, setRows] = useState<any[]>([]);
   const [editing, setEditing] = useState<any | null>(null);
@@ -203,6 +279,7 @@ export default function AdminMemberships() {
             <div className="text-xs text-slate-500 line-through">
               ₹{p.originalPriceInr.toLocaleString("en-IN")}
             </div>
+            <InlinePrice plan={p} onSaved={load} />
             <div className="text-xs text-slate-400 mt-3 space-y-1">
               <div>{p.gymsIncluded} gyms included</div>
               <div>{p.classesPerMonth} classes/month</div>

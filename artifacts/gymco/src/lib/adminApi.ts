@@ -76,6 +76,11 @@ export const adminApi = {
         method: "POST",
         body: JSON.stringify({ password }),
       }),
+    impersonate: (id: number) =>
+      request<{ ok: true; redirectTo: string }>(
+        `/admin/partners/${id}/impersonate`,
+        { method: "POST" },
+      ),
     remove: (id: number) =>
       request<{ ok: true }>(`/admin/partners/${id}`, { method: "DELETE" }),
   },

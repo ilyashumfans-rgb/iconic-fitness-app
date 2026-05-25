@@ -264,12 +264,107 @@ function TopNav() {
 
 const HERO_VIDEO_SRC = `${import.meta.env.BASE_URL}media/hero.mp4`;
 
+// Twinkling-lights background layer for the hero. Renders dozens of small
+// pulsing dots in brand colors, two slow breathing radial blooms, a soft
+// diagonal light sweep, and a drifting grid — all CSS-only, GPU-friendly.
+const HERO_LIGHTS = Array.from({ length: 56 }).map((_, i) => {
+  const palette = [
+    "hsl(18 100% 60%)",   // orange
+    "hsl(268 90% 68%)",   // purple
+    "hsl(330 95% 65%)",   // pink
+    "hsl(48 100% 65%)",   // amber
+    "hsl(200 95% 70%)",   // cyan accent
+  ];
+  // deterministic pseudo-random so SSR/CSR match and layout is stable
+  const r = (n: number) => {
+    const x = Math.sin((i + 1) * n) * 10000;
+    return x - Math.floor(x);
+  };
+  return {
+    left: `${(r(1) * 100).toFixed(2)}%`,
+    top: `${(r(2) * 100).toFixed(2)}%`,
+    size: 2 + Math.floor(r(3) * 5),
+    color: palette[i % palette.length]!,
+    delay: `${(r(4) * 4).toFixed(2)}s`,
+    duration: `${(2.2 + r(5) * 3.8).toFixed(2)}s`,
+  };
+});
+
+function HeroBlinkingLights({ active }: { active: boolean }) {
+  return (
+    <div
+      className={`pointer-events-none absolute inset-0 z-[1] overflow-hidden transition-opacity duration-700 ${
+        active ? "opacity-100" : "opacity-0"
+      }`}
+      aria-hidden="true"
+    >
+      {/* Drifting grid */}
+      <div
+        className="absolute inset-0 hero-grid-drift opacity-[0.18] dark:opacity-25"
+        style={{
+          backgroundImage:
+            "linear-gradient(hsl(18 100% 60% / 0.18) 1px, transparent 1px), linear-gradient(90deg, hsl(268 90% 68% / 0.18) 1px, transparent 1px)",
+          backgroundSize: "44px 44px",
+          maskImage:
+            "radial-gradient(ellipse 75% 70% at 50% 45%, black 30%, transparent 85%)",
+          WebkitMaskImage:
+            "radial-gradient(ellipse 75% 70% at 50% 45%, black 30%, transparent 85%)",
+        }}
+      />
+
+      {/* Breathing brand blooms */}
+      <div
+        className="absolute left-[18%] top-[28%] h-[22rem] w-[22rem] rounded-full blur-[120px] hero-breathe"
+        style={{ background: "hsl(18 100% 55% / 0.55)" }}
+      />
+      <div
+        className="absolute right-[14%] top-[20%] h-[24rem] w-[24rem] rounded-full blur-[140px] hero-breathe-slow"
+        style={{ background: "hsl(268 76% 58% / 0.55)" }}
+      />
+      <div
+        className="absolute left-[40%] bottom-[8%] h-[18rem] w-[18rem] rounded-full blur-[120px] hero-breathe"
+        style={{ background: "hsl(330 90% 60% / 0.45)", animationDelay: "2.4s" }}
+      />
+
+      {/* Diagonal light sweep */}
+      <div
+        className="absolute -top-1/2 -left-1/2 h-[200%] w-[60%] hero-sweep mix-blend-screen"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent 0%, hsl(18 100% 70% / 0.18) 45%, hsl(268 90% 75% / 0.22) 55%, transparent 100%)",
+          filter: "blur(28px)",
+        }}
+      />
+
+      {/* Twinkling lights */}
+      {HERO_LIGHTS.map((l, i) => (
+        <span
+          key={i}
+          className="absolute rounded-full hero-twinkle"
+          style={
+            {
+              left: l.left,
+              top: l.top,
+              width: l.size,
+              height: l.size,
+              background: l.color,
+              boxShadow: `0 0 ${l.size * 3}px ${l.size}px ${l.color}`,
+              "--dur": l.duration,
+              "--delay": l.delay,
+            } as React.CSSProperties
+          }
+        />
+      ))}
+    </div>
+  );
+}
+
 function Hero() {
   const [, navigate] = useLocation();
   const [query, setQuery] = useState("");
   const [city, setCity] = useState("");
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [videoOn, setVideoOn] = useState(true);
+  const [videoOn, setVideoOn] = useState(false);
   const [muted, setMuted] = useState(true);
 
   useEffect(() => {
@@ -316,6 +411,9 @@ function Hero() {
           }`}
         />
       </div>
+
+      {/* Blinking-lights wow layer */}
+      <HeroBlinkingLights active={!videoOn} />
 
       {/* Layered decorative background */}
       <div className="pointer-events-none absolute inset-0 z-0">

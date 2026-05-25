@@ -30,6 +30,12 @@ export default function AdminUsers() {
         />
       }
     >
+      <div className="mb-4 text-xs text-slate-400 bg-slate-900/60 border border-slate-800 rounded-lg p-3 leading-relaxed">
+        <span className="font-semibold text-slate-200">Member accounts are managed by Clerk.</span>{" "}
+        Password resets and account sign-in for members happen through the
+        Clerk dashboard, not from here. Use the Partners page for "Sign in as"
+        and password reset on partner accounts.
+      </div>
       <AdminCard className="overflow-hidden">
         <table className="w-full text-sm">
           <thead>

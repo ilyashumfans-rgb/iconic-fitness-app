@@ -128,6 +128,54 @@ function Input({
   );
 }
 
+function InlineGymPrice({
+  gym,
+  onSaved,
+}: {
+  gym: any;
+  onSaved: () => void;
+}) {
+  const [price, setPrice] = useState<number>(gym.priceFrom ?? 0);
+  const [busy, setBusy] = useState(false);
+  const [ok, setOk] = useState(false);
+  const dirty = price !== gym.priceFrom;
+
+  const save = async () => {
+    if (!dirty) return;
+    setBusy(true);
+    try {
+      await adminApi.gyms.update(gym.id, { priceFrom: Number(price) });
+      setOk(true);
+      onSaved();
+      setTimeout(() => setOk(false), 1500);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="inline-flex items-center gap-1">
+      <span className="text-slate-500">₹</span>
+      <input
+        type="number"
+        value={price}
+        onChange={(e) => setPrice(Number(e.target.value))}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") save();
+        }}
+        className="w-20 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+      />
+      <button
+        onClick={save}
+        disabled={!dirty || busy}
+        className="text-xs px-2 py-1 rounded bg-orange-500/15 text-orange-300 border border-orange-500/30 hover:bg-orange-500/25 disabled:opacity-30 disabled:cursor-not-allowed"
+      >
+        {busy ? "…" : ok ? "✓" : "Save"}
+      </button>
+    </div>
+  );
+}
+
 export default function AdminGymManagement() {
   const [rows, setRows] = useState<any[]>([]);
   const [editing, setEditing] = useState<any | null>(null);
@@ -212,7 +260,9 @@ export default function AdminGymManagement() {
                 <td className="px-5 py-3 font-medium text-white">{g.name}</td>
                 <td className="px-5 py-3 text-slate-300">{g.city}</td>
                 <td className="px-5 py-3 text-slate-400">{g.area}</td>
-                <td className="px-5 py-3 text-slate-300">₹{g.priceFrom}</td>
+                <td className="px-5 py-3 text-slate-300">
+                  <InlineGymPrice gym={g} onSaved={load} />
+                </td>
                 <td className="px-5 py-3 text-slate-300">{g.rating}</td>
                 <td className="px-5 py-3">
                   <div className="flex gap-1">

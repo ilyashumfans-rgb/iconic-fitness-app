@@ -300,6 +300,35 @@ router.delete(
   },
 );
 
+// Auto-login (impersonation): admin signs into a partner's session in the
+// same browser. Partner + admin sessions are independent, so the admin
+// remains signed in to /admin even after this call.
+router.post(
+  "/admin/partners/:id/impersonate",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const [partner] = await db
+      .select()
+      .from(partnersTable)
+      .where(eq(partnersTable.id, id));
+    if (!partner) {
+      res.status(404).json({ error: "Partner not found" });
+      return;
+    }
+    if (partner.status === "suspended") {
+      res.status(400).json({
+        error: "Cannot sign in as a suspended partner. Reactivate first.",
+      });
+      return;
+    }
+    req.session.partnerId = partner.id;
+    req.session.partnerEmail = partner.email;
+    req.session.partnerName = partner.name;
+    res.json({ ok: true, redirectTo: "/partner" });
+  },
+);
+
 // ───────────────────────────── Gyms ─────────────────────────────
 
 router.get(
