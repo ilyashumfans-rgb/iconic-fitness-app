@@ -292,6 +292,26 @@
             mask-composite: exclude;
     pointer-events: none;
   }
+
+  @keyframes marquee-x {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  .animate-marquee {
+    animation: marquee-x 40s linear infinite;
+  }
+  .marquee-mask {
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 8%, #000 92%, transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0%, #000 8%, #000 92%, transparent 100%);
+  }
+
+  @keyframes ticker-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 hsl(142 70% 45% / 0.6); }
+    50%      { box-shadow: 0 0 0 6px hsl(142 70% 45% / 0); }
+  }
+  .ticker-dot {
+    animation: ticker-pulse 1.8s ease-out infinite;
+  }
 }
 
 /**

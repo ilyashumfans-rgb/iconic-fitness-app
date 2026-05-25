@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion, useInView } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useListFeaturedGyms } from "@workspace/api-client-react";
@@ -22,6 +22,11 @@ import {
   Search,
   Clock,
   Crown,
+  Activity,
+  TrendingUp,
+  Users,
+  Smartphone,
+  Zap,
 } from "lucide-react";
 const logoUrl = `${import.meta.env.BASE_URL}media/gymco-logo.png`;
 
@@ -379,8 +384,11 @@ function Hero() {
           </Link>
         </div>
 
+        {/* Live ticker */}
+        <LiveTicker />
+
         {/* Trust strip */}
-        <div className="mt-10 flex items-center justify-center gap-5 flex-wrap">
+        <div className="mt-8 flex items-center justify-center gap-5 flex-wrap">
           <div className="flex -space-x-3">
             {testimonials.map((t) => (
               <img
@@ -415,8 +423,8 @@ function Hero() {
         >
           {stats.map((s) => (
             <div key={s.label} className="bg-card/95 backdrop-blur p-6 md:p-8 text-left">
-              <div className="text-3xl md:text-4xl font-black text-gradient-brand">
-                {s.value}
+              <div className="text-3xl md:text-4xl font-black text-gradient-brand tabular-nums">
+                <CountUp value={s.value} />
               </div>
               <div className="text-xs md:text-sm font-bold uppercase tracking-wider text-muted-foreground mt-1">
                 {s.label}
@@ -430,24 +438,121 @@ function Hero() {
 }
 
 function PartnerStrip() {
+  // Two identical tracks side-by-side. We translate the wrapper by exactly
+  // one track's width (-50%) so the second track lands where the first started
+  // — seamless, no phase mismatch regardless of internal gaps.
+  const Track = () => (
+    <div className="flex shrink-0 items-center gap-16 pr-16">
+      {partnerGyms.map((g, i) => (
+        <div
+          key={`${g.name}-${i}`}
+          className="text-2xl md:text-3xl font-black tracking-wider text-foreground/40 hover:text-foreground transition-colors whitespace-nowrap"
+        >
+          {g.letters}
+        </div>
+      ))}
+    </div>
+  );
   return (
-    <section className="border-y border-border bg-secondary/30 py-8">
+    <section className="border-y border-border bg-secondary/30 py-10">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <div className="text-center text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground mb-6">
+        <div className="text-center text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground mb-8">
           Trusted by India's best fitness brands
         </div>
-        <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-4">
-          {partnerGyms.map((g) => (
-            <div
-              key={g.name}
-              className="text-lg md:text-xl font-black tracking-wider text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {g.letters}
-            </div>
-          ))}
+        <div className="relative overflow-hidden marquee-mask">
+          <div className="flex w-max animate-marquee" aria-hidden="true">
+            <Track />
+            <Track />
+          </div>
         </div>
       </div>
     </section>
+  );
+}
+
+// Animated count-up that triggers on scroll-in.
+// Avoids final→0 flicker by initializing to "0 + suffix" up front,
+// then animating up to the target only after the element enters the viewport.
+function CountUp({ value }: { value: string }) {
+  const ref = useRef<HTMLSpanElement | null>(null);
+  const inView = useInView(ref, { once: true, margin: "-40px" });
+
+  // Parse "500+" -> 500, "4.9" -> 4.9, "8K+" -> 8 (K is treated as suffix).
+  const match = value.match(/^([\d.]+)(.*)$/);
+  const target = match ? parseFloat(match[1]) : NaN;
+  const suffix = match ? match[2] : "";
+  const isDecimal = !Number.isNaN(target) && !Number.isInteger(target);
+  const numericValid = !Number.isNaN(target);
+
+  const format = (v: number) =>
+    (isDecimal ? v.toFixed(1) : Math.round(v).toString()) + suffix;
+
+  const [display, setDisplay] = useState<string>(() =>
+    numericValid ? format(0) : value,
+  );
+
+  useEffect(() => {
+    if (!inView || !numericValid) return;
+    const duration = 1200;
+    const start = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplay(format(target * eased));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inView, target, isDecimal, suffix, numericValid]);
+
+  return <span ref={ref}>{display}</span>;
+}
+
+const liveTicks = [
+  { name: "Aarav", action: "checked into Iron Republic", city: "Indiranagar" },
+  { name: "Priya", action: "booked Sunrise Yoga", city: "Koramangala" },
+  { name: "Kabir", action: "earned a 30-day streak", city: "Bandra West" },
+  { name: "Meera", action: "started a HIIT class", city: "HSR Layout" },
+  { name: "Rohan", action: "joined GYMCO Elite", city: "Powai" },
+  { name: "Ananya", action: "redeemed wallet cashback", city: "Indiranagar" },
+];
+
+function LiveTicker() {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setI((x) => (x + 1) % liveTicks.length), 3200);
+    return () => clearInterval(t);
+  }, []);
+  const item = liveTicks[i];
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      className="mt-8 inline-flex items-center gap-3 px-4 py-2.5 rounded-full bg-white/80 backdrop-blur border border-border shadow-sm max-w-full"
+    >
+      <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500 ticker-dot shrink-0" />
+      <span className="text-[11px] font-black uppercase tracking-[0.18em] text-green-600 shrink-0">
+        Live
+      </span>
+      <span className="h-3 w-px bg-border shrink-0" />
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={i}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.35 }}
+          className="text-xs md:text-sm font-semibold text-foreground/80 truncate"
+        >
+          <span className="font-black text-foreground">{item.name}</span>{" "}
+          {item.action}
+          <span className="text-muted-foreground"> · {item.city}</span>
+        </motion.span>
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -668,73 +773,288 @@ function Categories() {
 function FeatureBlock() {
   return (
     <section id="gyms" className="py-24 md:py-32 relative">
-      <div className="max-w-7xl mx-auto px-4 md:px-8 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-        <div>
+      <div className="max-w-7xl mx-auto px-4 md:px-8">
+        <div className="max-w-2xl mb-14">
           <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary mb-3">
             Built for the way you train
           </div>
-          <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-[1.05] mb-8">
+          <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-[1.05]">
             More than a gym pass.{" "}
             <span className="text-gradient-brand">A fitness OS.</span>
           </h2>
-          <div className="space-y-6">
-            {[
-              {
-                icon: Heart,
-                title: "AI-powered recommendations",
-                body: "We learn what you love. Get class suggestions tailored to your goals, sleep and recovery.",
-              },
-              {
-                icon: Trophy,
-                title: "Streaks & fitness score",
-                body: "Compete with yourself. Daily score, weekly streaks, and milestone rewards keep you honest.",
-              },
-              {
-                icon: Dumbbell,
-                title: "Trainer marketplace",
-                body: "Book India's best coaches 1-on-1 or in small groups. Strength, mobility, nutrition — your call.",
-              },
-              {
-                icon: Flame,
-                title: "Cashback wallet",
-                body: "Every class earns reward points. Redeem for free classes, gear, and trainer credits.",
-              },
-            ].map((f) => (
-              <div key={f.title} className="flex gap-4">
-                <div className="h-11 w-11 shrink-0 rounded-xl bg-gradient-brand-soft border border-primary/20 flex items-center justify-center">
-                  <f.icon className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-black text-lg mb-1">{f.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {f.body}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
 
-        <div className="relative">
-          <div className="absolute -inset-8 bg-gradient-brand opacity-30 blur-3xl -z-10" />
-          <div className="relative rounded-3xl overflow-hidden ring-1 ring-border shadow-2xl">
-            <img
-              src="https://images.unsplash.com/photo-1571388208497-71bedc66e932?w=1200&q=80"
-              alt="Train anywhere"
-              className="w-full aspect-[4/5] object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
-            <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between">
-              <div>
-                <div className="text-xs font-bold uppercase tracking-wider text-primary mb-1">
-                  Live now
-                </div>
-                <div className="text-white font-black text-xl">
-                  124 members training across Bangalore
+        {/* Bento grid */}
+        <div className="grid grid-cols-1 md:grid-cols-6 auto-rows-[minmax(180px,auto)] gap-4">
+          {/* 1. Hero feature — phone mock */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            className="md:col-span-3 md:row-span-2 relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-secondary/40 p-8 md:p-10"
+          >
+            <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
+            <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-[hsl(268_76%_58%/0.22)] blur-3xl" />
+            <div className="relative">
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 mb-4">
+                <Smartphone className="h-3 w-3 text-primary" />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                  Your pocket coach
+                </span>
+              </div>
+              <h3 className="text-2xl md:text-3xl font-black leading-tight mb-3">
+                The whole network,{" "}
+                <span className="text-gradient-brand">one tap away.</span>
+              </h3>
+              <p className="text-muted-foreground leading-relaxed mb-6 max-w-md">
+                Live class capacity, rotating QR check-in, and an AI coach that
+                learns from every session — built into a single, beautiful app.
+              </p>
+            </div>
+
+            {/* Phone mockup */}
+            <div className="relative mt-2 flex justify-center md:justify-end">
+              <div className="relative w-[230px] md:w-[280px] aspect-[9/19] rounded-[2.2rem] bg-gradient-to-br from-foreground to-foreground/80 p-2 shadow-[0_40px_80px_-30px_rgba(0,0,0,0.5)] rotate-[6deg] hover:rotate-[3deg] transition-transform duration-700">
+                <div className="absolute inset-2 rounded-[1.9rem] bg-background overflow-hidden flex flex-col">
+                  <div className="h-7 flex items-center justify-center">
+                    <div className="h-1 w-12 rounded-full bg-foreground/15" />
+                  </div>
+                  <div className="px-4 pb-4 flex-1 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                          Good morning
+                        </div>
+                        <div className="text-base font-black">Priya</div>
+                      </div>
+                      <div className="h-8 w-8 rounded-full bg-gradient-brand" />
+                    </div>
+                    <div className="rounded-xl bg-gradient-brand p-3 text-white">
+                      <div className="text-[8px] font-bold uppercase tracking-wider opacity-90">
+                        Today's class
+                      </div>
+                      <div className="text-sm font-black mt-0.5">
+                        Sunrise Yoga · 6:30am
+                      </div>
+                      <div className="text-[10px] opacity-80 mt-0.5">
+                        Iron Republic, Indiranagar
+                      </div>
+                      <div className="mt-2 inline-flex items-center gap-1 text-[9px] font-black bg-white/20 px-2 py-0.5 rounded-full">
+                        Check in
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-border p-3">
+                      <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                        This week
+                      </div>
+                      <div className="flex items-end justify-between mt-1">
+                        <div className="text-2xl font-black text-gradient-brand">
+                          4
+                        </div>
+                        <div className="flex items-end gap-1 h-8">
+                          {[3, 5, 2, 7, 4, 6, 3].map((h, k) => (
+                            <div
+                              key={k}
+                              className="w-1.5 rounded-sm bg-gradient-brand"
+                              style={{ height: `${h * 12}%` }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-border p-3">
+                      <div className="text-[9px] font-bold uppercase tracking-wider text-primary">
+                        Streak
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <Flame className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-black">
+                          27 days · personal best
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
+
+          {/* 2. AI Recommendations */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ delay: 0.05 }}
+            className="md:col-span-3 relative overflow-hidden rounded-3xl border border-border bg-card p-6 md:p-8 group hover:border-primary/40 transition-colors"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="h-11 w-11 rounded-xl bg-gradient-brand-soft border border-primary/20 flex items-center justify-center mb-4">
+                  <Heart className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="font-black text-xl mb-2">
+                  AI that knows your goals
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Class picks tuned to your sleep, recovery and weekly load.
+                </p>
+              </div>
+              <div className="hidden sm:flex flex-col gap-1.5 shrink-0">
+                {["Mobility — 92%", "Strength — 87%", "HIIT — 71%"].map((row) => {
+                  const [label, pct] = row.split(" — ");
+                  const value = parseInt(pct, 10);
+                  return (
+                    <div
+                      key={label}
+                      className="flex items-center gap-2 text-[10px] font-bold"
+                    >
+                      <span className="text-muted-foreground w-14 text-right">
+                        {label}
+                      </span>
+                      <div className="h-1.5 w-20 rounded-full bg-secondary overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-brand rounded-full"
+                          style={{ width: `${value}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* 3. Streaks */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ delay: 0.1 }}
+            className="md:col-span-2 relative overflow-hidden rounded-3xl border border-border bg-card p-6 group hover:border-primary/40 transition-colors"
+          >
+            <div className="h-11 w-11 rounded-xl bg-gradient-brand-soft border border-primary/20 flex items-center justify-center mb-4">
+              <Trophy className="h-5 w-5 text-primary" />
+            </div>
+            <h3 className="font-black text-lg mb-1.5">Streaks & score</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed mb-4">
+              Daily fitness score that compounds.
+            </p>
+            <div className="flex items-baseline gap-1">
+              <span className="text-3xl font-black text-gradient-brand tabular-nums">
+                <CountUp value="847" />
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                avg score
+              </span>
+            </div>
+          </motion.div>
+
+          {/* 4. Trainer marketplace */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ delay: 0.15 }}
+            className="md:col-span-2 relative overflow-hidden rounded-3xl border border-border bg-card p-6 group hover:border-primary/40 transition-colors"
+          >
+            <div className="h-11 w-11 rounded-xl bg-gradient-brand-soft border border-primary/20 flex items-center justify-center mb-4">
+              <Dumbbell className="h-5 w-5 text-primary" />
+            </div>
+            <h3 className="font-black text-lg mb-1.5">Trainer marketplace</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed mb-4">
+              India's best coaches, 1-on-1 or in small groups.
+            </p>
+            <div className="flex -space-x-2">
+              {testimonials.map((t) => (
+                <img
+                  key={t.name}
+                  src={t.avatar}
+                  alt=""
+                  className="h-8 w-8 rounded-full object-cover ring-2 ring-card"
+                />
+              ))}
+              <div className="h-8 w-8 rounded-full bg-secondary ring-2 ring-card inline-flex items-center justify-center text-[10px] font-black text-foreground/70">
+                +28
+              </div>
+            </div>
+          </motion.div>
+
+          {/* 5. Wallet cashback */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ delay: 0.2 }}
+            className="md:col-span-2 relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card to-secondary/40 p-6 group hover:border-primary/40 transition-colors"
+          >
+            <div className="h-11 w-11 rounded-xl bg-gradient-brand-soft border border-primary/20 flex items-center justify-center mb-4">
+              <Flame className="h-5 w-5 text-primary" />
+            </div>
+            <h3 className="font-black text-lg mb-1.5">Cashback wallet</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed mb-4">
+              Earn on every class. Redeem on anything.
+            </p>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
+              <TrendingUp className="h-3 w-3 text-primary" />
+              <span className="text-[10px] font-black uppercase tracking-wider text-primary">
+                Up to 8% back
+              </span>
+            </div>
+          </motion.div>
+
+          {/* 6. Live community */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ delay: 0.25 }}
+            className="md:col-span-4 relative overflow-hidden rounded-3xl border border-border bg-foreground text-background p-6 md:p-8"
+          >
+            <div className="absolute inset-0 opacity-30 pointer-events-none">
+              <div className="absolute -top-20 right-10 h-60 w-60 rounded-full bg-primary/40 blur-3xl" />
+              <div className="absolute -bottom-20 left-10 h-60 w-60 rounded-full bg-[hsl(268_76%_58%/0.5)] blur-3xl" />
+            </div>
+            <div className="relative flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-8">
+              <div className="flex-1">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/10 border border-white/15 mb-3">
+                  <span className="h-1.5 w-1.5 rounded-full bg-green-400 ticker-dot" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.18em] text-green-300">
+                    Live community
+                  </span>
+                </div>
+                <h3 className="font-black text-2xl md:text-3xl leading-tight">
+                  <span className="text-gradient-brand">
+                    <CountUp value="1240" />
+                  </span>{" "}
+                  members training across India right now.
+                </h3>
+                <p className="text-background/70 text-sm leading-relaxed mt-2 max-w-md">
+                  From sunrise yoga in Mumbai to midnight MMA in Bangalore.
+                  Join a city that never stops moving.
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-3 shrink-0">
+                {[
+                  { icon: Users, k: "40K+", l: "Members" },
+                  { icon: Activity, k: "8K+", l: "Classes/mo" },
+                  { icon: Zap, k: "98%", l: "Show-up rate" },
+                ].map((it) => (
+                  <div
+                    key={it.l}
+                    className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur p-3 md:p-4 min-w-[88px]"
+                  >
+                    <it.icon className="h-4 w-4 text-primary mb-2" />
+                    <div className="text-base md:text-lg font-black text-gradient-brand tabular-nums">
+                      <CountUp value={it.k} />
+                    </div>
+                    <div className="text-[9px] font-bold uppercase tracking-wider text-background/60 mt-0.5">
+                      {it.l}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
         </div>
       </div>
     </section>
