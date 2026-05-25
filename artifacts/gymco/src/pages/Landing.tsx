@@ -517,31 +517,33 @@ function Hero() {
         />
       </div>
 
-      {/* Blinking-lights wow layer */}
-      <HeroBlinkingLights active={!videoOn} />
+      {/* Blinking-lights wow layer — dark mode only; light mode stays clean white */}
+      <div className="hidden dark:block absolute inset-0 z-[1]">
+        <HeroBlinkingLights active={!videoOn} />
+      </div>
 
-      {/* Layered decorative background */}
+      {/* Layered decorative background — heavy blooms only in dark mode */}
       <div className="pointer-events-none absolute inset-0 z-0">
-        {/* Conic mesh blobs */}
+        {/* Conic mesh blobs (dark mode only) */}
         <div
-          className={`absolute -top-40 left-1/2 -translate-x-1/2 h-[44rem] w-[80rem] rounded-full bg-[conic-gradient(from_120deg_at_50%_50%,hsl(18_100%_55%/0.22),hsl(32_100%_55%/0.22),hsl(330_90%_60%/0.18),hsl(18_100%_55%/0.22))] blur-[140px] transition-opacity duration-700 ${
+          className={`hidden dark:block absolute -top-40 left-1/2 -translate-x-1/2 h-[44rem] w-[80rem] rounded-full bg-[conic-gradient(from_120deg_at_50%_50%,hsl(18_100%_55%/0.22),hsl(32_100%_55%/0.22),hsl(330_90%_60%/0.18),hsl(18_100%_55%/0.22))] blur-[140px] transition-opacity duration-700 ${
             videoOn ? "opacity-40" : "opacity-90"
           }`}
         />
         <div
-          className={`absolute top-1/3 -left-32 h-[28rem] w-[28rem] rounded-full bg-primary/20 blur-[160px] transition-opacity duration-700 ${
+          className={`hidden dark:block absolute top-1/3 -left-32 h-[28rem] w-[28rem] rounded-full bg-primary/20 blur-[160px] transition-opacity duration-700 ${
             videoOn ? "opacity-50" : "opacity-100"
           }`}
         />
         <div
-          className={`absolute top-1/4 -right-24 h-[30rem] w-[30rem] rounded-full bg-[hsl(32_100%_55%/0.22)] blur-[170px] transition-opacity duration-700 ${
+          className={`hidden dark:block absolute top-1/4 -right-24 h-[30rem] w-[30rem] rounded-full bg-[hsl(32_100%_55%/0.22)] blur-[170px] transition-opacity duration-700 ${
             videoOn ? "opacity-50" : "opacity-100"
           }`}
         />
 
-        {/* Dot grid */}
+        {/* Dot grid (dark mode only) */}
         <div
-          className="absolute inset-0 opacity-[0.35]"
+          className="hidden dark:block absolute inset-0 opacity-[0.35]"
           style={{
             backgroundImage:
               "radial-gradient(hsl(0 0% 0% / 0.08) 1px, transparent 1px)",
