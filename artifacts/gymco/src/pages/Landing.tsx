@@ -38,14 +38,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 
-const popularCities = [
-  "Bangalore",
-  "Mumbai",
-  "Delhi NCR",
-  "Hyderabad",
-  "Pune",
-  "Chennai",
-];
+const popularCities = ["Bangalore"];
 
 const partnerGyms = [
   { name: "Cult.fit", letters: "CULT" },
