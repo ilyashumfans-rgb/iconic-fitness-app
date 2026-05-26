@@ -337,20 +337,8 @@ router.post(
     }
 
     const normalizedEmail = email.toLowerCase().trim();
-    const [existing] = await db
-      .select({ id: partnersTable.id, name: partnersTable.name })
-      .from(partnersTable)
-      .where(eq(partnersTable.email, normalizedEmail))
-      .limit(1);
-    if (existing) {
-      res.status(409).json({
-        error: `A partner with email ${normalizedEmail} already exists${
-          existing.name ? ` (${existing.name})` : ""
-        }. Use a different email, or edit the existing partner from the Partners list.`,
-      });
-      return;
-    }
-
+    // Duplicate emails are intentionally allowed — see partnersTable schema
+    // comment. Each row is a distinct login disambiguated by password.
     let created;
     try {
       [created] = await db
@@ -367,13 +355,6 @@ router.post(
         })
         .returning();
     } catch (e: unknown) {
-      const code = (e as { code?: string })?.code;
-      if (code === "23505") {
-        res.status(409).json({
-          error: `A partner with email ${normalizedEmail} already exists.`,
-        });
-        return;
-      }
       req.log.error({ err: e }, "Failed to insert partner");
       res.status(500).json({
         error:

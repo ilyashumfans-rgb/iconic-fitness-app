@@ -43,29 +43,49 @@ router.post(
       res.status(400).json({ error: "Email and password required" });
       return;
     }
-    const [partner] = await db
+    // Email may match multiple rows (one brand can hold many partner logins
+    // that share an email). We try each row and accept the first whose
+    // password verifies. Vendor-only and suspended rows are skipped so a
+    // valid gym-partner record under the same email can still sign in.
+    const candidates = await db
       .select()
       .from(partnersTable)
       .where(eq(partnersTable.email, email.toLowerCase().trim()));
-    if (!partner) {
+    if (candidates.length === 0) {
       res.status(401).json({ error: "Invalid credentials" });
       return;
     }
-    if (partner.status === "suspended") {
-      res.status(403).json({
-        error: "Your partner account is suspended. Contact GYMCO support.",
-      });
-      return;
+    let partner: (typeof candidates)[number] | null = null;
+    let sawSuspended = false;
+    let sawVendorOnly = false;
+    for (const row of candidates) {
+      if (row.status === "suspended") {
+        sawSuspended = true;
+        continue;
+      }
+      if (row.kind === "vendor") {
+        sawVendorOnly = true;
+        continue;
+      }
+      if (await verifyPassword(password, row.passwordHash)) {
+        partner = row;
+        break;
+      }
     }
-    if (partner.kind === "vendor") {
-      res.status(403).json({
-        error:
-          "This account is a store vendor. Please sign in at the vendor portal (/vendor/login).",
-      });
-      return;
-    }
-    const ok = await verifyPassword(password, partner.passwordHash);
-    if (!ok) {
+    if (!partner) {
+      if (sawSuspended && !sawVendorOnly) {
+        res.status(403).json({
+          error: "Your partner account is suspended. Contact GYMCO support.",
+        });
+        return;
+      }
+      if (sawVendorOnly && !sawSuspended) {
+        res.status(403).json({
+          error:
+            "This account is a store vendor. Please sign in at the vendor portal (/vendor/login).",
+        });
+        return;
+      }
       res.status(401).json({ error: "Invalid credentials" });
       return;
     }
@@ -184,28 +204,46 @@ router.post(
       res.status(400).json({ error: "Email and password required" });
       return;
     }
-    const [partner] = await db
+    // Multiple rows may share an email — pick the first vendor-eligible row
+    // whose password verifies.
+    const candidates = await db
       .select()
       .from(partnersTable)
       .where(eq(partnersTable.email, email.toLowerCase().trim()));
-    if (!partner) {
+    if (candidates.length === 0) {
       res.status(401).json({ error: "Invalid credentials" });
       return;
     }
-    if (partner.status === "suspended") {
-      res.status(403).json({
-        error: "Your vendor account is suspended. Contact GYMCO support.",
-      });
-      return;
+    let partner: (typeof candidates)[number] | null = null;
+    let sawSuspended = false;
+    let sawNonVendor = false;
+    for (const row of candidates) {
+      if (row.status === "suspended") {
+        sawSuspended = true;
+        continue;
+      }
+      if (row.kind !== "vendor" && row.kind !== "both") {
+        sawNonVendor = true;
+        continue;
+      }
+      if (await verifyPassword(password, row.passwordHash)) {
+        partner = row;
+        break;
+      }
     }
-    if (partner.kind !== "vendor" && partner.kind !== "both") {
-      res.status(403).json({
-        error: "This account is not registered as a store vendor.",
-      });
-      return;
-    }
-    const ok = await verifyPassword(password, partner.passwordHash);
-    if (!ok) {
+    if (!partner) {
+      if (sawSuspended && !sawNonVendor) {
+        res.status(403).json({
+          error: "Your vendor account is suspended. Contact GYMCO support.",
+        });
+        return;
+      }
+      if (sawNonVendor && !sawSuspended) {
+        res.status(403).json({
+          error: "This account is not registered as a store vendor.",
+        });
+        return;
+      }
       res.status(401).json({ error: "Invalid credentials" });
       return;
     }

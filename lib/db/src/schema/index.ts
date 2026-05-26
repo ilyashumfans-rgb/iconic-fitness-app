@@ -341,7 +341,11 @@ export const productOrderItemsTable = pgTable("product_order_items", {
 export const partnersTable = pgTable("partners", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  email: text("email").notNull().unique(),
+  // NOTE: email is intentionally NOT unique. The product allows multiple
+  // partner accounts to share a contact email (e.g. one brand operating
+  // several franchise/branch logins). Login disambiguates by bcrypt-checking
+  // the supplied password against every matching row.
+  email: text("email").notNull(),
   phone: text("phone").notNull(),
   passwordHash: text("password_hash").notNull(),
   status: text("status").notNull().default("pending"),
