@@ -8,10 +8,12 @@ const inputCls =
 
 function GymForm({
   initial,
+  partners,
   onSave,
   onCancel,
 }: {
   initial?: any;
+  partners: { id: number; name: string; email: string; status: string }[];
   onSave: (body: Record<string, unknown>) => Promise<void>;
   onCancel: () => void;
 }) {
@@ -30,6 +32,10 @@ function GymForm({
     hours: initial?.hours ?? "6am – 11pm",
     payoutPerVisitInr: initial?.payoutPerVisitInr ?? 100,
     payoutTaxPct: initial?.payoutTaxPct ?? 18,
+    ownerPartnerId:
+      initial?.ownerPartnerId === undefined || initial?.ownerPartnerId === null
+        ? ""
+        : String(initial.ownerPartnerId),
   });
   const [busy, setBusy] = useState(false);
 
@@ -42,6 +48,7 @@ function GymForm({
         rating: Number(f.rating),
         payoutPerVisitInr: Number(f.payoutPerVisitInr),
         payoutTaxPct: Number(f.payoutTaxPct),
+        ownerPartnerId: f.ownerPartnerId === "" ? null : Number(f.ownerPartnerId),
         categories: String(f.categories)
           .split(",")
           .map((s) => s.trim())
@@ -78,6 +85,28 @@ function GymForm({
           value={f.payoutTaxPct}
           onChange={(v) => setF({ ...f, payoutTaxPct: v as any })}
         />
+        <div className="sm:col-span-2">
+          <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+            Owner partner
+          </label>
+          <select
+            value={f.ownerPartnerId}
+            onChange={(e) => setF({ ...f, ownerPartnerId: e.target.value })}
+            className={inputCls}
+          >
+            <option value="">— Unassigned —</option>
+            {partners.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name} ({p.email}){p.status !== "active" ? ` · ${p.status}` : ""}
+              </option>
+            ))}
+          </select>
+          <div className="text-[11px] text-slate-500 mt-1">
+            The selected partner will see this gym in their Partner Portal under
+            "My Gyms" and can manage bookings, check-ins, classes, and products
+            for it.
+          </div>
+        </div>
         <div className="sm:col-span-2">
           <Input label="Address" value={f.address} onChange={(v) => setF({ ...f, address: v })} />
         </div>
@@ -143,13 +172,23 @@ function Input({
 
 export default function AdminGymManagement() {
   const [rows, setRows] = useState<any[]>([]);
+  const [partners, setPartners] = useState<
+    { id: number; name: string; email: string; status: string }[]
+  >([]);
   const [editing, setEditing] = useState<any | null>(null);
   const [creating, setCreating] = useState(false);
 
   const load = () => adminApi.gyms.list().then(setRows).catch(() => {});
   useEffect(() => {
     load();
+    adminApi.partners.list().then(setPartners).catch(() => {});
   }, []);
+
+  const partnerName = (id: number | null | undefined) => {
+    if (!id) return null;
+    const p = partners.find((x) => x.id === id);
+    return p ? p.name : `#${id}`;
+  };
 
   const remove = async (id: number) => {
     if (!confirm("Delete this gym?")) return;
@@ -191,6 +230,7 @@ export default function AdminGymManagement() {
           </div>
           <GymForm
             initial={editing ?? undefined}
+            partners={partners}
             onCancel={() => {
               setCreating(false);
               setEditing(null);
@@ -213,6 +253,7 @@ export default function AdminGymManagement() {
               <th className="px-5 py-3">Name</th>
               <th className="px-5 py-3">City</th>
               <th className="px-5 py-3">Area</th>
+              <th className="px-5 py-3">Owner partner</th>
               <th className="px-5 py-3">Rating</th>
               <th className="px-5 py-3">Flags</th>
               <th className="px-5 py-3"></th>
@@ -224,6 +265,11 @@ export default function AdminGymManagement() {
                 <td className="px-5 py-3 font-medium text-white">{g.name}</td>
                 <td className="px-5 py-3 text-slate-300">{g.city}</td>
                 <td className="px-5 py-3 text-slate-400">{g.area}</td>
+                <td className="px-5 py-3 text-slate-300">
+                  {partnerName(g.ownerPartnerId) ?? (
+                    <span className="text-slate-600 italic">Unassigned</span>
+                  )}
+                </td>
                 <td className="px-5 py-3 text-slate-300">{g.rating}</td>
                 <td className="px-5 py-3">
                   <div className="flex gap-1">
