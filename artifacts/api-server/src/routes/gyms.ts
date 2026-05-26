@@ -5,6 +5,10 @@ import {
   gymsTable,
   classSessionsTable,
   trainersTable,
+  amenitiesTable,
+  gymAmenitiesTable,
+  gymCustomAmenitiesTable,
+  gymHoursTable,
 } from "@workspace/db";
 import {
   ListGymsQueryParams,
@@ -143,6 +147,66 @@ router.get("/gyms/:gymId", async (req, res): Promise<void> => {
       upcomingClasses,
     }),
   );
+});
+
+router.get("/gyms/:gymId/amenities", async (req, res): Promise<void> => {
+  const gymId = Number(req.params.gymId);
+  if (!gymId) {
+    res.status(400).json({ error: "Invalid gymId" });
+    return;
+  }
+  const selected = await db
+    .select({
+      id: amenitiesTable.id,
+      name: amenitiesTable.name,
+      slug: amenitiesTable.slug,
+      description: amenitiesTable.description,
+      icon: amenitiesTable.icon,
+      category: amenitiesTable.category,
+    })
+    .from(gymAmenitiesTable)
+    .innerJoin(
+      amenitiesTable,
+      eq(gymAmenitiesTable.amenityId, amenitiesTable.id),
+    )
+    .where(
+      and(
+        eq(gymAmenitiesTable.gymId, gymId),
+        eq(amenitiesTable.isActive, true),
+      ),
+    )
+    .orderBy(asc(amenitiesTable.sortOrder), asc(amenitiesTable.name));
+  const custom = await db
+    .select()
+    .from(gymCustomAmenitiesTable)
+    .where(eq(gymCustomAmenitiesTable.gymId, gymId))
+    .orderBy(asc(gymCustomAmenitiesTable.id));
+  res.json({ catalog: selected, custom });
+});
+
+router.get("/gyms/:gymId/hours", async (req, res): Promise<void> => {
+  const gymId = Number(req.params.gymId);
+  if (!gymId) {
+    res.status(400).json({ error: "Invalid gymId" });
+    return;
+  }
+  const rows = await db
+    .select()
+    .from(gymHoursTable)
+    .where(eq(gymHoursTable.gymId, gymId))
+    .orderBy(asc(gymHoursTable.dayOfWeek));
+  const byDay = new Map(rows.map((r) => [r.dayOfWeek, r]));
+  const out = Array.from({ length: 7 }, (_, d) =>
+    byDay.get(d) ?? {
+      id: 0,
+      gymId,
+      dayOfWeek: d,
+      isClosed: false,
+      openMinute: 360,
+      closeMinute: 1380,
+    },
+  );
+  res.json(out);
 });
 
 router.get("/gyms/:gymId/classes", async (req, res): Promise<void> => {

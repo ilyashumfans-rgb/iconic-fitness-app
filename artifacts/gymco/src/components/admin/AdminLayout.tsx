@@ -15,6 +15,7 @@ import {
   ShoppingBag,
   LogOut,
   RefreshCcw,
+  Sparkles,
 } from "lucide-react";
 import { adminApi, type AdminUser } from "@/lib/adminApi";
 
@@ -73,6 +74,11 @@ const SECTIONS: Section[] = [
         label: "Gym Verification",
         href: "/admin/gym-verification",
         icon: <ShieldCheck className="h-4 w-4" />,
+      },
+      {
+        label: "Amenities Catalog",
+        href: "/admin/amenities",
+        icon: <Sparkles className="h-4 w-4" />,
       },
     ],
   },

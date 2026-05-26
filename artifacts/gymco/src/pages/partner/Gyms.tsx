@@ -126,6 +126,94 @@ function EditGymModal({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  const [amenityCatalog, setAmenityCatalog] = useState<
+    { id: number; name: string; icon: string; category: string }[]
+  >([]);
+  const [selectedAmenityIds, setSelectedAmenityIds] = useState<Set<number>>(
+    new Set(),
+  );
+  const [customAmenities, setCustomAmenities] = useState<
+    { name: string; description: string; icon: string }[]
+  >([]);
+  const [customDraft, setCustomDraft] = useState<{
+    name: string;
+    description: string;
+    icon: string;
+  }>({ name: "", description: "", icon: "Dot" });
+
+  const [weeklyHours, setWeeklyHours] = useState<
+    {
+      dayOfWeek: number;
+      isClosed: boolean;
+      openMinute: number;
+      closeMinute: number;
+    }[]
+  >([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [cat, am, hrs] = await Promise.all([
+          partnerApi.amenityCatalog(),
+          partnerApi.getGymAmenities(gym.id),
+          partnerApi.getGymHours(gym.id),
+        ]);
+        setAmenityCatalog(cat as any[]);
+        setSelectedAmenityIds(new Set(am.catalogIds));
+        setCustomAmenities(
+          am.custom.map((c) => ({
+            name: c.name,
+            description: c.description ?? "",
+            icon: c.icon ?? "Dot",
+          })),
+        );
+        setWeeklyHours(hrs);
+      } catch {
+        // soft-fail; modal still works for basic fields
+      }
+    })();
+  }, [gym.id]);
+
+  const toggleAmenity = (id: number) => {
+    setSelectedAmenityIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const addCustomAmenity = () => {
+    const name = customDraft.name.trim();
+    if (!name) return;
+    setCustomAmenities((prev) => [
+      ...prev,
+      {
+        name,
+        description: customDraft.description.trim(),
+        icon: customDraft.icon.trim() || "Dot",
+      },
+    ]);
+    setCustomDraft({ name: "", description: "", icon: "Dot" });
+  };
+
+  const removeCustomAmenity = (idx: number) => {
+    setCustomAmenities((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const updateHour = (
+    day: number,
+    patch: Partial<{
+      isClosed: boolean;
+      openMinute: number;
+      closeMinute: number;
+    }>,
+  ) => {
+    setWeeklyHours((prev) =>
+      prev.map((h) => (h.dayOfWeek === day ? { ...h, ...patch } : h)),
+    );
+  };
+
   const save = async () => {
     setBusy(true);
     setErr(null);
@@ -147,6 +235,13 @@ function EditGymModal({
         priceFrom: Number(priceFrom) || 0,
         openNow,
       });
+      await partnerApi.saveGymAmenities(gym.id, {
+        catalogIds: Array.from(selectedAmenityIds),
+        custom: customAmenities,
+      });
+      if (weeklyHours.length === 7) {
+        await partnerApi.saveGymHours(gym.id, weeklyHours);
+      }
       onSaved();
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Save failed");
@@ -283,6 +378,133 @@ function EditGymModal({
             />
             Currently open
           </label>
+
+          <div className="sm:col-span-2 rounded-xl border border-slate-800 p-4 bg-slate-950/40">
+            <div className="text-xs uppercase tracking-wide text-orange-500 font-bold mb-3">
+              Amenities (from catalog)
+            </div>
+            {amenityCatalog.length === 0 ? (
+              <div className="text-xs text-slate-500">
+                No catalog amenities available yet. Ask an admin to add some.
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {amenityCatalog.map((a) => {
+                  const active = selectedAmenityIds.has(a.id);
+                  return (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => toggleAmenity(a.id)}
+                      className={`px-3 py-1.5 rounded-full border text-xs font-semibold transition-colors ${
+                        active
+                          ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-transparent"
+                          : "bg-slate-800 text-slate-300 border-slate-700 hover:border-orange-500/60"
+                      }`}
+                    >
+                      {a.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="mt-5">
+              <div className="text-xs uppercase tracking-wide text-orange-500 font-bold mb-2">
+                Custom amenities
+              </div>
+              {customAmenities.length > 0 && (
+                <div className="space-y-1.5 mb-3">
+                  {customAmenities.map((c, i) => (
+                    <div
+                      key={`${c.name}-${i}`}
+                      className="flex items-center justify-between rounded-lg bg-slate-800 border border-slate-700 px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <div className="text-sm text-white font-medium truncate">
+                          {c.name}{" "}
+                          <span className="text-[10px] text-slate-400 uppercase tracking-wide ml-1">
+                            {c.icon}
+                          </span>
+                        </div>
+                        {c.description && (
+                          <div className="text-xs text-slate-400 truncate">
+                            {c.description}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeCustomAmenity(i)}
+                        className="p-1.5 rounded-md hover:bg-slate-700 text-slate-400"
+                        aria-label="Remove"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <input
+                  value={customDraft.name}
+                  onChange={(e) =>
+                    setCustomDraft({ ...customDraft, name: e.target.value })
+                  }
+                  placeholder="Name (e.g. Rooftop Sauna)"
+                  className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                />
+                <input
+                  value={customDraft.icon}
+                  onChange={(e) =>
+                    setCustomDraft({ ...customDraft, icon: e.target.value })
+                  }
+                  placeholder="Icon (Lucide name)"
+                  className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                />
+                <input
+                  value={customDraft.description}
+                  onChange={(e) =>
+                    setCustomDraft({
+                      ...customDraft,
+                      description: e.target.value,
+                    })
+                  }
+                  placeholder="Description (optional)"
+                  className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={addCustomAmenity}
+                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-orange-400 text-xs font-bold border border-slate-700"
+              >
+                Add custom amenity
+              </button>
+            </div>
+          </div>
+
+          <div className="sm:col-span-2 rounded-xl border border-slate-800 p-4 bg-slate-950/40">
+            <div className="text-xs uppercase tracking-wide text-orange-500 font-bold mb-3">
+              Weekly hours
+            </div>
+            {weeklyHours.length === 0 ? (
+              <div className="text-xs text-slate-500">Loading hours…</div>
+            ) : (
+              <div className="space-y-2">
+                {weeklyHours.map((h) => (
+                  <HourRow
+                    key={h.dayOfWeek}
+                    row={h}
+                    onChange={(patch) => updateHour(h.dayOfWeek, patch)}
+                  />
+                ))}
+                <div className="text-[11px] text-slate-500">
+                  Times are local to the gym. Use 24h format.
+                </div>
+              </div>
+            )}
+          </div>
           {err && (
             <div className="sm:col-span-2 text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg p-3">
               {err}
@@ -333,6 +555,79 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+      />
+    </div>
+  );
+}
+
+const DAY_NAMES = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
+function minutesToHHMM(m: number): string {
+  const safe = Math.max(0, Math.min(1440, Math.round(m)));
+  const h = Math.floor(safe / 60);
+  const mm = safe % 60;
+  return `${String(h).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+}
+function hhmmToMinutes(s: string): number {
+  const [h, m] = s.split(":").map((n) => Number(n) || 0);
+  return Math.max(0, Math.min(1440, h * 60 + m));
+}
+
+function HourRow({
+  row,
+  onChange,
+}: {
+  row: {
+    dayOfWeek: number;
+    isClosed: boolean;
+    openMinute: number;
+    closeMinute: number;
+  };
+  onChange: (
+    patch: Partial<{
+      isClosed: boolean;
+      openMinute: number;
+      closeMinute: number;
+    }>,
+  ) => void;
+}) {
+  return (
+    <div className="grid grid-cols-12 items-center gap-2">
+      <div className="col-span-3 text-sm font-semibold text-slate-200">
+        {DAY_NAMES[row.dayOfWeek]}
+      </div>
+      <label className="col-span-3 flex items-center gap-2 text-xs text-slate-400">
+        <input
+          type="checkbox"
+          checked={row.isClosed}
+          onChange={(e) => onChange({ isClosed: e.target.checked })}
+          className="rounded border-slate-700 bg-slate-800"
+        />
+        Closed
+      </label>
+      <input
+        type="time"
+        disabled={row.isClosed}
+        value={minutesToHHMM(row.openMinute)}
+        onChange={(e) => onChange({ openMinute: hhmmToMinutes(e.target.value) })}
+        className="col-span-3 px-2 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/60 disabled:opacity-40"
+      />
+      <input
+        type="time"
+        disabled={row.isClosed}
+        value={minutesToHHMM(row.closeMinute)}
+        onChange={(e) =>
+          onChange({ closeMinute: hhmmToMinutes(e.target.value) })
+        }
+        className="col-span-3 px-2 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/60 disabled:opacity-40"
       />
     </div>
   );

@@ -142,6 +142,21 @@ export const adminApi = {
   users: {
     list: () => request<any[]>("/admin/users"),
   },
+  amenities: {
+    list: () => request<any[]>("/admin/amenities"),
+    create: (body: Record<string, unknown>) =>
+      request<any>("/admin/amenities", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: number, body: Record<string, unknown>) =>
+      request<any>(`/admin/amenities/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: number) =>
+      request<{ ok: true }>(`/admin/amenities/${id}`, { method: "DELETE" }),
+  },
   userMemberships: {
     list: () => request<any[]>("/admin/user-memberships"),
     updateStatus: (id: number, status: string) =>

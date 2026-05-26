@@ -236,4 +236,43 @@ export const partnerApi = {
       request<{ ok: true }>(`/partner/products/${id}`, { method: "DELETE" }),
   },
   orders: () => request<any[]>("/partner/orders"),
+  amenityCatalog: () => request<any[]>("/partner/amenities/catalog"),
+  getGymAmenities: (gymId: number) =>
+    request<{
+      catalogIds: number[];
+      custom: { id: number; name: string; description: string; icon: string }[];
+    }>(`/partner/gyms/${gymId}/amenities`),
+  saveGymAmenities: (
+    gymId: number,
+    body: {
+      catalogIds: number[];
+      custom: { name: string; description?: string; icon?: string }[];
+    },
+  ) =>
+    request<{ ok: true }>(`/partner/gyms/${gymId}/amenities`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    }),
+  getGymHours: (gymId: number) =>
+    request<
+      {
+        dayOfWeek: number;
+        isClosed: boolean;
+        openMinute: number;
+        closeMinute: number;
+      }[]
+    >(`/partner/gyms/${gymId}/hours`),
+  saveGymHours: (
+    gymId: number,
+    hours: {
+      dayOfWeek: number;
+      isClosed: boolean;
+      openMinute: number;
+      closeMinute: number;
+    }[],
+  ) =>
+    request<{ ok: true }>(`/partner/gyms/${gymId}/hours`, {
+      method: "PUT",
+      body: JSON.stringify({ hours }),
+    }),
 };

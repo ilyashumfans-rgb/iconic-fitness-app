@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import {
   db,
   partnersTable,
@@ -12,6 +12,10 @@ import {
   productsTable,
   productOrdersTable,
   productOrderItemsTable,
+  amenitiesTable,
+  gymAmenitiesTable,
+  gymCustomAmenitiesTable,
+  gymHoursTable,
 } from "@workspace/db";
 import {
   hashPassword,
@@ -604,6 +608,188 @@ router.get(
       week: await sumSince(startOfWeek),
       month: await sumSince(startOfMonth),
     });
+  },
+);
+
+// ─── Amenities & Hours per gym ───
+
+router.get(
+  "/partner/amenities/catalog",
+  requirePartner,
+  async (_req: Request, res: Response): Promise<void> => {
+    const rows = await db
+      .select()
+      .from(amenitiesTable)
+      .where(eq(amenitiesTable.isActive, true))
+      .orderBy(asc(amenitiesTable.sortOrder), asc(amenitiesTable.name));
+    res.json(rows);
+  },
+);
+
+router.get(
+  "/partner/gyms/:id/amenities",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!(await ensureOwnsGym(req.session.partnerId!, id))) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    const selected = await db
+      .select({ amenityId: gymAmenitiesTable.amenityId })
+      .from(gymAmenitiesTable)
+      .where(eq(gymAmenitiesTable.gymId, id));
+    const custom = await db
+      .select()
+      .from(gymCustomAmenitiesTable)
+      .where(eq(gymCustomAmenitiesTable.gymId, id))
+      .orderBy(asc(gymCustomAmenitiesTable.id));
+    res.json({
+      catalogIds: selected.map((s) => s.amenityId),
+      custom,
+    });
+  },
+);
+
+router.put(
+  "/partner/gyms/:id/amenities",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!(await ensureOwnsGym(req.session.partnerId!, id))) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    const b = (req.body ?? {}) as {
+      catalogIds?: number[];
+      custom?: { name: string; description?: string; icon?: string }[];
+    };
+    const rawIds = Array.isArray(b.catalogIds)
+      ? Array.from(new Set(b.catalogIds.map((n) => Number(n)).filter(Boolean)))
+      : [];
+    let catalogIds: number[] = [];
+    if (rawIds.length > 0) {
+      const valid = await db
+        .select({ id: amenitiesTable.id })
+        .from(amenitiesTable)
+        .where(
+          and(
+            inArray(amenitiesTable.id, rawIds),
+            eq(amenitiesTable.isActive, true),
+          ),
+        );
+      catalogIds = valid.map((v) => v.id);
+    }
+    const custom = Array.isArray(b.custom)
+      ? b.custom
+          .map((c) => ({
+            name: String(c?.name ?? "").trim(),
+            description: String(c?.description ?? ""),
+            icon: String(c?.icon ?? "Dot"),
+          }))
+          .filter((c) => c.name)
+      : [];
+
+    await db.transaction(async (tx) => {
+      await tx.delete(gymAmenitiesTable).where(eq(gymAmenitiesTable.gymId, id));
+      if (catalogIds.length > 0) {
+        await tx
+          .insert(gymAmenitiesTable)
+          .values(catalogIds.map((amenityId) => ({ gymId: id, amenityId })));
+      }
+      await tx
+        .delete(gymCustomAmenitiesTable)
+        .where(eq(gymCustomAmenitiesTable.gymId, id));
+      if (custom.length > 0) {
+        await tx
+          .insert(gymCustomAmenitiesTable)
+          .values(custom.map((c) => ({ gymId: id, ...c })));
+      }
+    });
+
+    res.json({ ok: true });
+  },
+);
+
+router.get(
+  "/partner/gyms/:id/hours",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!(await ensureOwnsGym(req.session.partnerId!, id))) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    const rows = await db
+      .select()
+      .from(gymHoursTable)
+      .where(eq(gymHoursTable.gymId, id))
+      .orderBy(asc(gymHoursTable.dayOfWeek));
+    // Pad with defaults for any missing day
+    const byDay = new Map(rows.map((r) => [r.dayOfWeek, r]));
+    const out = Array.from({ length: 7 }, (_, d) =>
+      byDay.get(d) ?? {
+        id: 0,
+        gymId: id,
+        dayOfWeek: d,
+        isClosed: false,
+        openMinute: 360,
+        closeMinute: 1380,
+      },
+    );
+    res.json(out);
+  },
+);
+
+router.put(
+  "/partner/gyms/:id/hours",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!(await ensureOwnsGym(req.session.partnerId!, id))) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    const b = (req.body ?? {}) as {
+      hours?: {
+        dayOfWeek: number;
+        isClosed: boolean;
+        openMinute: number;
+        closeMinute: number;
+      }[];
+    };
+    if (!Array.isArray(b.hours)) {
+      res.status(400).json({ error: "hours[] required" });
+      return;
+    }
+    const clamp = (n: number) =>
+      Math.max(0, Math.min(1440, Math.round(Number(n) || 0)));
+    const byDay = new Map<number, {
+      gymId: number;
+      dayOfWeek: number;
+      isClosed: boolean;
+      openMinute: number;
+      closeMinute: number;
+    }>();
+    for (const h of b.hours) {
+      const day = Number(h.dayOfWeek);
+      if (!Number.isInteger(day) || day < 0 || day > 6) continue;
+      byDay.set(day, {
+        gymId: id,
+        dayOfWeek: day,
+        isClosed: Boolean(h.isClosed),
+        openMinute: clamp(h.openMinute ?? 360),
+        closeMinute: clamp(h.closeMinute ?? 1380),
+      });
+    }
+    const cleaned = Array.from(byDay.values());
+    await db.transaction(async (tx) => {
+      await tx.delete(gymHoursTable).where(eq(gymHoursTable.gymId, id));
+      if (cleaned.length > 0) {
+        await tx.insert(gymHoursTable).values(cleaned);
+      }
+    });
+    res.json({ ok: true });
   },
 );
 

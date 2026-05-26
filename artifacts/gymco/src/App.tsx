@@ -51,6 +51,7 @@ import AdminResetPartnerPassword from "@/pages/admin/ResetPartnerPassword";
 import AdminGymManagement from "@/pages/admin/GymManagement";
 import AdminFeaturedGyms from "@/pages/admin/FeaturedGyms";
 import AdminGymVerification from "@/pages/admin/GymVerification";
+import AdminAmenityCatalog from "@/pages/admin/AmenityCatalog";
 import AdminUsers from "@/pages/admin/Users";
 import AdminUserManagement from "@/pages/admin/UserManagement";
 import AdminMemberships from "@/pages/admin/Memberships";
@@ -254,6 +255,7 @@ function AppShell() {
         <Route path="/admin/gyms" component={AdminGymManagement} />
         <Route path="/admin/featured-gyms" component={AdminFeaturedGyms} />
         <Route path="/admin/gym-verification" component={AdminGymVerification} />
+        <Route path="/admin/amenities" component={AdminAmenityCatalog} />
         <Route path="/admin/users" component={AdminUsers} />
         <Route path="/admin/user-management" component={AdminUserManagement} />
         <Route path="/admin/memberships" component={AdminMemberships} />

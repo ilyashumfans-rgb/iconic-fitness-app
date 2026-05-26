@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useParams, Link } from "wouter";
 import {
   useGetGym,
@@ -9,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import * as LucideIcons from "lucide-react";
 import {
   MapPin,
   Star,
@@ -21,9 +23,47 @@ import {
   ShieldCheck,
   ChevronRight,
   Navigation,
+  Dot,
 } from "lucide-react";
 import { format } from "date-fns";
 import { GymGalleryMosaic } from "@/components/GymGalleryMosaic";
+
+type AmenityRow = {
+  id: number;
+  name: string;
+  description?: string;
+  icon: string;
+};
+type HourRow = {
+  dayOfWeek: number;
+  isClosed: boolean;
+  openMinute: number;
+  closeMinute: number;
+};
+
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function fmtMinutes(m: number): string {
+  const safe = Math.max(0, Math.min(1440, Math.round(m)));
+  const h = Math.floor(safe / 60);
+  const mm = safe % 60;
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = ((h + 11) % 12) + 1;
+  return `${h12}:${String(mm).padStart(2, "0")} ${ampm}`;
+}
+
+function AmenityIcon({ name, className }: { name: string; className?: string }) {
+  const lookup = (LucideIcons as unknown as Record<string, unknown>)[name];
+  const Comp =
+    typeof lookup === "function" || typeof lookup === "object"
+      ? (lookup as React.ComponentType<{ className?: string }>)
+      : Dot;
+  try {
+    return <Comp className={className} />;
+  } catch {
+    return <Dot className={className} />;
+  }
+}
 
 export default function GymDetail() {
   const { gymId } = useParams();
@@ -35,6 +75,38 @@ export default function GymDetail() {
   const { data: classes, isLoading: loadingClasses } = useListGymClasses(id, {
     query: { enabled: !!id, queryKey: getListGymClassesQueryKey(id) },
   });
+
+  const [amenityData, setAmenityData] = useState<{
+    catalog: AmenityRow[];
+    custom: AmenityRow[];
+  } | null>(null);
+  const [weeklyHours, setWeeklyHours] = useState<HourRow[] | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    let abort = false;
+    (async () => {
+      try {
+        const [amRes, hrRes] = await Promise.all([
+          fetch(`/api/gyms/${id}/amenities`),
+          fetch(`/api/gyms/${id}/hours`),
+        ]);
+        if (amRes.ok) {
+          const a = await amRes.json();
+          if (!abort) setAmenityData(a);
+        }
+        if (hrRes.ok) {
+          const h = await hrRes.json();
+          if (!abort) setWeeklyHours(h);
+        }
+      } catch {
+        // silent — fall back to gym.amenities/hours fields
+      }
+    })();
+    return () => {
+      abort = true;
+    };
+  }, [id]);
 
   if (isLoading) {
     return (
@@ -173,17 +245,69 @@ export default function GymDetail() {
           {/* Amenities */}
           <section>
             <h2 className="text-xl font-bold mb-3">Amenities</h2>
-            <div className="flex flex-wrap gap-2">
-              {gym.amenities.map((amenity) => (
-                <span
-                  key={amenity}
-                  className="bg-secondary text-secondary-foreground px-3 py-1.5 rounded-lg text-sm font-medium"
-                >
-                  {amenity}
-                </span>
-              ))}
-            </div>
+            {amenityData &&
+            (amenityData.catalog.length > 0 ||
+              amenityData.custom.length > 0) ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {[...amenityData.catalog, ...amenityData.custom].map((a) => (
+                  <div
+                    key={`a-${a.id}-${a.name}`}
+                    className="flex items-center gap-2.5 rounded-xl border border-border bg-secondary/40 px-3 py-2.5"
+                    title={a.description ?? ""}
+                  >
+                    <span className="h-8 w-8 rounded-full bg-primary/10 inline-flex items-center justify-center shrink-0">
+                      <AmenityIcon
+                        name={a.icon}
+                        className="h-4 w-4 text-primary"
+                      />
+                    </span>
+                    <span className="text-sm font-semibold truncate">
+                      {a.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {gym.amenities.map((amenity) => (
+                  <span
+                    key={amenity}
+                    className="bg-secondary text-secondary-foreground px-3 py-1.5 rounded-lg text-sm font-medium"
+                  >
+                    {amenity}
+                  </span>
+                ))}
+              </div>
+            )}
           </section>
+
+          {/* Weekly hours */}
+          {weeklyHours && weeklyHours.length === 7 && (
+            <section>
+              <h2 className="text-xl font-bold mb-3 flex items-center">
+                <Clock className="h-5 w-5 mr-2 text-primary" /> Weekly hours
+              </h2>
+              <Card className="border-border bg-card">
+                <CardContent className="p-0 divide-y divide-border">
+                  {weeklyHours.map((h) => (
+                    <div
+                      key={h.dayOfWeek}
+                      className="px-5 py-3 flex items-center justify-between"
+                    >
+                      <span className="font-semibold text-sm">
+                        {DAY_NAMES[h.dayOfWeek]}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {h.isClosed
+                          ? "Closed"
+                          : `${fmtMinutes(h.openMinute)} – ${fmtMinutes(h.closeMinute)}`}
+                      </span>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </section>
+          )}
 
           {/* Enroll CTA */}
           <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-secondary/40 p-8 md:p-10 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.18)]">

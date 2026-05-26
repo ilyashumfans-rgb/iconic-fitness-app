@@ -149,6 +149,70 @@ export const checkinsTable = pgTable("checkins", {
   ),
 }));
 
+// ─── Amenities catalog (admin-managed) ───
+export const amenitiesTable = pgTable("amenities", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  slug: text("slug").notNull().unique(),
+  description: text("description").notNull().default(""),
+  icon: text("icon").notNull().default("Dot"),
+  category: text("category").notNull().default("general"),
+  isActive: boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// Join: which catalog amenities a gym offers
+export const gymAmenitiesTable = pgTable(
+  "gym_amenities",
+  {
+    id: serial("id").primaryKey(),
+    gymId: integer("gym_id")
+      .notNull()
+      .references(() => gymsTable.id, { onDelete: "cascade" }),
+    amenityId: integer("amenity_id")
+      .notNull()
+      .references(() => amenitiesTable.id, { onDelete: "cascade" }),
+  },
+  (t) => ({
+    uniq: uniqueIndex("gym_amenities_gym_amenity_unique").on(
+      t.gymId,
+      t.amenityId,
+    ),
+  }),
+);
+
+// Partner-added custom amenities (outside the master catalog)
+export const gymCustomAmenitiesTable = pgTable("gym_custom_amenities", {
+  id: serial("id").primaryKey(),
+  gymId: integer("gym_id")
+    .notNull()
+    .references(() => gymsTable.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description").notNull().default(""),
+  icon: text("icon").notNull().default("Dot"),
+});
+
+// Per-day opening hours; 0=Sunday … 6=Saturday
+export const gymHoursTable = pgTable(
+  "gym_hours",
+  {
+    id: serial("id").primaryKey(),
+    gymId: integer("gym_id")
+      .notNull()
+      .references(() => gymsTable.id, { onDelete: "cascade" }),
+    dayOfWeek: integer("day_of_week").notNull(),
+    isClosed: boolean("is_closed").notNull().default(false),
+    openMinute: integer("open_minute").notNull().default(360), // 06:00
+    closeMinute: integer("close_minute").notNull().default(1380), // 23:00
+  },
+  (t) => ({
+    uniq: uniqueIndex("gym_hours_gym_day_unique").on(t.gymId, t.dayOfWeek),
+  }),
+);
+
 export const walletsTable = pgTable("wallets", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
