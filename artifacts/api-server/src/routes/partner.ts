@@ -544,6 +544,10 @@ router.get(
         gymName: gymsTable.name,
         userName: usersTable.name,
         userEmail: usersTable.email,
+        baseInr: checkinsTable.baseInr,
+        taxPct: checkinsTable.taxPct,
+        taxInr: checkinsTable.taxInr,
+        payoutInr: checkinsTable.payoutInr,
       })
       .from(checkinsTable)
       .innerJoin(gymsTable, eq(checkinsTable.gymId, gymsTable.id))
@@ -552,6 +556,54 @@ router.get(
       .orderBy(desc(checkinsTable.checkedInAt))
       .limit(200);
     res.json(rows);
+  },
+);
+
+router.get(
+  "/partner/earnings",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const gymIds = await ownedGymIds(req.session.partnerId!);
+    const empty = {
+      today: { visits: 0, payoutInr: 0 },
+      week: { visits: 0, payoutInr: 0 },
+      month: { visits: 0, payoutInr: 0 },
+    };
+    if (gymIds.length === 0) {
+      res.json(empty);
+      return;
+    }
+    const now = new Date();
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    const startOfWeek = new Date(startOfDay);
+    startOfWeek.setDate(startOfDay.getDate() - 6);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const sumSince = async (since: Date) => {
+      const [row] = await db
+        .select({
+          visits: sql<number>`count(*)::int`,
+          payoutInr: sql<number>`coalesce(sum(${checkinsTable.payoutInr}), 0)::int`,
+        })
+        .from(checkinsTable)
+        .where(
+          and(
+            inArray(checkinsTable.gymId, gymIds),
+            gte(checkinsTable.checkedInAt, since),
+          ),
+        );
+      return {
+        visits: Number(row?.visits ?? 0),
+        payoutInr: Number(row?.payoutInr ?? 0),
+      };
+    };
+
+    res.json({
+      today: await sumSince(startOfDay),
+      week: await sumSince(startOfWeek),
+      month: await sumSince(startOfMonth),
+    });
   },
 );
 

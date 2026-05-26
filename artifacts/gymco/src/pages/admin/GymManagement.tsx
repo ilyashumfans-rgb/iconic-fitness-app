@@ -29,6 +29,8 @@ function GymForm({
     amenities: (initial?.amenities ?? []).join(", "),
     about: initial?.about ?? "",
     hours: initial?.hours ?? "6am – 11pm",
+    payoutPerVisitInr: initial?.payoutPerVisitInr ?? 100,
+    payoutTaxPct: initial?.payoutTaxPct ?? 18,
   });
   const [busy, setBusy] = useState(false);
 
@@ -40,6 +42,8 @@ function GymForm({
         ...f,
         priceFrom: Number(f.priceFrom),
         rating: Number(f.rating),
+        payoutPerVisitInr: Number(f.payoutPerVisitInr),
+        payoutTaxPct: Number(f.payoutTaxPct),
         categories: String(f.categories)
           .split(",")
           .map((s) => s.trim())
@@ -65,6 +69,18 @@ function GymForm({
         <Input label="Rating" type="number" value={f.rating} onChange={(v) => setF({ ...f, rating: v as any })} />
         <Input label="Categories (comma)" value={f.categories} onChange={(v) => setF({ ...f, categories: v })} />
         <Input label="Amenities (comma)" value={f.amenities} onChange={(v) => setF({ ...f, amenities: v })} />
+        <Input
+          label="Partner Payout per Visit (₹, base)"
+          type="number"
+          value={f.payoutPerVisitInr}
+          onChange={(v) => setF({ ...f, payoutPerVisitInr: v as any })}
+        />
+        <Input
+          label="GST on Payout (%)"
+          type="number"
+          value={f.payoutTaxPct}
+          onChange={(v) => setF({ ...f, payoutTaxPct: v as any })}
+        />
         <div className="sm:col-span-2">
           <Input label="Address" value={f.address} onChange={(v) => setF({ ...f, address: v })} />
         </div>

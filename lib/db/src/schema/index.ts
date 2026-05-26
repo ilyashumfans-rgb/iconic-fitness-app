@@ -6,7 +6,9 @@ import {
   real,
   boolean,
   timestamp,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const usersTable = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -57,6 +59,8 @@ export const gymsTable = pgTable("gyms", {
   lng: real("lng").notNull(),
   featured: boolean("featured").notNull().default(false),
   ownerPartnerId: integer("owner_partner_id"),
+  payoutPerVisitInr: integer("payout_per_visit_inr").notNull().default(0),
+  payoutTaxPct: integer("payout_tax_pct").notNull().default(18),
 });
 
 export const trainersTable = pgTable("trainers", {
@@ -133,7 +137,17 @@ export const checkinsTable = pgTable("checkins", {
     .notNull()
     .defaultNow(),
   method: text("method").notNull().default("qr"),
-});
+  baseInr: integer("base_inr").notNull().default(0),
+  taxPct: integer("tax_pct").notNull().default(0),
+  taxInr: integer("tax_inr").notNull().default(0),
+  payoutInr: integer("payout_inr").notNull().default(0),
+}, (t) => ({
+  oncePerDay: uniqueIndex("checkins_user_gym_ist_day_unique").on(
+    t.userId,
+    t.gymId,
+    sql`((${t.checkedInAt} AT TIME ZONE 'Asia/Kolkata')::date)`,
+  ),
+}));
 
 export const walletsTable = pgTable("wallets", {
   id: serial("id").primaryKey(),

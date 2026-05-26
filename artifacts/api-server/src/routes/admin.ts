@@ -491,6 +491,8 @@ router.post(
           b.ownerPartnerId === undefined || b.ownerPartnerId === null || b.ownerPartnerId === ""
             ? null
             : Number(b.ownerPartnerId),
+        payoutPerVisitInr: Number(b.payoutPerVisitInr ?? 0),
+        payoutTaxPct: Number(b.payoutTaxPct ?? 18),
       })
       .returning();
     res.status(201).json(created);
@@ -516,7 +518,16 @@ router.patch(
     ]) {
       if (b[k] !== undefined) patch[k] = String(b[k]);
     }
-    for (const k of ["rating", "reviewsCount", "priceFrom", "distanceKm", "lat", "lng"]) {
+    for (const k of [
+      "rating",
+      "reviewsCount",
+      "priceFrom",
+      "distanceKm",
+      "lat",
+      "lng",
+      "payoutPerVisitInr",
+      "payoutTaxPct",
+    ]) {
       if (b[k] !== undefined) patch[k] = Number(b[k]);
     }
     for (const k of ["isPremium", "openNow", "featured"]) {

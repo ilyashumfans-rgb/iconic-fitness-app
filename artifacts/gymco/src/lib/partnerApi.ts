@@ -93,6 +93,16 @@ export type PartnerCheckin = {
   gymName: string;
   userName: string;
   userEmail: string;
+  baseInr: number;
+  taxPct: number;
+  taxInr: number;
+  payoutInr: number;
+};
+
+export type PartnerEarnings = {
+  today: { visits: number; payoutInr: number };
+  week: { visits: number; payoutInr: number };
+  month: { visits: number; payoutInr: number };
 };
 
 export type PartnerClass = {
@@ -173,6 +183,7 @@ export const partnerApi = {
       body: JSON.stringify({ currentPassword, newPassword }),
     }),
   stats: () => request<PartnerStats>("/partner/stats"),
+  earnings: () => request<PartnerEarnings>("/partner/earnings"),
   gyms: {
     list: () => request<PartnerGym[]>("/partner/gyms"),
     update: (id: number, body: Partial<PartnerGym>) =>
