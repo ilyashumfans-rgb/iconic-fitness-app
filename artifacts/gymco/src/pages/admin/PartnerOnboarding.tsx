@@ -101,6 +101,18 @@ export default function AdminPartnerOnboarding() {
     return partners.find((p) => p.email.toLowerCase() === e) ?? null;
   }, [form.email, partners]);
 
+  const phoneMatchesExisting = useMemo(() => {
+    if (!existingPartner) return false;
+    const normalize = (s: string | null | undefined) =>
+      (s ?? "").replace(/\D+/g, "");
+    return (
+      normalize(form.phone) !== "" &&
+      normalize(form.phone) === normalize(existingPartner.phone)
+    );
+  }, [existingPartner, form.phone]);
+
+  const verifiedSamePartner = !!existingPartner && phoneMatchesExisting;
+
   const toggleAmenity = (id: number) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -351,7 +363,35 @@ export default function AdminPartnerOnboarding() {
             </div>
           )}
 
-          {existingPartner && (
+          {existingPartner && verifiedSamePartner && (
+            <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-4 flex items-start gap-3">
+              <Building2 className="h-5 w-5 text-emerald-300 mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <div className="text-sm font-semibold text-emerald-200">
+                  Verified branch of{" "}
+                  <span className="text-white">{existingPartner.name}</span>
+                </div>
+                <div className="text-xs text-emerald-200/80 mt-1">
+                  Email and mobile number both match an existing partner —
+                  this is the same brand. You can add as many gym branches as
+                  you like under this single partner login.
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(
+                      `/admin/gyms?ownerPartnerId=${existingPartner.id}`,
+                    )
+                  }
+                  className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white text-xs font-semibold"
+                >
+                  Add another branch to {existingPartner.name}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+          {existingPartner && !verifiedSamePartner && (
             <div className="rounded-2xl border border-orange-500/40 bg-orange-500/10 p-4 flex items-start gap-3">
               <Building2 className="h-5 w-5 text-orange-300 mt-0.5 shrink-0" />
               <div className="flex-1">
@@ -360,9 +400,12 @@ export default function AdminPartnerOnboarding() {
                   <span className="text-white">{existingPartner.name}</span>
                 </div>
                 <div className="text-xs text-orange-200/80 mt-1">
-                  One email = one partner login. To open another branch under
-                  this partner, add a new gym to their account instead of
-                  creating a duplicate partner.
+                  One email = one partner login. To confirm this is the same
+                  brand, also enter their registered mobile number{" "}
+                  <span className="text-orange-100 font-mono">
+                    {existingPartner.phone}
+                  </span>
+                  . Or open another branch under this partner directly:
                 </div>
                 <button
                   type="button"
@@ -397,9 +440,11 @@ export default function AdminPartnerOnboarding() {
           >
             {busy
               ? "Creating…"
-              : existingPartner
-                ? "Add gym branch to this partner"
-                : "Create Partner"}
+              : verifiedSamePartner
+                ? "Add another branch to this partner"
+                : existingPartner
+                  ? "Add gym branch to this partner"
+                  : "Create Partner"}
           </button>
         </form>
       </AdminCard>
