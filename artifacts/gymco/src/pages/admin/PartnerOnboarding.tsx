@@ -253,13 +253,19 @@ export default function AdminPartnerOnboarding() {
             <div className="sm:col-span-2">
               <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
                 Initial Password
+                {verifiedSamePartner && (
+                  <span className="ml-2 text-emerald-300 normal-case tracking-normal">
+                    not needed — existing login will be reused
+                  </span>
+                )}
               </label>
               <input
-                required
-                minLength={6}
+                required={!verifiedSamePartner}
+                minLength={verifiedSamePartner ? 0 : 6}
+                disabled={verifiedSamePartner}
                 type="text"
-                className={inputCls}
-                value={form.password}
+                className={`${inputCls} ${verifiedSamePartner ? "opacity-50 cursor-not-allowed" : ""}`}
+                value={verifiedSamePartner ? "" : form.password}
                 onChange={(e) =>
                   setForm({ ...form, password: e.target.value })
                 }
