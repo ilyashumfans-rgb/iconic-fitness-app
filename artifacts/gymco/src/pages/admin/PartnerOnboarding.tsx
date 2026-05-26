@@ -194,8 +194,8 @@ export default function AdminPartnerOnboarding() {
                 placeholder="owner@goldfit.in"
               />
               <div className="text-[11px] text-slate-500 mt-1">
-                One email = one partner login. The same partner can own many
-                gym branches.
+                One email = multiple partner logins allowed. The same partner
+                can own many gym branches.
               </div>
             </div>
             <div>
