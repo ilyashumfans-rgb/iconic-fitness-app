@@ -12,6 +12,13 @@ import {
   Activity,
   Plus,
   Dot,
+  Image as ImageIcon,
+  Clock,
+  Sparkles,
+  ListChecks,
+  IndianRupee,
+  ExternalLink,
+  CheckCircle2,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 
@@ -76,62 +83,132 @@ export default function PartnerGyms() {
         </div>
       )}
       {rows.length === 0 && !busy ? (
-        <PartnerCard className="p-10 text-center">
-          <Building2 className="h-10 w-10 text-slate-600 mx-auto mb-3" />
-          <div className="text-white font-semibold">No gyms assigned yet</div>
-          <div className="text-sm text-slate-500 mt-1">
-            Once GYMCO admin assigns gyms to your account, you'll be able to
-            manage them here.
+        <div className="relative overflow-hidden rounded-3xl border border-orange-200/70 bg-gradient-to-br from-white via-orange-50/60 to-amber-50 p-12 text-center shadow-[0_30px_60px_-30px_rgba(249,115,22,0.35)]">
+          <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-orange-200/40 blur-3xl" />
+          <div className="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-amber-200/40 blur-3xl" />
+          <div className="relative">
+            <div className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white shadow-[0_15px_30px_-10px_rgba(249,115,22,0.6)]">
+              <Building2 className="h-8 w-8" />
+            </div>
+            <div className="mt-5 text-xl font-bold text-slate-900">
+              No gyms assigned yet
+            </div>
+            <div className="text-sm text-slate-600 mt-2 max-w-md mx-auto">
+              Once GYMCO admin assigns gyms to your partner account, they'll
+              appear here for you to brand, manage, and grow.
+            </div>
           </div>
-        </PartnerCard>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {rows.map((g) => (
-            <PartnerCard key={g.id} className="overflow-hidden flex flex-col">
-              <div
-                className="h-36 bg-slate-800 bg-cover bg-center"
-                style={{ backgroundImage: `url(${g.heroImage})` }}
-              />
-              <div className="p-4 flex-1 flex flex-col">
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="text-white font-semibold">{g.name}</h3>
-                  <div className="flex items-center gap-1 text-amber-400 text-xs">
-                    <Star className="h-3.5 w-3.5 fill-amber-400" />
+            <div
+              key={g.id}
+              className="group relative overflow-hidden rounded-2xl bg-white border border-orange-100 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.15)] hover:shadow-[0_24px_50px_-20px_rgba(249,115,22,0.45)] hover:-translate-y-1 transition-all duration-300 flex flex-col"
+            >
+              <div className="relative h-44 overflow-hidden">
+                <img
+                  src={g.heroImage}
+                  alt={g.name}
+                  className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/85 via-slate-900/20 to-transparent" />
+                <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur text-[11px] font-bold text-amber-700 shadow">
+                    <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
                     {g.rating.toFixed(1)}
                   </div>
+                  <div
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold backdrop-blur shadow ${
+                      g.openNow
+                        ? "bg-emerald-500/95 text-white"
+                        : "bg-slate-900/80 text-slate-200"
+                    }`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        g.openNow ? "bg-white animate-pulse" : "bg-slate-400"
+                      }`}
+                    />
+                    {g.openNow ? "Open now" : "Closed"}
+                  </div>
                 </div>
-                <div className="text-xs text-slate-400 mt-1 flex items-center gap-1">
-                  <MapPin className="h-3 w-3" />
+                <div className="absolute left-4 -bottom-6 h-14 w-14 rounded-2xl bg-white border-2 border-white shadow-lg overflow-hidden flex items-center justify-center">
+                  {g.logoUrl ? (
+                    <img
+                      src={g.logoUrl}
+                      alt={`${g.name} logo`}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white font-extrabold text-lg">
+                      {g.name[0]?.toUpperCase() ?? "G"}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="px-4 pt-8 pb-4 flex-1 flex flex-col">
+                <h3 className="text-base font-extrabold text-slate-900 leading-snug">
+                  {g.name}
+                </h3>
+                <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                  <MapPin className="h-3 w-3 text-orange-500" />
                   {g.area}, {g.city}
                 </div>
+
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {g.categories.slice(0, 3).map((c) => (
                     <span
                       key={c}
-                      className="px-2 py-0.5 rounded-md bg-slate-800 text-[10px] uppercase tracking-wide text-slate-300"
+                      className="px-2 py-0.5 rounded-md bg-orange-50 border border-orange-100 text-[10px] uppercase tracking-wide font-bold text-orange-700"
                     >
                       {c}
                     </span>
                   ))}
                 </div>
-                <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
-                  <span
-                    className={`text-xs font-medium ${
-                      g.openNow ? "text-emerald-400" : "text-slate-500"
-                    }`}
-                  >
-                    {g.openNow ? "Open now" : "Closed"}
-                  </span>
+
+                <div className="mt-4 grid grid-cols-2 gap-2 text-[11px]">
+                  <div className="rounded-lg bg-slate-50 border border-slate-100 px-2.5 py-1.5">
+                    <div className="text-slate-400 uppercase tracking-wide font-bold text-[9px]">
+                      Starts at
+                    </div>
+                    <div className="flex items-center text-slate-900 font-bold">
+                      <IndianRupee className="h-3 w-3" />
+                      {g.priceFrom}
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-slate-50 border border-slate-100 px-2.5 py-1.5">
+                    <div className="text-slate-400 uppercase tracking-wide font-bold text-[9px]">
+                      Hours
+                    </div>
+                    <div className="text-slate-900 font-semibold truncate flex items-center gap-1">
+                      <Clock className="h-3 w-3 text-orange-500 shrink-0" />
+                      {g.hours}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2">
                   <button
                     onClick={() => setEditing(g)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium"
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold shadow-[0_8px_20px_-8px_rgba(249,115,22,0.6)]"
                   >
-                    <Edit3 className="h-3 w-3" />
-                    Edit
+                    <Edit3 className="h-3.5 w-3.5" />
+                    Manage gym
                   </button>
+                  <a
+                    href={`/g/${g.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    title="View public page"
+                    className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
                 </div>
               </div>
-            </PartnerCard>
+            </div>
           ))}
         </div>
       )}
@@ -174,6 +251,7 @@ function EditGymModal({
   const [openNow, setOpenNow] = useState(gym.openNow);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [tab, setTab] = useState<TabId>("basics");
 
   const [amenityCatalog, setAmenityCatalog] = useState<
     { id: number; name: string; icon: string; category: string }[]
@@ -371,21 +449,86 @@ function EditGymModal({
     .map((s) => s.trim())
     .filter(Boolean);
 
+  const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
+    { id: "basics", label: "Basics", icon: <Sparkles className="h-3.5 w-3.5" /> },
+    { id: "media", label: "Media", icon: <ImageIcon className="h-3.5 w-3.5" /> },
+    {
+      id: "amenities",
+      label: "Amenities",
+      icon: <ListChecks className="h-3.5 w-3.5" />,
+    },
+    {
+      id: "workouts",
+      label: "Workouts",
+      icon: <Activity className="h-3.5 w-3.5" />,
+    },
+    { id: "hours", label: "Hours", icon: <Clock className="h-3.5 w-3.5" /> },
+  ];
+
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between sticky top-0 bg-slate-900">
-          <h3 className="text-lg font-semibold text-white">Edit {gym.name}</h3>
+    <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)]">
+        <div className="relative">
+          <div className="h-32 bg-cover bg-center" style={{ backgroundImage: `url(${heroImage || gym.heroImage})` }} />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/70 to-slate-900/40" />
           <button
             onClick={onClose}
-            className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400"
+            className="absolute top-4 right-4 p-2 rounded-full bg-white/95 hover:bg-white text-slate-700 shadow"
           >
             <X className="h-4 w-4" />
           </button>
+          <div className="absolute inset-0 flex items-end gap-4 px-6 pb-4">
+            <div className="h-16 w-16 rounded-2xl bg-white border-2 border-white shadow-lg overflow-hidden flex items-center justify-center shrink-0">
+              {logoUrl ? (
+                <img src={logoUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="h-full w-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white font-extrabold text-xl">
+                  {gym.name[0]?.toUpperCase() ?? "G"}
+                </div>
+              )}
+            </div>
+            <div className="min-w-0">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-orange-300 font-bold">
+                Editing
+              </div>
+              <div className="text-xl font-extrabold text-white truncate">
+                {name || gym.name}
+              </div>
+              <div className="text-xs text-slate-200 flex items-center gap-1 mt-0.5">
+                <MapPin className="h-3 w-3 text-orange-400" />
+                {area || gym.area}, {city || gym.city}
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Name" value={name} onChange={setName} className="sm:col-span-2" />
 
+        <div className="px-4 pt-3 border-b border-slate-800 bg-slate-900 overflow-x-auto">
+          <div className="flex gap-1 min-w-max">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTab(t.id)}
+                className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-bold border-b-2 transition-colors -mb-px ${
+                  tab === t.id
+                    ? "border-orange-500 text-orange-600"
+                    : "border-transparent text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                {t.icon}
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+        <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {tab === "basics" && (
+            <Field label="Name" value={name} onChange={setName} className="sm:col-span-2" />
+          )}
+
+          {tab === "media" && (
           <div className="sm:col-span-2 rounded-xl border border-slate-800 p-4 bg-slate-950/40">
             <div className="text-xs uppercase tracking-wide text-orange-500 font-bold mb-3">
               Media assets
@@ -494,7 +637,10 @@ function EditGymModal({
               </div>
             </div>
           </div>
+          )}
 
+          {tab === "basics" && (
+            <>
           <Field label="Area" value={area} onChange={setArea} />
           <Field label="City" value={city} onChange={setCity} />
           <Field label="Address" value={address} onChange={setAddress} className="sm:col-span-2" />
@@ -511,16 +657,37 @@ function EditGymModal({
               className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
             />
           </div>
-          <label className="sm:col-span-2 flex items-center gap-2 text-sm text-slate-300">
-            <input
-              type="checkbox"
-              checked={openNow}
-              onChange={(e) => setOpenNow(e.target.checked)}
-              className="rounded border-slate-700 bg-slate-800"
-            />
-            Currently open
-          </label>
+          <button
+            type="button"
+            onClick={() => setOpenNow(!openNow)}
+            className={`sm:col-span-2 flex items-center justify-between gap-3 px-4 py-3 rounded-xl border transition ${
+              openNow
+                ? "bg-emerald-50 border-emerald-200"
+                : "bg-slate-50 border-slate-200"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className={`h-4 w-4 ${openNow ? "text-emerald-600" : "text-slate-400"}`} />
+              <div className="text-sm font-semibold text-slate-800">
+                Currently open
+              </div>
+            </div>
+            <div
+              className={`h-6 w-11 rounded-full p-0.5 transition ${
+                openNow ? "bg-emerald-500" : "bg-slate-300"
+              }`}
+            >
+              <div
+                className={`h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                  openNow ? "translate-x-5" : ""
+                }`}
+              />
+            </div>
+          </button>
+            </>
+          )}
 
+          {tab === "amenities" && (
           <div className="sm:col-span-2 rounded-xl border border-slate-800 p-4 bg-slate-950/40">
             <div className="text-xs uppercase tracking-wide text-orange-500 font-bold mb-3">
               Amenities (from catalog)
@@ -625,7 +792,9 @@ function EditGymModal({
               </button>
             </div>
           </div>
+          )}
 
+          {tab === "workouts" && (
           <div className="sm:col-span-2 rounded-xl border border-slate-800 p-4 bg-slate-950/40">
             <div className="text-xs uppercase tracking-wide text-orange-500 font-bold mb-3 flex items-center gap-2">
               <Activity className="h-4 w-4" /> Workout types
@@ -730,7 +899,9 @@ function EditGymModal({
               </div>
             )}
           </div>
+          )}
 
+          {tab === "hours" && (
           <div className="sm:col-span-2 rounded-xl border border-slate-800 p-4 bg-slate-950/40">
             <div className="text-xs uppercase tracking-wide text-orange-500 font-bold mb-3">
               Weekly hours
@@ -752,13 +923,19 @@ function EditGymModal({
               </div>
             )}
           </div>
+          )}
           {err && (
             <div className="sm:col-span-2 text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg p-3">
               {err}
             </div>
           )}
         </div>
-        <div className="px-6 py-4 border-t border-slate-800 flex items-center justify-end gap-2">
+        </div>
+        <div className="px-6 py-4 border-t border-slate-800 flex items-center justify-between gap-2 bg-slate-900">
+          <div className="text-[11px] text-slate-500 hidden sm:block">
+            Changes save across all tabs at once.
+          </div>
+          <div className="flex items-center gap-2">
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm"
@@ -773,11 +950,14 @@ function EditGymModal({
             <Save className="h-4 w-4" />
             {busy ? "Saving…" : "Save changes"}
           </button>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
+type TabId = "basics" | "media" | "amenities" | "workouts" | "hours";
 
 function Field({
   label,
