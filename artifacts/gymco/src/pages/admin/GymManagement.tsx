@@ -20,7 +20,6 @@ function GymForm({
     city: initial?.city ?? "",
     area: initial?.area ?? "",
     address: initial?.address ?? "",
-    priceFrom: initial?.priceFrom ?? 999,
     rating: initial?.rating ?? 4.5,
     heroImage:
       initial?.heroImage ??
@@ -40,7 +39,6 @@ function GymForm({
     try {
       await onSave({
         ...f,
-        priceFrom: Number(f.priceFrom),
         rating: Number(f.rating),
         payoutPerVisitInr: Number(f.payoutPerVisitInr),
         payoutTaxPct: Number(f.payoutTaxPct),
@@ -65,7 +63,6 @@ function GymForm({
         <Input label="City" value={f.city} onChange={(v) => setF({ ...f, city: v })} required />
         <Input label="Area" value={f.area} onChange={(v) => setF({ ...f, area: v })} required />
         <Input label="Hours" value={f.hours} onChange={(v) => setF({ ...f, hours: v })} />
-        <Input label="Price From (₹)" type="number" value={f.priceFrom} onChange={(v) => setF({ ...f, priceFrom: v as any })} />
         <Input label="Rating" type="number" value={f.rating} onChange={(v) => setF({ ...f, rating: v as any })} />
         <Input label="Categories (comma)" value={f.categories} onChange={(v) => setF({ ...f, categories: v })} />
         <Input label="Amenities (comma)" value={f.amenities} onChange={(v) => setF({ ...f, amenities: v })} />
@@ -144,54 +141,6 @@ function Input({
   );
 }
 
-function InlineGymPrice({
-  gym,
-  onSaved,
-}: {
-  gym: any;
-  onSaved: () => void;
-}) {
-  const [price, setPrice] = useState<number>(gym.priceFrom ?? 0);
-  const [busy, setBusy] = useState(false);
-  const [ok, setOk] = useState(false);
-  const dirty = price !== gym.priceFrom;
-
-  const save = async () => {
-    if (!dirty) return;
-    setBusy(true);
-    try {
-      await adminApi.gyms.update(gym.id, { priceFrom: Number(price) });
-      setOk(true);
-      onSaved();
-      setTimeout(() => setOk(false), 1500);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div className="inline-flex items-center gap-1">
-      <span className="text-slate-500">₹</span>
-      <input
-        type="number"
-        value={price}
-        onChange={(e) => setPrice(Number(e.target.value))}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") save();
-        }}
-        className="w-20 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
-      />
-      <button
-        onClick={save}
-        disabled={!dirty || busy}
-        className="text-xs px-2 py-1 rounded bg-orange-500/15 text-orange-300 border border-orange-500/30 hover:bg-orange-500/25 disabled:opacity-30 disabled:cursor-not-allowed"
-      >
-        {busy ? "…" : ok ? "✓" : "Save"}
-      </button>
-    </div>
-  );
-}
-
 export default function AdminGymManagement() {
   const [rows, setRows] = useState<any[]>([]);
   const [editing, setEditing] = useState<any | null>(null);
@@ -264,7 +213,6 @@ export default function AdminGymManagement() {
               <th className="px-5 py-3">Name</th>
               <th className="px-5 py-3">City</th>
               <th className="px-5 py-3">Area</th>
-              <th className="px-5 py-3">Price</th>
               <th className="px-5 py-3">Rating</th>
               <th className="px-5 py-3">Flags</th>
               <th className="px-5 py-3"></th>
@@ -276,9 +224,6 @@ export default function AdminGymManagement() {
                 <td className="px-5 py-3 font-medium text-white">{g.name}</td>
                 <td className="px-5 py-3 text-slate-300">{g.city}</td>
                 <td className="px-5 py-3 text-slate-400">{g.area}</td>
-                <td className="px-5 py-3 text-slate-300">
-                  <InlineGymPrice gym={g} onSaved={load} />
-                </td>
                 <td className="px-5 py-3 text-slate-300">{g.rating}</td>
                 <td className="px-5 py-3">
                   <div className="flex gap-1">
