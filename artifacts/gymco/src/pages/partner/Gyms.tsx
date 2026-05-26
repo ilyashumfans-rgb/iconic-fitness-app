@@ -466,8 +466,8 @@ function EditGymModal({
   ];
 
   return (
-    <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(15,23,42,0.55)", backdropFilter: "blur(4px)" }}>
+      <div className="bg-white border border-orange-100 rounded-3xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col shadow-[0_40px_80px_-20px_rgba(15,23,42,0.35)]">
         <div className="relative">
           <div className="h-32 bg-cover bg-center" style={{ backgroundImage: `url(${heroImage || gym.heroImage})` }} />
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/70 to-slate-900/40" />
@@ -502,7 +502,7 @@ function EditGymModal({
           </div>
         </div>
 
-        <div className="px-4 pt-3 border-b border-slate-800 bg-slate-900 overflow-x-auto">
+        <div className="px-4 pt-3 border-b border-orange-100 bg-white overflow-x-auto">
           <div className="flex gap-1 min-w-max">
             {TABS.map((t) => (
               <button
@@ -529,7 +529,7 @@ function EditGymModal({
           )}
 
           {tab === "media" && (
-          <div className="sm:col-span-2 rounded-xl border border-slate-800 p-4 bg-slate-950/40">
+          <div className="sm:col-span-2 rounded-xl border border-orange-100 p-4 bg-white">
             <div className="text-xs uppercase tracking-wide text-orange-500 font-bold mb-3">
               Media assets
             </div>
@@ -688,7 +688,7 @@ function EditGymModal({
           )}
 
           {tab === "amenities" && (
-          <div className="sm:col-span-2 rounded-xl border border-slate-800 p-4 bg-slate-950/40">
+          <div className="sm:col-span-2 rounded-xl border border-orange-100 p-4 bg-white">
             <div className="text-xs uppercase tracking-wide text-orange-500 font-bold mb-3">
               Amenities (from catalog)
             </div>
@@ -795,7 +795,7 @@ function EditGymModal({
           )}
 
           {tab === "workouts" && (
-          <div className="sm:col-span-2 rounded-xl border border-slate-800 p-4 bg-slate-950/40">
+          <div className="sm:col-span-2 rounded-xl border border-orange-100 p-4 bg-white">
             <div className="text-xs uppercase tracking-wide text-orange-500 font-bold mb-3 flex items-center gap-2">
               <Activity className="h-4 w-4" /> Workout types
             </div>
@@ -902,7 +902,7 @@ function EditGymModal({
           )}
 
           {tab === "hours" && (
-          <div className="sm:col-span-2 rounded-xl border border-slate-800 p-4 bg-slate-950/40">
+          <div className="sm:col-span-2 rounded-xl border border-orange-100 p-4 bg-white">
             <div className="text-xs uppercase tracking-wide text-orange-500 font-bold mb-3">
               Weekly hours
             </div>
@@ -931,7 +931,7 @@ function EditGymModal({
           )}
         </div>
         </div>
-        <div className="px-6 py-4 border-t border-slate-800 flex items-center justify-between gap-2 bg-slate-900">
+        <div className="px-6 py-4 border-t border-orange-100 flex items-center justify-between gap-2 bg-white">
           <div className="text-[11px] text-slate-500 hidden sm:block">
             Changes save across all tabs at once.
           </div>
