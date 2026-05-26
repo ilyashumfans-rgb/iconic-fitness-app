@@ -84,6 +84,7 @@ export default function AdminPartnerOnboarding() {
       .then((list) => {
         const active = (list as Amenity[]).filter((a) => a.isActive);
         setAmenities(active);
+        setSelectedIds(new Set(active.map((a) => a.id)));
       })
       .catch(() => {
         // soft-fail: form still works without amenities
@@ -320,8 +321,31 @@ export default function AdminPartnerOnboarding() {
                 </div>
               )}
               {amenities.length > 0 && (
-                <div className="mt-3 text-[11px] text-slate-500">
-                  {selectedIds.size} of {amenities.length} selected
+                <div className="mt-3 flex items-center justify-between gap-2 text-[11px] text-slate-500">
+                  <span>
+                    {selectedIds.size} of {amenities.length} selected
+                    {selectedIds.size === amenities.length
+                      ? " (all)"
+                      : ""}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedIds(new Set(amenities.map((a) => a.id)))
+                      }
+                      className="px-2 py-1 rounded bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700"
+                    >
+                      Select all
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedIds(new Set())}
+                      className="px-2 py-1 rounded bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700"
+                    >
+                      Clear
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
