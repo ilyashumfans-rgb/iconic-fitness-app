@@ -81,15 +81,38 @@ export default function GymDetail() {
     custom: AmenityRow[];
   } | null>(null);
   const [weeklyHours, setWeeklyHours] = useState<HourRow[] | null>(null);
+  const [workouts, setWorkouts] = useState<
+    {
+      id: number;
+      name: string;
+      slug: string;
+      description: string;
+      icon: string;
+      color: string;
+      imageUrl: string;
+    }[]
+  >([]);
+  const [workoutSessions, setWorkoutSessions] = useState<
+    {
+      id: number;
+      workoutId: number;
+      dayOfWeek: number;
+      startMinute: number;
+      endMinute: number;
+      instructor: string;
+    }[]
+  >([]);
 
   useEffect(() => {
     if (!id) return;
     let abort = false;
     (async () => {
       try {
-        const [amRes, hrRes] = await Promise.all([
+        const [amRes, hrRes, wkRes, wsRes] = await Promise.all([
           fetch(`/api/gyms/${id}/amenities`),
           fetch(`/api/gyms/${id}/hours`),
+          fetch(`/api/gyms/${id}/workouts`),
+          fetch(`/api/gyms/${id}/workouts/sessions`),
         ]);
         if (amRes.ok) {
           const a = await amRes.json();
@@ -98,6 +121,14 @@ export default function GymDetail() {
         if (hrRes.ok) {
           const h = await hrRes.json();
           if (!abort) setWeeklyHours(h);
+        }
+        if (wkRes.ok) {
+          const w = await wkRes.json();
+          if (!abort) setWorkouts(w);
+        }
+        if (wsRes.ok) {
+          const s = await wsRes.json();
+          if (!abort) setWorkoutSessions(s);
         }
       } catch {
         // silent — fall back to gym.amenities/hours fields
@@ -280,6 +311,104 @@ export default function GymDetail() {
               </div>
             )}
           </section>
+
+          {/* Workouts offered */}
+          {workouts.length > 0 && (
+            <section>
+              <h2 className="text-xl font-bold mb-3 flex items-center">
+                <Sparkles className="h-5 w-5 mr-2 text-primary" /> Workouts
+                offered
+              </h2>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                {workouts.map((w) => (
+                  <div
+                    key={w.id}
+                    className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-3 shadow-sm"
+                    title={w.description}
+                  >
+                    <div
+                      className={`h-14 w-14 rounded-xl bg-gradient-to-br ${w.color || "from-orange-500 to-amber-500"} flex items-center justify-center text-white shadow`}
+                    >
+                      <AmenityIcon name={w.icon} className="h-6 w-6" />
+                    </div>
+                    <div className="text-xs font-bold text-center leading-tight">
+                      {w.name}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {workoutSessions.length > 0 && (
+                <Card className="mt-4 border-border bg-card">
+                  <CardContent className="p-0 divide-y divide-border">
+                    {[0, 1, 2, 3, 4, 5, 6]
+                      .map((day) => ({
+                        day,
+                        rows: workoutSessions.filter(
+                          (s) => s.dayOfWeek === day,
+                        ),
+                      }))
+                      .filter((g) => g.rows.length > 0)
+                      .map((g) => (
+                        <div key={g.day} className="px-5 py-3">
+                          <div className="text-[11px] uppercase tracking-wider font-bold text-primary mb-2">
+                            {
+                              [
+                                "Sunday",
+                                "Monday",
+                                "Tuesday",
+                                "Wednesday",
+                                "Thursday",
+                                "Friday",
+                                "Saturday",
+                              ][g.day]
+                            }
+                          </div>
+                          <div className="space-y-1.5">
+                            {g.rows.map((s) => {
+                              const w = workouts.find(
+                                (x) => x.id === s.workoutId,
+                              );
+                              return (
+                                <div
+                                  key={s.id}
+                                  className="flex items-center justify-between gap-3 text-sm"
+                                >
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    {w && (
+                                      <span
+                                        className={`h-7 w-7 rounded-md bg-gradient-to-br ${w.color || "from-orange-500 to-amber-500"} flex items-center justify-center text-white shrink-0`}
+                                      >
+                                        <AmenityIcon
+                                          name={w.icon}
+                                          className="h-3.5 w-3.5"
+                                        />
+                                      </span>
+                                    )}
+                                    <span className="font-semibold truncate">
+                                      {w?.name ?? "Workout"}
+                                    </span>
+                                    {s.instructor && (
+                                      <span className="text-xs text-muted-foreground truncate">
+                                        · {s.instructor}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="text-xs text-muted-foreground whitespace-nowrap font-medium">
+                                    {fmtMinutes(s.startMinute)} –{" "}
+                                    {fmtMinutes(s.endMinute)}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                  </CardContent>
+                </Card>
+              )}
+            </section>
+          )}
 
           {/* Weekly hours */}
           {weeklyHours && weeklyHours.length === 7 && (

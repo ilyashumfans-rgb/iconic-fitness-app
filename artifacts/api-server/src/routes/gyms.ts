@@ -9,6 +9,9 @@ import {
   gymAmenitiesTable,
   gymCustomAmenitiesTable,
   gymHoursTable,
+  workoutsTable,
+  gymWorkoutsTable,
+  gymWorkoutSessionsTable,
 } from "@workspace/db";
 import {
   ListGymsQueryParams,
@@ -208,6 +211,81 @@ router.get("/gyms/:gymId/hours", async (req, res): Promise<void> => {
   );
   res.json(out);
 });
+
+router.get("/gyms/:gymId/workouts", async (req, res): Promise<void> => {
+  const gymId = Number(req.params.gymId);
+  if (!gymId) {
+    res.status(400).json({ error: "Invalid gymId" });
+    return;
+  }
+  const rows = await db
+    .select({
+      id: workoutsTable.id,
+      name: workoutsTable.name,
+      slug: workoutsTable.slug,
+      description: workoutsTable.description,
+      icon: workoutsTable.icon,
+      color: workoutsTable.color,
+      imageUrl: workoutsTable.imageUrl,
+    })
+    .from(gymWorkoutsTable)
+    .innerJoin(
+      workoutsTable,
+      eq(gymWorkoutsTable.workoutId, workoutsTable.id),
+    )
+    .where(
+      and(
+        eq(gymWorkoutsTable.gymId, gymId),
+        eq(workoutsTable.isActive, true),
+      ),
+    )
+    .orderBy(asc(workoutsTable.sortOrder), asc(workoutsTable.name));
+  res.json(rows);
+});
+
+router.get(
+  "/gyms/:gymId/workouts/sessions",
+  async (req, res): Promise<void> => {
+    const gymId = Number(req.params.gymId);
+    if (!gymId) {
+      res.status(400).json({ error: "Invalid gymId" });
+      return;
+    }
+    const rows = await db
+      .select({
+        id: gymWorkoutSessionsTable.id,
+        gymId: gymWorkoutSessionsTable.gymId,
+        workoutId: gymWorkoutSessionsTable.workoutId,
+        dayOfWeek: gymWorkoutSessionsTable.dayOfWeek,
+        startMinute: gymWorkoutSessionsTable.startMinute,
+        endMinute: gymWorkoutSessionsTable.endMinute,
+        instructor: gymWorkoutSessionsTable.instructor,
+      })
+      .from(gymWorkoutSessionsTable)
+      .innerJoin(
+        gymWorkoutsTable,
+        and(
+          eq(gymWorkoutsTable.gymId, gymWorkoutSessionsTable.gymId),
+          eq(gymWorkoutsTable.workoutId, gymWorkoutSessionsTable.workoutId),
+        ),
+      )
+      .innerJoin(
+        workoutsTable,
+        eq(workoutsTable.id, gymWorkoutSessionsTable.workoutId),
+      )
+      .where(
+        and(
+          eq(gymWorkoutSessionsTable.gymId, gymId),
+          eq(workoutsTable.isActive, true),
+        ),
+      )
+      .orderBy(
+        asc(gymWorkoutSessionsTable.dayOfWeek),
+        asc(gymWorkoutSessionsTable.startMinute),
+      );
+    res.json(rows);
+  },
+);
 
 router.get("/gyms/:gymId/classes", async (req, res): Promise<void> => {
   const params = ListGymClassesParams.safeParse(req.params);

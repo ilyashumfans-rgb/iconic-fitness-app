@@ -16,6 +16,7 @@ import {
   LogOut,
   RefreshCcw,
   Sparkles,
+  Activity,
 } from "lucide-react";
 import { adminApi, type AdminUser } from "@/lib/adminApi";
 
@@ -79,6 +80,11 @@ const SECTIONS: Section[] = [
         label: "Amenities Catalog",
         href: "/admin/amenities",
         icon: <Sparkles className="h-4 w-4" />,
+      },
+      {
+        label: "Workouts Catalog",
+        href: "/admin/workouts",
+        icon: <Activity className="h-4 w-4" />,
       },
     ],
   },

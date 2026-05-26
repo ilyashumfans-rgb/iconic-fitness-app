@@ -16,6 +16,7 @@ import {
   productOrdersTable,
   productOrderItemsTable,
   amenitiesTable,
+  workoutsTable,
 } from "@workspace/db";
 import {
   hashPassword,
@@ -677,6 +678,102 @@ router.delete(
   async (req: Request, res: Response): Promise<void> => {
     const id = Number(req.params.id);
     await db.delete(amenitiesTable).where(eq(amenitiesTable.id, id));
+    res.json({ ok: true });
+  },
+);
+
+// ───────────────────────────── Workouts catalog ─────────────────────────────
+
+router.get(
+  "/admin/workouts",
+  requireAdmin,
+  async (_req: Request, res: Response): Promise<void> => {
+    const rows = await db
+      .select()
+      .from(workoutsTable)
+      .orderBy(asc(workoutsTable.sortOrder), asc(workoutsTable.name));
+    res.json(rows);
+  },
+);
+
+router.post(
+  "/admin/workouts",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    if (!b.name) {
+      res.status(400).json({ error: "name required" });
+      return;
+    }
+    const slug =
+      (b.slug as string | undefined)?.trim() || slugify(String(b.name));
+    try {
+      const [row] = await db
+        .insert(workoutsTable)
+        .values({
+          name: String(b.name).trim(),
+          slug,
+          description: String(b.description ?? ""),
+          icon: String(b.icon ?? "Dumbbell"),
+          color: String(b.color ?? "from-orange-500 to-amber-500"),
+          imageUrl: String(b.imageUrl ?? ""),
+          isActive: b.isActive === undefined ? true : Boolean(b.isActive),
+          sortOrder: Number(b.sortOrder ?? 0),
+        })
+        .returning();
+      res.status(201).json(row);
+    } catch (e: unknown) {
+      if ((e as { code?: string })?.code === "23505") {
+        res.status(409).json({ error: "Workout name or slug already exists" });
+        return;
+      }
+      throw e;
+    }
+  },
+);
+
+router.patch(
+  "/admin/workouts/:id",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const patch: Record<string, unknown> = {};
+    if (b.name !== undefined) patch.name = String(b.name).trim();
+    if (b.slug !== undefined) patch.slug = slugify(String(b.slug));
+    if (b.description !== undefined) patch.description = String(b.description);
+    if (b.icon !== undefined) patch.icon = String(b.icon);
+    if (b.color !== undefined) patch.color = String(b.color);
+    if (b.imageUrl !== undefined) patch.imageUrl = String(b.imageUrl);
+    if (b.isActive !== undefined) patch.isActive = Boolean(b.isActive);
+    if (b.sortOrder !== undefined) patch.sortOrder = Number(b.sortOrder);
+    try {
+      const [row] = await db
+        .update(workoutsTable)
+        .set(patch)
+        .where(eq(workoutsTable.id, id))
+        .returning();
+      if (!row) {
+        res.status(404).json({ error: "Not found" });
+        return;
+      }
+      res.json(row);
+    } catch (e: unknown) {
+      if ((e as { code?: string })?.code === "23505") {
+        res.status(409).json({ error: "Workout name or slug already exists" });
+        return;
+      }
+      throw e;
+    }
+  },
+);
+
+router.delete(
+  "/admin/workouts/:id",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    await db.delete(workoutsTable).where(eq(workoutsTable.id, id));
     res.json({ ok: true });
   },
 );

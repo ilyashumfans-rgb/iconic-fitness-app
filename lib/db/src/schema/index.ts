@@ -213,6 +213,57 @@ export const gymHoursTable = pgTable(
   }),
 );
 
+// ─── Workouts catalog (admin-managed) ───
+export const workoutsTable = pgTable("workouts", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  slug: text("slug").notNull().unique(),
+  description: text("description").notNull().default(""),
+  icon: text("icon").notNull().default("Dumbbell"),
+  color: text("color").notNull().default("from-orange-500 to-amber-500"),
+  imageUrl: text("image_url").notNull().default(""),
+  isActive: boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// Join: which catalog workouts a gym offers
+export const gymWorkoutsTable = pgTable(
+  "gym_workouts",
+  {
+    id: serial("id").primaryKey(),
+    gymId: integer("gym_id")
+      .notNull()
+      .references(() => gymsTable.id, { onDelete: "cascade" }),
+    workoutId: integer("workout_id")
+      .notNull()
+      .references(() => workoutsTable.id, { onDelete: "cascade" }),
+  },
+  (t) => ({
+    uniq: uniqueIndex("gym_workouts_gym_workout_unique").on(
+      t.gymId,
+      t.workoutId,
+    ),
+  }),
+);
+
+// Per-workout session schedule rows; one row per time slot
+export const gymWorkoutSessionsTable = pgTable("gym_workout_sessions", {
+  id: serial("id").primaryKey(),
+  gymId: integer("gym_id")
+    .notNull()
+    .references(() => gymsTable.id, { onDelete: "cascade" }),
+  workoutId: integer("workout_id")
+    .notNull()
+    .references(() => workoutsTable.id, { onDelete: "cascade" }),
+  dayOfWeek: integer("day_of_week").notNull(), // 0=Sun … 6=Sat
+  startMinute: integer("start_minute").notNull().default(360),
+  endMinute: integer("end_minute").notNull().default(420),
+  instructor: text("instructor").notNull().default(""),
+});
+
 export const walletsTable = pgTable("wallets", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
