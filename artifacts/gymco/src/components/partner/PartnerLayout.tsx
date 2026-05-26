@@ -11,7 +11,6 @@ import {
   LogOut,
   RefreshCcw,
   Handshake,
-  MapPin,
   QrCode,
 } from "lucide-react";
 import { partnerApi, type Partner } from "@/lib/partnerApi";
@@ -25,7 +24,6 @@ const NAV: Item[] = [
   { label: "Check-ins", href: "/partner/checkins", icon: <CheckCircle2 className="h-4 w-4" /> },
   { label: "Classes", href: "/partner/classes", icon: <Dumbbell className="h-4 w-4" /> },
   { label: "Products", href: "/partner/products", icon: <Package className="h-4 w-4" /> },
-  { label: "Cities & Areas", href: "/partner/locations", icon: <MapPin className="h-4 w-4" /> },
   { label: "Scan QR", href: "/partner/scan", icon: <QrCode className="h-4 w-4" /> },
   { label: "Profile & Settings", href: "/partner/settings", icon: <Settings className="h-4 w-4" /> },
 ];

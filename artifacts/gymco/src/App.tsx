@@ -53,7 +53,6 @@ import AdminFeaturedGyms from "@/pages/admin/FeaturedGyms";
 import AdminGymVerification from "@/pages/admin/GymVerification";
 import AdminAmenityCatalog from "@/pages/admin/AmenityCatalog";
 import AdminCityAreaManagement from "@/pages/admin/CityAreaManagement";
-import PartnerCityAreaManagement from "@/pages/partner/CityAreaManagement";
 import PartnerScanner from "@/pages/partner/Scanner";
 import AdminWorkoutCatalog from "@/pages/admin/WorkoutCatalog";
 import AdminUsers from "@/pages/admin/Users";
@@ -235,7 +234,6 @@ function AppShell() {
         <Route path="/partner/checkins" component={PartnerCheckins} />
         <Route path="/partner/classes" component={PartnerClasses} />
         <Route path="/partner/products" component={PartnerProducts} />
-        <Route path="/partner/locations" component={PartnerCityAreaManagement} />
         <Route path="/partner/scan" component={PartnerScanner} />
         <Route path="/partner/settings" component={PartnerSettings} />
         <Route component={NotFound} />
