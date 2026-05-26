@@ -25,6 +25,7 @@ const NAV: Item[] = [
   { label: "Classes", href: "/partner/classes", icon: <Dumbbell className="h-4 w-4" /> },
   { label: "Products", href: "/partner/products", icon: <Package className="h-4 w-4" /> },
   { label: "Scan QR", href: "/partner/scan", icon: <QrCode className="h-4 w-4" /> },
+  { label: "Display gym QR", href: "/partner/display-qr", icon: <QrCode className="h-4 w-4" /> },
   { label: "Profile & Settings", href: "/partner/settings", icon: <Settings className="h-4 w-4" /> },
 ];
 
