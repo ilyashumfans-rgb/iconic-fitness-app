@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
 import { adminApi } from "@/lib/adminApi";
+import { locationsApi, type City, type Area } from "@/lib/locationsApi";
 import { Plus, Trash2, X, Users, ChevronDown, ChevronUp, Check } from "lucide-react";
 
 const inputCls =
@@ -9,11 +10,15 @@ const inputCls =
 function GymForm({
   initial,
   partners,
+  cities,
+  areas,
   onSave,
   onCancel,
 }: {
   initial?: any;
   partners: { id: number; name: string; email: string; status: string }[];
+  cities: City[];
+  areas: Area[];
   onSave: (body: Record<string, unknown>) => Promise<void>;
   onCancel: () => void;
 }) {
@@ -67,8 +72,13 @@ function GymForm({
     <form onSubmit={submit} className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input label="Name" value={f.name} onChange={(v) => setF({ ...f, name: v })} required />
-        <Input label="City" value={f.city} onChange={(v) => setF({ ...f, city: v })} required />
-        <Input label="Area" value={f.area} onChange={(v) => setF({ ...f, area: v })} required />
+        <CityAreaPicker
+          cities={cities}
+          areas={areas}
+          city={f.city}
+          area={f.area}
+          onChange={(city, area) => setF({ ...f, city, area })}
+        />
         <Input label="Hours" value={f.hours} onChange={(v) => setF({ ...f, hours: v })} />
         <Input label="Rating" type="number" value={f.rating} onChange={(v) => setF({ ...f, rating: v as any })} />
         <Input label="Categories (comma)" value={f.categories} onChange={(v) => setF({ ...f, categories: v })} />
@@ -141,6 +151,98 @@ function GymForm({
   );
 }
 
+function CityAreaPicker({
+  cities,
+  areas,
+  city,
+  area,
+  onChange,
+}: {
+  cities: City[];
+  areas: Area[];
+  city: string;
+  area: string;
+  onChange: (city: string, area: string) => void;
+}) {
+  const activeCities = useMemo(
+    () => cities.filter((c) => c.isActive).sort((a, b) => a.name.localeCompare(b.name)),
+    [cities],
+  );
+  const selectedCity = cities.find(
+    (c) => c.name.toLowerCase() === city.toLowerCase(),
+  );
+  const areasForCity = useMemo(() => {
+    if (!selectedCity) return [];
+    return areas
+      .filter((a) => a.cityId === selectedCity.id && a.isActive)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [areas, selectedCity]);
+
+  return (
+    <>
+      <div>
+        <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+          City
+        </label>
+        <select
+          required
+          value={selectedCity ? selectedCity.name : city ? "__custom" : ""}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (v === "" || v === "__custom") {
+              onChange("", "");
+            } else {
+              onChange(v, "");
+            }
+          }}
+          className={inputCls}
+        >
+          <option value="">— Select city —</option>
+          {activeCities.map((c) => (
+            <option key={c.id} value={c.name}>
+              {c.name}
+            </option>
+          ))}
+          {city && !selectedCity && (
+            <option value="__custom">{city} (legacy)</option>
+          )}
+        </select>
+      </div>
+      <div>
+        <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+          Area
+        </label>
+        <select
+          required
+          value={area}
+          disabled={!selectedCity}
+          onChange={(e) => onChange(city, e.target.value)}
+          className={`${inputCls} disabled:opacity-60 disabled:cursor-not-allowed`}
+        >
+          <option value="">
+            {selectedCity ? "— Select area —" : "Pick a city first"}
+          </option>
+          {areasForCity.map((a) => (
+            <option key={a.id} value={a.name}>
+              {a.name}
+            </option>
+          ))}
+          {area &&
+            !areasForCity.some(
+              (a) => a.name.toLowerCase() === area.toLowerCase(),
+            ) && <option value={area}>{area} (legacy)</option>}
+        </select>
+        {selectedCity && areasForCity.length === 0 && (
+          <div className="text-[11px] text-amber-400/80 mt-1">
+            No areas configured for {selectedCity.name}. Add them in Admin →
+            Cities & Areas.
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
 function Input({
   label,
   value,
@@ -175,6 +277,8 @@ export default function AdminGymManagement() {
   const [partners, setPartners] = useState<
     { id: number; name: string; email: string; status: string }[]
   >([]);
+  const [cities, setCities] = useState<City[]>([]);
+  const [areas, setAreas] = useState<Area[]>([]);
   const [editing, setEditing] = useState<any | null>(null);
   const [creating, setCreating] = useState(false);
 
@@ -182,6 +286,8 @@ export default function AdminGymManagement() {
   useEffect(() => {
     load();
     adminApi.partners.list().then(setPartners).catch(() => {});
+    locationsApi.listCities().then(setCities).catch(() => {});
+    locationsApi.listAreas().then(setAreas).catch(() => {});
   }, []);
 
   const partnerName = (id: number | null | undefined) => {
@@ -248,6 +354,8 @@ export default function AdminGymManagement() {
           <GymForm
             initial={editing ?? undefined}
             partners={partners}
+            cities={cities}
+            areas={areas}
             onCancel={() => {
               setCreating(false);
               setEditing(null);
