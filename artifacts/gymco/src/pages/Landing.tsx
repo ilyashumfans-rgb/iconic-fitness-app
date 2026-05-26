@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { AnimatePresence, motion, useInView } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useListFeaturedGyms } from "@workspace/api-client-react";
+import { useListFeaturedGyms, useListClasses, getListClassesQueryKey } from "@workspace/api-client-react";
 import NearbyGyms from "@/components/NearbyGyms";
 import { SiteFooter as Footer } from "@/components/SiteFooter";
 import {
@@ -995,6 +995,14 @@ function HowItWorks() {
 }
 
 function Categories() {
+  const { data: classes, isLoading } = useListClasses(
+    {},
+    { query: { queryKey: getListClassesQueryKey({}) } },
+  );
+
+  const fallbackImage =
+    "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=900&q=80";
+
   return (
     <section id="classes" className="py-24 md:py-32 relative">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
@@ -1009,40 +1017,62 @@ function Categories() {
               a class for it.
             </h2>
           </div>
-          <Link href="/dashboard">
+          <Link href="/classes">
             <Button variant="ghost" className="font-semibold">
               Browse all classes <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {categories.map((c, i) => (
-            <motion.div
-              key={c.name}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ delay: i * 0.06 }}
-              className="group relative aspect-[4/5] md:aspect-[4/3] rounded-2xl overflow-hidden cursor-pointer"
-            >
-              <img
-                src={c.image}
-                alt={c.name}
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+        {isLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="aspect-[4/5] md:aspect-[4/3] rounded-2xl bg-secondary/50 animate-pulse"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-5 md:p-6">
-                <div className="text-xs font-bold uppercase tracking-wider text-primary mb-1">
-                  {c.sessions}
-                </div>
-                <h3 className="text-2xl md:text-3xl font-black text-white tracking-tight">
-                  {c.name}
-                </h3>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : !classes || classes.length === 0 ? (
+          <div className="rounded-2xl border border-border bg-card p-12 text-center text-muted-foreground">
+            <p className="font-bold text-lg">No classes scheduled yet</p>
+            <p className="text-sm mt-1">Check back soon for new sessions.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {classes.map((cls, i) => (
+              <motion.div
+                key={cls.id}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ delay: Math.min(i, 8) * 0.05 }}
+              >
+                <Link href={`/classes/${cls.id}`}>
+                  <div className="group relative aspect-[4/5] md:aspect-[4/3] rounded-2xl overflow-hidden cursor-pointer">
+                    <img
+                      src={cls.coverImage || fallbackImage}
+                      alt={cls.title}
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 p-5 md:p-6">
+                      <div className="text-xs font-bold uppercase tracking-wider text-primary mb-1">
+                        {cls.category}
+                      </div>
+                      <h3 className="text-2xl md:text-3xl font-black text-white tracking-tight leading-tight">
+                        {cls.title}
+                      </h3>
+                      <div className="mt-2 text-[11px] font-bold uppercase tracking-wider text-white/80">
+                        {cls.gymName} · {cls.durationMin}m
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
