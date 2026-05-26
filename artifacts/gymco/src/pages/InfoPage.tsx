@@ -12,7 +12,6 @@ import {
   MapPin,
   Building2,
   Briefcase,
-  HeartHandshake,
   GraduationCap,
   Shield,
   LifeBuoy,
@@ -119,35 +118,6 @@ const CONTENT: Record<string, InfoContent> = {
         body: "Send your resume and a short note to careers@gymco.in with the role in the subject line.",
       },
     ],
-  },
-  "partner-with-us": {
-    slug: "partner-with-us",
-    eyebrow: "For gym owners",
-    title: "Fill your off-peak hours. Grow your gym.",
-    icon: HeartHandshake,
-    subtitle:
-      "List your gym on GYMCO and reach thousands of premium members across Bangalore.",
-    sections: [
-      {
-        heading: "Why partners join us",
-        body: [
-          "Guaranteed revenue from off-peak check-ins.",
-          "Zero setup cost — go live in 48 hours.",
-          "Weekly payouts, transparent dashboard.",
-          "Marketing support: photos, listings, social features.",
-          "Dedicated partner success manager.",
-        ],
-      },
-      {
-        heading: "How it works",
-        body: "1. Apply via the form below or partner@gymco.in. 2. Our team visits your facility within a week. 3. We onboard your team, set up the QR scanner, and you're live. 4. Get paid weekly for every member who trains with you.",
-      },
-      {
-        heading: "Already a partner?",
-        body: "Sign in to your dashboard at /partner/login to manage classes, view check-ins and update your gym profile.",
-      },
-    ],
-    showContactForm: true,
   },
   "become-a-trainer": {
     slug: "become-a-trainer",

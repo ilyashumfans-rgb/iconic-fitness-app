@@ -173,7 +173,6 @@ const PUBLIC_ROUTES = [
   "/about",
   "/press",
   "/careers",
-  "/partner-with-us",
   "/become-a-trainer",
   "/corporate",
   "/help",
@@ -235,7 +234,6 @@ function MemberShellRoutes() {
         <Route path="/about" component={() => <InfoPage slug="about" />} />
         <Route path="/press" component={() => <InfoPage slug="press" />} />
         <Route path="/careers" component={() => <InfoPage slug="careers" />} />
-        <Route path="/partner-with-us" component={() => <InfoPage slug="partner-with-us" />} />
         <Route path="/become-a-trainer" component={() => <InfoPage slug="become-a-trainer" />} />
         <Route path="/corporate" component={() => <InfoPage slug="corporate" />} />
         <Route path="/help" component={() => <InfoPage slug="help" />} />
