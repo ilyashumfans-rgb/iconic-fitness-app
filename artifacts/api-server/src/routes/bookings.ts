@@ -82,6 +82,14 @@ router.post("/bookings", requireUser, async (req, res): Promise<void> => {
     res.status(404).json({ error: "Class not found" });
     return;
   }
+  const [g] = await db
+    .select({ isVerified: gymsTable.isVerified })
+    .from(gymsTable)
+    .where(eq(gymsTable.id, c.gymId));
+  if (!g || !g.isVerified) {
+    res.status(403).json({ error: "This gym is not yet verified." });
+    return;
+  }
   const [existing] = await db
     .select()
     .from(bookingsTable)

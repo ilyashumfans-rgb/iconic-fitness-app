@@ -33,7 +33,10 @@ router.get("/gyms", async (req, res): Promise<void> => {
     return;
   }
   const { q, city, category, amenity, sort } = parsed.data;
-  let rows = await db.select().from(gymsTable);
+  let rows = await db
+    .select()
+    .from(gymsTable)
+    .where(eq(gymsTable.isVerified, true));
   if (q) {
     const ql = q.toLowerCase();
     rows = rows.filter(
@@ -62,12 +65,15 @@ router.get("/gyms/featured", async (_req, res): Promise<void> => {
   const rows = await db
     .select()
     .from(gymsTable)
-    .where(eq(gymsTable.featured, true));
+    .where(and(eq(gymsTable.featured, true), eq(gymsTable.isVerified, true)));
   res.json(ListFeaturedGymsResponse.parse(rows));
 });
 
 router.get("/gyms/categories", async (_req, res): Promise<void> => {
-  const rows = await db.select().from(gymsTable);
+  const rows = await db
+    .select()
+    .from(gymsTable)
+    .where(eq(gymsTable.isVerified, true));
   const counts = new Map<string, number>();
   for (const g of rows) {
     for (const c of g.categories) {
@@ -105,7 +111,12 @@ router.get("/gyms/:gymId", async (req, res): Promise<void> => {
   const [gym] = await db
     .select()
     .from(gymsTable)
-    .where(eq(gymsTable.id, params.data.gymId));
+    .where(
+      and(
+        eq(gymsTable.id, params.data.gymId),
+        eq(gymsTable.isVerified, true),
+      ),
+    );
   if (!gym) {
     res.status(404).json({ error: "Gym not found" });
     return;
@@ -152,10 +163,22 @@ router.get("/gyms/:gymId", async (req, res): Promise<void> => {
   );
 });
 
+async function assertVerifiedGym(gymId: number): Promise<boolean> {
+  const [g] = await db
+    .select({ isVerified: gymsTable.isVerified })
+    .from(gymsTable)
+    .where(eq(gymsTable.id, gymId));
+  return !!g && g.isVerified === true;
+}
+
 router.get("/gyms/:gymId/amenities", async (req, res): Promise<void> => {
   const gymId = Number(req.params.gymId);
   if (!gymId) {
     res.status(400).json({ error: "Invalid gymId" });
+    return;
+  }
+  if (!(await assertVerifiedGym(gymId))) {
+    res.status(404).json({ error: "Gym not found" });
     return;
   }
   const selected = await db
@@ -193,6 +216,10 @@ router.get("/gyms/:gymId/hours", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Invalid gymId" });
     return;
   }
+  if (!(await assertVerifiedGym(gymId))) {
+    res.status(404).json({ error: "Gym not found" });
+    return;
+  }
   const rows = await db
     .select()
     .from(gymHoursTable)
@@ -216,6 +243,10 @@ router.get("/gyms/:gymId/workouts", async (req, res): Promise<void> => {
   const gymId = Number(req.params.gymId);
   if (!gymId) {
     res.status(400).json({ error: "Invalid gymId" });
+    return;
+  }
+  if (!(await assertVerifiedGym(gymId))) {
+    res.status(404).json({ error: "Gym not found" });
     return;
   }
   const rows = await db
@@ -249,6 +280,10 @@ router.get(
     const gymId = Number(req.params.gymId);
     if (!gymId) {
       res.status(400).json({ error: "Invalid gymId" });
+      return;
+    }
+    if (!(await assertVerifiedGym(gymId))) {
+      res.status(404).json({ error: "Gym not found" });
       return;
     }
     const rows = await db
@@ -296,7 +331,12 @@ router.get("/gyms/:gymId/classes", async (req, res): Promise<void> => {
   const [gym] = await db
     .select()
     .from(gymsTable)
-    .where(eq(gymsTable.id, params.data.gymId));
+    .where(
+      and(
+        eq(gymsTable.id, params.data.gymId),
+        eq(gymsTable.isVerified, true),
+      ),
+    );
   if (!gym) {
     res.status(404).json({ error: "Gym not found" });
     return;

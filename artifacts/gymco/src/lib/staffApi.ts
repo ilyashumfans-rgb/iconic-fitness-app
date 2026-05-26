@@ -32,6 +32,7 @@ export type StaffGym = {
   rating: number;
   lat: number | null;
   lng: number | null;
+  isVerified: boolean;
   ownerPartnerId: number | null;
   partnerName: string | null;
 };

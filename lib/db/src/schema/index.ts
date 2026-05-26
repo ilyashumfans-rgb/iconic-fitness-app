@@ -58,6 +58,7 @@ export const gymsTable = pgTable("gyms", {
   lat: real("lat").notNull(),
   lng: real("lng").notNull(),
   featured: boolean("featured").notNull().default(false),
+  isVerified: boolean("is_verified").notNull().default(false),
   ownerPartnerId: integer("owner_partner_id"),
   payoutPerVisitInr: integer("payout_per_visit_inr").notNull().default(0),
   payoutTaxPct: integer("payout_tax_pct").notNull().default(18),

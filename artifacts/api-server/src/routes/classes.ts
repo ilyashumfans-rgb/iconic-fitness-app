@@ -15,7 +15,12 @@ async function buildSessionDtos(rows: typeof classSessionsTable.$inferSelect[]) 
   const gyms = await db.select().from(gymsTable);
   const trainers = await db.select().from(trainersTable);
   const bookings = await db.select().from(bookingsTable);
-  return rows.map((c) => {
+  return rows
+    .filter((c) => {
+      const g = gyms.find((x) => x.id === c.gymId);
+      return g?.isVerified === true;
+    })
+    .map((c) => {
     const g = gyms.find((x) => x.id === c.gymId);
     const t = trainers.find((x) => x.id === c.trainerId);
     const booked = bookings.filter((b) => b.classId === c.id && b.status !== "cancelled").length;
@@ -84,6 +89,10 @@ router.get("/classes/:classId", async (req, res): Promise<void> => {
     return;
   }
   const [base] = await buildSessionDtos([c]);
+  if (!base) {
+    res.status(404).json({ error: "Class not found" });
+    return;
+  }
   res.json(
     GetClassResponse.parse({
       ...base,

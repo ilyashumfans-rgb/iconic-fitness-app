@@ -77,6 +77,7 @@ router.get("/dashboard", requireUser, async (req, res): Promise<void> => {
   const nearby = await db
     .select()
     .from(gymsTable)
+    .where(eq(gymsTable.isVerified, true))
     .orderBy(asc(gymsTable.distanceKm))
     .limit(4);
 

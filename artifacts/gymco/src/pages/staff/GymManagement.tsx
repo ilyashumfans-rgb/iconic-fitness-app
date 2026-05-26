@@ -15,6 +15,9 @@ import {
   X,
   Edit3,
   Loader2,
+  BadgeCheck,
+  ShieldOff,
+  ShieldCheck,
 } from "lucide-react";
 
 export default function StaffGymManagementPage() {
@@ -33,6 +36,24 @@ function Inner() {
   const [err, setErr] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<StaffGym | null>(null);
+  const [filter, setFilter] = useState<"all" | "verified" | "unverified">("all");
+  const [toggling, setToggling] = useState<number | null>(null);
+
+  const toggleVerify = async (g: StaffGym) => {
+    setToggling(g.id);
+    try {
+      const updated = await staffApi.gyms.update(g.id, {
+        isVerified: !g.isVerified,
+      });
+      setGyms((prev) =>
+        prev.map((x) => (x.id === g.id ? { ...x, ...updated } : x)),
+      );
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Failed to update verification");
+    } finally {
+      setToggling(null);
+    }
+  };
 
   const refresh = async () => {
     setLoading(true);
@@ -53,15 +74,27 @@ function Inner() {
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
-    if (!term) return gyms;
-    return gyms.filter(
-      (g) =>
+    return gyms.filter((g) => {
+      if (filter === "verified" && !g.isVerified) return false;
+      if (filter === "unverified" && g.isVerified) return false;
+      if (!term) return true;
+      return (
         g.name.toLowerCase().includes(term) ||
         g.city.toLowerCase().includes(term) ||
         g.area.toLowerCase().includes(term) ||
-        (g.partnerName ?? "").toLowerCase().includes(term),
-    );
-  }, [gyms, q]);
+        (g.partnerName ?? "").toLowerCase().includes(term)
+      );
+    });
+  }, [gyms, q, filter]);
+
+  const counts = useMemo(
+    () => ({
+      all: gyms.length,
+      verified: gyms.filter((g) => g.isVerified).length,
+      unverified: gyms.filter((g) => !g.isVerified).length,
+    }),
+    [gyms],
+  );
 
   return (
     <div className="space-y-5">
@@ -76,9 +109,33 @@ function Inner() {
               className="w-full pl-9 pr-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
             />
           </div>
+          <div className="inline-flex rounded-lg border border-slate-700 bg-slate-800 p-0.5 text-xs font-semibold">
+            {([
+              ["all", `All (${counts.all})`],
+              ["verified", `Verified (${counts.verified})`],
+              ["unverified", `Pending (${counts.unverified})`],
+            ] as const).map(([k, label]) => (
+              <button
+                key={k}
+                onClick={() => setFilter(k)}
+                className={`px-3 py-1.5 rounded-md transition-colors ${
+                  filter === k
+                    ? "bg-orange-500 text-white"
+                    : "text-slate-300 hover:text-white"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <div className="text-xs text-slate-400">
             {loading ? "Loading…" : `${filtered.length} of ${gyms.length} gyms`}
           </div>
+        </div>
+        <div className="mt-3 text-[11px] text-slate-400">
+          Only <span className="text-emerald-400 font-semibold">verified</span>{" "}
+          gyms appear to members anywhere in the app. Unverified gyms remain
+          hidden until you verify them.
         </div>
       </StaffCard>
 
@@ -124,15 +181,26 @@ function Inner() {
                     {g.area}, {g.city}
                   </div>
                 </div>
-                {g.lat != null && g.lng != null ? (
-                  <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/90 text-white text-[10px] font-bold">
-                    <Navigation className="h-3 w-3" /> PINNED
-                  </span>
-                ) : (
-                  <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/90 text-white text-[10px] font-bold">
-                    NO LOCATION
-                  </span>
-                )}
+                <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
+                  {g.isVerified ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/95 text-white text-[10px] font-bold shadow">
+                      <BadgeCheck className="h-3 w-3" /> VERIFIED
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500/95 text-white text-[10px] font-bold shadow">
+                      <ShieldOff className="h-3 w-3" /> HIDDEN
+                    </span>
+                  )}
+                  {g.lat != null && g.lng != null ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-500/90 text-white text-[10px] font-bold">
+                      <Navigation className="h-3 w-3" /> PINNED
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/90 text-white text-[10px] font-bold">
+                      NO LOCATION
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="p-4 flex-1 flex flex-col">
                 <div className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">
@@ -153,12 +221,35 @@ function Inner() {
                     {g.openNow ? "Open now" : "Closed"}
                   </span>
                 </div>
-                <button
-                  onClick={() => setEditing(g)}
-                  className="mt-4 inline-flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-bold hover:opacity-95"
-                >
-                  <Edit3 className="h-4 w-4" /> Edit gym
-                </button>
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setEditing(g)}
+                    className="inline-flex items-center justify-center gap-1.5 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-bold hover:opacity-95"
+                  >
+                    <Edit3 className="h-3.5 w-3.5" /> Edit
+                  </button>
+                  <button
+                    onClick={() => toggleVerify(g)}
+                    disabled={toggling === g.id}
+                    className={`inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition disabled:opacity-60 ${
+                      g.isVerified
+                        ? "bg-rose-500/15 text-rose-300 border border-rose-500/40 hover:bg-rose-500/25"
+                        : "bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/25"
+                    }`}
+                  >
+                    {toggling === g.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : g.isVerified ? (
+                      <>
+                        <ShieldOff className="h-3.5 w-3.5" /> Unverify
+                      </>
+                    ) : (
+                      <>
+                        <ShieldCheck className="h-3.5 w-3.5" /> Verify
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </StaffCard>
           ))}

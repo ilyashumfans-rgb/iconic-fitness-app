@@ -43,6 +43,10 @@ router.post("/checkins", requireUser, async (req, res): Promise<void> => {
     res.status(404).json({ error: "Gym not found" });
     return;
   }
+  if (!g.isVerified) {
+    res.status(403).json({ error: "This gym is not yet verified." });
+    return;
+  }
   // Anti-abuse: one paid check-in per user per gym per calendar day (Asia/Kolkata)
   const istParts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Kolkata",

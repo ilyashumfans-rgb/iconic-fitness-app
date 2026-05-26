@@ -369,6 +369,7 @@ router.get(
         rating: gymsTable.rating,
         lat: gymsTable.lat,
         lng: gymsTable.lng,
+        isVerified: gymsTable.isVerified,
         ownerPartnerId: gymsTable.ownerPartnerId,
         partnerName: partnersTable.name,
       })
@@ -413,6 +414,7 @@ router.patch(
       }
     }
     if (b.openNow !== undefined) patch.openNow = Boolean(b.openNow);
+    if (b.isVerified !== undefined) patch.isVerified = Boolean(b.isVerified);
     if (Object.keys(patch).length === 0) {
       res.status(400).json({ error: "No fields to update" });
       return;
