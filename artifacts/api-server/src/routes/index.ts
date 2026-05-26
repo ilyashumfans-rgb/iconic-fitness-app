@@ -14,6 +14,7 @@ import partnerRouter from "./partner";
 import staffRouter from "./staff";
 import storeRouter from "./store";
 import locationsRouter from "./locations";
+import storageRouter from "./storage";
 
 const router: IRouter = Router();
 
@@ -32,5 +33,6 @@ router.use(partnerRouter);
 router.use(staffRouter);
 router.use(storeRouter);
 router.use(locationsRouter);
+router.use(storageRouter);
 
 export default router;

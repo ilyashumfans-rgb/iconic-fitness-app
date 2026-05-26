@@ -79,6 +79,7 @@
     "@clerk/react": "^6.7.1",
     "@clerk/themes": "^2.4.57",
     "canvas-confetti": "^1.9.4",
+    "html5-qrcode": "^2.3.8",
     "qrcode.react": "^4.2.0"
   }
 }

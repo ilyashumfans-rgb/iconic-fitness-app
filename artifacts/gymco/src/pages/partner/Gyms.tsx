@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { PartnerLayout, PartnerCard } from "@/components/partner/PartnerLayout";
 import { partnerApi, type PartnerGym } from "@/lib/partnerApi";
+import FileUpload from "@/components/FileUpload";
 import {
   Building2,
   MapPin,
@@ -392,57 +393,83 @@ function EditGymModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs uppercase tracking-wide text-slate-400 font-medium mb-1.5 block">
-                  Gym logo URL
+                  Gym logo
                 </label>
                 <input
                   value={logoUrl}
                   onChange={(e) => setLogoUrl(e.target.value)}
-                  placeholder="https://…/logo.png"
+                  placeholder="Upload or paste a URL"
                   className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
                 />
-                <div className="mt-2 h-24 w-24 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center">
-                  {logoUrl ? (
-                    <img
-                      src={logoUrl}
-                      alt="Logo preview"
-                      className="h-full w-full object-contain"
-                    />
-                  ) : (
-                    <span className="text-[10px] text-slate-500">
-                      Logo preview
-                    </span>
-                  )}
+                <div className="mt-2 flex items-start gap-3">
+                  <div className="h-24 w-24 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center shrink-0">
+                    {logoUrl ? (
+                      <img
+                        src={logoUrl}
+                        alt="Logo preview"
+                        className="h-full w-full object-contain"
+                      />
+                    ) : (
+                      <span className="text-[10px] text-slate-500">
+                        Logo preview
+                      </span>
+                    )}
+                  </div>
+                  <FileUpload
+                    label="Upload logo"
+                    onUploaded={(urls) => urls[0] && setLogoUrl(urls[0])}
+                  />
                 </div>
               </div>
               <div>
                 <label className="text-xs uppercase tracking-wide text-slate-400 font-medium mb-1.5 block">
-                  Hero / profile image URL
+                  Hero / profile image
                 </label>
                 <input
                   value={heroImage}
                   onChange={(e) => setHeroImage(e.target.value)}
-                  placeholder="https://…/hero.jpg"
+                  placeholder="Upload or paste a URL"
                   className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
                 />
-                <div className="mt-2 h-24 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden">
-                  {heroImage && (
-                    <img
-                      src={heroImage}
-                      alt="Hero preview"
-                      className="h-full w-full object-cover"
-                    />
-                  )}
+                <div className="mt-2 flex items-start gap-3">
+                  <div className="h-24 flex-1 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden">
+                    {heroImage && (
+                      <img
+                        src={heroImage}
+                        alt="Hero preview"
+                        className="h-full w-full object-cover"
+                      />
+                    )}
+                  </div>
+                  <FileUpload
+                    label="Upload hero"
+                    onUploaded={(urls) => urls[0] && setHeroImage(urls[0])}
+                  />
                 </div>
               </div>
               <div className="sm:col-span-2">
-                <label className="text-xs uppercase tracking-wide text-slate-400 font-medium mb-1.5 block">
-                  Gallery (one image URL per line)
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs uppercase tracking-wide text-slate-400 font-medium block">
+                    Gallery
+                  </label>
+                  <FileUpload
+                    label="Upload photos"
+                    multiple
+                    onUploaded={(urls) => {
+                      const cur = galleryText
+                        .split("\n")
+                        .map((s) => s.trim())
+                        .filter(Boolean);
+                      const merged = Array.from(new Set([...cur, ...urls]));
+                      setGalleryText(merged.join("\n"));
+                    }}
+                  />
+                </div>
                 <textarea
                   value={galleryText}
                   onChange={(e) => setGalleryText(e.target.value)}
                   rows={4}
-                  placeholder="https://…/photo-1.jpg&#10;https://…/photo-2.jpg"
+                  placeholder="Upload photos or paste one image URL per line"
                   className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60 font-mono"
                 />
                 {galleryList.length > 0 && (
@@ -462,7 +489,7 @@ function EditGymModal({
                   </div>
                 )}
                 <div className="text-[11px] text-slate-500 mt-2">
-                  Paste public image URLs (e.g. from your CDN or image host).
+                  Upload photos directly, or paste public image URLs (one per line).
                 </div>
               </div>
             </div>

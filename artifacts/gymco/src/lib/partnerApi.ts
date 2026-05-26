@@ -194,6 +194,18 @@ export const partnerApi = {
   },
   bookings: () => request<PartnerBooking[]>("/partner/bookings"),
   checkins: () => request<PartnerCheckin[]>("/partner/checkins"),
+  scanCheckin: (token: string, gymId: number) =>
+    request<{
+      id: number;
+      gymId: number;
+      gymName: string;
+      memberCode: string;
+      userName: string;
+      checkedInAt: string;
+    }>("/partner/checkins/scan", {
+      method: "POST",
+      body: JSON.stringify({ token, gymId }),
+    }),
   trainers: () => request<PartnerTrainer[]>("/partner/trainers"),
   classes: {
     list: () => request<PartnerClass[]>("/partner/classes"),
