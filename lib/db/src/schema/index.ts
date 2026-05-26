@@ -299,6 +299,10 @@ export const partnersTable = pgTable("partners", {
   // kind = "gym" → gym operator (default), "vendor" → store seller,
   // "both"   → can sign in to both the partner portal and the vendor portal.
   kind: text("kind").notNull().default("gym"),
+  pendingAmenityIds: integer("pending_amenity_ids")
+    .array()
+    .notNull()
+    .default(sql`'{}'::integer[]`),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

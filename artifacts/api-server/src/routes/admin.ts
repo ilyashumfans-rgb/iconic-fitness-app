@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import {
   db,
   adminsTable,
@@ -298,7 +298,7 @@ router.post(
   "/admin/partners",
   requireAdmin,
   async (req: Request, res: Response): Promise<void> => {
-    const { name, email, phone, city, password, notes, kind } =
+    const { name, email, phone, city, password, notes, kind, amenityIds } =
       (req.body ?? {}) as {
         name?: string;
         email?: string;
@@ -307,6 +307,7 @@ router.post(
         password?: string;
         notes?: string;
         kind?: string;
+        amenityIds?: number[];
       };
     if (!name || !email || !phone || !city || !password) {
       res.status(400).json({ error: "name, email, phone, city, password required" });
@@ -314,6 +315,24 @@ router.post(
     }
     const partnerKind = kind && VALID_KINDS.has(kind) ? kind : "gym";
     const passwordHash = await hashPassword(password);
+
+    const rawIds = Array.isArray(amenityIds)
+      ? Array.from(new Set(amenityIds.map((n) => Number(n)).filter(Boolean)))
+      : [];
+    let pendingAmenityIds: number[] = [];
+    if (rawIds.length > 0) {
+      const valid = await db
+        .select({ id: amenitiesTable.id })
+        .from(amenitiesTable)
+        .where(
+          and(
+            inArray(amenitiesTable.id, rawIds),
+            eq(amenitiesTable.isActive, true),
+          ),
+        );
+      pendingAmenityIds = valid.map((v) => v.id);
+    }
+
     const [created] = await db
       .insert(partnersTable)
       .values({
@@ -324,6 +343,7 @@ router.post(
         notes: notes ?? "",
         kind: partnerKind,
         passwordHash,
+        pendingAmenityIds,
       })
       .returning();
     res.status(201).json({

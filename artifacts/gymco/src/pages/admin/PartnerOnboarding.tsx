@@ -1,7 +1,38 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useLocation } from "wouter";
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
 import { adminApi } from "@/lib/adminApi";
+import * as LucideIcons from "lucide-react";
+import { Dot, Sparkles } from "lucide-react";
+
+type Amenity = {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+  category: string;
+  isActive: boolean;
+  sortOrder: number;
+};
+
+function AmenityIcon({
+  name,
+  className,
+}: {
+  name: string;
+  className?: string;
+}) {
+  const lookup = (LucideIcons as unknown as Record<string, unknown>)[name];
+  const Comp =
+    typeof lookup === "function" || typeof lookup === "object"
+      ? (lookup as React.ComponentType<{ className?: string }>)
+      : Dot;
+  try {
+    return <Comp className={className} />;
+  } catch {
+    return <Dot className={className} />;
+  }
+}
 
 export default function AdminPartnerOnboarding() {
   const [, navigate] = useLocation();
@@ -18,12 +49,39 @@ export default function AdminPartnerOnboarding() {
   const [err, setErr] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
 
+  const [amenities, setAmenities] = useState<Amenity[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    adminApi.amenities
+      .list()
+      .then((list) => {
+        const active = (list as Amenity[]).filter((a) => a.isActive);
+        setAmenities(active);
+      })
+      .catch(() => {
+        // soft-fail: form still works without amenities
+      });
+  }, []);
+
+  const toggleAmenity = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setBusy(true);
     setErr(null);
     try {
-      await adminApi.partners.create(form);
+      await adminApi.partners.create({
+        ...form,
+        amenityIds: Array.from(selectedIds),
+      });
       setOk(true);
       setTimeout(() => navigate("/admin/partners"), 700);
     } catch (e) {
@@ -36,9 +94,12 @@ export default function AdminPartnerOnboarding() {
   const inputCls =
     "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
 
+  const showAmenitiesSection =
+    form.kind === "gym" || form.kind === "both";
+
   return (
     <AdminLayout title="Partner Onboarding">
-      <AdminCard className="p-6 max-w-2xl">
+      <AdminCard className="p-6 max-w-3xl">
         <p className="text-sm text-slate-400 mb-6">
           Create a new partner gym account. They'll be able to log in to a
           partner dashboard with the credentials below.
@@ -150,6 +211,67 @@ export default function AdminPartnerOnboarding() {
               />
             </div>
           </div>
+
+          {showAmenitiesSection && (
+            <div className="rounded-2xl border border-slate-700 bg-slate-900/40 p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="h-4 w-4 text-orange-400" />
+                <h3 className="text-sm font-bold uppercase tracking-wider text-orange-400">
+                  Gym Amenities
+                </h3>
+              </div>
+              <p className="text-xs text-slate-500 mb-4">
+                Select the amenities this partner's gyms will offer. They will
+                be pre-applied to the first gym this partner creates.
+              </p>
+              {amenities.length === 0 ? (
+                <div className="text-xs text-slate-500">
+                  No active amenities in the catalog yet. Add some in{" "}
+                  <code>/admin/amenities</code>.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {amenities.map((a) => {
+                    const active = selectedIds.has(a.id);
+                    return (
+                      <label
+                        key={a.id}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border cursor-pointer transition-colors ${
+                          active
+                            ? "bg-gradient-to-r from-orange-500/15 to-amber-500/10 border-orange-500/60"
+                            : "bg-slate-800 border-slate-700 hover:border-orange-500/40"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={active}
+                          onChange={() => toggleAmenity(a.id)}
+                          className="rounded border-slate-600 bg-slate-900 text-orange-500 focus:ring-orange-500/60"
+                        />
+                        <span
+                          className={`h-8 w-8 rounded-full inline-flex items-center justify-center shrink-0 ${
+                            active
+                              ? "bg-orange-500/20 text-orange-300"
+                              : "bg-slate-700/60 text-slate-300"
+                          }`}
+                        >
+                          <AmenityIcon name={a.icon} className="h-4 w-4" />
+                        </span>
+                        <span className="text-sm font-semibold text-slate-100 truncate">
+                          {a.name}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+              {amenities.length > 0 && (
+                <div className="mt-3 text-[11px] text-slate-500">
+                  {selectedIds.size} of {amenities.length} selected
+                </div>
+              )}
+            </div>
+          )}
 
           {err && (
             <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg p-3">
