@@ -54,6 +54,14 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
     ],
   },
   {
+    title: "Legal",
+    links: [
+      { label: "Terms & conditions", href: "/terms" },
+      { label: "Privacy policy", href: "/privacy" },
+      { label: "Cookie policy", href: "/cookies" },
+    ],
+  },
+  {
     title: "Sign in",
     links: [
       { label: "Admin Login", href: "/admin/login" },
