@@ -185,14 +185,14 @@ function TopNav() {
           <Link href="/explore" className="hover:text-foreground transition-colors">
             Browse Gyms
           </Link>
-          <Link href="/classes" className="hover:text-foreground transition-colors">
-            Classes
-          </Link>
           <Link href="/store" className="hover:text-foreground transition-colors">
             Store
           </Link>
           <Link href="/memberships" className="hover:text-foreground transition-colors">
             Pricing
+          </Link>
+          <Link href="/blog" className="hover:text-foreground transition-colors">
+            Blog
           </Link>
           <a href="#how" className="hover:text-foreground transition-colors">
             How it works
