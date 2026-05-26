@@ -28,11 +28,21 @@ export default function PartnerScanner() {
 
   useEffect(() => {
     return () => {
-      if (scannerRef.current) {
-        scannerRef.current.stop().catch(() => {});
-        scannerRef.current.clear();
-        scannerRef.current = null;
-      }
+      const inst = scannerRef.current;
+      scannerRef.current = null;
+      if (!inst) return;
+      // Must await stop() before clear(); otherwise html5-qrcode throws
+      // "Cannot clear while scan is ongoing" and React's unmount crashes.
+      void inst
+        .stop()
+        .catch(() => {})
+        .then(() => {
+          try {
+            inst.clear();
+          } catch {
+            /* element may already be detached */
+          }
+        });
     };
   }, []);
 
@@ -81,9 +91,10 @@ export default function PartnerScanner() {
       return;
     }
     if (scannerRef.current) {
-      try { await scannerRef.current.stop(); } catch {}
-      scannerRef.current.clear();
+      const prev = scannerRef.current;
       scannerRef.current = null;
+      try { await prev.stop(); } catch { /* ignore */ }
+      try { prev.clear(); } catch { /* ignore */ }
     }
     // Expand the reader container BEFORE starting the camera, otherwise
     // html5-qrcode measures a 0-height div and the video can fail to attach.
@@ -134,12 +145,11 @@ export default function PartnerScanner() {
   }
 
   async function stopScan() {
-    if (scannerRef.current) {
-      try {
-        await scannerRef.current.stop();
-      } catch {}
-      scannerRef.current.clear();
-      scannerRef.current = null;
+    const inst = scannerRef.current;
+    scannerRef.current = null;
+    if (inst) {
+      try { await inst.stop(); } catch { /* ignore */ }
+      try { inst.clear(); } catch { /* ignore */ }
     }
     setScanning(false);
   }

@@ -101,14 +101,24 @@ export default function Checkin() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Stop camera on unmount or mode change
+  // Stop camera on unmount or mode change. `clear()` must run AFTER `stop()`
+  // resolves, otherwise html5-qrcode throws "Cannot clear while scan is ongoing"
+  // and the React teardown then crashes with removeChild.
   useEffect(() => {
     return () => {
-      if (scannerRef.current) {
-        scannerRef.current.stop().catch(() => {});
-        scannerRef.current.clear();
-        scannerRef.current = null;
-      }
+      const inst = scannerRef.current;
+      scannerRef.current = null;
+      if (!inst) return;
+      void inst
+        .stop()
+        .catch(() => {})
+        .then(() => {
+          try {
+            inst.clear();
+          } catch {
+            /* element may already be gone after unmount */
+          }
+        });
     };
   }, []);
 
@@ -121,13 +131,10 @@ export default function Checkin() {
   async function startScan() {
     setScanError(null);
     if (scannerRef.current) {
-      try {
-        await scannerRef.current.stop();
-      } catch {
-        /* ignore */
-      }
-      scannerRef.current.clear();
+      const prev = scannerRef.current;
       scannerRef.current = null;
+      try { await prev.stop(); } catch { /* ignore */ }
+      try { prev.clear(); } catch { /* ignore */ }
     }
     const inst = new Html5Qrcode("member-gym-reader");
     scannerRef.current = inst;
@@ -165,14 +172,19 @@ export default function Checkin() {
   }
 
   async function stopScan() {
-    if (scannerRef.current) {
+    const inst = scannerRef.current;
+    scannerRef.current = null;
+    if (inst) {
       try {
-        await scannerRef.current.stop();
+        await inst.stop();
       } catch {
         /* ignore */
       }
-      scannerRef.current.clear();
-      scannerRef.current = null;
+      try {
+        inst.clear();
+      } catch {
+        /* ignore */
+      }
     }
     setScanning(false);
   }
