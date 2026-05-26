@@ -306,7 +306,7 @@ export default function NearbyGyms({
             {nearby.map((g) => (
               <Link
                 key={g.id}
-                href={`/gym/${g.id}`}
+                href={`/gyms/${g.id}`}
                 className={`group rounded-2xl overflow-hidden flex flex-col ${styles.card} transition-all hover:-translate-y-1`}
               >
                 <div className="relative h-40 overflow-hidden">
