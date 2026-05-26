@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { PartnerLayout, PartnerCard } from "@/components/partner/PartnerLayout";
+import FileUpload from "@/components/FileUpload";
 import {
   partnerApi,
   type PartnerAttendee,
@@ -631,15 +632,54 @@ export default function PartnerClasses() {
                 />
               </div>
               <div className="sm:col-span-2">
-                <Label>Cover image URL</Label>
-                <input
-                  className={INPUT}
-                  value={editing.coverImage}
-                  onChange={(e) =>
-                    setEditing({ ...editing, coverImage: e.target.value })
-                  }
-                  placeholder="https://…"
-                />
+                <Label>Cover image</Label>
+                <div className="flex items-start gap-3">
+                  {editing.coverImage ? (
+                    <img
+                      src={editing.coverImage}
+                      alt="Cover preview"
+                      className="h-20 w-28 rounded-lg object-cover border border-slate-700 shrink-0"
+                    />
+                  ) : (
+                    <div className="h-20 w-28 rounded-lg border border-dashed border-slate-700 bg-slate-800/40 flex items-center justify-center text-[10px] text-slate-500 uppercase tracking-wider shrink-0">
+                      No image
+                    </div>
+                  )}
+                  <div className="flex-1 space-y-2">
+                    <input
+                      className={INPUT}
+                      value={editing.coverImage}
+                      onChange={(e) =>
+                        setEditing({ ...editing, coverImage: e.target.value })
+                      }
+                      placeholder="Paste an image URL or upload below"
+                    />
+                    <div className="flex items-center gap-2">
+                      <FileUpload
+                        label="Upload image"
+                        accept="image/*"
+                        onUploaded={(urls) => {
+                          if (urls[0]) {
+                            setEditing((prev) =>
+                              prev ? { ...prev, coverImage: urls[0] } : prev,
+                            );
+                          }
+                        }}
+                      />
+                      {editing.coverImage && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setEditing({ ...editing, coverImage: "" })
+                          }
+                          className="text-[11px] font-semibold text-slate-400 hover:text-rose-400"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
               <div className="sm:col-span-2">
                 <Label>Description</Label>
