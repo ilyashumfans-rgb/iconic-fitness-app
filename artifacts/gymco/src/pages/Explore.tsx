@@ -209,7 +209,9 @@ export default function Explore() {
                       ))}
                     </div>
                     <div className="flex items-center justify-between mt-auto">
-                      <div className="font-black text-lg">₹{gym.priceFrom}<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
+                      <span className="inline-flex items-center text-[10px] uppercase tracking-wider font-bold text-primary bg-orange-50 border border-orange-100 px-2 py-1 rounded">
+                        Included with plan
+                      </span>
                       <div className="flex items-center text-sm font-bold">
                         <Star className="h-4 w-4 mr-1 text-yellow-400 fill-current" />
                         {gym.rating}
@@ -268,17 +270,9 @@ export default function Explore() {
                       </div>
 
                       <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 sm:gap-2 shrink-0 sm:border-l sm:pl-6 sm:border-border">
-                        <div className="text-right">
-                          <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                            From
-                          </div>
-                          <div className="font-black text-2xl text-gradient-brand leading-none">
-                            ₹{gym.priceFrom}
-                          </div>
-                          <div className="text-[11px] font-medium text-muted-foreground mt-0.5">
-                            / month
-                          </div>
-                        </div>
+                        <span className="inline-flex items-center text-[10px] uppercase tracking-wider font-bold text-primary bg-orange-50 border border-orange-100 px-2 py-1 rounded">
+                          Included with plan
+                        </span>
                         <span className="inline-flex items-center gap-1 text-sm font-bold text-primary group-hover:gap-2 transition-all">
                           View <ChevronRight className="h-4 w-4" />
                         </span>

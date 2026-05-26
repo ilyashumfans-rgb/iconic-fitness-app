@@ -931,15 +931,9 @@ function FeaturedGyms() {
                         ))}
                       </div>
                       <div className="text-right">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                          from
-                        </div>
-                        <div className="text-base font-black text-gradient-brand">
-                          ₹{gym.priceFrom.toLocaleString("en-IN")}
-                          <span className="text-xs text-muted-foreground font-bold">
-                            /mo
-                          </span>
-                        </div>
+                        <span className="inline-flex items-center text-[10px] uppercase tracking-wider font-bold text-primary bg-orange-50 border border-orange-100 px-2 py-1 rounded">
+                          Included with plan
+                        </span>
                       </div>
                     </div>
                   </div>

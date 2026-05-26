@@ -478,19 +478,16 @@ export default function GymDetail() {
 
               <div className="flex flex-col items-stretch gap-3 md:items-end">
                 <div className="rounded-2xl bg-background/80 backdrop-blur border border-border p-6 w-full max-w-sm md:ml-auto shadow-md">
-                  <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Starting from
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-orange-50 border border-orange-200 text-[11px] font-black uppercase tracking-wider text-primary">
+                    <Sparkles className="h-3 w-3" />
+                    Included with GYMCO plan
                   </div>
-                  <div className="flex items-baseline gap-1.5 mt-1">
-                    <span className="text-4xl md:text-5xl font-black text-gradient-brand">
-                      ₹{gym.priceFrom}
-                    </span>
-                    <span className="text-base font-bold text-muted-foreground">
-                      / month
-                    </span>
+                  <div className="mt-3 text-lg font-black leading-tight">
+                    Get unlimited access to this gym
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Billed monthly • taxes included
+                  <div className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+                    One GYMCO membership unlocks this gym plus hundreds more
+                    across India. Pick a plan that fits — no per-gym fees.
                   </div>
 
                   <Link href="/memberships">
@@ -498,7 +495,7 @@ export default function GymDetail() {
                       size="lg"
                       className="mt-5 w-full bg-gradient-brand text-white border-none h-14 text-base font-black tracking-wide shadow-[0_16px_50px_-12px_hsl(18_100%_55%/0.6)] hover:opacity-95"
                     >
-                      Enroll now <ArrowRight className="h-5 w-5 ml-1.5" />
+                      View plans <ArrowRight className="h-5 w-5 ml-1.5" />
                     </Button>
                   </Link>
 
@@ -560,15 +557,12 @@ export default function GymDetail() {
                 Unlimited access to group classes & all Elite + Pro gyms across
                 India.
               </p>
-              <div className="flex items-baseline gap-1.5 mb-4">
-                <span className="text-3xl font-black">₹{gym.priceFrom}</span>
-                <span className="text-xs font-bold text-muted-foreground">
-                  per month onwards
-                </span>
+              <div className="mb-4 text-sm font-bold text-foreground">
+                One plan. Every gym.
               </div>
               <Link href="/memberships">
                 <Button className="w-full bg-gradient-brand text-white border-none font-black uppercase tracking-wider">
-                  Buy now
+                  See plans
                 </Button>
               </Link>
             </CardContent>

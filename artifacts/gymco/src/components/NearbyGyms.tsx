@@ -350,13 +350,9 @@ export default function NearbyGyms({
                     ))}
                   </div>
                   <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-                    <div className="flex items-center text-slate-900 font-bold text-sm">
-                      <IndianRupee className="h-3.5 w-3.5" />
-                      {g.priceFrom}
-                      <span className="text-[10px] text-slate-400 ml-1 font-medium">
-                        /mo
-                      </span>
-                    </div>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-orange-50 border border-orange-100 text-[10px] uppercase tracking-wider font-bold text-orange-700">
+                      Included with plan
+                    </span>
                     <span className="inline-flex items-center gap-1 text-orange-600 text-xs font-bold">
                       View
                       <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
