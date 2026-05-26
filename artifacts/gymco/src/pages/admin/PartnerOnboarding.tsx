@@ -1,9 +1,17 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useLocation } from "wouter";
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
 import { adminApi } from "@/lib/adminApi";
 import * as LucideIcons from "lucide-react";
-import { Dot, Sparkles } from "lucide-react";
+import { Dot, Sparkles, Building2, ArrowRight } from "lucide-react";
+
+type ExistingPartner = {
+  id: number;
+  name: string;
+  email: string;
+  city?: string | null;
+  phone?: string | null;
+};
 
 type Amenity = {
   id: number;
@@ -51,6 +59,7 @@ export default function AdminPartnerOnboarding() {
 
   const [amenities, setAmenities] = useState<Amenity[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [partners, setPartners] = useState<ExistingPartner[]>([]);
 
   useEffect(() => {
     adminApi.amenities
@@ -62,7 +71,17 @@ export default function AdminPartnerOnboarding() {
       .catch(() => {
         // soft-fail: form still works without amenities
       });
+    adminApi.partners
+      .list()
+      .then((list) => setPartners(list as ExistingPartner[]))
+      .catch(() => {});
   }, []);
+
+  const existingPartner = useMemo<ExistingPartner | null>(() => {
+    const e = form.email.trim().toLowerCase();
+    if (!e) return null;
+    return partners.find((p) => p.email.toLowerCase() === e) ?? null;
+  }, [form.email, partners]);
 
   const toggleAmenity = (id: number) => {
     setSelectedIds((prev) => {
@@ -75,6 +94,10 @@ export default function AdminPartnerOnboarding() {
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (existingPartner) {
+      navigate(`/admin/gyms?ownerPartnerId=${existingPartner.id}`);
+      return;
+    }
     setBusy(true);
     setErr(null);
     try {
@@ -130,6 +153,10 @@ export default function AdminPartnerOnboarding() {
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 placeholder="owner@goldfit.in"
               />
+              <div className="text-[11px] text-slate-500 mt-1">
+                One email = one partner login. The same partner can own many
+                gym branches.
+              </div>
             </div>
             <div>
               <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
@@ -273,6 +300,35 @@ export default function AdminPartnerOnboarding() {
             </div>
           )}
 
+          {existingPartner && (
+            <div className="rounded-2xl border border-orange-500/40 bg-orange-500/10 p-4 flex items-start gap-3">
+              <Building2 className="h-5 w-5 text-orange-300 mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <div className="text-sm font-semibold text-orange-200">
+                  This email already belongs to{" "}
+                  <span className="text-white">{existingPartner.name}</span>
+                </div>
+                <div className="text-xs text-orange-200/80 mt-1">
+                  One email = one partner login. To open another branch under
+                  this partner, add a new gym to their account instead of
+                  creating a duplicate partner.
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(
+                      `/admin/gyms?ownerPartnerId=${existingPartner.id}`,
+                    )
+                  }
+                  className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white text-xs font-semibold"
+                >
+                  Add a gym branch to {existingPartner.name}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+
           {err && (
             <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg p-3">
               {err}
@@ -288,7 +344,11 @@ export default function AdminPartnerOnboarding() {
             disabled={busy}
             className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-semibold transition-colors disabled:opacity-60"
           >
-            {busy ? "Creating…" : "Create Partner"}
+            {busy
+              ? "Creating…"
+              : existingPartner
+                ? "Add gym branch to this partner"
+                : "Create Partner"}
           </button>
         </form>
       </AdminCard>

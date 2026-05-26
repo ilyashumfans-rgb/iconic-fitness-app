@@ -281,6 +281,9 @@ export default function AdminGymManagement() {
   const [areas, setAreas] = useState<Area[]>([]);
   const [editing, setEditing] = useState<any | null>(null);
   const [creating, setCreating] = useState(false);
+  const [prefillOwnerPartnerId, setPrefillOwnerPartnerId] = useState<
+    number | null
+  >(null);
 
   const load = () => adminApi.gyms.list().then(setRows).catch(() => {});
   useEffect(() => {
@@ -288,6 +291,16 @@ export default function AdminGymManagement() {
     adminApi.partners.list().then(setPartners).catch(() => {});
     locationsApi.listCities().then(setCities).catch(() => {});
     locationsApi.listAreas().then(setAreas).catch(() => {});
+    const params = new URLSearchParams(window.location.search);
+    const pid = params.get("ownerPartnerId");
+    if (pid && /^\d+$/.test(pid)) {
+      setPrefillOwnerPartnerId(Number(pid));
+      setCreating(true);
+      setEditing(null);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("ownerPartnerId");
+      window.history.replaceState({}, "", url.toString());
+    }
   }, []);
 
   const partnerName = (id: number | null | undefined) => {
@@ -339,7 +352,11 @@ export default function AdminGymManagement() {
         <AdminCard className="p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-white">
-              {editing ? `Edit Gym — ${editing.name}` : "Add Gym"}
+              {editing
+                ? `Edit Gym — ${editing.name}`
+                : prefillOwnerPartnerId
+                  ? `Add gym branch — ${partnerName(prefillOwnerPartnerId) ?? `Partner #${prefillOwnerPartnerId}`}`
+                  : "Add Gym"}
             </h3>
             <button
               onClick={() => {
@@ -352,19 +369,26 @@ export default function AdminGymManagement() {
             </button>
           </div>
           <GymForm
-            initial={editing ?? undefined}
+            initial={
+              editing ??
+              (prefillOwnerPartnerId
+                ? { ownerPartnerId: prefillOwnerPartnerId }
+                : undefined)
+            }
             partners={partners}
             cities={cities}
             areas={areas}
             onCancel={() => {
               setCreating(false);
               setEditing(null);
+              setPrefillOwnerPartnerId(null);
             }}
             onSave={async (body) => {
               if (editing) await adminApi.gyms.update(editing.id, body);
               else await adminApi.gyms.create(body);
               setCreating(false);
               setEditing(null);
+              setPrefillOwnerPartnerId(null);
               load();
             }}
           />

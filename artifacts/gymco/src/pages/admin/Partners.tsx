@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
 import { adminApi } from "@/lib/adminApi";
 import {
@@ -12,6 +12,7 @@ import {
   QrCode,
   Download,
   Pencil,
+  Building2,
 } from "lucide-react";
 import {
   GymQrPoster,
@@ -20,6 +21,7 @@ import {
 } from "@/components/GymQrPoster";
 
 export default function AdminPartners() {
+  const [, navigate] = useLocation();
   const [rows, setRows] = useState<any[]>([]);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -426,6 +428,15 @@ export default function AdminPartners() {
                     className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 mr-1"
                   >
                     <Pencil className="h-3.5 w-3.5" /> Edit
+                  </button>
+                  <button
+                    onClick={() =>
+                      navigate(`/admin/gyms?ownerPartnerId=${p.id}`)
+                    }
+                    title="Add a new gym branch under this partner"
+                    className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-orange-500/15 text-orange-700 border border-orange-500/30 hover:bg-orange-500/25 mr-1"
+                  >
+                    <Building2 className="h-3.5 w-3.5" /> Add branch
                   </button>
                   <button
                     onClick={() => openQrFor(p)}
