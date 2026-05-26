@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { locationsApi, type City, type Area } from "@/lib/locationsApi";
-import { MapPin, Plus, Trash2, Check, X, Pencil } from "lucide-react";
+import { MapPin, Plus, Trash2, Check, X, Pencil, Star } from "lucide-react";
 
 const inputCls =
   "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
@@ -188,6 +188,37 @@ export default function CityAreaManagement() {
                           <div className="text-xs text-slate-500">{areaCount} area{areaCount === 1 ? "" : "s"}</div>
                         </div>
                       )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const updated = await locationsApi.updateCity(c.id, {
+                          isDefault: !c.isDefault,
+                        });
+                        setCities((prev) =>
+                          prev.map((row) =>
+                            row.id === updated.id
+                              ? updated
+                              : updated.isDefault
+                                ? { ...row, isDefault: false }
+                                : row,
+                          ),
+                        );
+                      }}
+                      title={
+                        c.isDefault
+                          ? "Default city for member search"
+                          : "Make this the default city"
+                      }
+                      className={`p-2 rounded-lg border transition ${
+                        c.isDefault
+                          ? "bg-amber-500/15 border-amber-400 text-amber-500"
+                          : "bg-slate-800 border-slate-700 text-slate-500 hover:text-amber-400"
+                      }`}
+                    >
+                      <Star
+                        className={`h-4 w-4 ${c.isDefault ? "fill-amber-400" : ""}`}
+                      />
                     </button>
                     <label className="flex items-center gap-2 text-xs text-slate-300">
                       <input

@@ -4,6 +4,7 @@ import {
   useListGyms,
   getListGymsQueryKey,
 } from "@workspace/api-client-react";
+import { locationsApi, type City } from "@/lib/locationsApi";
 import {
   MapPin,
   Star,
@@ -42,6 +43,9 @@ export default function NearbyGyms({
 }: Props) {
   const [query, setQuery] = useState("");
   const [city, setCity] = useState<string | undefined>();
+  const [cityCatalog, setCityCatalog] = useState<City[]>([]);
+  const [defaultCity, setDefaultCity] = useState<string | null>(null);
+  const [cityTouched, setCityTouched] = useState(false);
   const [coords, setCoords] = useState<Coords | null>(null);
   const [geoStatus, setGeoStatus] = useState<
     "idle" | "loading" | "granted" | "denied" | "unsupported"
@@ -52,6 +56,29 @@ export default function NearbyGyms({
     { q: query || undefined, city },
     { query: { queryKey: getListGymsQueryKey({ q: query || undefined, city }) } },
   );
+
+  // Load the admin's chosen default city + the full active city catalog on mount.
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([locationsApi.listCities(), locationsApi.getDefaultCity()])
+      .then(([all, def]) => {
+        if (cancelled) return;
+        const active = all.filter((c) => c.isActive);
+        setCityCatalog(active);
+        if (def?.name) {
+          setDefaultCity(def.name);
+          // Only auto-apply if the user hasn't manually chosen a city yet.
+          setCity((prev) => (prev === undefined && !cityTouched ? def.name : prev));
+        }
+      })
+      .catch(() => {
+        /* soft fail — popular cities fallback still works */
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // When user grants geolocation, try to reverse-geocode to a city name for filtering.
   useEffect(() => {
@@ -70,6 +97,7 @@ export default function NearbyGyms({
         if (detectedCity) {
           setGeoLabel(detectedCity);
           setCity(detectedCity);
+          setCityTouched(true);
         }
       })
       .catch(() => {
@@ -182,13 +210,20 @@ export default function NearbyGyms({
             </div>
             <select
               value={city ?? ""}
-              onChange={(e) => setCity(e.target.value || undefined)}
+              onChange={(e) => {
+                setCityTouched(true);
+                setCity(e.target.value || undefined);
+              }}
               className="px-3 py-2.5 rounded-xl bg-white border border-orange-100 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
             >
               <option value="">All cities</option>
-              {POPULAR_CITIES.map((c) => (
+              {(cityCatalog.length
+                ? cityCatalog.map((c) => c.name)
+                : POPULAR_CITIES
+              ).map((c) => (
                 <option key={c} value={c}>
                   {c}
+                  {defaultCity === c ? " (default)" : ""}
                 </option>
               ))}
             </select>
@@ -204,21 +239,33 @@ export default function NearbyGyms({
             <span className={`text-[11px] uppercase tracking-wide font-bold ${styles.muted}`}>
               Popular:
             </span>
-            {POPULAR_CITIES.map((c) => {
-              const active = city === c;
-              return (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setCity(active ? undefined : c)}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition ${
-                    active ? styles.chipActive : styles.chip
-                  }`}
-                >
-                  {c}
-                </button>
-              );
-            })}
+            {(cityCatalog.length
+              ? cityCatalog.map((c) => c.name)
+              : POPULAR_CITIES
+            )
+              .slice(0, 8)
+              .map((c) => {
+                const active = city === c;
+                const isDef = defaultCity === c;
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => {
+                      setCityTouched(true);
+                      setCity(active ? undefined : c);
+                    }}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition ${
+                      active ? styles.chipActive : styles.chip
+                    }`}
+                  >
+                    {c}
+                    {isDef && !active && (
+                      <span className="ml-1 text-amber-500">★</span>
+                    )}
+                  </button>
+                );
+              })}
           </div>
         </div>
 

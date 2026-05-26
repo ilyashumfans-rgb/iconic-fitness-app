@@ -4,6 +4,7 @@ export type City = {
   id: number;
   name: string;
   isActive: boolean;
+  isDefault: boolean;
   createdAt: string;
 };
 
@@ -40,6 +41,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export const locationsApi = {
   listCities: () => request<City[]>("/locations/cities"),
+  getDefaultCity: () => request<City | null>("/locations/cities/default"),
   listAreas: () => request<Area[]>("/locations/areas"),
   listAreasByCity: (cityId: number) =>
     request<Area[]>(`/locations/cities/${cityId}/areas`),
@@ -48,7 +50,10 @@ export const locationsApi = {
       method: "POST",
       body: JSON.stringify({ name }),
     }),
-  updateCity: (id: number, body: Partial<Pick<City, "name" | "isActive">>) =>
+  updateCity: (
+    id: number,
+    body: Partial<Pick<City, "name" | "isActive" | "isDefault">>,
+  ) =>
     request<City>(`/locations/cities/${id}`, {
       method: "PATCH",
       body: JSON.stringify(body),

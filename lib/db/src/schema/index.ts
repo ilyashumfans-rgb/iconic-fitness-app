@@ -378,6 +378,7 @@ export const citiesTable = pgTable("cities", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
   isActive: boolean("is_active").notNull().default(true),
+  isDefault: boolean("is_default").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

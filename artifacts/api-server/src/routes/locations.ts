@@ -17,6 +17,26 @@ router.get("/locations/cities", async (_req, res): Promise<void> => {
   res.json(rows);
 });
 
+router.get("/locations/cities/default", async (_req, res): Promise<void> => {
+  const [row] = await db
+    .select()
+    .from(citiesTable)
+    .where(eq(citiesTable.isDefault, true))
+    .limit(1);
+  if (row) {
+    res.json(row);
+    return;
+  }
+  // Fallback: first active city alphabetically, so the UI always has *something*
+  const [first] = await db
+    .select()
+    .from(citiesTable)
+    .where(eq(citiesTable.isActive, true))
+    .orderBy(asc(citiesTable.name))
+    .limit(1);
+  res.json(first ?? null);
+});
+
 router.get("/locations/cities/:id/areas", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) {
@@ -69,9 +89,17 @@ router.patch("/locations/cities/:id", requireAdminOrPartner, async (req, res): P
   const patch: Record<string, unknown> = {};
   if (typeof b.name === "string") patch.name = b.name.trim();
   if (typeof b.isActive === "boolean") patch.isActive = b.isActive;
+  if (typeof b.isDefault === "boolean") patch.isDefault = b.isDefault;
   if (!Object.keys(patch).length) {
     res.status(400).json({ error: "no fields to update" });
     return;
+  }
+  // Enforce single default city: when promoting a city, demote all others first.
+  if (patch.isDefault === true) {
+    await db
+      .update(citiesTable)
+      .set({ isDefault: false })
+      .where(eq(citiesTable.isDefault, true));
   }
   const [updated] = await db
     .update(citiesTable)
