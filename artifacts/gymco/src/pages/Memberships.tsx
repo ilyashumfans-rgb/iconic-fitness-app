@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, Crown, AlertCircle, Sparkles, Flame, Dumbbell } from "lucide-react";
 import { format } from "date-fns";
+import { LeadEnquiryDialog } from "@/components/LeadEnquiryDialog";
 
 export default function Memberships() {
   const { data: myMembership, isLoading: loadingMyMembership } = useGetMyMembership({ query: { queryKey: getGetMyMembershipQueryKey() } });
@@ -265,23 +266,47 @@ export default function Memberships() {
                       </ul>
 
                       {/* CTA */}
-                      <Button
-                        size="sm"
-                        className={`w-full font-black tracking-[0.12em] border-none ${
-                          isGreat
-                            ? "h-12 text-sm bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 hover:from-amber-500 hover:via-orange-600 hover:to-rose-600 text-white shadow-[0_14px_36px_-10px_rgba(244,63,94,0.7)] ring-2 ring-white/40 dark:ring-white/10"
-                            : accent
-                              ? "h-10 text-xs bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-[0_8px_24px_-8px_rgba(249,115,22,0.6)]"
-                              : "h-10 text-xs bg-slate-900 hover:bg-slate-800 text-white"
-                        }`}
-                        disabled={isCurrent}
-                      >
-                        {isCurrent
-                          ? "CURRENT PLAN"
-                          : isGreat
-                            ? (<><Flame className="h-4 w-4 mr-1.5 inline" /> CLAIM BEST DEAL</>)
-                            : "SELECT PLAN"}
-                      </Button>
+                      {isCurrent ? (
+                        <Button
+                          size="sm"
+                          className="w-full h-10 text-xs font-black tracking-[0.12em] border-none bg-slate-900 hover:bg-slate-800 text-white"
+                          disabled
+                        >
+                          CURRENT PLAN
+                        </Button>
+                      ) : (
+                        <LeadEnquiryDialog
+                          kind="membership"
+                          planId={plan.id}
+                          planName={plan.name}
+                          planPriceInr={plan.priceInr}
+                          source="memberships-page"
+                          badgeLabel="Plan Enquiry"
+                          title="Get this plan"
+                          description="Share your details and our team will reach out to activate your membership."
+                          ctaLabel="Send Enquiry"
+                          successTitle="Enquiry Received!"
+                          successDescription="Our team will call you shortly to help you get started with this plan."
+                          trigger={
+                            <Button
+                              size="sm"
+                              className={`w-full font-black tracking-[0.12em] border-none ${
+                                isGreat
+                                  ? "h-12 text-sm bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 hover:from-amber-500 hover:via-orange-600 hover:to-rose-600 text-white shadow-[0_14px_36px_-10px_rgba(244,63,94,0.7)] ring-2 ring-white/40 dark:ring-white/10"
+                                  : accent
+                                    ? "h-10 text-xs bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-[0_8px_24px_-8px_rgba(249,115,22,0.6)]"
+                                    : "h-10 text-xs bg-slate-900 hover:bg-slate-800 text-white"
+                              }`}
+                            >
+                              {isGreat ? (
+                                <><Flame className="h-4 w-4 mr-1.5 inline" /> CLAIM BEST DEAL</>
+                              ) : (
+                                "SELECT PLAN"
+                              )}
+                            </Button>
+                          }
+                        />
+                      )}
                     </CardContent>
                   </Card>
                 </div>

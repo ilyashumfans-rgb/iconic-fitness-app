@@ -16,14 +16,21 @@ import { CheckCircle2, Loader2, Sparkles } from "lucide-react";
 
 type Props = {
   trigger: ReactNode;
-  kind: "class" | "gym" | "general";
+  kind: "class" | "gym" | "general" | "membership";
   classId?: number;
   gymId?: number;
+  planId?: number;
   className?: string;
   gymName?: string;
+  planName?: string;
+  planPriceInr?: number;
   source?: string;
   title?: string;
   description?: string;
+  ctaLabel?: string;
+  badgeLabel?: string;
+  successTitle?: string;
+  successDescription?: string;
 };
 
 export function LeadEnquiryDialog(props: Props) {
@@ -62,8 +69,11 @@ export function LeadEnquiryDialog(props: Props) {
           kind: props.kind,
           classId: props.classId,
           gymId: props.gymId,
+          planId: props.planId,
           className: props.className,
           gymName: props.gymName,
+          planName: props.planName,
+          planPriceInr: props.planPriceInr,
           source: props.source ?? "web",
           name,
           phone,
@@ -102,10 +112,11 @@ export function LeadEnquiryDialog(props: Props) {
             </div>
             <DialogHeader>
               <DialogTitle className="text-center text-2xl font-black">
-                Enquiry Received!
+                {props.successTitle ?? "Enquiry Received!"}
               </DialogTitle>
               <DialogDescription className="text-center">
-                Our team will call you shortly to confirm your free class.
+                {props.successDescription ??
+                  "Our team will call you shortly to confirm your free class."}
               </DialogDescription>
             </DialogHeader>
             <Button
@@ -120,7 +131,7 @@ export function LeadEnquiryDialog(props: Props) {
             <DialogHeader>
               <div className="inline-flex items-center gap-1.5 self-start px-2.5 py-1 rounded-full bg-orange-100 text-orange-700 text-[10px] font-black uppercase tracking-wider">
                 <Sparkles className="h-3 w-3" />
-                Free Trial
+                {props.badgeLabel ?? "Free Trial"}
               </div>
               <DialogTitle className="text-2xl font-black">
                 {props.title ?? "Book your free class"}
@@ -128,7 +139,19 @@ export function LeadEnquiryDialog(props: Props) {
               <DialogDescription>
                 {props.description ??
                   "Share a few details and our team will call to confirm your free trial."}
-                {props.className ? (
+                {props.planName ? (
+                  <span className="mt-2 flex items-center justify-between gap-3 rounded-lg border border-orange-200 bg-orange-50 dark:bg-orange-950/30 dark:border-orange-900/50 px-3 py-2">
+                    <span className="text-foreground font-bold text-sm">
+                      {props.planName}
+                    </span>
+                    {typeof props.planPriceInr === "number" &&
+                      props.planPriceInr > 0 && (
+                        <span className="text-orange-600 dark:text-orange-300 font-black text-sm">
+                          ₹{props.planPriceInr.toLocaleString("en-IN")}
+                        </span>
+                      )}
+                  </span>
+                ) : props.className ? (
                   <span className="block mt-1 text-foreground font-semibold">
                     {props.className}
                     {props.gymName ? ` at ${props.gymName}` : ""}
@@ -221,7 +244,7 @@ export function LeadEnquiryDialog(props: Props) {
                     Sending...
                   </>
                 ) : (
-                  "Send Enquiry"
+                  props.ctaLabel ?? "Send Enquiry"
                 )}
               </Button>
             </DialogFooter>

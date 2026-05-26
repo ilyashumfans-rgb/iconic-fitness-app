@@ -12,7 +12,7 @@ const VALID_STATUS = new Set([
   "converted",
   "lost",
 ]);
-const VALID_KIND = new Set(["class", "gym", "general"]);
+const VALID_KIND = new Set(["class", "gym", "general", "membership"]);
 
 // ─────────────────────────── Public capture ───────────────────────────
 
@@ -27,8 +27,13 @@ router.post("/leads", async (req: Request, res: Response): Promise<void> => {
     ? Number(b.classId)
     : null;
   const gymId = Number.isFinite(Number(b.gymId)) ? Number(b.gymId) : null;
+  const planId = Number.isFinite(Number(b.planId)) ? Number(b.planId) : null;
   const className = typeof b.className === "string" ? b.className : "";
   const gymName = typeof b.gymName === "string" ? b.gymName : "";
+  const planName = typeof b.planName === "string" ? b.planName : "";
+  const planPriceInr = Number.isFinite(Number(b.planPriceInr))
+    ? Number(b.planPriceInr)
+    : 0;
   const preferredDate =
     typeof b.preferredDate === "string" ? b.preferredDate : "";
   const message = typeof b.message === "string" ? b.message : "";
@@ -53,8 +58,11 @@ router.post("/leads", async (req: Request, res: Response): Promise<void> => {
       city,
       classId,
       gymId,
+      planId,
       className,
       gymName,
+      planName,
+      planPriceInr,
       preferredDate,
       message,
       source,
