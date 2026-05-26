@@ -10,7 +10,18 @@ interface GymGalleryMosaicProps {
 export function GymGalleryMosaic({ images, gymName }: GymGalleryMosaicProps) {
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);
+  const [heroIndex, setHeroIndex] = useState(0);
+  const [heroPaused, setHeroPaused] = useState(false);
   const count = images.length;
+
+  // Auto-rotate the big hero image when there are 2+ photos
+  useEffect(() => {
+    if (count < 2 || open || heroPaused) return undefined;
+    const id = window.setInterval(() => {
+      setHeroIndex((i) => (i + 1) % count);
+    }, 3500);
+    return () => window.clearInterval(id);
+  }, [count, open, heroPaused]);
 
   const triggerRef = useRef<HTMLElement | null>(null);
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -70,23 +81,78 @@ export function GymGalleryMosaic({ images, gymName }: GymGalleryMosaicProps) {
   const sideRaw = images.slice(1, 4);
   while (sideRaw.length < 3) sideRaw.push(hero);
   const side = sideRaw;
+  const activeHero = images[heroIndex] ?? hero;
 
   return (
     <div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-3 h-[280px] md:h-[460px] rounded-2xl md:rounded-3xl overflow-hidden">
-        {/* Big left image */}
+        {/* Big left image — auto-slides */}
         <button
           type="button"
-          onClick={(e) => openAt(0, e)}
-          aria-label={`Open gallery — ${gymName} photo 1`}
+          onClick={(e) => openAt(heroIndex, e)}
+          onMouseEnter={() => setHeroPaused(true)}
+          onMouseLeave={() => setHeroPaused(false)}
+          aria-label={`Open gallery — ${gymName} photo ${heroIndex + 1}`}
           className="relative group overflow-hidden md:col-span-2 rounded-2xl md:rounded-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
-          <img
-            src={hero}
-            alt={`${gymName} photo 1`}
-            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-          />
-          <div className="absolute inset-0 bg-gradient-to-tr from-black/15 via-transparent to-transparent" />
+          <AnimatePresence initial={false} mode="sync">
+            <motion.img
+              key={heroIndex}
+              src={activeHero}
+              alt={`${gymName} photo ${heroIndex + 1}`}
+              initial={{ opacity: 0, scale: 1.04 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1 }}
+              transition={{ duration: 0.9, ease: "easeOut" }}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          </AnimatePresence>
+          <div className="absolute inset-0 bg-gradient-to-tr from-black/15 via-transparent to-transparent pointer-events-none" />
+
+          {count > 1 && (
+            <>
+              <div className="absolute left-3 right-3 bottom-3 flex items-center justify-between gap-3 z-10">
+                <div className="flex items-center gap-1.5">
+                  {images.map((_, i) => (
+                    <span
+                      key={i}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        i === heroIndex
+                          ? "w-6 bg-white"
+                          : "w-1.5 bg-white/50"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-white/90 bg-black/30 backdrop-blur-sm px-2.5 py-1 rounded-full">
+                  {heroIndex + 1} / {count}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setHeroIndex((i) => (i - 1 + count) % count);
+                }}
+                aria-label="Previous photo"
+                className="absolute left-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/35 hover:bg-black/55 text-white opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center justify-center z-10"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setHeroIndex((i) => (i + 1) % count);
+                }}
+                aria-label="Next photo"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/35 hover:bg-black/55 text-white opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center justify-center z-10"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </>
+          )}
         </button>
 
         {/* Right stack (desktop only) */}
