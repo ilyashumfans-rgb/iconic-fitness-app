@@ -72,24 +72,70 @@ export default function AdminLogin() {
   };
 
   const startGoogle = async () => {
-    if (!signIn?.signIn) return;
     setErr(null);
     setGoogleBusy(true);
     try {
-      // Clerk's typed shape varies between @clerk/react (future) and the
-      // classic SDK; the runtime method exists in both. Cast and call.
-      const si = signIn.signIn as unknown as {
-        authenticateWithRedirect: (args: {
-          strategy: string;
-          redirectUrl: string;
-          redirectUrlComplete: string;
-        }) => Promise<void>;
-      };
-      await si.authenticateWithRedirect({
-        strategy: "oauth_google",
-        redirectUrl: `${basePath}/admin/sso-callback`,
-        redirectUrlComplete: `${basePath}/admin/sso-callback`,
-      });
+      // If the user is already signed in to Clerk, skip the OAuth bounce
+      // and just exchange the session for an admin login.
+      if (isSignedInToClerk) {
+        await continueAsClerkUser();
+        return;
+      }
+      // `useSignIn()` returns { signIn, errors, fetchStatus } where `signIn`
+      // is the SignInResource itself — call authenticateWithRedirect on it.
+      const resource = (signIn as unknown as {
+        signIn?: {
+          authenticateWithRedirect?: (args: {
+            strategy: string;
+            redirectUrl: string;
+            redirectUrlComplete: string;
+          }) => Promise<void>;
+        };
+      })?.signIn;
+      if (resource && typeof resource.authenticateWithRedirect === "function") {
+        await resource.authenticateWithRedirect({
+          strategy: "oauth_google",
+          redirectUrl: `${basePath}/admin/sso-callback`,
+          redirectUrlComplete: `${basePath}/admin/sso-callback`,
+        });
+        return;
+      }
+      // Fallback: use the top-level Clerk instance, which exposes the same
+      // OAuth-redirect helper and is available even before sign-in resource
+      // is ready.
+      const clerkAny = clerk as unknown as {
+        client?: {
+          signIn?: {
+            authenticateWithRedirect?: (args: {
+              strategy: string;
+              redirectUrl: string;
+              redirectUrlComplete: string;
+            }) => Promise<void>;
+          };
+        };
+        redirectWithAuth?: (url: string) => Promise<void>;
+        openSignIn?: (opts?: Record<string, unknown>) => void;
+      } | null;
+      const clientResource = clerkAny?.client?.signIn;
+      if (
+        clientResource &&
+        typeof clientResource.authenticateWithRedirect === "function"
+      ) {
+        await clientResource.authenticateWithRedirect({
+          strategy: "oauth_google",
+          redirectUrl: `${basePath}/admin/sso-callback`,
+          redirectUrlComplete: `${basePath}/admin/sso-callback`,
+        });
+        return;
+      }
+      // Last resort: open Clerk's hosted sign-in modal with Google preferred.
+      if (clerkAny?.openSignIn) {
+        clerkAny.openSignIn({
+          redirectUrl: `${basePath}/admin/sso-callback`,
+        });
+        return;
+      }
+      throw new Error("Google sign-in is not available right now.");
     } catch (e) {
       setGoogleBusy(false);
       setErr(e instanceof Error ? e.message : "Could not start Google sign-in");
