@@ -253,10 +253,18 @@
     background-attachment: fixed;
   }
   .dark body {
-    background-image:
-      radial-gradient(at 12% 6%, hsl(32 100% 58% / 0.14) 0px, transparent 55%),
-      radial-gradient(at 88% 0%, hsl(18 100% 55% / 0.12) 0px, transparent 55%),
-      radial-gradient(at 50% 100%, hsl(290 70% 50% / 0.08) 0px, transparent 60%);
+    background-image: none;
+  }
+
+  /* Dark mode: kill decorative lighting/glow effects for a flat, clean look */
+  .dark .blur-3xl,
+  .dark .blur-2xl {
+    display: none !important;
+  }
+  .dark [style*="radial-gradient"] {
+    background-image: none !important;
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
   }
 }
 
