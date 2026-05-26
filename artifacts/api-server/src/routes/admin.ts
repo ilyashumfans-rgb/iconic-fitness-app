@@ -4,6 +4,7 @@ import {
   db,
   adminsTable,
   partnersTable,
+  partnerLoginTokensTable,
   gymsTable,
   trainersTable,
   classSessionsTable,
@@ -451,6 +452,51 @@ router.post(
     req.session.partnerEmail = partner.email;
     req.session.partnerName = partner.name;
     res.json({ ok: true, redirectTo: "/partner" });
+  },
+);
+
+// Generate a single-use QR login token for a partner. The admin shows the
+// resulting QR code to the partner, who scans it from the /partner/login page
+// on their phone to sign in without typing a password. Tokens expire after
+// 10 minutes and are consumed on first use.
+router.post(
+  "/admin/partners/:id/qr-login",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const [partner] = await db
+      .select()
+      .from(partnersTable)
+      .where(eq(partnersTable.id, id));
+    if (!partner) {
+      res.status(404).json({ error: "Partner not found" });
+      return;
+    }
+    if (partner.status === "suspended") {
+      res.status(400).json({
+        error: "Cannot issue a QR for a suspended partner.",
+      });
+      return;
+    }
+    const token =
+      "PQR_" +
+      Date.now().toString(36) +
+      "_" +
+      Math.random().toString(36).slice(2, 10) +
+      Math.random().toString(36).slice(2, 10);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    await db.insert(partnerLoginTokensTable).values({
+      token,
+      partnerId: partner.id,
+      expiresAt,
+      createdByEmail: req.session.adminEmail ?? "",
+    });
+    res.json({
+      token,
+      expiresAt: expiresAt.toISOString(),
+      partnerName: partner.name,
+      partnerEmail: partner.email,
+    });
   },
 );
 

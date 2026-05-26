@@ -422,6 +422,20 @@ export const leadsTable = pgTable("leads", {
     .defaultNow(),
 });
 
+export const partnerLoginTokensTable = pgTable("partner_login_tokens", {
+  id: serial("id").primaryKey(),
+  token: text("token").notNull().unique(),
+  partnerId: integer("partner_id")
+    .notNull()
+    .references(() => partnersTable.id, { onDelete: "cascade" }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+  createdByEmail: text("created_by_email").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const partnerDocumentsTable = pgTable("partner_documents", {
   id: serial("id").primaryKey(),
   partnerId: integer("partner_id")

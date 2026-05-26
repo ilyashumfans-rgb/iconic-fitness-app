@@ -170,6 +170,11 @@ export const partnerApi = {
       method: "POST",
       body: JSON.stringify({ email, password }),
     }),
+  qrLogin: (token: string) =>
+    request<Partner>("/partner/qr-login", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    }),
   logout: () => request<{ ok: true }>("/partner/logout", { method: "POST" }),
   me: () => request<Partner>("/partner/me"),
   updateMe: (

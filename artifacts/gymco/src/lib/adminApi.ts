@@ -83,6 +83,13 @@ export const adminApi = {
         `/admin/partners/${id}/impersonate`,
         { method: "POST" },
       ),
+    qrLogin: (id: number) =>
+      request<{
+        token: string;
+        expiresAt: string;
+        partnerName: string;
+        partnerEmail: string;
+      }>(`/admin/partners/${id}/qr-login`, { method: "POST" }),
     remove: (id: number) =>
       request<{ ok: true }>(`/admin/partners/${id}`, { method: "DELETE" }),
   },

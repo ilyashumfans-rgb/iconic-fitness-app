@@ -3,6 +3,7 @@ import { and, asc, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import {
   db,
   partnersTable,
+  partnerLoginTokensTable,
   partnerDocumentsTable,
   gymsTable,
   classSessionsTable,
@@ -68,6 +69,89 @@ router.post(
       res.status(401).json({ error: "Invalid credentials" });
       return;
     }
+    req.session.partnerId = partner.id;
+    req.session.partnerEmail = partner.email;
+    req.session.partnerName = partner.name;
+    res.json({
+      id: partner.id,
+      email: partner.email,
+      name: partner.name,
+      phone: partner.phone,
+      city: partner.city,
+      status: partner.status,
+      kind: partner.kind,
+    });
+  },
+);
+
+// QR sign-in. Admin issues a single-use, short-lived token (see
+// /admin/partners/:id/qr-login) and renders it as a QR code. The partner
+// scans it from this page on their phone and lands signed in.
+router.post(
+  "/partner/qr-login",
+  async (req: Request, res: Response): Promise<void> => {
+    const raw = (req.body ?? {}) as { token?: string };
+    let token = (raw.token ?? "").trim();
+    // Allow scanning a full URL like https://…/partner/login?token=XXX
+    if (token.includes("token=")) {
+      try {
+        const u = new URL(token);
+        const t = u.searchParams.get("token");
+        if (t) token = t;
+      } catch {
+        const m = token.match(/token=([A-Za-z0-9_\-]+)/);
+        if (m) token = m[1];
+      }
+    }
+    if (!token) {
+      res.status(400).json({ error: "QR code is empty or unreadable." });
+      return;
+    }
+    const [row] = await db
+      .select()
+      .from(partnerLoginTokensTable)
+      .where(eq(partnerLoginTokensTable.token, token));
+    if (!row) {
+      res.status(401).json({ error: "Invalid QR code." });
+      return;
+    }
+    if (row.usedAt) {
+      res
+        .status(401)
+        .json({ error: "This QR code has already been used. Ask admin for a new one." });
+      return;
+    }
+    if (new Date(row.expiresAt).getTime() < Date.now()) {
+      res
+        .status(401)
+        .json({ error: "This QR code has expired. Ask admin for a new one." });
+      return;
+    }
+    const [partner] = await db
+      .select()
+      .from(partnersTable)
+      .where(eq(partnersTable.id, row.partnerId));
+    if (!partner) {
+      res.status(404).json({ error: "Partner not found" });
+      return;
+    }
+    if (partner.status === "suspended") {
+      res.status(403).json({
+        error: "Your partner account is suspended. Contact GYMCO support.",
+      });
+      return;
+    }
+    if (partner.kind === "vendor") {
+      res.status(403).json({
+        error:
+          "This account is a store vendor. Please sign in at the vendor portal.",
+      });
+      return;
+    }
+    await db
+      .update(partnerLoginTokensTable)
+      .set({ usedAt: new Date() })
+      .where(eq(partnerLoginTokensTable.id, row.id));
     req.session.partnerId = partner.id;
     req.session.partnerEmail = partner.email;
     req.session.partnerName = partner.name;
