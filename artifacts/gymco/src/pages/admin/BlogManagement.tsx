@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Loader2, Plus, Pencil, Trash2, X, BookOpen } from "lucide-react";
+import FileUpload from "@/components/FileUpload";
 
 type Post = {
   id: number;
@@ -251,14 +252,44 @@ export default function AdminBlogManagement() {
                 </div>
               </div>
               <div>
-                <Label>Cover image URL</Label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <Label>Cover image</Label>
+                  <FileUpload
+                    label={form.coverImage ? "Replace image" : "Upload image"}
+                    accept="image/*"
+                    onUploaded={(paths) => {
+                      if (paths[0])
+                        setForm({ ...form, coverImage: paths[0] });
+                    }}
+                  />
+                </div>
                 <Input
                   value={form.coverImage}
                   onChange={(e) =>
                     setForm({ ...form, coverImage: e.target.value })
                   }
-                  placeholder="https://…"
+                  placeholder="Paste a URL or upload an image"
                 />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  JPG, PNG, WebP up to 15 MB. Recommended 1600×900.
+                </p>
+                {form.coverImage && (
+                  <div className="mt-2 relative w-full max-w-xs">
+                    <img
+                      src={form.coverImage}
+                      alt="Cover preview"
+                      className="w-full h-32 object-cover rounded-lg border border-border"
+                    />
+                    <button
+                      type="button"
+                      aria-label="Remove cover image"
+                      onClick={() => setForm({ ...form, coverImage: "" })}
+                      className="absolute top-1.5 right-1.5 h-7 w-7 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
               </div>
               <div>
                 <Label>Excerpt</Label>
