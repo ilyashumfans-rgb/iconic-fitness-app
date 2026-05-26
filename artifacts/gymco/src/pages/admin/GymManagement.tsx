@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
 import { adminApi } from "@/lib/adminApi";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, Trash2, X, Users, ChevronDown, ChevronUp, Check } from "lucide-react";
 
 const inputCls =
   "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
@@ -196,6 +196,23 @@ export default function AdminGymManagement() {
     load();
   };
 
+  const [expandedPartner, setExpandedPartner] = useState<number | null>(null);
+  const [assignBusy, setAssignBusy] = useState<number | null>(null);
+
+  const toggleAssign = async (gym: any, partnerId: number) => {
+    setAssignBusy(gym.id);
+    try {
+      const next = gym.ownerPartnerId === partnerId ? null : partnerId;
+      await adminApi.gyms.update(gym.id, { ownerPartnerId: next });
+      await load();
+    } finally {
+      setAssignBusy(null);
+    }
+  };
+
+  const gymsForPartner = (pid: number) =>
+    rows.filter((g) => g.ownerPartnerId === pid);
+
   return (
     <AdminLayout
       title="Gym Management"
@@ -245,6 +262,118 @@ export default function AdminGymManagement() {
           />
         </AdminCard>
       )}
+
+      <AdminCard className="overflow-hidden mb-6">
+        <div className="px-5 py-3 border-b border-slate-800 flex items-center gap-2">
+          <Users className="h-4 w-4 text-orange-500" />
+          <h3 className="font-semibold text-white text-sm">Enrolled partners</h3>
+          <span className="text-xs text-slate-500">
+            {partners.length} total · click a partner to assign gyms
+          </span>
+        </div>
+        {partners.length === 0 ? (
+          <div className="p-6 text-sm text-slate-500 text-center">
+            No partners enrolled yet. Add one from the Partners page.
+          </div>
+        ) : (
+          <ul className="divide-y divide-slate-800">
+            {partners.map((p) => {
+              const owned = gymsForPartner(p.id);
+              const open = expandedPartner === p.id;
+              return (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedPartner(open ? null : p.id)}
+                    className="w-full flex items-center gap-3 px-5 py-3 hover:bg-slate-800/30 text-left"
+                  >
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white text-sm font-bold shrink-0">
+                      {p.name[0]?.toUpperCase() ?? "P"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-white truncate">
+                        {p.name}
+                        {p.status !== "active" && (
+                          <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                            {p.status}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-slate-500 truncate">{p.email}</div>
+                    </div>
+                    <div className="text-xs text-slate-400 whitespace-nowrap">
+                      {owned.length} {owned.length === 1 ? "gym" : "gyms"} assigned
+                    </div>
+                    {open ? (
+                      <ChevronUp className="h-4 w-4 text-slate-500" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-slate-500" />
+                    )}
+                  </button>
+                  {open && (
+                    <div className="px-5 pb-4 pt-1 bg-slate-900/40">
+                      <div className="text-[11px] uppercase tracking-wide text-slate-500 mb-2">
+                        Tap a gym to assign or unassign it for this partner
+                      </div>
+                      {rows.length === 0 ? (
+                        <div className="text-xs text-slate-500 italic">
+                          No gyms yet. Create one with "Add Gym" above.
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                          {rows.map((g) => {
+                            const isOwn = g.ownerPartnerId === p.id;
+                            const otherOwner =
+                              g.ownerPartnerId &&
+                              g.ownerPartnerId !== p.id
+                                ? partnerName(g.ownerPartnerId)
+                                : null;
+                            return (
+                              <button
+                                key={g.id}
+                                type="button"
+                                disabled={assignBusy === g.id}
+                                onClick={() => toggleAssign(g, p.id)}
+                                className={`text-left px-3 py-2 rounded-lg border text-xs flex items-start gap-2 transition ${
+                                  isOwn
+                                    ? "bg-orange-500/10 border-orange-500/40 text-orange-200"
+                                    : "bg-slate-800/40 border-slate-800 text-slate-300 hover:border-slate-700"
+                                } disabled:opacity-60`}
+                              >
+                                <div
+                                  className={`mt-0.5 h-4 w-4 rounded border flex items-center justify-center shrink-0 ${
+                                    isOwn
+                                      ? "bg-orange-500 border-orange-500"
+                                      : "border-slate-600"
+                                  }`}
+                                >
+                                  {isOwn && <Check className="h-3 w-3 text-white" />}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="font-medium truncate">{g.name}</div>
+                                  <div className="text-[11px] text-slate-500 truncate">
+                                    {g.city} · {g.area}
+                                  </div>
+                                  {otherOwner && (
+                                    <div className="text-[10px] text-amber-400/80 mt-0.5">
+                                      currently owned by {otherOwner} — clicking
+                                      will reassign
+                                    </div>
+                                  )}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </AdminCard>
 
       <AdminCard className="overflow-hidden">
         <table className="w-full text-sm">
