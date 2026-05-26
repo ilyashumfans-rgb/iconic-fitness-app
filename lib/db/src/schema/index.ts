@@ -464,6 +464,30 @@ export const blogPostsTable = pgTable("blog_posts", {
     .defaultNow(),
 });
 
+// In-app notifications. One row per (recipient, notification). For broadcasts,
+// the admin sends one logical message that fans out to N rows sharing a batchId.
+// recipientType is one of: "user" | "partner" | "vendor" | "admin".
+// recipientId references the corresponding table (usersTable / partnersTable /
+// partnersTable / adminsTable) by id. No FK is enforced because the target
+// table varies by recipientType.
+export const notificationsTable = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  recipientType: text("recipient_type").notNull(),
+  recipientId: integer("recipient_id").notNull(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  link: text("link").notNull().default(""),
+  batchId: text("batch_id").notNull(),
+  createdByAdminId: integer("created_by_admin_id").references(
+    () => adminsTable.id,
+    { onDelete: "set null" },
+  ),
+  readAt: timestamp("read_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const partnerDocumentsTable = pgTable("partner_documents", {
   id: serial("id").primaryKey(),
   partnerId: integer("partner_id")

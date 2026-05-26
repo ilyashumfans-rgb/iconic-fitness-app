@@ -233,6 +233,62 @@ export const adminApi = {
     remove: (id: number) =>
       request<{ ok: true }>(`/admin/blogs/${id}`, { method: "DELETE" }),
   },
+  notifications: {
+    send: (body: {
+      recipientType: "user" | "partner" | "vendor" | "admin";
+      recipientId: number | null;
+      title: string;
+      body: string;
+      link?: string;
+    }) =>
+      request<{
+        ok: true;
+        batchId: string;
+        recipientType: string;
+        broadcast: boolean;
+        delivered: number;
+      }>("/admin/notifications", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    listSent: () =>
+      request<
+        {
+          batchId: string;
+          recipientType: string;
+          title: string;
+          body: string;
+          link: string;
+          createdByAdminId: number | null;
+          createdAt: string;
+          delivered: number;
+          read: number;
+        }[]
+      >("/admin/notifications"),
+    recipients: (type: "user" | "partner" | "vendor" | "admin") =>
+      request<{ id: number; name: string; email: string }[]>(
+        `/admin/notifications/recipients?type=${type}`,
+      ),
+    myInbox: () =>
+      request<
+        {
+          id: number;
+          title: string;
+          body: string;
+          link: string;
+          createdAt: string;
+          readAt: string | null;
+        }[]
+      >("/admin/me/notifications"),
+    markRead: (id: number) =>
+      request<{ ok: true }>(`/admin/me/notifications/${id}/read`, {
+        method: "POST",
+      }),
+    markAllRead: () =>
+      request<{ ok: true }>("/admin/me/notifications/read-all", {
+        method: "POST",
+      }),
+  },
   admins: {
     list: () =>
       request<

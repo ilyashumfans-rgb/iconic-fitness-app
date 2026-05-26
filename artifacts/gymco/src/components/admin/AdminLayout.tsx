@@ -21,8 +21,10 @@ import {
   MapPin,
   Inbox,
   BookOpen,
+  Megaphone,
 } from "lucide-react";
 import { adminApi, type AdminUser } from "@/lib/adminApi";
+import { NotificationBell } from "@/components/NotificationBell";
 
 type Item = {
   label: string;
@@ -159,6 +161,11 @@ const SECTIONS: Section[] = [
         label: "Blog Posts",
         href: "/admin/blogs",
         icon: <BookOpen className="h-4 w-4" />,
+      },
+      {
+        label: "Notifications",
+        href: "/admin/notifications",
+        icon: <Megaphone className="h-4 w-4" />,
       },
     ],
   },
@@ -303,6 +310,14 @@ export function AdminLayout({
           </h1>
           <div className="flex items-center gap-3">
             {actions}
+            <NotificationBell
+              api={{
+                list: () => adminApi.notifications.myInbox(),
+                markRead: (id) => adminApi.notifications.markRead(id),
+                markAllRead: () => adminApi.notifications.markAllRead(),
+              }}
+              theme="portal"
+            />
             <button
               onClick={() => window.location.reload()}
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-orange-200 hover:border-orange-500 text-slate-600 hover:text-orange-600 text-sm transition-colors bg-white"

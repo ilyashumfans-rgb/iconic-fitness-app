@@ -14,6 +14,8 @@ import { cn } from "@/lib/utils";
 import { useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 import { toast } from "sonner";
 import { useClerk } from "@clerk/react";
+import { NotificationBell } from "@/components/NotificationBell";
+import { userNotificationsApi } from "@/lib/userNotifications";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -103,6 +105,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <p className="font-semibold text-sm truncate">{user.name}</p>
                 <p className="text-xs text-muted-foreground truncate">{user.city}</p>
               </div>
+              <NotificationBell api={userNotificationsApi} theme="member" />
               <button
                 type="button"
                 onClick={signOut}
@@ -127,6 +130,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-gradient-brand-soft border border-primary/20">
                 {user.city}
               </div>
+              <NotificationBell api={userNotificationsApi} theme="member" />
               <button
                 type="button"
                 onClick={signOut}

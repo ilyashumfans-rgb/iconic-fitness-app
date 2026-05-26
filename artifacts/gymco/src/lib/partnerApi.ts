@@ -357,4 +357,25 @@ export const partnerApi = {
       method: "PUT",
       body: JSON.stringify({ hours }),
     }),
+  notifications: {
+    list: () =>
+      request<
+        {
+          id: number;
+          title: string;
+          body: string;
+          link: string;
+          createdAt: string;
+          readAt: string | null;
+        }[]
+      >("/partner/notifications"),
+    markRead: (id: number) =>
+      request<{ ok: true }>(`/partner/notifications/${id}/read`, {
+        method: "POST",
+      }),
+    markAllRead: () =>
+      request<{ ok: true }>("/partner/notifications/read-all", {
+        method: "POST",
+      }),
+  },
 };

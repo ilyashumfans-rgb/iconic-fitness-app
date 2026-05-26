@@ -110,4 +110,25 @@ export const vendorApi = {
       request<{ ok: true }>(`/partner/products/${id}`, { method: "DELETE" }),
   },
   orders: () => request<VendorOrder[]>("/partner/orders"),
+  notifications: {
+    list: () =>
+      request<
+        {
+          id: number;
+          title: string;
+          body: string;
+          link: string;
+          createdAt: string;
+          readAt: string | null;
+        }[]
+      >("/vendor/notifications"),
+    markRead: (id: number) =>
+      request<{ ok: true }>(`/vendor/notifications/${id}/read`, {
+        method: "POST",
+      }),
+    markAllRead: () =>
+      request<{ ok: true }>("/vendor/notifications/read-all", {
+        method: "POST",
+      }),
+  },
 };

@@ -10,6 +10,7 @@ import {
   Store,
 } from "lucide-react";
 import { vendorApi, type Vendor } from "@/lib/vendorApi";
+import { NotificationBell } from "@/components/NotificationBell";
 
 type Item = { label: string; href: string; icon: ReactNode };
 
@@ -138,6 +139,14 @@ export function VendorLayout({
           </h1>
           <div className="flex items-center gap-3">
             {actions}
+            <NotificationBell
+              api={{
+                list: () => vendorApi.notifications.list(),
+                markRead: (id) => vendorApi.notifications.markRead(id),
+                markAllRead: () => vendorApi.notifications.markAllRead(),
+              }}
+              theme="portal"
+            />
             <button
               onClick={() => window.location.reload()}
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-orange-200 hover:border-orange-500 text-slate-600 hover:text-orange-600 text-sm transition-colors bg-white"
