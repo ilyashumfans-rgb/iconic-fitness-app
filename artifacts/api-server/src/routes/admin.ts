@@ -336,19 +336,51 @@ router.post(
       pendingAmenityIds = valid.map((v) => v.id);
     }
 
-    const [created] = await db
-      .insert(partnersTable)
-      .values({
-        name,
-        email: email.toLowerCase(),
-        phone,
-        city,
-        notes: notes ?? "",
-        kind: partnerKind,
-        passwordHash,
-        pendingAmenityIds,
-      })
-      .returning();
+    const normalizedEmail = email.toLowerCase().trim();
+    const [existing] = await db
+      .select({ id: partnersTable.id, name: partnersTable.name })
+      .from(partnersTable)
+      .where(eq(partnersTable.email, normalizedEmail))
+      .limit(1);
+    if (existing) {
+      res.status(409).json({
+        error: `A partner with email ${normalizedEmail} already exists${
+          existing.name ? ` (${existing.name})` : ""
+        }. Use a different email, or edit the existing partner from the Partners list.`,
+      });
+      return;
+    }
+
+    let created;
+    try {
+      [created] = await db
+        .insert(partnersTable)
+        .values({
+          name,
+          email: normalizedEmail,
+          phone,
+          city,
+          notes: notes ?? "",
+          kind: partnerKind,
+          passwordHash,
+          pendingAmenityIds,
+        })
+        .returning();
+    } catch (e: unknown) {
+      const code = (e as { code?: string })?.code;
+      if (code === "23505") {
+        res.status(409).json({
+          error: `A partner with email ${normalizedEmail} already exists.`,
+        });
+        return;
+      }
+      req.log.error({ err: e }, "Failed to insert partner");
+      res.status(500).json({
+        error:
+          e instanceof Error ? e.message : "Failed to create partner.",
+      });
+      return;
+    }
     res.status(201).json({
       id: created.id,
       name: created.name,
