@@ -218,6 +218,21 @@ export const adminApi = {
     remove: (id: number) =>
       request<{ ok: true }>(`/admin/leads/${id}`, { method: "DELETE" }),
   },
+  blogs: {
+    list: () => request<any[]>("/admin/blogs"),
+    create: (body: Record<string, unknown>) =>
+      request<any>("/admin/blogs", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: number, body: Record<string, unknown>) =>
+      request<any>(`/admin/blogs/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: number) =>
+      request<{ ok: true }>(`/admin/blogs/${id}`, { method: "DELETE" }),
+  },
   userMemberships: {
     list: () => request<any[]>("/admin/user-memberships"),
     updateStatus: (id: number, status: string) =>

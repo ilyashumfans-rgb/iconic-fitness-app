@@ -20,6 +20,7 @@ import {
   Headset,
   MapPin,
   Inbox,
+  BookOpen,
 } from "lucide-react";
 import { adminApi, type AdminUser } from "@/lib/adminApi";
 
@@ -143,6 +144,16 @@ const SECTIONS: Section[] = [
         label: "Leads (CRM)",
         href: "/admin/leads",
         icon: <Inbox className="h-4 w-4" />,
+      },
+    ],
+  },
+  {
+    title: "Content",
+    items: [
+      {
+        label: "Blog Posts",
+        href: "/admin/blogs",
+        icon: <BookOpen className="h-4 w-4" />,
       },
     ],
   },

@@ -436,6 +436,27 @@ export const partnerLoginTokensTable = pgTable("partner_login_tokens", {
     .defaultNow(),
 });
 
+export const blogPostsTable = pgTable("blog_posts", {
+  id: serial("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  excerpt: text("excerpt").notNull().default(""),
+  content: text("content").notNull().default(""),
+  coverImage: text("cover_image").notNull().default(""),
+  author: text("author").notNull().default("GYMCO Team"),
+  category: text("category").notNull().default("Fitness"),
+  isPublished: boolean("is_published").notNull().default(true),
+  publishedAt: timestamp("published_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const partnerDocumentsTable = pgTable("partner_documents", {
   id: serial("id").primaryKey(),
   partnerId: integer("partner_id")

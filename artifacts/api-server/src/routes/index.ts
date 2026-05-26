@@ -16,6 +16,7 @@ import storeRouter from "./store";
 import locationsRouter from "./locations";
 import storageRouter from "./storage";
 import leadsRouter from "./leads";
+import blogsRouter from "./blogs";
 
 const router: IRouter = Router();
 
@@ -36,5 +37,6 @@ router.use(storeRouter);
 router.use(locationsRouter);
 router.use(storageRouter);
 router.use(leadsRouter);
+router.use(blogsRouter);
 
 export default router;

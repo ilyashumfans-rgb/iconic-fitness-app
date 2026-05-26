@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useListFeaturedGyms, useListClasses, getListClassesQueryKey } from "@workspace/api-client-react";
 import NearbyGyms from "@/components/NearbyGyms";
+import { BlogTeaserSection } from "@/components/BlogTeaserSection";
 import { SiteFooter as Footer } from "@/components/SiteFooter";
 import {
   ArrowRight,
@@ -1245,6 +1246,9 @@ export default function Landing() {
       <Categories />
       <FeatureBlock />
       <Testimonials />
+      <section className="max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-16">
+        <BlogTeaserSection />
+      </section>
       <CTA />
       <Footer />
     </div>

@@ -40,6 +40,8 @@ import VendorDashboard from "@/pages/vendor/Dashboard";
 import VendorProducts from "@/pages/vendor/Products";
 import VendorOrders from "@/pages/vendor/Orders";
 import VendorSettings from "@/pages/vendor/Settings";
+import Blog from "@/pages/Blog";
+import BlogDetail from "@/pages/BlogDetail";
 import Store from "@/pages/Store";
 import StoreDetail from "@/pages/StoreDetail";
 import Cart from "@/pages/Cart";
@@ -64,6 +66,7 @@ import AdminOrders from "@/pages/admin/Orders";
 import AdminSsoCallback from "@/pages/admin/SsoCallback";
 import AdminStaffManagement from "@/pages/admin/StaffManagement";
 import AdminLeads from "@/pages/admin/Leads";
+import AdminBlogManagement from "@/pages/admin/BlogManagement";
 import StaffLogin from "@/pages/staff/Login";
 import StaffDashboard from "@/pages/staff/Dashboard";
 import StaffPartnerOnboarding from "@/pages/staff/PartnerOnboarding";
@@ -159,6 +162,7 @@ const PUBLIC_ROUTES = [
   "/store",
   "/cart",
   "/checkout",
+  "/blog",
 ];
 
 function isPublicPath(path: string) {
@@ -200,6 +204,8 @@ function MemberShellRoutes() {
         <Route path="/trainers/:trainerId" component={TrainerDetail} />
         <Route path="/wallet" component={Wallet} />
         <Route path="/profile" component={Profile} />
+        <Route path="/blog" component={Blog} />
+        <Route path="/blog/:slug" component={BlogDetail} />
         <Route path="/store" component={Store} />
         <Route path="/store/:slug" component={StoreDetail} />
         <Route path="/cart" component={Cart} />
@@ -279,6 +285,7 @@ function AppShell() {
         <Route path="/admin/orders" component={AdminOrders} />
         <Route path="/admin/staff" component={AdminStaffManagement} />
         <Route path="/admin/leads" component={AdminLeads} />
+        <Route path="/admin/blogs" component={AdminBlogManagement} />
         <Route component={NotFound} />
       </Switch>
     );

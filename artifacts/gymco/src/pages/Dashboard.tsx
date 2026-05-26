@@ -1,9 +1,10 @@
 import { useGetDashboard, getGetDashboardQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
-import { Zap, Flame, Trophy, MapPin, ChevronRight, Clock, Droplets, Moon } from "lucide-react";
+import { Zap, Flame, Trophy, MapPin, ChevronRight, Clock, Droplets, Moon, Star } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
+import { BlogTeaserSection } from "@/components/BlogTeaserSection";
 
 export default function Dashboard() {
   const { data: dashboard, isLoading } = useGetDashboard({ query: { queryKey: getGetDashboardQueryKey() } });
@@ -137,32 +138,51 @@ export default function Dashboard() {
         </section>
       )}
 
-      {/* Recommended Classes */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold">Recommended for you</h2>
-          <Link href="/classes" className="text-sm text-primary font-medium flex items-center">
-            See all <ChevronRight className="h-4 w-4 ml-1" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {dashboard.recommendedClasses.map(cls => (
-            <Link key={cls.id} href={`/classes/${cls.id}`}>
-              <Card className="hover-elevate cursor-pointer overflow-hidden group">
-                <div className="relative h-40">
-                  <img src={cls.coverImage} alt={cls.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                  <div className="absolute bottom-4 left-4 right-4 text-white">
-                    <div className="text-xs font-bold uppercase tracking-wider text-primary mb-1">{cls.category}</div>
-                    <h3 className="font-bold text-lg leading-tight">{cls.title}</h3>
-                    <div className="text-sm opacity-80">{cls.gymName}</div>
-                  </div>
-                </div>
-              </Card>
+      {/* Gyms near you */}
+      {dashboard.nearbyGyms.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">Gyms near you</h2>
+            <Link href="/explore" className="text-sm text-primary font-medium flex items-center">
+              See all <ChevronRight className="h-4 w-4 ml-1" />
             </Link>
-          ))}
-        </div>
-      </section>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {dashboard.nearbyGyms.map((g) => (
+              <Link key={g.id} href={`/gyms/${g.id}`}>
+                <Card className="hover-elevate cursor-pointer overflow-hidden group">
+                  <div className="relative h-40">
+                    <img
+                      src={g.heroImage}
+                      alt={g.name}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                    <div className="absolute bottom-4 left-4 right-4 text-white">
+                      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary mb-1">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {g.area || g.city}
+                      </div>
+                      <h3 className="font-bold text-lg leading-tight">{g.name}</h3>
+                      <div className="flex items-center gap-3 text-sm opacity-90 mt-1">
+                        <span className="inline-flex items-center gap-1">
+                          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                          {g.rating?.toFixed?.(1) ?? g.rating}
+                        </span>
+                        {typeof g.distanceKm === "number" && (
+                          <span>{g.distanceKm.toFixed(1)} km away</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <BlogTeaserSection />
     </div>
   );
 }

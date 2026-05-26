@@ -8,6 +8,7 @@ function PublicNav() {
     { href: "/explore", label: "Browse Gyms" },
     { href: "/store", label: "Store" },
     { href: "/memberships", label: "Pricing" },
+    { href: "/blog", label: "Blog" },
   ];
   return (
     <header className="sticky top-0 inset-x-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
