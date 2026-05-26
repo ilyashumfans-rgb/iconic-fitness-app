@@ -1,6 +1,8 @@
 import type { Request, Response, NextFunction, RequestHandler } from "express";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 import bcrypt from "bcryptjs";
+import { pool } from "@workspace/db";
 
 const SESSION_SECRET = process.env.SESSION_SECRET;
 if (!SESSION_SECRET) {
@@ -23,11 +25,35 @@ declare module "express-session" {
   }
 }
 
+const PgStore = connectPgSimple(session);
+
+// Ensure the session table exists. We do this manually (rather than via
+// `createTableIfMissing: true`) because connect-pg-simple reads a packaged
+// table.sql at runtime, which esbuild does not bundle — so the flag fails
+// in production with ENOENT. Schema mirrors connect-pg-simple's table.sql.
+// Must be awaited before the server starts accepting requests.
+export async function ensureSessionTable(): Promise<void> {
+  await pool.query(
+    `CREATE TABLE IF NOT EXISTS "user_sessions" (
+      "sid" varchar NOT NULL COLLATE "default",
+      "sess" json NOT NULL,
+      "expire" timestamp(6) NOT NULL,
+      CONSTRAINT "user_sessions_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE
+    ) WITH (OIDS=FALSE);
+    CREATE INDEX IF NOT EXISTS "IDX_user_sessions_expire" ON "user_sessions" ("expire");`,
+  );
+}
+
 export const sessionMiddleware: RequestHandler = session({
   name: "gymco.admin.sid",
   secret: SECRET,
   resave: false,
   saveUninitialized: false,
+  store: new PgStore({
+    pool,
+    tableName: "user_sessions",
+    createTableIfMissing: false,
+  }),
   cookie: {
     httpOnly: true,
     sameSite: "lax",

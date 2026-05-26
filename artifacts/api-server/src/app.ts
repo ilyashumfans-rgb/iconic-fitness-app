@@ -16,6 +16,11 @@ import {
 
 const app: Express = express();
 
+// Replit's reverse proxy terminates HTTPS in front of us. Without this,
+// Express sees the request as HTTP and refuses to set `secure: true` cookies,
+// which silently breaks session-based auth (admin/partner/vendor/staff login).
+app.set("trust proxy", 1);
+
 app.use(
   pinoHttp({
     logger,
