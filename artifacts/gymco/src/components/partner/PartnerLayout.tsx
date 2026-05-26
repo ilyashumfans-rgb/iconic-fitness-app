@@ -27,7 +27,7 @@ const NAV: Item[] = [
   { label: "Products", href: "/partner/products", icon: <Package className="h-4 w-4" /> },
   { label: "Cities & Areas", href: "/partner/locations", icon: <MapPin className="h-4 w-4" /> },
   { label: "Scan QR", href: "/partner/scan", icon: <QrCode className="h-4 w-4" /> },
-  { label: "Settings", href: "/partner/settings", icon: <Settings className="h-4 w-4" /> },
+  { label: "Profile & Settings", href: "/partner/settings", icon: <Settings className="h-4 w-4" /> },
 ];
 
 export function PartnerLayout({

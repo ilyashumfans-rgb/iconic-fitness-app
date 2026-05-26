@@ -1,7 +1,25 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { PartnerLayout, PartnerCard } from "@/components/partner/PartnerLayout";
 import { partnerApi, type Partner } from "@/lib/partnerApi";
-import { Loader2, Save, KeyRound, UserCog, ImageIcon } from "lucide-react";
+import FileUpload from "@/components/FileUpload";
+import {
+  Loader2,
+  Save,
+  KeyRound,
+  UserCog,
+  FileText,
+  Trash2,
+  ExternalLink,
+} from "lucide-react";
+
+type PartnerDoc = {
+  id: number;
+  name: string;
+  url: string;
+  notes: string;
+  uploadedAt: string;
+  uploadedByKind: string;
+};
 
 export default function PartnerSettings() {
   const [partner, setPartner] = useState<Partner | null>(null);
@@ -23,6 +41,13 @@ export default function PartnerSettings() {
   );
   const [pwBusy, setPwBusy] = useState(false);
 
+  const [docs, setDocs] = useState<PartnerDoc[]>([]);
+  const [docName, setDocName] = useState("");
+  const [docNotes, setDocNotes] = useState("");
+  const [docMsg, setDocMsg] = useState<{ type: "ok" | "err"; text: string } | null>(
+    null,
+  );
+
   useEffect(() => {
     partnerApi.me().then((p) => {
       setPartner(p);
@@ -31,6 +56,7 @@ export default function PartnerSettings() {
       setCity(p.city);
       setAvatarUrl(p.avatarUrl ?? "");
     });
+    partnerApi.documents.list().then(setDocs).catch(() => {});
   }, []);
 
   const saveProfile = async (e: FormEvent) => {
@@ -84,8 +110,38 @@ export default function PartnerSettings() {
     }
   };
 
+  const uploadDoc = async (urls: string[]) => {
+    const url = urls[0];
+    if (!url) return;
+    const finalName = docName.trim() || "Document";
+    setDocMsg(null);
+    try {
+      await partnerApi.documents.create({
+        name: finalName,
+        url,
+        notes: docNotes.trim(),
+      });
+      const list = await partnerApi.documents.list();
+      setDocs(list);
+      setDocName("");
+      setDocNotes("");
+      setDocMsg({ type: "ok", text: `Uploaded "${finalName}".` });
+    } catch (e) {
+      setDocMsg({
+        type: "err",
+        text: e instanceof Error ? e.message : "Upload failed",
+      });
+    }
+  };
+
+  const removeDoc = async (id: number) => {
+    if (!confirm("Remove this document?")) return;
+    await partnerApi.documents.remove(id);
+    setDocs((ds) => ds.filter((d) => d.id !== id));
+  };
+
   return (
-    <PartnerLayout title="Settings">
+    <PartnerLayout title="Profile & Settings">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PartnerCard className="p-6">
           <div className="flex items-center gap-2 mb-5">
@@ -105,20 +161,20 @@ export default function PartnerSettings() {
                   (name?.[0] ?? "P").toUpperCase()
                 )}
               </div>
-              <div className="flex-1 min-w-0">
-                <label className="text-xs uppercase tracking-wide text-slate-400 font-medium mb-1.5 block flex items-center gap-1.5">
-                  <ImageIcon className="h-3.5 w-3.5" />
-                  Profile picture URL
+              <div className="flex-1 min-w-0 space-y-2">
+                <label className="text-xs uppercase tracking-wide text-slate-400 font-medium block">
+                  Profile picture
                 </label>
                 <input
                   value={avatarUrl}
                   onChange={(e) => setAvatarUrl(e.target.value)}
-                  placeholder="https://…/avatar.jpg"
+                  placeholder="Upload a photo or paste a URL"
                   className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
                 />
-                <div className="text-[11px] text-slate-500 mt-1">
-                  Shown next to your name in the partner portal.
-                </div>
+                <FileUpload
+                  label="Upload photo"
+                  onUploaded={(urls) => urls[0] && setAvatarUrl(urls[0])}
+                />
               </div>
             </div>
             <Field label="Business / partner name" value={name} onChange={setName} />
@@ -188,6 +244,95 @@ export default function PartnerSettings() {
               Update password
             </button>
           </form>
+        </PartnerCard>
+
+        <PartnerCard className="p-6 lg:col-span-2">
+          <div className="flex items-center gap-2 mb-2">
+            <FileText className="h-5 w-5 text-orange-600" />
+            <h2 className="text-lg font-semibold text-white">
+              Business documents
+            </h2>
+          </div>
+          <div className="text-xs text-slate-400 mb-4">
+            Upload PAN, GST certificate, partner agreement, bank proof, or any
+            other KYC document. Files are stored securely and visible to GYMCO
+            staff for verification.
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+            <input
+              value={docName}
+              onChange={(e) => setDocName(e.target.value)}
+              placeholder="Document name (e.g. PAN card)"
+              className="sm:col-span-1 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+            />
+            <input
+              value={docNotes}
+              onChange={(e) => setDocNotes(e.target.value)}
+              placeholder="Notes (optional)"
+              className="sm:col-span-2 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+            />
+          </div>
+          <FileUpload
+            label="Upload document"
+            accept="image/*,application/pdf"
+            onUploaded={uploadDoc}
+          />
+          {docMsg && (
+            <div className="mt-3">
+              <Msg type={docMsg.type} text={docMsg.text} />
+            </div>
+          )}
+
+          <div className="mt-5">
+            {docs.length === 0 ? (
+              <div className="text-sm text-slate-500 text-center py-6 rounded-xl border border-dashed border-slate-800">
+                No documents uploaded yet.
+              </div>
+            ) : (
+              <ul className="divide-y divide-slate-800 rounded-xl border border-slate-800 overflow-hidden">
+                {docs.map((d) => (
+                  <li
+                    key={d.id}
+                    className="flex items-center gap-3 p-3 bg-slate-900/40"
+                  >
+                    <FileText className="h-5 w-5 text-slate-400 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-white truncate">
+                        {d.name}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {new Date(d.uploadedAt).toLocaleString("en-IN")} •
+                        uploaded by {d.uploadedByKind}
+                      </div>
+                      {d.notes && (
+                        <div className="text-xs text-slate-400 mt-0.5">
+                          {d.notes}
+                        </div>
+                      )}
+                    </div>
+                    <a
+                      href={d.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-2 rounded-md hover:bg-slate-800 text-slate-300"
+                      title="Open"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => removeDoc(d.id)}
+                      className="p-2 rounded-md hover:bg-slate-800 text-rose-400"
+                      title="Delete"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </PartnerCard>
       </div>
     </PartnerLayout>

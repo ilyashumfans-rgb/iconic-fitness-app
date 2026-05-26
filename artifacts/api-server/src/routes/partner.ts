@@ -3,6 +3,7 @@ import { and, asc, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import {
   db,
   partnersTable,
+  partnerDocumentsTable,
   gymsTable,
   classSessionsTable,
   bookingsTable,
@@ -1465,6 +1466,68 @@ router.get(
     }
     // Only return this vendor's items (not other vendors' items in the same order)
     res.json(orders.map((o) => ({ ...o, items: byOrder.get(o.id) ?? [] })));
+  },
+);
+
+router.get(
+  "/partner/documents",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const docs = await db
+      .select()
+      .from(partnerDocumentsTable)
+      .where(eq(partnerDocumentsTable.partnerId, req.session.partnerId!))
+      .orderBy(desc(partnerDocumentsTable.uploadedAt));
+    res.json(docs);
+  },
+);
+
+router.post(
+  "/partner/documents",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const { name, url, notes } = (req.body ?? {}) as {
+      name?: string;
+      url?: string;
+      notes?: string;
+    };
+    if (!name || !url) {
+      res.status(400).json({ error: "Document name and file required" });
+      return;
+    }
+    const [created] = await db
+      .insert(partnerDocumentsTable)
+      .values({
+        partnerId: req.session.partnerId!,
+        name,
+        url,
+        notes: notes ?? "",
+        uploadedByKind: "partner",
+        uploadedByEmail: req.session.partnerEmail ?? "",
+      })
+      .returning();
+    res.status(201).json(created);
+  },
+);
+
+router.delete(
+  "/partner/documents/:id",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id) || id <= 0) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+    await db
+      .delete(partnerDocumentsTable)
+      .where(
+        and(
+          eq(partnerDocumentsTable.id, id),
+          eq(partnerDocumentsTable.partnerId, req.session.partnerId!),
+        ),
+      );
+    res.json({ ok: true });
   },
 );
 

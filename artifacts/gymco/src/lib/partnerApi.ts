@@ -248,6 +248,24 @@ export const partnerApi = {
       request<{ ok: true }>(`/partner/products/${id}`, { method: "DELETE" }),
   },
   orders: () => request<any[]>("/partner/orders"),
+  documents: {
+    list: () =>
+      request<{
+        id: number;
+        name: string;
+        url: string;
+        notes: string;
+        uploadedAt: string;
+        uploadedByKind: string;
+      }[]>("/partner/documents"),
+    create: (body: { name: string; url: string; notes?: string }) =>
+      request<{ id: number }>("/partner/documents", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: number) =>
+      request<{ ok: true }>(`/partner/documents/${id}`, { method: "DELETE" }),
+  },
   amenityCatalog: () => request<any[]>("/partner/amenities/catalog"),
   getGymAmenities: (gymId: number) =>
     request<{
