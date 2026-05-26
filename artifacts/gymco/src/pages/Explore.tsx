@@ -97,7 +97,13 @@ export default function Explore() {
                   <div className="relative h-full w-full">
                     <img src={gym.heroImage} alt={gym.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                    
+
+                    {gym.logoUrl ? (
+                      <div className="absolute top-4 right-4 z-10 h-14 w-14 rounded-xl bg-white ring-2 ring-white shadow-lg overflow-hidden">
+                        <img src={gym.logoUrl} alt={`${gym.name} logo`} className="h-full w-full object-cover" />
+                      </div>
+                    ) : null}
+
                     <div className="absolute top-4 left-4">
                       {gym.isPremium && (
                         <Badge className="bg-primary text-primary-foreground font-bold tracking-wider">PREMIUM</Badge>
@@ -192,6 +198,11 @@ export default function Explore() {
                   <div className="relative h-48">
                     <img src={gym.heroImage} alt={gym.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                    {gym.logoUrl ? (
+                      <div className="absolute top-3 right-3 z-10 h-12 w-12 rounded-xl bg-white ring-2 ring-white shadow-lg overflow-hidden">
+                        <img src={gym.logoUrl} alt={`${gym.name} logo`} className="h-full w-full object-cover" />
+                      </div>
+                    ) : null}
                     <div className="absolute bottom-3 left-3 right-3 text-white">
                       <h3 className="font-bold text-lg">{gym.name}</h3>
                       <div className="flex items-center text-xs opacity-90">
@@ -235,6 +246,11 @@ export default function Explore() {
                         className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                       />
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent to-card/30 hidden sm:block" />
+                      {gym.logoUrl ? (
+                        <div className="absolute bottom-3 left-3 z-10 h-12 w-12 rounded-xl bg-white ring-2 ring-white shadow-lg overflow-hidden">
+                          <img src={gym.logoUrl} alt={`${gym.name} logo`} className="h-full w-full object-cover" />
+                        </div>
+                      ) : null}
                     </div>
 
                     <CardContent className="flex-1 p-5 md:p-6 flex flex-col sm:flex-row gap-4 sm:items-center justify-between">

@@ -892,6 +892,15 @@ function FeaturedGyms() {
                         className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                      {gym.logoUrl ? (
+                        <div className="absolute bottom-3 right-3 z-10 h-12 w-12 rounded-xl bg-white ring-2 ring-white shadow-lg overflow-hidden">
+                          <img
+                            src={gym.logoUrl}
+                            alt={`${gym.name} logo`}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                      ) : null}
                       {gym.isPremium && (
                         <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-brand text-white text-[10px] font-black tracking-wider uppercase shadow-lg">
                           <Crown className="h-3 w-3" /> Premium

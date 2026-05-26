@@ -432,7 +432,7 @@ components:
       type: object
       required:
         [
-          id, name, slug, city, area, address, heroImage, rating,
+          id, name, slug, city, area, address, heroImage, logoUrl, rating,
           reviewsCount, priceFrom, categories, amenities, distanceKm,
           isPremium, openNow
         ]
@@ -444,6 +444,7 @@ components:
         area: { type: string }
         address: { type: string }
         heroImage: { type: string }
+        logoUrl: { type: string, description: "Gym logo image URL (may be empty)" }
         rating: { type: number }
         reviewsCount: { type: integer }
         priceFrom: { type: integer, description: "Monthly price in INR" }

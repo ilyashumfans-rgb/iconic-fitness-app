@@ -316,6 +316,15 @@ export default function NearbyGyms({
                     className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/10 to-transparent" />
+                  {g.logoUrl ? (
+                    <div className="absolute bottom-3 right-3 z-10 h-12 w-12 rounded-xl bg-white ring-2 ring-white shadow-lg overflow-hidden">
+                      <img
+                        src={g.logoUrl}
+                        alt={`${g.name} logo`}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  ) : null}
                   <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 text-[11px] font-bold text-amber-700 shadow">
                     <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
                     {g.rating.toFixed(1)}

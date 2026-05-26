@@ -54,6 +54,8 @@ export interface Gym {
   area: string;
   address: string;
   heroImage: string;
+  /** Gym logo image URL (may be empty) */
+  logoUrl: string;
   rating: number;
   reviewsCount: number;
   /** Monthly price in INR */

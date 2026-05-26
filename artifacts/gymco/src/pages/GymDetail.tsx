@@ -218,9 +218,20 @@ export default function GymDetail() {
                 Group Classes
               </span>
             </div>
-            <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-tight">
-              {gym.name}
-            </h1>
+            <div className="flex items-center gap-4">
+              {gym.logoUrl ? (
+                <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl bg-white ring-2 ring-border shadow-md overflow-hidden shrink-0">
+                  <img
+                    src={gym.logoUrl}
+                    alt={`${gym.name} logo`}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              ) : null}
+              <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-tight">
+                {gym.name}
+              </h1>
+            </div>
           </header>
 
           {/* Location + hours card (cult.fit style) */}
