@@ -19,6 +19,8 @@ import {
   IndianRupee,
   ExternalLink,
   CheckCircle2,
+  Navigation,
+  Search,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 
@@ -249,6 +251,68 @@ function EditGymModal({
   );
   const [priceFrom, setPriceFrom] = useState(String(gym.priceFrom));
   const [openNow, setOpenNow] = useState(gym.openNow);
+  const [lat, setLat] = useState(
+    gym.lat !== undefined && gym.lat !== null ? String(gym.lat) : "",
+  );
+  const [lng, setLng] = useState(
+    gym.lng !== undefined && gym.lng !== null ? String(gym.lng) : "",
+  );
+  const [geoBusy, setGeoBusy] = useState<"none" | "device" | "address">("none");
+  const [geoMsg, setGeoMsg] = useState<string | null>(null);
+
+  const useDeviceLocation = () => {
+    if (!("geolocation" in navigator)) {
+      setGeoMsg("Geolocation not supported on this device.");
+      return;
+    }
+    setGeoBusy("device");
+    setGeoMsg(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLat(pos.coords.latitude.toFixed(6));
+        setLng(pos.coords.longitude.toFixed(6));
+        setGeoBusy("none");
+        setGeoMsg("Pinned to your current location.");
+      },
+      (err) => {
+        setGeoBusy("none");
+        setGeoMsg(
+          err.code === err.PERMISSION_DENIED
+            ? "Location permission denied. Enable it in your browser address bar."
+            : "Couldn't read your location. Try again.",
+        );
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  };
+
+  const geocodeFromAddress = async () => {
+    const q = [address, area, city, "India"].filter(Boolean).join(", ").trim();
+    if (!q) {
+      setGeoMsg("Fill in the address, area, or city first.");
+      return;
+    }
+    setGeoBusy("address");
+    setGeoMsg(null);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`,
+        { headers: { Accept: "application/json" } },
+      );
+      const data = (await res.json()) as { lat: string; lon: string }[];
+      if (data && data[0]) {
+        setLat(Number(data[0].lat).toFixed(6));
+        setLng(Number(data[0].lon).toFixed(6));
+        setGeoMsg("Found coordinates from address.");
+      } else {
+        setGeoMsg("No match found. Try a more specific address.");
+      }
+    } catch {
+      setGeoMsg("Lookup failed. Check your connection.");
+    } finally {
+      setGeoBusy("none");
+    }
+  };
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [tab, setTab] = useState<TabId>("basics");
@@ -407,6 +471,8 @@ function EditGymModal({
         .split("\n")
         .map((s) => s.trim())
         .filter(Boolean);
+      const latNum = lat.trim() === "" ? undefined : Number(lat);
+      const lngNum = lng.trim() === "" ? undefined : Number(lng);
       await partnerApi.gyms.update(gym.id, {
         name,
         address,
@@ -419,6 +485,8 @@ function EditGymModal({
         gallery,
         priceFrom: Number(priceFrom) || 0,
         openNow,
+        ...(latNum !== undefined && Number.isFinite(latNum) ? { lat: latNum } : {}),
+        ...(lngNum !== undefined && Number.isFinite(lngNum) ? { lng: lngNum } : {}),
       });
       await partnerApi.saveGymAmenities(gym.id, {
         catalogIds: Array.from(selectedAmenityIds),
@@ -644,6 +712,68 @@ function EditGymModal({
           <Field label="Area" value={area} onChange={setArea} />
           <Field label="City" value={city} onChange={setCity} />
           <Field label="Address" value={address} onChange={setAddress} className="sm:col-span-2" />
+
+          <div className="sm:col-span-2 rounded-xl border border-orange-200 bg-orange-50/50 p-4">
+            <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
+              <div>
+                <div className="text-xs uppercase tracking-wide text-orange-700 font-bold flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5" />
+                  Map location
+                </div>
+                <div className="text-[11px] text-slate-600 mt-0.5">
+                  Pin where this gym is on the map. Members use this for "near me" search and directions.
+                </div>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={useDeviceLocation}
+                  disabled={geoBusy !== "none"}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-orange-300 text-orange-700 text-xs font-semibold hover:bg-orange-100 disabled:opacity-60"
+                >
+                  <Navigation className="h-3.5 w-3.5" />
+                  {geoBusy === "device" ? "Locating…" : "Use my location"}
+                </button>
+                <button
+                  type="button"
+                  onClick={geocodeFromAddress}
+                  disabled={geoBusy !== "none"}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-semibold hover:opacity-95 disabled:opacity-60"
+                >
+                  <Search className="h-3.5 w-3.5" />
+                  {geoBusy === "address" ? "Searching…" : "Find from address"}
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field
+                label="Latitude"
+                value={lat}
+                onChange={setLat}
+                type="number"
+              />
+              <Field
+                label="Longitude"
+                value={lng}
+                onChange={setLng}
+                type="number"
+              />
+            </div>
+            {geoMsg && (
+              <div className="mt-2 text-[11px] font-medium text-slate-700">{geoMsg}</div>
+            )}
+            {lat && lng && Number.isFinite(Number(lat)) && Number.isFinite(Number(lng)) && (
+              <a
+                href={`https://www.google.com/maps?q=${lat},${lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-orange-700 hover:text-orange-800 underline"
+              >
+                Preview on Google Maps →
+              </a>
+            )}
+          </div>
+
           <Field label="Hours" value={hours} onChange={setHours} />
           <Field label="Starting price (₹)" value={priceFrom} onChange={setPriceFrom} type="number" />
           <div className="sm:col-span-2">

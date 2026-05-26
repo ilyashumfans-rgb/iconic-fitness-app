@@ -50,6 +50,8 @@ export type PartnerGym = {
   ownerPartnerId: number | null;
   gallery: string[];
   logoUrl?: string;
+  lat?: number;
+  lng?: number;
 };
 
 export type PartnerTrainer = {

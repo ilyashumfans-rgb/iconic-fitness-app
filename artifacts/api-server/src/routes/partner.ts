@@ -335,6 +335,12 @@ router.patch(
     for (const k of ["priceFrom"]) {
       if (b[k] !== undefined) patch[k] = Number(b[k]);
     }
+    for (const k of ["lat", "lng"]) {
+      if (b[k] !== undefined && b[k] !== null && b[k] !== "") {
+        const n = Number(b[k]);
+        if (Number.isFinite(n)) patch[k] = n;
+      }
+    }
     for (const k of ["openNow"]) {
       if (b[k] !== undefined) patch[k] = Boolean(b[k]);
     }
