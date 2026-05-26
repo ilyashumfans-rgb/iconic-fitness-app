@@ -124,10 +124,6 @@ export default function AdminPartnerOnboarding() {
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (existingPartner) {
-      navigate(`/admin/gyms?ownerPartnerId=${existingPartner.id}`);
-      return;
-    }
     setBusy(true);
     setErr(null);
     try {
@@ -253,24 +249,23 @@ export default function AdminPartnerOnboarding() {
             <div className="sm:col-span-2">
               <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
                 Initial Password
-                {verifiedSamePartner && (
-                  <span className="ml-2 text-emerald-300 normal-case tracking-normal">
-                    not needed — existing login will be reused
-                  </span>
-                )}
               </label>
               <input
-                required={!verifiedSamePartner}
-                minLength={verifiedSamePartner ? 0 : 6}
-                disabled={verifiedSamePartner}
+                required
+                minLength={6}
                 type="text"
-                className={`${inputCls} ${verifiedSamePartner ? "opacity-50 cursor-not-allowed" : ""}`}
-                value={verifiedSamePartner ? "" : form.password}
+                className={inputCls}
+                value={form.password}
                 onChange={(e) =>
                   setForm({ ...form, password: e.target.value })
                 }
                 placeholder="At least 6 characters"
               />
+              <div className="text-[11px] text-slate-500 mt-1">
+                Must be different from the existing partner's password if this
+                email is already in use — login picks the first matching
+                password.
+              </div>
             </div>
             <div className="sm:col-span-2">
               <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
@@ -369,18 +364,21 @@ export default function AdminPartnerOnboarding() {
             </div>
           )}
 
-          {existingPartner && verifiedSamePartner && (
+          {existingPartner && (
             <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-4 flex items-start gap-3">
               <Building2 className="h-5 w-5 text-emerald-300 mt-0.5 shrink-0" />
               <div className="flex-1">
                 <div className="text-sm font-semibold text-emerald-200">
-                  Verified branch of{" "}
+                  Heads up — this email is already used by{" "}
                   <span className="text-white">{existingPartner.name}</span>
                 </div>
                 <div className="text-xs text-emerald-200/80 mt-1">
-                  Email and mobile number both match an existing partner —
-                  this is the same brand. You can add as many gym branches as
-                  you like under this single partner login.
+                  Submitting will create a new, independent partner login that
+                  shares this email. Make sure the password below is different
+                  from {existingPartner.name}'s password, otherwise sign-in
+                  will keep landing on the older account. If you only want to
+                  add another gym branch to the existing login instead, use
+                  the shortcut below.
                 </div>
                 <button
                   type="button"
@@ -391,38 +389,7 @@ export default function AdminPartnerOnboarding() {
                   }
                   className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white text-xs font-semibold"
                 >
-                  Add another branch to {existingPartner.name}
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-          )}
-          {existingPartner && !verifiedSamePartner && (
-            <div className="rounded-2xl border border-orange-500/40 bg-orange-500/10 p-4 flex items-start gap-3">
-              <Building2 className="h-5 w-5 text-orange-300 mt-0.5 shrink-0" />
-              <div className="flex-1">
-                <div className="text-sm font-semibold text-orange-200">
-                  This email already belongs to{" "}
-                  <span className="text-white">{existingPartner.name}</span>
-                </div>
-                <div className="text-xs text-orange-200/80 mt-1">
-                  One email = one partner login. To confirm this is the same
-                  brand, also enter their registered mobile number{" "}
-                  <span className="text-orange-100 font-mono">
-                    {existingPartner.phone}
-                  </span>
-                  . Or open another branch under this partner directly:
-                </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    navigate(
-                      `/admin/gyms?ownerPartnerId=${existingPartner.id}`,
-                    )
-                  }
-                  className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white text-xs font-semibold"
-                >
-                  Add a gym branch to {existingPartner.name}
+                  Just add a gym branch to {existingPartner.name}
                   <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               </div>
@@ -444,13 +411,7 @@ export default function AdminPartnerOnboarding() {
             disabled={busy}
             className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-semibold transition-colors disabled:opacity-60"
           >
-            {busy
-              ? "Creating…"
-              : verifiedSamePartner
-                ? "Add another branch to this partner"
-                : existingPartner
-                  ? "Add gym branch to this partner"
-                  : "Create Partner"}
+            {busy ? "Creating…" : "Create Partner"}
           </button>
         </form>
       </AdminCard>
