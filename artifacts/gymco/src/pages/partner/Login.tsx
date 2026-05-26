@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useLocation } from "wouter";
 import { partnerApi } from "@/lib/partnerApi";
 import { Loader2, Handshake } from "lucide-react";
+import NearbyGyms from "@/components/NearbyGyms";
 
 export default function PartnerLogin() {
   const [, navigate] = useLocation();
@@ -35,7 +36,8 @@ export default function PartnerLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
+    <div className="flex items-center justify-center p-6 pt-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 shadow-lg shadow-orange-500/30">
@@ -106,6 +108,11 @@ export default function PartnerLogin() {
           </div>
         </form>
       </div>
+    </div>
+      <NearbyGyms
+        title="Browse gyms on GYMCO"
+        subtitle="Members searching nearby will find your gym here. See what they see."
+      />
     </div>
   );
 }

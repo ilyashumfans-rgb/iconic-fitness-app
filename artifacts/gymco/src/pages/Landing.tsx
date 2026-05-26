@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useInView } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useListFeaturedGyms } from "@workspace/api-client-react";
+import NearbyGyms from "@/components/NearbyGyms";
 import { SiteFooter as Footer } from "@/components/SiteFooter";
 import {
   ArrowRight,
@@ -1441,6 +1442,7 @@ export default function Landing() {
       <TopNav />
       <Hero />
       <PartnerStrip />
+      <NearbyGyms />
       <FeaturedGyms />
       <HowItWorks />
       <Categories />
