@@ -25,14 +25,7 @@ type Props = {
 
 type Coords = { lat: number; lng: number };
 
-const POPULAR_CITIES = [
-  "Bengaluru",
-  "Mumbai",
-  "Delhi",
-  "Hyderabad",
-  "Pune",
-  "Chennai",
-];
+const POPULAR_CITIES = ["Bangalore"];
 
 export default function NearbyGyms({
   variant = "light",

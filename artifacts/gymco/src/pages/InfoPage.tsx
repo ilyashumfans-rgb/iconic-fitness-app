@@ -1,0 +1,745 @@
+import { useState } from "react";
+import { Link } from "wouter";
+import { PublicLayout } from "@/components/PublicLayout";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import {
+  ArrowRight,
+  Mail,
+  Phone,
+  MapPin,
+  Building2,
+  Briefcase,
+  HeartHandshake,
+  GraduationCap,
+  Shield,
+  LifeBuoy,
+  ScrollText,
+  Cookie,
+  FileText,
+  HelpCircle,
+  Newspaper,
+  CheckCircle2,
+  Sparkles,
+} from "lucide-react";
+
+type Section = { heading?: string; body: string | string[] };
+
+type InfoContent = {
+  slug: string;
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  icon: React.ComponentType<{ className?: string }>;
+  sections: Section[];
+  showContactForm?: boolean;
+  showFaq?: { q: string; a: string }[];
+};
+
+const CONTENT: Record<string, InfoContent> = {
+  about: {
+    slug: "about",
+    eyebrow: "About GYMCO",
+    title: "One membership. Unlimited gyms in Bangalore.",
+    icon: Building2,
+    subtitle:
+      "We're building India's most loved fitness pass — starting with Bangalore.",
+    sections: [
+      {
+        heading: "Our story",
+        body: "GYMCO started in 2024 in Indiranagar with a simple idea: people don't want to be locked into one gym. They want to train near home on weekdays, by the office at lunch, and try yoga or MMA on weekends. We partnered with the city's best studios so one pass unlocks them all.",
+      },
+      {
+        heading: "What we believe",
+        body: [
+          "Movement should be a habit, not a contract.",
+          "Premium facilities should be accessible to everyone.",
+          "Partners win when members win.",
+          "Software should disappear — open the app, scan, train.",
+        ],
+      },
+      {
+        heading: "By the numbers",
+        body: "120+ partner gyms across Bangalore · 8,000+ classes booked every month · 95% member retention after 90 days.",
+      },
+    ],
+  },
+  press: {
+    slug: "press",
+    eyebrow: "Press",
+    title: "GYMCO in the news",
+    icon: Newspaper,
+    subtitle:
+      "Media kit, founder interviews and press inquiries — everything in one place.",
+    sections: [
+      {
+        heading: "Recent coverage",
+        body: [
+          "YourStory · How GYMCO is rewriting the gym membership in India",
+          "Inc42 · 120 gyms, one pass: Bangalore's fitness experiment",
+          "Economic Times · The rise of the all-access fitness membership",
+        ],
+      },
+      {
+        heading: "Press inquiries",
+        body: "For interviews, quotes or media assets, write to press@gymco.in. We respond within one business day.",
+      },
+      {
+        heading: "Brand assets",
+        body: "Logo, screenshots and founder photos available on request.",
+      },
+    ],
+  },
+  careers: {
+    slug: "careers",
+    eyebrow: "Careers",
+    title: "Build the future of fitness with us",
+    icon: Briefcase,
+    subtitle:
+      "We're a small team in Bangalore obsessed with helping people move more.",
+    sections: [
+      {
+        heading: "Open roles",
+        body: [
+          "Senior Product Designer — Bangalore (hybrid)",
+          "Full-stack Engineer (React / Node) — Bangalore",
+          "Partner Success Manager — Bangalore",
+          "City Marketing Lead — Bangalore",
+          "Customer Experience Associate — Bangalore",
+        ],
+      },
+      {
+        heading: "Why GYMCO",
+        body: "Free Elite membership for every employee · Annual learning budget · Health insurance for you and your family · Real ownership through ESOPs.",
+      },
+      {
+        heading: "Apply",
+        body: "Send your resume and a short note to careers@gymco.in with the role in the subject line.",
+      },
+    ],
+  },
+  "partner-with-us": {
+    slug: "partner-with-us",
+    eyebrow: "For gym owners",
+    title: "Fill your off-peak hours. Grow your gym.",
+    icon: HeartHandshake,
+    subtitle:
+      "List your gym on GYMCO and reach thousands of premium members across Bangalore.",
+    sections: [
+      {
+        heading: "Why partners join us",
+        body: [
+          "Guaranteed revenue from off-peak check-ins.",
+          "Zero setup cost — go live in 48 hours.",
+          "Weekly payouts, transparent dashboard.",
+          "Marketing support: photos, listings, social features.",
+          "Dedicated partner success manager.",
+        ],
+      },
+      {
+        heading: "How it works",
+        body: "1. Apply via the form below or partner@gymco.in. 2. Our team visits your facility within a week. 3. We onboard your team, set up the QR scanner, and you're live. 4. Get paid weekly for every member who trains with you.",
+      },
+      {
+        heading: "Already a partner?",
+        body: "Sign in to your dashboard at /partner/login to manage classes, view check-ins and update your gym profile.",
+      },
+    ],
+    showContactForm: true,
+  },
+  "become-a-trainer": {
+    slug: "become-a-trainer",
+    eyebrow: "For trainers",
+    title: "Coach on GYMCO",
+    icon: GraduationCap,
+    subtitle:
+      "Get discovered by members across Bangalore who are looking for serious coaching.",
+    sections: [
+      {
+        heading: "Who we work with",
+        body: "Certified personal trainers, strength coaches, yoga instructors, pilates teachers, physios and nutritionists. We verify every trainer before listing.",
+      },
+      {
+        heading: "What you get",
+        body: [
+          "A public profile with reviews and specialties.",
+          "Bookings handled in-app — no chasing payments.",
+          "70% trainer payout, paid weekly.",
+          "Free access to all partner gyms while coaching.",
+        ],
+      },
+      {
+        heading: "Apply",
+        body: "Use the form below or email trainers@gymco.in with your certifications and a short bio.",
+      },
+    ],
+    showContactForm: true,
+  },
+  corporate: {
+    slug: "corporate",
+    eyebrow: "Corporate plans",
+    title: "Wellness benefits your team will actually use",
+    icon: Sparkles,
+    subtitle:
+      "Give your employees access to 120+ gyms in Bangalore — one bill, full visibility.",
+    sections: [
+      {
+        heading: "Why companies choose GYMCO",
+        body: [
+          "Up to 25% off retail pricing on bulk seats.",
+          "Live engagement dashboard for HR.",
+          "Onboarding sessions and wellness workshops.",
+          "Add or remove employees in seconds.",
+          "Family add-ons available.",
+        ],
+      },
+      {
+        heading: "How it works",
+        body: "Tell us your team size, we send a tailored proposal within 24 hours. Pilot with 10 seats, scale when you're ready.",
+      },
+      {
+        heading: "Request a proposal",
+        body: "Fill the form below or email corporate@gymco.in.",
+      },
+    ],
+    showContactForm: true,
+  },
+  help: {
+    slug: "help",
+    eyebrow: "Help center",
+    title: "How can we help?",
+    icon: LifeBuoy,
+    subtitle:
+      "Most questions answered in under a minute. Can't find what you need? Talk to us.",
+    sections: [],
+    showFaq: [
+      {
+        q: "How do check-ins work?",
+        a: "Open the GYMCO app, tap Check-in, scan the QR code at the gym's front desk. You're in.",
+      },
+      {
+        q: "Can I freeze my membership?",
+        a: "Yes — pause for up to 30 days per year from Profile → Membership.",
+      },
+      {
+        q: "Do I need to book in advance?",
+        a: "Gym entries are walk-in. Group classes and trainer sessions need to be booked in the app.",
+      },
+      {
+        q: "What if a gym is full?",
+        a: "Open another nearby gym in the app — your pass works at all 120+ partner gyms in Bangalore.",
+      },
+      {
+        q: "Can I bring a guest?",
+        a: "Elite members get 2 guest passes per month. Upgrade in Profile → Membership.",
+      },
+    ],
+  },
+  contact: {
+    slug: "contact",
+    eyebrow: "Contact",
+    title: "Talk to a human",
+    icon: Mail,
+    subtitle:
+      "We reply to every message within one business day — usually faster.",
+    sections: [
+      {
+        heading: "Reach us directly",
+        body: [
+          "Members — hello@gymco.in",
+          "Partner gyms — partner@gymco.in",
+          "Corporate — corporate@gymco.in",
+          "Press — press@gymco.in",
+          "Careers — careers@gymco.in",
+        ],
+      },
+      {
+        heading: "Phone",
+        body: "+91 80 0123 4567 · Mon–Sat, 9 AM – 9 PM IST",
+      },
+      {
+        heading: "Office",
+        body: "GYMCO India Pvt. Ltd., 100 Feet Road, Indiranagar, Bangalore 560038",
+      },
+    ],
+    showContactForm: true,
+  },
+  faqs: {
+    slug: "faqs",
+    eyebrow: "FAQs",
+    title: "Frequently asked questions",
+    icon: HelpCircle,
+    subtitle: "Everything you need to know about GYMCO.",
+    sections: [],
+    showFaq: [
+      {
+        q: "What is GYMCO?",
+        a: "One membership that unlocks 120+ premium gyms, studios and trainers across Bangalore.",
+      },
+      {
+        q: "How is this different from joining a single gym?",
+        a: "You're not locked in. Train at any partner facility, switch styles weekly, no long contracts.",
+      },
+      {
+        q: "Which cities are live?",
+        a: "We're currently live in Bangalore with deep coverage in Indiranagar, Koramangala, HSR, Whitefield, JP Nagar and more.",
+      },
+      {
+        q: "Can I cancel anytime?",
+        a: "Yes. Monthly plans cancel anytime from Profile → Membership. Annual plans are pro-rated.",
+      },
+      {
+        q: "Do classes cost extra?",
+        a: "All plans include a monthly class quota. Additional classes are pay-per-use at member rates.",
+      },
+      {
+        q: "What about hygiene?",
+        a: "Every partner is verified for cleanliness and equipment quality before they go live.",
+      },
+      {
+        q: "Is there a mobile app?",
+        a: "Yes — GYMCO is available on iOS and Android. Web works too.",
+      },
+    ],
+  },
+  cancellation: {
+    slug: "cancellation",
+    eyebrow: "Policy",
+    title: "Cancellation policy",
+    icon: ScrollText,
+    subtitle: "Last updated · May 2026",
+    sections: [
+      {
+        heading: "Membership cancellation",
+        body: "Monthly memberships can be cancelled anytime from Profile → Membership. Cancellation takes effect at the end of the current billing cycle. No partial refunds for unused days within a billing period.",
+      },
+      {
+        heading: "Annual memberships",
+        body: "Annual plans are non-refundable after 7 days of purchase. Within the first 7 days, you may cancel and receive a full refund minus any check-ins already used at retail rates.",
+      },
+      {
+        heading: "Class booking cancellation",
+        body: "Free cancellation up to 4 hours before class start. Cancellations within 4 hours forfeit the class credit. No-shows count as a used class.",
+      },
+      {
+        heading: "Trainer sessions",
+        body: "Free cancellation up to 12 hours before session. Within 12 hours, 50% credit applies. No-shows are charged in full.",
+      },
+      {
+        heading: "Need help cancelling?",
+        body: "Email hello@gymco.in and we'll process it the same day.",
+      },
+    ],
+  },
+  safety: {
+    slug: "safety",
+    eyebrow: "Safety",
+    title: "Safety guidelines",
+    icon: Shield,
+    subtitle: "Train hard. Train safe.",
+    sections: [
+      {
+        heading: "Before you train",
+        body: [
+          "Warm up for at least 5 minutes before any heavy lifting.",
+          "Hydrate — bring a bottle and refill as needed.",
+          "If it's your first time at a facility, ask staff for a quick orientation.",
+        ],
+      },
+      {
+        heading: "At the gym",
+        body: [
+          "Wipe down equipment after every set.",
+          "Wear proper closed-toe shoes in the weights area.",
+          "Use collars on barbells. Re-rack everything.",
+          "Don't lift heavy without a spotter or safety pins.",
+        ],
+      },
+      {
+        heading: "Medical conditions",
+        body: "Members with heart conditions, joint injuries or pregnancy should consult a doctor before starting any new program and inform the gym staff on arrival.",
+      },
+      {
+        heading: "Reporting incidents",
+        body: "If you witness or are involved in any incident, notify the gym immediately and email safety@gymco.in. We take every report seriously.",
+      },
+    ],
+  },
+  refund: {
+    slug: "refund",
+    eyebrow: "Policy",
+    title: "Refund policy",
+    icon: ScrollText,
+    subtitle: "Last updated · May 2026",
+    sections: [
+      {
+        heading: "Memberships",
+        body: "Full refunds available within 7 days of first purchase, minus any retail-rate charges for visits already taken. After 7 days, memberships are non-refundable but can be cancelled to stop future billing.",
+      },
+      {
+        heading: "Store purchases",
+        body: "Unused merchandise can be returned within 14 days of delivery for a full refund. Items must be in original packaging with tags attached.",
+      },
+      {
+        heading: "Class & trainer credits",
+        body: "Unused credits expire at the end of your billing cycle and are not refundable in cash.",
+      },
+      {
+        heading: "How refunds are processed",
+        body: "Refunds are issued to the original payment method within 5–7 business days. UPI refunds are usually faster.",
+      },
+      {
+        heading: "Disputes",
+        body: "If you believe you've been charged incorrectly, email billing@gymco.in within 30 days of the charge.",
+      },
+    ],
+  },
+  privacy: {
+    slug: "privacy",
+    eyebrow: "Legal",
+    title: "Privacy policy",
+    icon: Shield,
+    subtitle: "Last updated · May 2026",
+    sections: [
+      {
+        heading: "What we collect",
+        body: "Account info (name, email, phone), check-in history, payment info (processed by our payment partners — we never store full card numbers), device and usage data, and optional location data for finding nearby gyms.",
+      },
+      {
+        heading: "How we use it",
+        body: "To operate your membership, process payments, prevent fraud, send service updates, personalise gym and class recommendations, and improve the product.",
+      },
+      {
+        heading: "Who we share with",
+        body: "Partner gyms receive your name and member ID at check-in. Payment processors handle billing. We never sell your data to advertisers.",
+      },
+      {
+        heading: "Your rights",
+        body: "Access, export or delete your data anytime from Profile → Privacy. Or email privacy@gymco.in.",
+      },
+      {
+        heading: "Contact",
+        body: "Questions about privacy? Reach our Data Protection Officer at privacy@gymco.in.",
+      },
+    ],
+  },
+  terms: {
+    slug: "terms",
+    eyebrow: "Legal",
+    title: "Terms of service",
+    icon: FileText,
+    subtitle: "Last updated · May 2026",
+    sections: [
+      {
+        heading: "Acceptance",
+        body: "By creating a GYMCO account, you agree to these terms. If you don't agree, please don't use the service.",
+      },
+      {
+        heading: "Eligibility",
+        body: "You must be 16 or older to create an account. Members under 18 require parental consent for paid plans.",
+      },
+      {
+        heading: "Membership",
+        body: "Plans renew automatically until cancelled. Pricing may change with 30 days' notice. Plan benefits are subject to fair-use limits stated in your plan.",
+      },
+      {
+        heading: "Conduct",
+        body: "Be respectful to staff and members at every partner facility. Repeated violations may result in account suspension without refund.",
+      },
+      {
+        heading: "Liability",
+        body: "Exercise carries inherent risk. By using GYMCO you acknowledge that GYMCO and its partners are not liable for injury sustained during workouts. Always train within your ability.",
+      },
+      {
+        heading: "Governing law",
+        body: "These terms are governed by the laws of India. Disputes are subject to the courts of Bangalore.",
+      },
+    ],
+  },
+  cookies: {
+    slug: "cookies",
+    eyebrow: "Legal",
+    title: "Cookie policy",
+    icon: Cookie,
+    subtitle: "Last updated · May 2026",
+    sections: [
+      {
+        heading: "What are cookies",
+        body: "Small text files stored by your browser when you visit a website. They help us remember your preferences and keep you signed in.",
+      },
+      {
+        heading: "Cookies we use",
+        body: [
+          "Essential — sign-in, session, security. Cannot be disabled.",
+          "Analytics — anonymous traffic patterns to improve the product.",
+          "Preferences — theme, city, language.",
+          "Marketing — measure campaign effectiveness (opt-in).",
+        ],
+      },
+      {
+        heading: "Managing cookies",
+        body: "You can clear or block cookies in your browser settings. Disabling essential cookies will prevent sign-in from working.",
+      },
+      {
+        heading: "Third parties",
+        body: "Payment partners and analytics providers may set their own cookies. See their respective policies for details.",
+      },
+    ],
+  },
+};
+
+function ContactForm({ topic }: { topic: string }) {
+  const { toast } = useToast();
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    message: "",
+  });
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.name || !form.email || !form.message) {
+      toast({
+        title: "Add a few more details",
+        description: "Name, email and a short message help us route this faster.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          kind: "general",
+          name: form.name,
+          email: form.email,
+          phone: form.phone || undefined,
+          message: `[${topic}] ${form.message}`,
+          source: `info:${topic}`,
+        }),
+      });
+      setDone(true);
+    } catch {
+      toast({
+        title: "Couldn't send",
+        description: "Please email us directly at hello@gymco.in.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (done) {
+    return (
+      <Card className="p-8 text-center border-emerald-500/30 bg-emerald-500/5">
+        <CheckCircle2 className="h-10 w-10 text-emerald-600 mx-auto mb-3" />
+        <h3 className="text-xl font-black tracking-tight">
+          Thanks — message received.
+        </h3>
+        <p className="text-muted-foreground mt-1 text-sm">
+          Our team will get back to you within one business day.
+        </p>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="p-6 md:p-8 border-border/60">
+      <h3 className="text-xl md:text-2xl font-black tracking-tight">
+        Send us a note
+      </h3>
+      <p className="text-sm text-muted-foreground mt-1">
+        We respond within one business day.
+      </p>
+      <form onSubmit={submit} className="mt-5 space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <Input
+            placeholder="Your name"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="h-11"
+          />
+          <Input
+            type="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            className="h-11"
+          />
+        </div>
+        <Input
+          placeholder="Phone (optional)"
+          value={form.phone}
+          onChange={(e) => setForm({ ...form, phone: e.target.value })}
+          className="h-11"
+        />
+        <Textarea
+          placeholder="How can we help?"
+          rows={5}
+          value={form.message}
+          onChange={(e) => setForm({ ...form, message: e.target.value })}
+        />
+        <Button
+          type="submit"
+          disabled={submitting}
+          className="w-full md:w-auto bg-gradient-brand text-white border-none font-black tracking-wider h-11 px-6"
+        >
+          {submitting ? "SENDING..." : "SEND MESSAGE"}{" "}
+          <ArrowRight className="h-4 w-4 ml-1.5" />
+        </Button>
+      </form>
+    </Card>
+  );
+}
+
+export default function InfoPage({ slug }: { slug: string }) {
+  const content = CONTENT[slug];
+
+  if (!content) {
+    return (
+      <PublicLayout>
+        <div className="py-20 text-center">
+          <h1 className="text-3xl font-black">Page not found</h1>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1 mt-4 text-orange-600 font-bold"
+          >
+            Back home <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </PublicLayout>
+    );
+  }
+
+  const Icon = content.icon;
+
+  return (
+    <PublicLayout>
+      <div className="max-w-4xl mx-auto py-6 md:py-10">
+        <div className="mb-10 md:mb-14">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/30 text-[10.5px] font-black tracking-[0.22em] text-orange-600 uppercase mb-5">
+            <Icon className="h-3.5 w-3.5" /> {content.eyebrow}
+          </div>
+          <h1 className="text-4xl md:text-6xl font-black tracking-[-0.03em] leading-[1.05]">
+            {content.title}
+          </h1>
+          <p className="text-base md:text-lg text-muted-foreground mt-4 max-w-2xl">
+            {content.subtitle}
+          </p>
+        </div>
+
+        <div className="space-y-8 md:space-y-10">
+          {content.sections.map((s, i) => (
+            <section key={i}>
+              {s.heading && (
+                <h2 className="text-xl md:text-2xl font-black tracking-tight mb-3">
+                  {s.heading}
+                </h2>
+              )}
+              {Array.isArray(s.body) ? (
+                <ul className="space-y-2">
+                  {s.body.map((line, k) => (
+                    <li
+                      key={k}
+                      className="flex gap-3 text-muted-foreground leading-relaxed"
+                    >
+                      <span className="mt-2.5 h-1.5 w-1.5 rounded-full bg-orange-500 shrink-0" />
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-muted-foreground leading-relaxed text-[15px]">
+                  {s.body}
+                </p>
+              )}
+            </section>
+          ))}
+        </div>
+
+        {content.showFaq && (
+          <div className="mt-10 space-y-3">
+            {content.showFaq.map((f, i) => (
+              <Card
+                key={i}
+                className="p-5 md:p-6 border-border/60 hover:border-orange-500/40 transition-colors"
+              >
+                <h3 className="font-black tracking-tight text-base md:text-lg">
+                  {f.q}
+                </h3>
+                <p className="text-muted-foreground mt-1.5 text-sm md:text-[15px] leading-relaxed">
+                  {f.a}
+                </p>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {content.showContactForm && (
+          <div className="mt-12">
+            <ContactForm topic={content.title} />
+          </div>
+        )}
+
+        {/* Quick contact strip */}
+        <Card className="mt-12 p-6 md:p-8 bg-gradient-to-br from-orange-500/8 via-card to-card border-orange-500/30">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+            <a
+              href="mailto:hello@gymco.in"
+              className="flex items-start gap-3 group"
+            >
+              <div className="h-10 w-10 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center shrink-0">
+                <Mail className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+                  Email
+                </div>
+                <div className="font-bold group-hover:text-orange-600 transition-colors">
+                  hello@gymco.in
+                </div>
+              </div>
+            </a>
+            <a
+              href="tel:+918001234567"
+              className="flex items-start gap-3 group"
+            >
+              <div className="h-10 w-10 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center shrink-0">
+                <Phone className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+                  Phone
+                </div>
+                <div className="font-bold group-hover:text-orange-600 transition-colors">
+                  +91 80 0123 4567
+                </div>
+              </div>
+            </a>
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center shrink-0">
+                <MapPin className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+                  Office
+                </div>
+                <div className="font-bold">Indiranagar, Bangalore</div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+    </PublicLayout>
+  );
+}

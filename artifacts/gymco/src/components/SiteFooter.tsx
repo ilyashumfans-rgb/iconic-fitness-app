@@ -21,44 +21,36 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
     title: "Product",
     links: [
       { label: "Browse gyms", href: "/explore" },
-      { label: "Classes", href: "/classes" },
       { label: "Store", href: "/store" },
       { label: "Memberships", href: "/memberships" },
       { label: "GYMCO Wallet", href: "/wallet" },
-      { label: "Corporate plans", href: "#" },
+      { label: "Corporate plans", href: "/corporate" },
     ],
   },
   {
     title: "Cities",
-    links: [
-      { label: "Bangalore", href: "/explore?city=Bangalore" },
-      { label: "Mumbai", href: "/explore?city=Mumbai" },
-      { label: "Delhi NCR", href: "/explore?city=Delhi" },
-      { label: "Hyderabad", href: "/explore?city=Hyderabad" },
-      { label: "Pune", href: "/explore?city=Pune" },
-      { label: "Chennai", href: "/explore?city=Chennai" },
-    ],
+    links: [{ label: "Bangalore", href: "/explore?city=Bangalore" }],
   },
   {
     title: "Company",
     links: [
-      { label: "About us", href: "#" },
-      { label: "Press", href: "#" },
-      { label: "Careers", href: "#" },
-      { label: "Partner gyms", href: "#" },
-      { label: "Become a trainer", href: "#" },
-      { label: "Blog", href: "#" },
+      { label: "About us", href: "/about" },
+      { label: "Press", href: "/press" },
+      { label: "Careers", href: "/careers" },
+      { label: "Partner with us", href: "/partner-with-us" },
+      { label: "Become a trainer", href: "/become-a-trainer" },
+      { label: "Blog", href: "/blog" },
     ],
   },
   {
     title: "Support",
     links: [
-      { label: "Help center", href: "#" },
-      { label: "Contact us", href: "#" },
-      { label: "Cancellation policy", href: "#" },
-      { label: "Safety guidelines", href: "#" },
-      { label: "Refund policy", href: "#" },
-      { label: "FAQs", href: "#" },
+      { label: "Help center", href: "/help" },
+      { label: "Contact us", href: "/contact" },
+      { label: "Cancellation policy", href: "/cancellation" },
+      { label: "Safety guidelines", href: "/safety" },
+      { label: "Refund policy", href: "/refund" },
+      { label: "FAQs", href: "/faqs" },
     ],
   },
   {
@@ -233,17 +225,17 @@ export function SiteFooter() {
             <span className="text-xs text-muted-foreground">
               © {new Date().getFullYear()} GYMCO India Pvt. Ltd. ·
             </span>
-            <a href="#" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/privacy" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               Privacy
-            </a>
+            </Link>
             <span className="text-xs text-muted-foreground">·</span>
-            <a href="#" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/terms" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               Terms
-            </a>
+            </Link>
             <span className="text-xs text-muted-foreground">·</span>
-            <a href="#" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/cookies" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               Cookies
-            </a>
+            </Link>
             <span className="text-xs text-muted-foreground">· Made in Bangalore</span>
           </div>
           <div className="flex items-center gap-2">

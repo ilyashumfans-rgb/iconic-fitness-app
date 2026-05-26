@@ -125,7 +125,7 @@ const testimonials = [
   },
   {
     name: "Rohan Kapoor",
-    role: "Founder · Mumbai",
+    role: "Founder · Bangalore",
     quote:
       "The Elite plan pays for itself in week one. I train near my apartment, my office, and the airport lounge gym. One pass.",
     avatar:
@@ -133,7 +133,7 @@ const testimonials = [
   },
   {
     name: "Anjali Iyer",
-    role: "Marathon runner · Delhi",
+    role: "Marathon runner · Bangalore",
     quote:
       "The trainer marketplace is the secret weapon. Real coaches, real progress. My PB dropped 12 minutes this season.",
     avatar:
@@ -294,7 +294,7 @@ function Hero() {
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/85 dark:bg-white/10 backdrop-blur border border-primary/25 shadow-sm">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
             <span className="text-[10.5px] md:text-xs font-bold uppercase tracking-[0.18em] text-primary">
-              Live in 12 Indian cities
+              Now live in Bangalore
             </span>
           </span>
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/85 dark:bg-white/10 backdrop-blur border border-border shadow-sm">
@@ -1119,7 +1119,7 @@ function FeatureBlock() {
                   members training across India right now.
                 </h3>
                 <p className="text-background/70 text-sm leading-relaxed mt-2 max-w-md">
-                  From sunrise yoga in Mumbai to midnight MMA in Bangalore.
+                  From sunrise yoga in Indiranagar to midnight MMA in Koramangala.
                   Join a city that never stops moving.
                 </p>
               </div>

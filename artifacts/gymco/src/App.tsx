@@ -42,6 +42,7 @@ import VendorOrders from "@/pages/vendor/Orders";
 import VendorSettings from "@/pages/vendor/Settings";
 import Blog from "@/pages/Blog";
 import BlogDetail from "@/pages/BlogDetail";
+import InfoPage from "@/pages/InfoPage";
 import Store from "@/pages/Store";
 import StoreDetail from "@/pages/StoreDetail";
 import Cart from "@/pages/Cart";
@@ -210,6 +211,21 @@ function MemberShellRoutes() {
         <Route path="/store/:slug" component={StoreDetail} />
         <Route path="/cart" component={Cart} />
         <Route path="/checkout" component={Checkout} />
+        <Route path="/about" component={() => <InfoPage slug="about" />} />
+        <Route path="/press" component={() => <InfoPage slug="press" />} />
+        <Route path="/careers" component={() => <InfoPage slug="careers" />} />
+        <Route path="/partner-with-us" component={() => <InfoPage slug="partner-with-us" />} />
+        <Route path="/become-a-trainer" component={() => <InfoPage slug="become-a-trainer" />} />
+        <Route path="/corporate" component={() => <InfoPage slug="corporate" />} />
+        <Route path="/help" component={() => <InfoPage slug="help" />} />
+        <Route path="/contact" component={() => <InfoPage slug="contact" />} />
+        <Route path="/faqs" component={() => <InfoPage slug="faqs" />} />
+        <Route path="/cancellation" component={() => <InfoPage slug="cancellation" />} />
+        <Route path="/safety" component={() => <InfoPage slug="safety" />} />
+        <Route path="/refund" component={() => <InfoPage slug="refund" />} />
+        <Route path="/privacy" component={() => <InfoPage slug="privacy" />} />
+        <Route path="/terms" component={() => <InfoPage slug="terms" />} />
+        <Route path="/cookies" component={() => <InfoPage slug="cookies" />} />
         <Route component={NotFound} />
       </Switch>
     </Shell>
