@@ -18,6 +18,7 @@ import {
   Sparkles,
   Activity,
   Headset,
+  MapPin,
 } from "lucide-react";
 import { adminApi, type AdminUser } from "@/lib/adminApi";
 
@@ -81,6 +82,11 @@ const SECTIONS: Section[] = [
         label: "Amenities Catalog",
         href: "/admin/amenities",
         icon: <Sparkles className="h-4 w-4" />,
+      },
+      {
+        label: "Cities & Areas",
+        href: "/admin/locations",
+        icon: <MapPin className="h-4 w-4" />,
       },
       {
         label: "Workouts Catalog",

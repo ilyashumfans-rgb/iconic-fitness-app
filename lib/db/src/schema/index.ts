@@ -374,6 +374,27 @@ export const staffTable = pgTable("staff", {
     .defaultNow(),
 });
 
+export const citiesTable = pgTable("cities", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const areasTable = pgTable("areas", {
+  id: serial("id").primaryKey(),
+  cityId: integer("city_id")
+    .notNull()
+    .references(() => citiesTable.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const partnerDocumentsTable = pgTable("partner_documents", {
   id: serial("id").primaryKey(),
   partnerId: integer("partner_id")

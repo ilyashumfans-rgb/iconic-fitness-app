@@ -994,7 +994,9 @@ router.post(
       .values({
         name: String(b.name),
         tagline: String(b.tagline ?? ""),
-        billingPeriod: String(b.billingPeriod ?? "monthly"),
+        billingPeriod: ["monthly", "quarterly", "annual"].includes(String(b.billingPeriod))
+          ? String(b.billingPeriod)
+          : "monthly",
         priceInr: Number(b.priceInr),
         originalPriceInr: Number(b.originalPriceInr ?? b.priceInr),
         gymsIncluded: Number(b.gymsIncluded ?? 50),
@@ -1015,8 +1017,12 @@ router.patch(
     const id = Number(req.params.id);
     const b = (req.body ?? {}) as Record<string, unknown>;
     const patch: Record<string, unknown> = {};
-    for (const k of ["name", "tagline", "billingPeriod", "badge"]) {
+    for (const k of ["name", "tagline", "badge"]) {
       if (b[k] !== undefined) patch[k] = String(b[k]);
+    }
+    if (b.billingPeriod !== undefined) {
+      const bp = String(b.billingPeriod);
+      patch.billingPeriod = ["monthly", "quarterly", "annual"].includes(bp) ? bp : "monthly";
     }
     for (const k of [
       "priceInr",

@@ -54,7 +54,18 @@ function PlanForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field label="Name" v={f.name} on={(v) => setF({ ...f, name: v })} required />
         <Field label="Tagline" v={f.tagline} on={(v) => setF({ ...f, tagline: v })} />
-        <Field label="Billing Period" v={f.billingPeriod} on={(v) => setF({ ...f, billingPeriod: v })} />
+        <div>
+          <label className="block text-xs font-medium text-slate-400 mb-1">Billing Period</label>
+          <select
+            value={f.billingPeriod}
+            onChange={(e) => setF({ ...f, billingPeriod: e.target.value })}
+            className={inputCls}
+          >
+            <option value="monthly">Monthly</option>
+            <option value="quarterly">Quarterly (3 months)</option>
+            <option value="annual">Annual (yearly)</option>
+          </select>
+        </div>
         <Field label="Badge" v={f.badge} on={(v) => setF({ ...f, badge: v })} />
         <Field type="number" label="Price (₹)" v={f.priceInr} on={(v) => setF({ ...f, priceInr: v as any })} />
         <Field type="number" label="Original Price (₹)" v={f.originalPriceInr} on={(v) => setF({ ...f, originalPriceInr: v as any })} />

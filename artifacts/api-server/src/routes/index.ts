@@ -13,6 +13,7 @@ import adminRouter from "./admin";
 import partnerRouter from "./partner";
 import staffRouter from "./staff";
 import storeRouter from "./store";
+import locationsRouter from "./locations";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(adminRouter);
 router.use(partnerRouter);
 router.use(staffRouter);
 router.use(storeRouter);
+router.use(locationsRouter);
 
 export default router;
