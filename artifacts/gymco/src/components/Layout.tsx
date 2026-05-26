@@ -118,7 +118,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-h-screen pb-20 md:pb-0 relative">
+      <main className="flex-1 flex flex-col min-h-screen pb-28 md:pb-0 relative">
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between p-4 border-b border-border bg-background/70 backdrop-blur-xl sticky top-0 z-10">
           <BrandMark />
@@ -144,27 +144,72 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </main>
 
-      {/* Mobile Tab Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t border-border bg-background/85 backdrop-blur-xl flex justify-around p-2 z-50">
-        {navItems.map((item) => {
-          const isActive = location === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex flex-col items-center gap-1 px-3 py-2 rounded-xl min-w-16 transition-all",
-                isActive
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <item.icon className={cn("h-5 w-5", isActive && "drop-shadow-[0_0_8px_hsl(18_100%_55%/0.7)]")} />
-              <span className="text-[10px] font-semibold">{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+      {/* Mobile Tab Bar — premium floating dock with raised center action */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
+        {/* Soft fade so content doesn't crash into the dock */}
+        <div className="h-8 bg-gradient-to-t from-background to-transparent" />
+        <div className="px-4 pb-4 pt-1 pointer-events-auto">
+          <nav
+            className="relative mx-auto max-w-md rounded-[28px] bg-card/85 backdrop-blur-2xl border border-border/70 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.35)] flex items-end justify-between px-3 pt-2 pb-2.5"
+            style={{ paddingBottom: "max(0.625rem, env(safe-area-inset-bottom))" }}
+          >
+            {navItems.map((item) => {
+              const isActive = location === item.href;
+              const isCenter = item.href === "/checkin";
+
+              if (isCenter) {
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    aria-label={item.label}
+                    className="relative -mt-7 flex flex-col items-center"
+                  >
+                    <span
+                      className={cn(
+                        "h-14 w-14 rounded-full bg-gradient-brand flex items-center justify-center text-white shadow-[0_14px_30px_-6px_hsl(18_100%_55%/0.7)] ring-4 ring-background transition-transform",
+                        isActive ? "scale-105" : "active:scale-95 hover:scale-105",
+                      )}
+                    >
+                      <item.icon className="h-6 w-6" />
+                    </span>
+                    <span
+                      className={cn(
+                        "text-[10px] font-bold uppercase tracking-wider mt-1",
+                        isActive ? "text-primary" : "text-muted-foreground",
+                      )}
+                    >
+                      {item.label}
+                    </span>
+                  </Link>
+                );
+              }
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "relative flex flex-col items-center gap-1 px-3 py-2 rounded-2xl min-w-14 transition-all",
+                    isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {isActive && (
+                    <span className="absolute inset-x-3 top-1 h-1 rounded-full bg-gradient-brand shadow-[0_0_10px_hsl(18_100%_55%/0.8)]" />
+                  )}
+                  <item.icon
+                    className={cn(
+                      "h-5 w-5 transition-transform",
+                      isActive && "drop-shadow-[0_0_8px_hsl(18_100%_55%/0.7)] scale-110",
+                    )}
+                  />
+                  <span className="text-[10px] font-semibold">{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,13 +1,15 @@
-import { useGetDashboard, getGetDashboardQueryKey } from "@workspace/api-client-react";
+import { useGetDashboard, getGetDashboardQueryKey, useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
-import { Zap, Flame, Trophy, MapPin, ChevronRight, Clock, Droplets, Moon, Star } from "lucide-react";
+import { Zap, Flame, MapPin, ChevronRight, Clock, Droplets, Moon, Star } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { BlogTeaserSection } from "@/components/BlogTeaserSection";
+import { WowHeroSlider } from "@/components/WowHeroSlider";
 
 export default function Dashboard() {
   const { data: dashboard, isLoading } = useGetDashboard({ query: { queryKey: getGetDashboardQueryKey() } });
+  const { data: me } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
 
   if (isLoading) {
     return (
@@ -25,37 +27,15 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Premium Hero */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-3xl p-6 md:p-10 bg-gradient-brand text-white shadow-[0_20px_60px_-20px_hsl(18_100%_55%/0.55)]"
-      >
-        <div className="absolute -top-24 -right-16 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-        <div className="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-black/30 blur-3xl" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-          <div>
-            <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-white/70 mb-2">
-              Welcome back
-            </div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.05]">
-              {dashboard.greeting}
-            </h1>
-            <p className="text-white/85 mt-3 max-w-lg text-[15px] leading-relaxed">
-              {dashboard.aiTip}
-            </p>
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="text-right">
-              <div className="text-[11px] font-bold uppercase tracking-widest text-white/70">Fitness Score</div>
-              <div className="text-5xl font-black leading-none mt-1">{dashboard.fitnessScore}</div>
-            </div>
-            <div className="h-16 w-16 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center ring-1 ring-white/30">
-              <Trophy className="h-8 w-8" />
-            </div>
-          </div>
-        </div>
-      </motion.div>
+      {/* Premium Wow Slider */}
+      <WowHeroSlider
+        greeting={dashboard.greeting}
+        aiTip={dashboard.aiTip}
+        fitnessScore={dashboard.fitnessScore}
+        streakDays={dashboard.streakDays}
+        userName={me?.name}
+        nextBooking={dashboard.nextBooking ?? undefined}
+      />
 
       {/* Main Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
