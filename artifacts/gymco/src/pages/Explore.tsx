@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, MapPin, Star, ChevronRight, LayoutGrid, List, Clock } from "lucide-react";
 import { Link, useSearch } from "wouter";
 import { cn } from "@/lib/utils";
+import NearbyGyms from "@/components/NearbyGyms";
 
 export default function Explore() {
   const queryString = useSearch();
@@ -49,6 +50,12 @@ export default function Explore() {
           />
         </div>
       </div>
+
+      {/* Nearby Gyms — geolocation-aware quick discovery */}
+      <NearbyGyms
+        title="Gyms near you"
+        subtitle="Use your location or pick a city to see what's closest."
+      />
 
       {/* Categories */}
       <section>
