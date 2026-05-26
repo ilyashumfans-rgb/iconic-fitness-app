@@ -48,7 +48,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const signOut = useSignOut();
 
   const navItems = [
-    { href: "/dashboard", label: "Home", icon: Home },
+    { href: "/", label: "Home", icon: Home },
     { href: "/explore", label: "Explore", icon: MapPin },
     { href: "/checkin", label: "Check-in", icon: QrCode },
     { href: "/bookings", label: "Bookings", icon: Calendar },
