@@ -61,6 +61,14 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
       { label: "FAQs", href: "#" },
     ],
   },
+  {
+    title: "Sign in",
+    links: [
+      { label: "Admin Login", href: "/admin/login" },
+      { label: "Partner Login", href: "/partner/login" },
+      { label: "Vendor Login", href: "/vendor/login" },
+    ],
+  },
 ];
 
 const socials = [
@@ -123,7 +131,7 @@ export function SiteFooter() {
 
       {/* Main link grid */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-10">
           {/* Brand column */}
           <div className="col-span-2">
             <Link href="/" className="flex flex-col leading-none mb-5">
