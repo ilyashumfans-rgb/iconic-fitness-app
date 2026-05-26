@@ -258,7 +258,7 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         heading: "Phone",
-        body: "+91 80 0123 4567 · Mon–Sat, 9 AM – 9 PM IST",
+        body: "+91 99162 32827 · Mon–Sat, 9 AM – 9 PM IST",
       },
       {
         heading: "Office",
@@ -711,7 +711,7 @@ export default function InfoPage({ slug }: { slug: string }) {
               </div>
             </a>
             <a
-              href="tel:+918001234567"
+              href="tel:+919916232827"
               className="flex items-start gap-3 group"
             >
               <div className="h-10 w-10 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center shrink-0">
@@ -722,7 +722,7 @@ export default function InfoPage({ slug }: { slug: string }) {
                   Phone
                 </div>
                 <div className="font-bold group-hover:text-orange-600 transition-colors">
-                  +91 80 0123 4567
+                  +91 99162 32827
                 </div>
               </div>
             </a>

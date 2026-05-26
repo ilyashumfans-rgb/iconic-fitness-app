@@ -156,11 +156,11 @@ export function SiteFooter() {
                 hello@gymco.in
               </a>
               <a
-                href="tel:+918001234567"
+                href="tel:+919916232827"
                 className="flex items-center gap-2.5 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Phone className="h-4 w-4 text-primary shrink-0" />
-                +91 80 0123 4567
+                +91 99162 32827
               </a>
             </div>
 
