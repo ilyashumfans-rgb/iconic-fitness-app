@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { GymGalleryMosaic } from "@/components/GymGalleryMosaic";
+import { LeadEnquiryDialog } from "@/components/LeadEnquiryDialog";
 
 type AmenityRow = {
   id: number;
@@ -545,14 +546,22 @@ export default function GymDetail() {
                   </div>
                 </div>
               </div>
-              <Link href="/classes">
-                <Button
-                  variant="outline"
-                  className="w-full font-black uppercase tracking-wider border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                >
-                  Try for free
-                </Button>
-              </Link>
+              <LeadEnquiryDialog
+                kind="gym"
+                gymId={gym.id}
+                gymName={gym.name}
+                source="gym-detail-try-for-free"
+                title="Book your free class"
+                description={`Try a free class at ${gym.name}. Share your details and our team will call you back to confirm a time.`}
+                trigger={
+                  <Button
+                    variant="outline"
+                    className="w-full font-black uppercase tracking-wider border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                  >
+                    Try for free
+                  </Button>
+                }
+              />
             </CardContent>
           </Card>
 
