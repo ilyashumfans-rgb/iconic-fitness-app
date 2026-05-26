@@ -133,19 +133,6 @@ export default function AmenityCatalog() {
                 value={draft.icon}
                 onChange={(v) => setDraft({ ...draft, icon: v })}
               />
-              <Field
-                label="Category"
-                value={draft.category}
-                onChange={(v) => setDraft({ ...draft, category: v })}
-              />
-              <Field
-                label="Sort order"
-                type="number"
-                value={String(draft.sortOrder)}
-                onChange={(v) =>
-                  setDraft({ ...draft, sortOrder: Number(v) || 0 })
-                }
-              />
               <label className="flex items-center gap-2 text-sm text-slate-700">
                 <input
                   type="checkbox"
@@ -206,10 +193,6 @@ export default function AmenityCatalog() {
                   <th className="text-left px-4 py-2 font-semibold">Name</th>
                   <th className="text-left px-4 py-2 font-semibold">Slug</th>
                   <th className="text-left px-4 py-2 font-semibold">Icon</th>
-                  <th className="text-left px-4 py-2 font-semibold">
-                    Category
-                  </th>
-                  <th className="text-left px-4 py-2 font-semibold">Sort</th>
                   <th className="text-left px-4 py-2 font-semibold">Active</th>
                   <th className="px-4 py-2"></th>
                 </tr>
@@ -222,8 +205,6 @@ export default function AmenityCatalog() {
                     </td>
                     <td className="px-4 py-2 text-slate-500">{a.slug}</td>
                     <td className="px-4 py-2 text-slate-500">{a.icon}</td>
-                    <td className="px-4 py-2 text-slate-500">{a.category}</td>
-                    <td className="px-4 py-2 text-slate-500">{a.sortOrder}</td>
                     <td className="px-4 py-2">
                       <span
                         className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
