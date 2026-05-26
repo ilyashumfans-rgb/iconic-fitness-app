@@ -342,11 +342,27 @@ export default function AdminPartners() {
 
       <style>{`
         @media print {
-          body { background: white !important; }
+          @page { size: 1754px 2480px; margin: 0; }
+          html, body { background: white !important; width: 1754px; }
           body * { visibility: hidden !important; }
           .admin-qr-modal, .admin-qr-modal * { visibility: visible !important; }
-          .admin-qr-modal { position: absolute !important; inset: 0 !important; background: white !important; }
-          .admin-qr-sheet { box-shadow: none !important; max-width: none !important; }
+          .admin-qr-modal {
+            position: absolute !important;
+            inset: 0 !important;
+            background: white !important;
+            padding: 0 !important;
+            display: block !important;
+          }
+          .admin-qr-sheet {
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            width: 1754px !important;
+            max-width: 1754px !important;
+            min-height: 2480px !important;
+            max-height: none !important;
+            overflow: visible !important;
+            margin: 0 !important;
+          }
         }
       `}</style>
     </AdminLayout>

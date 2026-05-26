@@ -92,7 +92,7 @@ export default function PartnerDisplayQr() {
         </PartnerCard>
 
         <div className="lg:col-span-2">
-          <div className="rounded-3xl bg-white border border-orange-100 shadow-[0_8px_30px_-12px_rgba(15,23,42,0.08)] overflow-hidden print:border-0 print:shadow-none">
+          <div className="gym-qr-print-sheet rounded-3xl bg-white border border-orange-100 shadow-[0_8px_30px_-12px_rgba(15,23,42,0.08)] overflow-hidden print:border-0 print:shadow-none">
             {!gym ? (
               <div className="p-16 text-center text-slate-400 text-sm">
                 Select a gym to generate its check-in QR.
@@ -106,9 +106,19 @@ export default function PartnerDisplayQr() {
 
       <style>{`
         @media print {
-          body { background: white; }
+          @page { size: 1754px 2480px; margin: 0; }
+          html, body { background: white !important; width: 1754px; }
           aside, header, .print\\:hidden { display: none !important; }
-          main { padding: 0 !important; }
+          main { padding: 0 !important; overflow: visible !important; }
+          .gym-qr-print-sheet {
+            width: 1754px !important;
+            max-width: 1754px !important;
+            min-height: 2480px !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+          }
         }
       `}</style>
     </PartnerLayout>
