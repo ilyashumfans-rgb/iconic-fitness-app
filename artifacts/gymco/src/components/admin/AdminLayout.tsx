@@ -19,6 +19,7 @@ import {
   Activity,
   Headset,
   MapPin,
+  Inbox,
 } from "lucide-react";
 import { adminApi, type AdminUser } from "@/lib/adminApi";
 
@@ -132,6 +133,16 @@ const SECTIONS: Section[] = [
         label: "Staff Management",
         href: "/admin/staff",
         icon: <Headset className="h-4 w-4" />,
+      },
+    ],
+  },
+  {
+    title: "Leads & CRM",
+    items: [
+      {
+        label: "Leads (CRM)",
+        href: "/admin/leads",
+        icon: <Inbox className="h-4 w-4" />,
       },
     ],
   },

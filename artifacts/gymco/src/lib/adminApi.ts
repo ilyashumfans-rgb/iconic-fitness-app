@@ -194,6 +194,23 @@ export const adminApi = {
     remove: (id: number) =>
       request<{ ok: true }>(`/admin/workouts/${id}`, { method: "DELETE" }),
   },
+  leads: {
+    list: (status?: string) =>
+      request<any[]>(
+        `/admin/leads${status ? `?status=${encodeURIComponent(status)}` : ""}`,
+      ),
+    stats: () =>
+      request<{ total: number; byStatus: { status: string; count: number }[] }>(
+        "/admin/leads/stats",
+      ),
+    update: (id: number, body: Record<string, unknown>) =>
+      request<any>(`/admin/leads/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: number) =>
+      request<{ ok: true }>(`/admin/leads/${id}`, { method: "DELETE" }),
+  },
   userMemberships: {
     list: () => request<any[]>("/admin/user-memberships"),
     updateStatus: (id: number, status: string) =>

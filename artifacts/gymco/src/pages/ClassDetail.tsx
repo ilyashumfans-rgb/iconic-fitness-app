@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { MapPin, Clock, User, ChevronLeft, Zap, CheckCircle2 } from "lucide-react";
+import { MapPin, Clock, User, ChevronLeft, Zap, CheckCircle2, Sparkles } from "lucide-react";
+import { LeadEnquiryDialog } from "@/components/LeadEnquiryDialog";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -202,14 +203,32 @@ export default function ClassDetail() {
                 />
               </div>
 
+              <LeadEnquiryDialog
+                kind="class"
+                classId={cls.id}
+                gymId={cls.gymId}
+                className={cls.title}
+                gymName={cls.gymName}
+                source="class-detail"
+                trigger={
+                  <Button
+                    type="button"
+                    className="w-full h-14 text-lg font-black tracking-wide mb-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-[0_12px_30px_-12px_rgba(249,115,22,0.7)]"
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    BOOK FREE CLASS
+                  </Button>
+                }
+              />
+
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button 
-                    className="w-full h-14 text-lg font-black tracking-wide" 
+                    className="w-full h-12 text-base font-black tracking-wide" 
                     disabled={isFull || createBooking.isPending}
-                    variant={isFull ? "secondary" : "default"}
+                    variant={isFull ? "secondary" : "outline"}
                   >
-                    {isFull ? "CLASS FULL" : "BOOK SPOT"}
+                    {isFull ? "CLASS FULL" : "Book with membership"}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent className="bg-card border-border">

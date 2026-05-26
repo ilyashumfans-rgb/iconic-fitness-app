@@ -397,6 +397,31 @@ export const areasTable = pgTable("areas", {
     .defaultNow(),
 });
 
+export const leadsTable = pgTable("leads", {
+  id: serial("id").primaryKey(),
+  kind: text("kind").notNull().default("class"),
+  name: text("name").notNull(),
+  phone: text("phone").notNull(),
+  email: text("email").notNull().default(""),
+  city: text("city").notNull().default(""),
+  classId: integer("class_id"),
+  gymId: integer("gym_id"),
+  className: text("class_name").notNull().default(""),
+  gymName: text("gym_name").notNull().default(""),
+  preferredDate: text("preferred_date").notNull().default(""),
+  message: text("message").notNull().default(""),
+  source: text("source").notNull().default("web"),
+  status: text("status").notNull().default("new"),
+  assignedTo: text("assigned_to").notNull().default(""),
+  notes: text("notes").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const partnerDocumentsTable = pgTable("partner_documents", {
   id: serial("id").primaryKey(),
   partnerId: integer("partner_id")
