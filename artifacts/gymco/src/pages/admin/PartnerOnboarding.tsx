@@ -44,15 +44,32 @@ function AmenityIcon({
 
 export default function AdminPartnerOnboarding() {
   const [, navigate] = useLocation();
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    city: "",
-    password: "",
-    notes: "",
-    kind: "gym" as "gym" | "vendor" | "both",
-  });
+  const initialForm = useMemo(() => {
+    const params =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search)
+        : new URLSearchParams();
+    const rawKind = params.get("kind");
+    const kind: "gym" | "vendor" | "both" =
+      rawKind === "vendor" || rawKind === "both" ? rawKind : "gym";
+    return {
+      name: params.get("name") ?? "",
+      email: "",
+      phone: params.get("phone") ?? "",
+      city: params.get("city") ?? "",
+      password: "",
+      notes: params.get("notes") ?? "",
+      kind,
+    };
+  }, []);
+  const duplicatedFromName = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    const params = new URLSearchParams(window.location.search);
+    if (!params.get("duplicateOf")) return null;
+    const n = params.get("name") ?? "";
+    return n.replace(/\s*\(copy\)\s*$/, "") || null;
+  }, []);
+  const [form, setForm] = useState(initialForm);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
@@ -123,10 +140,20 @@ export default function AdminPartnerOnboarding() {
   return (
     <AdminLayout title="Partner Onboarding">
       <AdminCard className="p-6 max-w-3xl">
-        <p className="text-sm text-slate-400 mb-6">
+        <p className="text-sm text-slate-400 mb-4">
           Create a new partner gym account. They'll be able to log in to a
           partner dashboard with the credentials below.
         </p>
+        {duplicatedFromName && (
+          <div className="mb-6 rounded-xl border border-orange-500/40 bg-orange-500/10 px-4 py-3 text-sm text-orange-200">
+            Duplicated from{" "}
+            <span className="font-semibold text-white">
+              {duplicatedFromName}
+            </span>
+            . Enter a new email and password — everything else is pre-filled
+            and editable.
+          </div>
+        )}
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>

@@ -13,6 +13,7 @@ import {
   Download,
   Pencil,
   Building2,
+  Copy,
 } from "lucide-react";
 import {
   GymQrPoster,
@@ -437,6 +438,23 @@ export default function AdminPartners() {
                     className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-orange-500/15 text-orange-700 border border-orange-500/30 hover:bg-orange-500/25 mr-1"
                   >
                     <Building2 className="h-3.5 w-3.5" /> Add branch
+                  </button>
+                  <button
+                    onClick={() => {
+                      const qs = new URLSearchParams({
+                        duplicateOf: String(p.id),
+                        name: `${p.name} (copy)`,
+                        phone: p.phone ?? "",
+                        city: p.city ?? "",
+                        notes: p.notes ?? "",
+                        kind: p.kind ?? "gym",
+                      }).toString();
+                      navigate(`/admin/partner-onboarding?${qs}`);
+                    }}
+                    title="Onboard a new partner pre-filled with this partner's details (use a different email)"
+                    className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 mr-1"
+                  >
+                    <Copy className="h-3.5 w-3.5" /> Duplicate
                   </button>
                   <button
                     onClick={() => openQrFor(p)}
