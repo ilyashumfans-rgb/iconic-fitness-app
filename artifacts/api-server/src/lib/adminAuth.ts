@@ -58,3 +58,29 @@ export function requireAdmin(
   }
   next();
 }
+
+// Loads the current admin row and only proceeds if their role is "superadmin".
+// Use AFTER `requireAdmin`. Avoids relying on session-only role values that
+// could go stale after a role change.
+export function requireSuperAdmin(
+  loadRole: (adminId: number) => Promise<string | undefined>,
+): RequestHandler {
+  return async (req, res, next) => {
+    const id = req.session.adminId;
+    if (!id) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+    try {
+      const role = await loadRole(id);
+      if (role !== "superadmin") {
+        res.status(403).json({ error: "Superadmin access required" });
+        return;
+      }
+      next();
+    } catch (err) {
+      req.log?.error({ err }, "requireSuperAdmin role lookup failed");
+      res.status(500).json({ error: "Role check failed" });
+    }
+  };
+}

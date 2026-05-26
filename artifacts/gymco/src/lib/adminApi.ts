@@ -233,6 +233,46 @@ export const adminApi = {
     remove: (id: number) =>
       request<{ ok: true }>(`/admin/blogs/${id}`, { method: "DELETE" }),
   },
+  admins: {
+    list: () =>
+      request<
+        {
+          id: number;
+          email: string;
+          name: string;
+          role: string;
+          createdAt: string;
+        }[]
+      >("/admin/admins"),
+    create: (body: {
+      name: string;
+      email: string;
+      password: string;
+      role: "admin" | "superadmin";
+    }) =>
+      request<{
+        id: number;
+        email: string;
+        name: string;
+        role: string;
+        createdAt: string;
+      }>("/admin/admins", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    updateRole: (id: number, role: "admin" | "superadmin") =>
+      request<{ id: number; role: string }>(`/admin/admins/${id}/role`, {
+        method: "PATCH",
+        body: JSON.stringify({ role }),
+      }),
+    resetPassword: (id: number, password: string) =>
+      request<{ ok: true }>(`/admin/admins/${id}/reset-password`, {
+        method: "POST",
+        body: JSON.stringify({ password }),
+      }),
+    remove: (id: number) =>
+      request<{ ok: true }>(`/admin/admins/${id}`, { method: "DELETE" }),
+  },
   userMemberships: {
     list: () => request<any[]>("/admin/user-memberships"),
     updateStatus: (id: number, status: string) =>

@@ -23,8 +23,19 @@ import {
 import {
   hashPassword,
   requireAdmin,
+  requireSuperAdmin,
   verifyPassword,
 } from "../lib/adminAuth";
+
+const loadAdminRole = async (id: number): Promise<string | undefined> => {
+  const [row] = await db
+    .select({ role: adminsTable.role })
+    .from(adminsTable)
+    .where(eq(adminsTable.id, id))
+    .limit(1);
+  return row?.role;
+};
+const superAdminGuard = requireSuperAdmin(loadAdminRole);
 import { getAuth, clerkClient } from "@clerk/express";
 
 // Hard-coded admin allowlist for Google sign-in, plus an optional
@@ -182,6 +193,214 @@ router.get("/admin/me", async (req: Request, res: Response): Promise<void> => {
     role: admin.role,
   });
 });
+
+// ───────────────────────────── Admin Users ─────────────────────────────
+
+const ADMIN_ROLES = ["admin", "superadmin"] as const;
+type AdminRole = (typeof ADMIN_ROLES)[number];
+
+router.get(
+  "/admin/admins",
+  requireAdmin,
+  async (_req: Request, res: Response): Promise<void> => {
+    const rows = await db
+      .select({
+        id: adminsTable.id,
+        email: adminsTable.email,
+        name: adminsTable.name,
+        role: adminsTable.role,
+        createdAt: adminsTable.createdAt,
+      })
+      .from(adminsTable)
+      .orderBy(asc(adminsTable.id));
+    res.json(rows);
+  },
+);
+
+router.post(
+  "/admin/admins",
+  requireAdmin,
+  superAdminGuard,
+  async (req: Request, res: Response): Promise<void> => {
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const email = String(b.email ?? "").toLowerCase().trim();
+    const password = String(b.password ?? "");
+    const name = String(b.name ?? "").trim();
+    if (b.role !== undefined && !ADMIN_ROLES.includes(b.role as AdminRole)) {
+      res.status(400).json({ error: "Invalid role" });
+      return;
+    }
+    const role = (b.role as AdminRole) ?? "admin";
+    if (!email || !password || !name) {
+      res.status(400).json({ error: "name, email, password are required" });
+      return;
+    }
+    if (password.length < 6) {
+      res.status(400).json({ error: "Password must be at least 6 characters" });
+      return;
+    }
+    const [existing] = await db
+      .select()
+      .from(adminsTable)
+      .where(eq(adminsTable.email, email))
+      .limit(1);
+    if (existing) {
+      res.status(409).json({ error: "An admin with this email already exists" });
+      return;
+    }
+    const passwordHash = await hashPassword(password);
+    const [created] = await db
+      .insert(adminsTable)
+      .values({ email, name, role, passwordHash })
+      .returning({
+        id: adminsTable.id,
+        email: adminsTable.email,
+        name: adminsTable.name,
+        role: adminsTable.role,
+        createdAt: adminsTable.createdAt,
+      });
+    res.status(201).json(created);
+  },
+);
+
+router.patch(
+  "/admin/admins/:id/role",
+  requireAdmin,
+  superAdminGuard,
+  async (req: Request, res: Response): Promise<void> => {
+    const meId = req.session.adminId!;
+    const id = Number(req.params.id);
+    const b = (req.body ?? {}) as { role?: string };
+    if (!ADMIN_ROLES.includes(b.role as AdminRole)) {
+      res.status(400).json({ error: "Invalid role" });
+      return;
+    }
+    const role = b.role as AdminRole;
+    try {
+      const updated = await db.transaction(async (tx) => {
+        const [target] = await tx
+          .select()
+          .from(adminsTable)
+          .where(eq(adminsTable.id, id))
+          .limit(1);
+        if (!target) return null;
+        // Block demoting the last remaining superadmin (whether self or other).
+        if (target.role === "superadmin" && role !== "superadmin") {
+          const [{ c }] = await tx
+            .select({ c: sql<number>`count(*)::int` })
+            .from(adminsTable)
+            .where(eq(adminsTable.role, "superadmin"));
+          if ((c ?? 0) <= 1) {
+            throw new Error("LAST_SUPERADMIN");
+          }
+        }
+        // Extra safety: don't let an admin demote themselves to a lower role
+        // and lock themselves out of this page — already covered by the above,
+        // but explicit for self-demote when other supers exist is fine.
+        if (id === meId && role !== "superadmin") {
+          // allowed only if more than one superadmin exists (checked above)
+        }
+        const [row] = await tx
+          .update(adminsTable)
+          .set({ role })
+          .where(eq(adminsTable.id, id))
+          .returning({
+            id: adminsTable.id,
+            email: adminsTable.email,
+            name: adminsTable.name,
+            role: adminsTable.role,
+          });
+        return row;
+      });
+      if (!updated) {
+        res.status(404).json({ error: "Admin not found" });
+        return;
+      }
+      res.json(updated);
+    } catch (err) {
+      if (err instanceof Error && err.message === "LAST_SUPERADMIN") {
+        res
+          .status(400)
+          .json({ error: "Cannot demote the last remaining superadmin" });
+        return;
+      }
+      throw err;
+    }
+  },
+);
+
+router.post(
+  "/admin/admins/:id/reset-password",
+  requireAdmin,
+  superAdminGuard,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const password = String((req.body ?? {}).password ?? "");
+    if (password.length < 6) {
+      res.status(400).json({ error: "Password must be at least 6 characters" });
+      return;
+    }
+    const passwordHash = await hashPassword(password);
+    const [updated] = await db
+      .update(adminsTable)
+      .set({ passwordHash })
+      .where(eq(adminsTable.id, id))
+      .returning({ id: adminsTable.id });
+    if (!updated) {
+      res.status(404).json({ error: "Admin not found" });
+      return;
+    }
+    res.json({ ok: true });
+  },
+);
+
+router.delete(
+  "/admin/admins/:id",
+  requireAdmin,
+  superAdminGuard,
+  async (req: Request, res: Response): Promise<void> => {
+    const meId = req.session.adminId!;
+    const id = Number(req.params.id);
+    if (id === meId) {
+      res.status(400).json({ error: "You cannot delete your own account" });
+      return;
+    }
+    try {
+      const result = await db.transaction(async (tx) => {
+        const [target] = await tx
+          .select()
+          .from(adminsTable)
+          .where(eq(adminsTable.id, id))
+          .limit(1);
+        if (!target) return { notFound: true } as const;
+        if (target.role === "superadmin") {
+          const [{ c }] = await tx
+            .select({ c: sql<number>`count(*)::int` })
+            .from(adminsTable)
+            .where(eq(adminsTable.role, "superadmin"));
+          if ((c ?? 0) <= 1) {
+            throw new Error("LAST_SUPERADMIN");
+          }
+        }
+        await tx.delete(adminsTable).where(eq(adminsTable.id, id));
+        return { ok: true } as const;
+      });
+      if ("notFound" in result) {
+        res.status(404).json({ error: "Admin not found" });
+        return;
+      }
+      res.json({ ok: true });
+    } catch (err) {
+      if (err instanceof Error && err.message === "LAST_SUPERADMIN") {
+        res
+          .status(400)
+          .json({ error: "Cannot delete the last remaining superadmin" });
+        return;
+      }
+      throw err;
+    }
+  },
+);
 
 // ───────────────────────────── Stats ─────────────────────────────
 

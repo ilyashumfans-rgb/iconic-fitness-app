@@ -128,8 +128,13 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    title: "Staff Management",
+    title: "Admin Team",
     items: [
+      {
+        label: "Admin Users",
+        href: "/admin/admins",
+        icon: <ShieldCheck className="h-4 w-4" />,
+      },
       {
         label: "Staff Management",
         href: "/admin/staff",
