@@ -16,7 +16,6 @@ import {
   Clock,
   Sparkles,
   ListChecks,
-  IndianRupee,
   ExternalLink,
   CheckCircle2,
   Navigation,
@@ -170,16 +169,7 @@ export default function PartnerGyms() {
                   ))}
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-2 text-[11px]">
-                  <div className="rounded-lg bg-slate-50 border border-slate-100 px-2.5 py-1.5">
-                    <div className="text-slate-400 uppercase tracking-wide font-bold text-[9px]">
-                      Starts at
-                    </div>
-                    <div className="flex items-center text-slate-900 font-bold">
-                      <IndianRupee className="h-3 w-3" />
-                      {g.priceFrom}
-                    </div>
-                  </div>
+                <div className="mt-4 text-[11px]">
                   <div className="rounded-lg bg-slate-50 border border-slate-100 px-2.5 py-1.5">
                     <div className="text-slate-400 uppercase tracking-wide font-bold text-[9px]">
                       Hours
