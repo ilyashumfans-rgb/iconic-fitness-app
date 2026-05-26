@@ -68,17 +68,43 @@ export default function PartnerScanner() {
       setResult({ kind: "err", message: "Select a gym first." });
       return;
     }
+    if (
+      typeof navigator === "undefined" ||
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia
+    ) {
+      setResult({
+        kind: "err",
+        message:
+          "Camera is not available in this browser. Open the site over HTTPS or use the manual token field below.",
+      });
+      return;
+    }
     if (scannerRef.current) {
       try { await scannerRef.current.stop(); } catch {}
       scannerRef.current.clear();
       scannerRef.current = null;
     }
+    // Expand the reader container BEFORE starting the camera, otherwise
+    // html5-qrcode measures a 0-height div and the video can fail to attach.
+    setScanning(true);
+    // Let React flush the layout change before we hand the element to html5-qrcode.
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
     const inst = new Html5Qrcode("partner-qr-reader");
     scannerRef.current = inst;
     try {
       await inst.start(
         { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 260, height: 260 } },
+        {
+          fps: 10,
+          // Adapt qrbox to the available viewfinder size so it never exceeds
+          // the actual video stream (which crashes html5-qrcode on small cameras).
+          qrbox: (vw: number, vh: number) => {
+            const min = Math.min(vw, vh);
+            const size = Math.max(150, Math.floor(min * 0.7));
+            return { width: size, height: size };
+          },
+        },
         (decoded) => {
           const now = Date.now();
           if (decoded === lastTokenRef.current && now - lastTokenAtRef.current < 4000) return;
@@ -88,15 +114,22 @@ export default function PartnerScanner() {
         },
         () => {},
       );
-      setScanning(true);
     } catch (e: unknown) {
-      setResult({
-        kind: "err",
-        message:
-          e instanceof Error
-            ? `Camera error: ${e.message}`
-            : "Could not start camera. You can paste the QR token below instead.",
-      });
+      scannerRef.current = null;
+      setScanning(false);
+      const raw = e instanceof Error ? e.message : String(e);
+      let friendly = `Camera error: ${raw}`;
+      if (/permission|denied|NotAllowed/i.test(raw)) {
+        friendly =
+          "Camera permission was blocked. Allow camera access in your browser settings and try again, or paste the token below.";
+      } else if (/NotFound|no camera/i.test(raw)) {
+        friendly =
+          "No camera was found on this device. You can paste the QR token below instead.";
+      } else if (/secure|https/i.test(raw)) {
+        friendly =
+          "Camera requires a secure (HTTPS) connection. Open the live site, or paste the token below.";
+      }
+      setResult({ kind: "err", message: friendly });
     }
   }
 
@@ -144,7 +177,7 @@ export default function PartnerScanner() {
             <div
               id="partner-qr-reader"
               className="w-full rounded-xl overflow-hidden bg-black border border-slate-800"
-              style={{ minHeight: scanning ? 280 : 0 }}
+              style={{ minHeight: scanning ? 280 : 0, height: scanning ? "auto" : 0 }}
             />
 
             <div className="flex gap-2">

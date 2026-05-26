@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ClerkProvider, Show } from "@clerk/react";
@@ -348,6 +349,16 @@ function AppShell() {
   return <MemberShellRoutes />;
 }
 
+function ScrollToTop() {
+  const [location] = useLocation();
+  useEffect(() => {
+    // Skip on in-page anchors (no real route change)
+    if (location.includes("#")) return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [location]);
+  return null;
+}
+
 function ClerkRouterBridge({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   // Partner portal is fully isolated from Clerk. Admin portal optionally uses
@@ -384,6 +395,7 @@ function App() {
       <ThemeProvider>
         <TooltipProvider>
           <WouterRouter base={basePath}>
+            <ScrollToTop />
             <ClerkRouterBridge>
               <AppShell />
             </ClerkRouterBridge>
