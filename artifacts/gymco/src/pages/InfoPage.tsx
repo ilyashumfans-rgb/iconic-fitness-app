@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { PublicLayout } from "@/components/PublicLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -607,24 +606,22 @@ export default function InfoPage({ slug }: { slug: string }) {
 
   if (!content) {
     return (
-      <PublicLayout>
-        <div className="py-20 text-center">
-          <h1 className="text-3xl font-black">Page not found</h1>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1 mt-4 text-orange-600 font-bold"
-          >
-            Back home <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </PublicLayout>
+      <div className="py-20 text-center">
+        <h1 className="text-3xl font-black">Page not found</h1>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1 mt-4 text-orange-600 font-bold"
+        >
+          Back home <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
     );
   }
 
   const Icon = content.icon;
 
   return (
-    <PublicLayout>
+    <>
       <div className="max-w-4xl mx-auto py-6 md:py-10">
         <div className="mb-10 md:mb-14">
           <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/30 text-[10.5px] font-black tracking-[0.22em] text-orange-600 uppercase mb-5">
@@ -740,6 +737,6 @@ export default function InfoPage({ slug }: { slug: string }) {
           </div>
         </Card>
       </div>
-    </PublicLayout>
+    </>
   );
 }
