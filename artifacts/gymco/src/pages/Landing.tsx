@@ -253,7 +253,7 @@ function Hero() {
   };
 
   return (
-    <section className="relative pt-28 md:pt-36 pb-20 md:pb-28 overflow-hidden">
+    <section className="relative pt-24 md:pt-36 pb-16 md:pb-28 overflow-hidden">
       {/* Video background */}
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
         <video
@@ -278,29 +278,43 @@ function Hero() {
         />
       </div>
 
-      {/* Clean hero — no decorative bloom/light effects. Just a soft bottom fade into the page. */}
-      <div className="pointer-events-none absolute inset-0 z-0">
+      {/* Premium mobile backdrop — subtle peach/orange wash behind headline (desktop unchanged) */}
+      <div className="pointer-events-none absolute inset-0 z-0 md:hidden">
+        <div className="absolute -top-24 left-1/2 -translate-x-1/2 h-[480px] w-[480px] rounded-full bg-[radial-gradient(closest-side,hsl(18_100%_60%/0.18),transparent_70%)] dark:bg-[radial-gradient(closest-side,hsl(18_100%_60%/0.25),transparent_70%)]" />
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-background" />
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 md:px-8 relative z-10 w-full text-center flex flex-col items-center">
+      {/* Clean hero — no decorative bloom/light effects. Just a soft bottom fade into the page. */}
+      <div className="pointer-events-none absolute inset-0 z-0 hidden md:block">
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-background" />
+      </div>
+
+      <div className="max-w-5xl mx-auto px-5 md:px-8 relative z-10 w-full text-center flex flex-col items-center">
+        {/* Premium stacked pills on mobile, single pill on desktop */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/70 backdrop-blur border border-primary/20 mb-8 shadow-sm"
+          className="mb-7 md:mb-8 flex flex-wrap items-center justify-center gap-2"
         >
-          <Sparkles className="h-3.5 w-3.5 text-primary" />
-          <span className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
-            Now live in 12 Indian cities
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/85 dark:bg-white/10 backdrop-blur border border-primary/25 shadow-sm">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <span className="text-[10.5px] md:text-xs font-bold uppercase tracking-[0.18em] text-primary">
+              Live in 12 Indian cities
+            </span>
           </span>
-          <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
-          <span className="text-xs font-bold uppercase tracking-[0.18em] text-foreground/70">
-            124 live classes now
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/85 dark:bg-white/10 backdrop-blur border border-border shadow-sm">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-75" />
+              <span className="relative h-2 w-2 rounded-full bg-emerald-500" />
+            </span>
+            <span className="text-[10.5px] md:text-xs font-bold uppercase tracking-[0.18em] text-foreground/80">
+              124 classes now
+            </span>
           </span>
         </motion.div>
 
-        <h1 className="text-5xl sm:text-6xl md:text-7xl xl:text-[6rem] font-black tracking-[-0.04em] leading-[0.95] uppercase text-foreground">
+        <h1 className="text-[2.6rem] leading-[1] sm:text-6xl md:text-7xl xl:text-[6rem] font-black tracking-[-0.04em] md:leading-[0.95] uppercase text-foreground">
           <motion.span
             initial={{ opacity: 0, y: 30, filter: "blur(12px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
@@ -319,7 +333,7 @@ function Hero() {
           </motion.span>
         </h1>
 
-        <p className="mt-7 text-lg md:text-xl text-muted-foreground max-w-2xl leading-relaxed">
+        <p className="mt-6 md:mt-7 text-base md:text-xl text-muted-foreground max-w-2xl leading-relaxed px-1">
           Access India's best gyms and studios on a single pass. Book any class,
           walk in with a QR — from sunrise yoga to midnight MMA.
         </p>
@@ -330,39 +344,39 @@ function Hero() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25, duration: 0.6 }}
-          className="mt-10 w-full max-w-3xl"
+          className="mt-8 md:mt-10 w-full max-w-3xl"
         >
-          <div className="rounded-2xl bg-card/90 backdrop-blur-xl border border-border p-2 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.25)] flex flex-col md:flex-row gap-2">
-            <div className="flex-1 flex items-center gap-3 px-4 py-2 bg-secondary rounded-xl text-left">
+          <div className="rounded-2xl md:rounded-2xl bg-card/95 backdrop-blur-xl border border-border/80 p-2 shadow-[0_20px_60px_-20px_hsl(18_100%_55%/0.25)] md:shadow-[0_30px_80px_-30px_rgba(0,0,0,0.25)] flex flex-col md:flex-row gap-2">
+            <div className="flex-1 flex items-center gap-3 px-4 py-1.5 bg-secondary rounded-xl text-left">
               <Search className="h-5 w-5 text-primary shrink-0" />
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search gym or activity..."
-                className="border-0 bg-transparent h-10 text-base focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+                className="border-0 bg-transparent h-11 text-base focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
               />
             </div>
-            <div className="flex-1 flex items-center gap-3 px-4 py-2 bg-secondary rounded-xl md:max-w-[240px] text-left">
+            <div className="flex-1 flex items-center gap-3 px-4 py-1.5 bg-secondary rounded-xl md:max-w-[240px] text-left">
               <MapPin className="h-5 w-5 text-primary shrink-0" />
               <Input
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 placeholder="City or location..."
-                className="border-0 bg-transparent h-10 text-base focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+                className="border-0 bg-transparent h-11 text-base focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
               />
             </div>
             <Button
               type="submit"
               size="lg"
-              className="bg-gradient-brand text-white border-none h-14 px-8 text-base font-black tracking-wide shadow-[0_10px_30px_-10px_hsl(18_100%_55%/0.8)] hover:opacity-95 rounded-xl"
+              className="bg-gradient-brand text-white border-none h-14 md:h-14 px-8 text-base font-black tracking-wide shadow-[0_10px_30px_-10px_hsl(18_100%_55%/0.8)] hover:opacity-95 rounded-xl"
             >
               <Search className="h-5 w-5 mr-2" /> Search
             </Button>
           </div>
 
-          <div className="mt-4 flex items-center justify-center gap-2 flex-wrap">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground mr-1">
-              Popular:
+          <div className="mt-5 flex items-center justify-center gap-1.5 md:gap-2 flex-wrap">
+            <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground mr-1 w-full md:w-auto md:mr-1">
+              Popular cities
             </span>
             {popularCities.map((c) => (
               <button
@@ -372,7 +386,7 @@ function Hero() {
                   setCity(c);
                   navigate(`/explore?city=${encodeURIComponent(c)}`);
                 }}
-                className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white/70 backdrop-blur border border-border text-foreground/80 hover:border-primary/40 hover:text-primary transition-colors"
+                className="text-xs font-semibold px-3.5 py-2 md:py-1.5 rounded-full bg-white/85 dark:bg-white/10 backdrop-blur border border-border text-foreground/80 hover:border-primary/40 hover:text-primary active:scale-95 transition"
               >
                 {c}
               </button>
@@ -380,8 +394,8 @@ function Hero() {
           </div>
         </motion.form>
 
-        <div className="mt-9 flex flex-col sm:flex-row gap-3 justify-center">
-          <Link href="/memberships">
+        <div className="mt-8 md:mt-9 w-full flex flex-col sm:flex-row gap-3 justify-center">
+          <Link href="/memberships" className="w-full sm:w-auto">
             <Button
               size="lg"
               className="bg-gradient-brand text-white border-none h-14 px-8 text-base font-black tracking-wide shadow-[0_16px_50px_-12px_hsl(18_100%_55%/0.6)] hover:opacity-95 w-full sm:w-auto"
@@ -389,11 +403,11 @@ function Hero() {
               Get GYMCO Pass <ArrowRight className="h-5 w-5 ml-2" />
             </Button>
           </Link>
-          <Link href="/explore">
+          <Link href="/explore" className="w-full sm:w-auto">
             <Button
               size="lg"
               variant="outline"
-              className="h-14 px-8 text-base font-bold w-full sm:w-auto bg-white/70 backdrop-blur"
+              className="h-14 px-8 text-base font-bold w-full sm:w-auto bg-white/80 dark:bg-white/5 backdrop-blur border-border/80"
             >
               Browse gyms
             </Button>
@@ -435,14 +449,14 @@ function Hero() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.7 }}
-          className="mt-16 md:mt-20 w-full grid grid-cols-2 md:grid-cols-4 gap-px rounded-2xl overflow-hidden bg-border border border-border shadow-[0_30px_80px_-40px_rgba(0,0,0,0.2)]"
+          className="mt-12 md:mt-20 w-full grid grid-cols-2 md:grid-cols-4 gap-px rounded-2xl overflow-hidden bg-border border border-border shadow-[0_20px_60px_-30px_hsl(18_100%_55%/0.4)] md:shadow-[0_30px_80px_-40px_rgba(0,0,0,0.2)]"
         >
           {stats.map((s) => (
-            <div key={s.label} className="bg-card/95 backdrop-blur p-6 md:p-8 text-left">
-              <div className="text-3xl md:text-4xl font-black text-gradient-brand tabular-nums">
+            <div key={s.label} className="bg-card/95 backdrop-blur p-5 md:p-8 text-left">
+              <div className="text-2xl md:text-4xl font-black text-gradient-brand tabular-nums">
                 <CountUp value={s.value} />
               </div>
-              <div className="text-xs md:text-sm font-bold uppercase tracking-wider text-muted-foreground mt-1">
+              <div className="text-[10px] md:text-sm font-bold uppercase tracking-[0.18em] text-muted-foreground mt-1.5">
                 {s.label}
               </div>
             </div>
@@ -450,8 +464,8 @@ function Hero() {
         </motion.div>
       </div>
 
-      {/* Video controls — top-right floating pill (visible inside hero viewport) */}
-      <div className="absolute top-24 right-4 md:top-28 md:right-8 z-20 flex items-center gap-2">
+      {/* Video controls — bottom-right on mobile (out of the way of the badge), top-right on desktop */}
+      <div className="absolute bottom-6 right-4 md:bottom-auto md:top-28 md:right-8 z-20 flex items-center gap-2">
         <button
           type="button"
           onClick={() => setVideoOn((v) => !v)}
