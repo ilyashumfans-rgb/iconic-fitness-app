@@ -7,6 +7,7 @@ import router from "./routes";
 import { logger } from "./lib/logger";
 import { sessionMiddleware } from "./lib/adminAuth";
 import { seedDefaultAdmin } from "./lib/seedAdmin";
+import { seedFromSnapshot } from "./lib/seedFromSnapshot";
 import {
   CLERK_PROXY_PATH,
   clerkProxyMiddleware,
@@ -53,5 +54,6 @@ app.use(
 app.use("/api", router);
 
 void seedDefaultAdmin();
+void seedFromSnapshot();
 
 export default app;
