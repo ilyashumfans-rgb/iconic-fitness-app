@@ -165,6 +165,23 @@ const PUBLIC_ROUTES = [
   "/cart",
   "/checkout",
   "/blog",
+  // Footer / info pages — must use the public top-nav shell, never the
+  // signed-in member sidebar (these are reachable by signed-out visitors too).
+  "/about",
+  "/press",
+  "/careers",
+  "/partner-with-us",
+  "/become-a-trainer",
+  "/corporate",
+  "/help",
+  "/contact",
+  "/faqs",
+  "/cancellation",
+  "/safety",
+  "/refund",
+  "/privacy",
+  "/terms",
+  "/cookies",
 ];
 
 function isPublicPath(path: string) {
