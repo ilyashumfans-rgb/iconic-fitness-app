@@ -11,6 +11,7 @@ import {
   Printer,
   QrCode,
   Download,
+  Pencil,
 } from "lucide-react";
 import {
   GymQrPoster,
@@ -29,6 +30,45 @@ export default function AdminPartners() {
   const [partnerGyms, setPartnerGyms] = useState<GymQrPosterGym[]>([]);
   const [qrGymId, setQrGymId] = useState<number | "">("");
   const [qrLoading, setQrLoading] = useState(false);
+  const [editing, setEditing] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    phone: "",
+    city: "",
+  });
+  const [editBusy, setEditBusy] = useState(false);
+
+  const openEdit = (p: any) => {
+    setEditing(p);
+    setEditForm({
+      name: p.name ?? "",
+      phone: p.phone ?? "",
+      city: p.city ?? "",
+    });
+    setMsg(null);
+    setErr(null);
+  };
+
+  const submitEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editing) return;
+    setEditBusy(true);
+    setErr(null);
+    try {
+      await adminApi.partners.update(editing.id, {
+        name: editForm.name.trim(),
+        phone: editForm.phone.trim(),
+        city: editForm.city.trim(),
+      });
+      setMsg(`Updated ${editForm.name}.`);
+      setEditing(null);
+      load();
+    } catch (e: any) {
+      setErr(e?.message ?? String(e));
+    } finally {
+      setEditBusy(false);
+    }
+  };
 
   const openQrFor = async (p: any) => {
     setQrFor(p);
@@ -158,6 +198,89 @@ export default function AdminPartners() {
           <p className="mt-2 text-xs text-slate-500">
             Share this password securely with the partner. They can change it
             from their settings after signing in.
+          </p>
+        </AdminCard>
+      )}
+
+      {editing && (
+        <AdminCard className="p-5 mb-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-white">
+              Edit partner — {editing.name}
+            </h3>
+            <button
+              onClick={() => setEditing(null)}
+              className="text-slate-400 hover:text-white"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <form
+            onSubmit={submitEdit}
+            className="grid grid-cols-1 sm:grid-cols-3 gap-2"
+          >
+            <div>
+              <label className="text-[10px] uppercase tracking-wide text-slate-400 font-bold mb-1 block">
+                Name
+              </label>
+              <input
+                autoFocus
+                type="text"
+                value={editForm.name}
+                onChange={(e) =>
+                  setEditForm((f) => ({ ...f, name: e.target.value }))
+                }
+                required
+                minLength={2}
+                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-wide text-slate-400 font-bold mb-1 block">
+                Phone
+              </label>
+              <input
+                type="tel"
+                value={editForm.phone}
+                onChange={(e) =>
+                  setEditForm((f) => ({ ...f, phone: e.target.value }))
+                }
+                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-wide text-slate-400 font-bold mb-1 block">
+                City
+              </label>
+              <input
+                type="text"
+                value={editForm.city}
+                onChange={(e) =>
+                  setEditForm((f) => ({ ...f, city: e.target.value }))
+                }
+                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+              />
+            </div>
+            <div className="sm:col-span-3 flex gap-2 mt-1">
+              <button
+                type="submit"
+                disabled={editBusy || !editForm.name.trim()}
+                className="px-5 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold disabled:opacity-50"
+              >
+                {editBusy ? "Saving…" : "Save changes"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditing(null)}
+                className="px-5 py-2 rounded-lg bg-slate-800 text-slate-200 border border-slate-700 font-semibold"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+          <p className="mt-3 text-xs text-slate-500">
+            Email is the login identifier and can't be changed here. To reset
+            the password, use the orange Reset button on the row.
           </p>
         </AdminCard>
       )}
@@ -297,6 +420,13 @@ export default function AdminPartners() {
                   {new Date(p.createdAt).toLocaleDateString()}
                 </td>
                 <td className="px-5 py-3 text-right whitespace-nowrap">
+                  <button
+                    onClick={() => openEdit(p)}
+                    title="Edit partner name, phone, city"
+                    className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 mr-1"
+                  >
+                    <Pencil className="h-3.5 w-3.5" /> Edit
+                  </button>
                   <button
                     onClick={() => openQrFor(p)}
                     title="Print branded gym check-in QR poster"
