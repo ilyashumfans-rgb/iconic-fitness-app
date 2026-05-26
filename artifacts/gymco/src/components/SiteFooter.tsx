@@ -67,6 +67,7 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
       { label: "Admin Login", href: "/admin/login" },
       { label: "Partner Login", href: "/partner/login" },
       { label: "Vendor Login", href: "/vendor/login" },
+      { label: "Staff Login", href: "/staff/login" },
     ],
   },
 ];
