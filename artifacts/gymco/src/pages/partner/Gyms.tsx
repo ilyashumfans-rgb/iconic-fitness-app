@@ -249,7 +249,6 @@ function EditGymModal({
   const [galleryText, setGalleryText] = useState(
     (gym.gallery ?? []).join("\n"),
   );
-  const [priceFrom, setPriceFrom] = useState(String(gym.priceFrom));
   const [openNow, setOpenNow] = useState(gym.openNow);
   const [lat, setLat] = useState(
     gym.lat !== undefined && gym.lat !== null ? String(gym.lat) : "",
@@ -483,7 +482,6 @@ function EditGymModal({
         heroImage,
         logoUrl,
         gallery,
-        priceFrom: Number(priceFrom) || 0,
         openNow,
         ...(latNum !== undefined && Number.isFinite(latNum) ? { lat: latNum } : {}),
         ...(lngNum !== undefined && Number.isFinite(lngNum) ? { lng: lngNum } : {}),
@@ -775,7 +773,6 @@ function EditGymModal({
           </div>
 
           <Field label="Hours" value={hours} onChange={setHours} />
-          <Field label="Starting price (₹)" value={priceFrom} onChange={setPriceFrom} type="number" />
           <div className="sm:col-span-2">
             <label className="text-xs uppercase tracking-wide text-slate-400 font-medium mb-1.5 block">
               About
