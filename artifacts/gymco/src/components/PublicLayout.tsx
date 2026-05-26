@@ -6,7 +6,6 @@ import { SiteFooter } from "@/components/SiteFooter";
 function PublicNav() {
   const links = [
     { href: "/explore", label: "Browse Gyms" },
-    { href: "/classes", label: "Classes" },
     { href: "/store", label: "Store" },
     { href: "/memberships", label: "Pricing" },
   ];
