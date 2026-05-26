@@ -2,7 +2,6 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useLocation } from "wouter";
 import { partnerApi } from "@/lib/partnerApi";
 import { Loader2, Handshake } from "lucide-react";
-import NearbyGyms from "@/components/NearbyGyms";
 
 export default function PartnerLogin() {
   const [, navigate] = useLocation();
@@ -109,10 +108,6 @@ export default function PartnerLogin() {
         </form>
       </div>
     </div>
-      <NearbyGyms
-        title="Browse gyms on GYMCO"
-        subtitle="Members searching nearby will find your gym here. See what they see."
-      />
     </div>
   );
 }
