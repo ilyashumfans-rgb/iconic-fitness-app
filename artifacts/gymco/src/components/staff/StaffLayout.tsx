@@ -7,6 +7,7 @@ import {
   KeyRound,
   FileText,
   LogOut,
+  Building2,
 } from "lucide-react";
 import { staffApi, type StaffUser } from "@/lib/staffApi";
 
@@ -41,6 +42,12 @@ const NAV: NavItem[] = [
     href: "/staff/reset-partner-password",
     icon: <KeyRound className="h-4 w-4" />,
     perm: "partner.assign_login",
+  },
+  {
+    label: "Gym Management",
+    href: "/staff/gym-management",
+    icon: <Building2 className="h-4 w-4" />,
+    perm: "gym.manage",
   },
 ];
 

@@ -1291,6 +1291,7 @@ const STAFF_PERMS = new Set([
   "partner.view",
   "partner.document_upload",
   "partner.assign_login",
+  "gym.manage",
 ]);
 
 function sanitizePermissions(input: unknown): string[] {

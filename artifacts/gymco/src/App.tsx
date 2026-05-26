@@ -69,6 +69,7 @@ import StaffPartnerOnboarding from "@/pages/staff/PartnerOnboarding";
 import StaffPartners from "@/pages/staff/Partners";
 import StaffPartnerDocuments from "@/pages/staff/PartnerDocuments";
 import StaffResetPartnerPassword from "@/pages/staff/ResetPartnerPassword";
+import StaffGymManagement from "@/pages/staff/GymManagement";
 
 const queryClient = new QueryClient();
 
@@ -290,6 +291,7 @@ function AppShell() {
         <Route path="/staff/partners" component={StaffPartners} />
         <Route path="/staff/partner-documents" component={StaffPartnerDocuments} />
         <Route path="/staff/reset-partner-password" component={StaffResetPartnerPassword} />
+        <Route path="/staff/gym-management" component={StaffGymManagement} />
         <Route component={NotFound} />
       </Switch>
     );

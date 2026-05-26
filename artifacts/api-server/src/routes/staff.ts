@@ -6,6 +6,7 @@ import {
   partnersTable,
   partnerDocumentsTable,
   amenitiesTable,
+  gymsTable,
 } from "@workspace/db";
 import { hashPassword, verifyPassword } from "../lib/adminAuth";
 import {
@@ -334,6 +335,98 @@ router.delete(
         ),
       );
     res.json({ ok: true });
+  },
+);
+
+// ───────────────────────────── Gym Management ─────────────────────────────
+
+router.get(
+  "/staff/gyms",
+  requireStaffPermission("gym.manage"),
+  async (req: Request, res: Response): Promise<void> => {
+    const partnerIdParam = req.query.partnerId;
+    let partnerId: number | undefined;
+    if (typeof partnerIdParam === "string" && partnerIdParam.length > 0) {
+      const n = Number(partnerIdParam);
+      if (!Number.isFinite(n) || n <= 0) {
+        res.status(400).json({ error: "Invalid partnerId" });
+        return;
+      }
+      partnerId = n;
+    }
+    const baseQuery = db
+      .select({
+        id: gymsTable.id,
+        name: gymsTable.name,
+        slug: gymsTable.slug,
+        city: gymsTable.city,
+        area: gymsTable.area,
+        address: gymsTable.address,
+        heroImage: gymsTable.heroImage,
+        logoUrl: gymsTable.logoUrl,
+        priceFrom: gymsTable.priceFrom,
+        openNow: gymsTable.openNow,
+        rating: gymsTable.rating,
+        lat: gymsTable.lat,
+        lng: gymsTable.lng,
+        ownerPartnerId: gymsTable.ownerPartnerId,
+        partnerName: partnersTable.name,
+      })
+      .from(gymsTable)
+      .leftJoin(partnersTable, eq(gymsTable.ownerPartnerId, partnersTable.id));
+    const rows = await (partnerId !== undefined
+      ? baseQuery.where(eq(gymsTable.ownerPartnerId, partnerId))
+      : baseQuery
+    ).orderBy(desc(gymsTable.id));
+    res.json(rows);
+  },
+);
+
+router.patch(
+  "/staff/gyms/:id",
+  requireStaffPermission("gym.manage"),
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id) || id <= 0) {
+      res.status(400).json({ error: "Invalid gym id" });
+      return;
+    }
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const patch: Record<string, unknown> = {};
+    for (const k of [
+      "name",
+      "address",
+      "area",
+      "city",
+      "about",
+      "hours",
+      "heroImage",
+      "logoUrl",
+    ]) {
+      if (b[k] !== undefined) patch[k] = String(b[k]);
+    }
+    if (b.priceFrom !== undefined) patch.priceFrom = Number(b.priceFrom);
+    for (const k of ["lat", "lng"]) {
+      if (b[k] !== undefined && b[k] !== null && b[k] !== "") {
+        const n = Number(b[k]);
+        if (Number.isFinite(n)) patch[k] = n;
+      }
+    }
+    if (b.openNow !== undefined) patch.openNow = Boolean(b.openNow);
+    if (Object.keys(patch).length === 0) {
+      res.status(400).json({ error: "No fields to update" });
+      return;
+    }
+    const [updated] = await db
+      .update(gymsTable)
+      .set(patch)
+      .where(eq(gymsTable.id, id))
+      .returning();
+    if (!updated) {
+      res.status(404).json({ error: "Gym not found" });
+      return;
+    }
+    res.json(updated);
   },
 );
 

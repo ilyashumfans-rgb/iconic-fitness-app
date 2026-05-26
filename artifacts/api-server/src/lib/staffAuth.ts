@@ -7,6 +7,7 @@ export const STAFF_PERMISSIONS = [
   "partner.view",
   "partner.document_upload",
   "partner.assign_login",
+  "gym.manage",
 ] as const;
 
 export type StaffPermission = (typeof STAFF_PERMISSIONS)[number];

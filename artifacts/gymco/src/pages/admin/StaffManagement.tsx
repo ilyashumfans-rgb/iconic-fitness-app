@@ -18,6 +18,7 @@ const ALL_PERMS = [
   "partner.view",
   "partner.document_upload",
   "partner.assign_login",
+  "gym.manage",
 ];
 
 const inputCls =

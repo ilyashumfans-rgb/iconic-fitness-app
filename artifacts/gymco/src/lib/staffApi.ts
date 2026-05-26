@@ -18,6 +18,24 @@ export type StaffPartner = {
   createdAt: string;
 };
 
+export type StaffGym = {
+  id: number;
+  name: string;
+  slug: string;
+  city: string;
+  area: string;
+  address: string;
+  heroImage: string;
+  logoUrl: string | null;
+  priceFrom: number;
+  openNow: boolean;
+  rating: number;
+  lat: number | null;
+  lng: number | null;
+  ownerPartnerId: number | null;
+  partnerName: string | null;
+};
+
 export type PartnerDocument = {
   id: number;
   partnerId: number;
@@ -63,6 +81,18 @@ export const staffApi = {
 
   amenities: () => request<any[]>("/staff/amenities"),
 
+  gyms: {
+    list: (partnerId?: number) =>
+      request<StaffGym[]>(
+        partnerId ? `/staff/gyms?partnerId=${partnerId}` : "/staff/gyms",
+      ),
+    update: (id: number, body: Partial<StaffGym>) =>
+      request<StaffGym>(`/staff/gyms/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+  },
+
   partners: {
     list: () => request<StaffPartner[]>("/staff/partners"),
     create: (body: Record<string, unknown>) =>
@@ -99,4 +129,5 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "partner.view": "View Partners",
   "partner.document_upload": "Partner Documents",
   "partner.assign_login": "Reset Partner Password",
+  "gym.manage": "Gym Management",
 };

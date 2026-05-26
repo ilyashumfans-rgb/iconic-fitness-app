@@ -5,6 +5,7 @@ import {
   Users as UsersIcon,
   KeyRound,
   FileText,
+  Building2,
 } from "lucide-react";
 import { StaffLayout, StaffCard } from "@/components/staff/StaffLayout";
 import { staffApi, type StaffUser, PERMISSION_LABELS } from "@/lib/staffApi";
@@ -37,6 +38,13 @@ const TILES = [
     label: "Reset Partner Password",
     desc: "Issue a new login password to a partner.",
     icon: <KeyRound className="h-6 w-6" />,
+  },
+  {
+    perm: "gym.manage",
+    href: "/staff/gym-management",
+    label: "Gym Management",
+    desc: "Edit any partner gym — details, pricing, and map location.",
+    icon: <Building2 className="h-6 w-6" />,
   },
 ];
 
