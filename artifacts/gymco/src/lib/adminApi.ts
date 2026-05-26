@@ -142,6 +142,28 @@ export const adminApi = {
   users: {
     list: () => request<any[]>("/admin/users"),
   },
+  staff: {
+    list: () => request<any[]>("/admin/staff"),
+    permissions: () =>
+      request<{ permissions: string[] }>("/admin/staff/permissions"),
+    create: (body: Record<string, unknown>) =>
+      request<any>("/admin/staff", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: number, body: Record<string, unknown>) =>
+      request<any>(`/admin/staff/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    resetPassword: (id: number, password: string) =>
+      request<{ ok: true }>(`/admin/staff/${id}/reset-password`, {
+        method: "POST",
+        body: JSON.stringify({ password }),
+      }),
+    remove: (id: number) =>
+      request<{ ok: true }>(`/admin/staff/${id}`, { method: "DELETE" }),
+  },
   amenities: {
     list: () => request<any[]>("/admin/amenities"),
     create: (body: Record<string, unknown>) =>

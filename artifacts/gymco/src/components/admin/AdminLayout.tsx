@@ -17,6 +17,7 @@ import {
   RefreshCcw,
   Sparkles,
   Activity,
+  Headset,
 } from "lucide-react";
 import { adminApi, type AdminUser } from "@/lib/adminApi";
 
@@ -115,6 +116,16 @@ const SECTIONS: Section[] = [
         label: "Membership Management",
         href: "/admin/membership-management",
         icon: <Settings2 className="h-4 w-4" />,
+      },
+    ],
+  },
+  {
+    title: "Staff Management",
+    items: [
+      {
+        label: "Staff Management",
+        href: "/admin/staff",
+        icon: <Headset className="h-4 w-4" />,
       },
     ],
   },

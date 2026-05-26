@@ -60,6 +60,13 @@ import AdminMembershipManagement from "@/pages/admin/MembershipManagement";
 import AdminProducts from "@/pages/admin/Products";
 import AdminOrders from "@/pages/admin/Orders";
 import AdminSsoCallback from "@/pages/admin/SsoCallback";
+import AdminStaffManagement from "@/pages/admin/StaffManagement";
+import StaffLogin from "@/pages/staff/Login";
+import StaffDashboard from "@/pages/staff/Dashboard";
+import StaffPartnerOnboarding from "@/pages/staff/PartnerOnboarding";
+import StaffPartners from "@/pages/staff/Partners";
+import StaffPartnerDocuments from "@/pages/staff/PartnerDocuments";
+import StaffResetPartnerPassword from "@/pages/staff/ResetPartnerPassword";
 
 const queryClient = new QueryClient();
 
@@ -264,6 +271,21 @@ function AppShell() {
         <Route path="/admin/membership-management" component={AdminMembershipManagement} />
         <Route path="/admin/products" component={AdminProducts} />
         <Route path="/admin/orders" component={AdminOrders} />
+        <Route path="/admin/staff" component={AdminStaffManagement} />
+        <Route component={NotFound} />
+      </Switch>
+    );
+  }
+
+  if (location.startsWith("/staff")) {
+    return (
+      <Switch>
+        <Route path="/staff/login" component={StaffLogin} />
+        <Route path="/staff" component={StaffDashboard} />
+        <Route path="/staff/partner-onboarding" component={StaffPartnerOnboarding} />
+        <Route path="/staff/partners" component={StaffPartners} />
+        <Route path="/staff/partner-documents" component={StaffPartnerDocuments} />
+        <Route path="/staff/reset-partner-password" component={StaffResetPartnerPassword} />
         <Route component={NotFound} />
       </Switch>
     );
@@ -280,6 +302,7 @@ function ClerkRouterBridge({ children }: { children: React.ReactNode }) {
   if (
     location.startsWith("/partner") ||
     location.startsWith("/vendor") ||
+    location.startsWith("/staff") ||
     !clerkPubKey
   ) {
     return <>{children}</>;

@@ -17,6 +17,7 @@ import {
   productOrderItemsTable,
   amenitiesTable,
   workoutsTable,
+  staffTable,
 } from "@workspace/db";
 import {
   hashPassword,
@@ -1274,6 +1275,178 @@ router.patch(
       return;
     }
     res.json(row);
+  },
+);
+
+// ───────────────────────────── Staff Management ─────────────────────────────
+
+const STAFF_PERMS = new Set([
+  "partner.onboard",
+  "partner.view",
+  "partner.document_upload",
+  "partner.assign_login",
+]);
+
+function sanitizePermissions(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  const out = new Set<string>();
+  for (const p of input) {
+    if (typeof p === "string" && STAFF_PERMS.has(p)) out.add(p);
+  }
+  return Array.from(out);
+}
+
+router.get(
+  "/admin/staff",
+  requireAdmin,
+  async (_req: Request, res: Response): Promise<void> => {
+    const rows = await db
+      .select({
+        id: staffTable.id,
+        name: staffTable.name,
+        email: staffTable.email,
+        isActive: staffTable.isActive,
+        permissions: staffTable.permissions,
+        createdAt: staffTable.createdAt,
+      })
+      .from(staffTable)
+      .orderBy(desc(staffTable.createdAt));
+    res.json(rows);
+  },
+);
+
+router.get(
+  "/admin/staff/permissions",
+  requireAdmin,
+  (_req: Request, res: Response): void => {
+    res.json({ permissions: Array.from(STAFF_PERMS) });
+  },
+);
+
+router.post(
+  "/admin/staff",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const { name, email, password, permissions, isActive } =
+      (req.body ?? {}) as {
+        name?: string;
+        email?: string;
+        password?: string;
+        permissions?: unknown;
+        isActive?: boolean;
+      };
+    if (!name || !email || !password) {
+      res.status(400).json({ error: "name, email, password required" });
+      return;
+    }
+    if (password.length < 6) {
+      res.status(400).json({ error: "Password must be at least 6 chars" });
+      return;
+    }
+    const perms = sanitizePermissions(permissions);
+    const passwordHash = await hashPassword(password);
+    try {
+      const [created] = await db
+        .insert(staffTable)
+        .values({
+          name,
+          email: email.toLowerCase().trim(),
+          passwordHash,
+          permissions: perms,
+          isActive: isActive !== false,
+        })
+        .returning({
+          id: staffTable.id,
+          name: staffTable.name,
+          email: staffTable.email,
+          isActive: staffTable.isActive,
+          permissions: staffTable.permissions,
+          createdAt: staffTable.createdAt,
+        });
+      res.status(201).json(created);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed";
+      if (/unique|duplicate/i.test(msg)) {
+        res
+          .status(409)
+          .json({ error: "A staff member with this email already exists" });
+        return;
+      }
+      res.status(500).json({ error: msg });
+    }
+  },
+);
+
+router.patch(
+  "/admin/staff/:id",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const { name, permissions, isActive } = (req.body ?? {}) as {
+      name?: string;
+      permissions?: unknown;
+      isActive?: boolean;
+    };
+    const patch: Record<string, unknown> = {};
+    if (name !== undefined) patch.name = name;
+    if (permissions !== undefined)
+      patch.permissions = sanitizePermissions(permissions);
+    if (isActive !== undefined) patch.isActive = Boolean(isActive);
+    if (Object.keys(patch).length === 0) {
+      res.status(400).json({ error: "Nothing to update" });
+      return;
+    }
+    const [updated] = await db
+      .update(staffTable)
+      .set(patch)
+      .where(eq(staffTable.id, id))
+      .returning({
+        id: staffTable.id,
+        name: staffTable.name,
+        email: staffTable.email,
+        isActive: staffTable.isActive,
+        permissions: staffTable.permissions,
+        createdAt: staffTable.createdAt,
+      });
+    if (!updated) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    res.json(updated);
+  },
+);
+
+router.post(
+  "/admin/staff/:id/reset-password",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const { password } = (req.body ?? {}) as { password?: string };
+    if (!password || password.length < 6) {
+      res.status(400).json({ error: "Password must be at least 6 chars" });
+      return;
+    }
+    const passwordHash = await hashPassword(password);
+    const [updated] = await db
+      .update(staffTable)
+      .set({ passwordHash })
+      .where(eq(staffTable.id, id))
+      .returning({ id: staffTable.id });
+    if (!updated) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    res.json({ ok: true });
+  },
+);
+
+router.delete(
+  "/admin/staff/:id",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    await db.delete(staffTable).where(eq(staffTable.id, id));
+    res.json({ ok: true });
   },
 );
 

@@ -358,3 +358,33 @@ export const partnersTable = pgTable("partners", {
     .notNull()
     .defaultNow(),
 });
+
+export const staffTable = pgTable("staff", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  permissions: text("permissions")
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const partnerDocumentsTable = pgTable("partner_documents", {
+  id: serial("id").primaryKey(),
+  partnerId: integer("partner_id")
+    .notNull()
+    .references(() => partnersTable.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  url: text("url").notNull(),
+  notes: text("notes").notNull().default(""),
+  uploadedByKind: text("uploaded_by_kind").notNull().default("staff"),
+  uploadedByEmail: text("uploaded_by_email").notNull().default(""),
+  uploadedAt: timestamp("uploaded_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
