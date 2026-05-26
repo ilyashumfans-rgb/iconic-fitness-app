@@ -28,10 +28,6 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
     ],
   },
   {
-    title: "Cities",
-    links: [{ label: "Bangalore", href: "/explore?city=Bangalore" }],
-  },
-  {
     title: "Company",
     links: [
       { label: "About us", href: "/about" },
