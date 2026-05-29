@@ -187,7 +187,7 @@ export default function AmenityCatalog() {
               No amenities yet. Click "New amenity" to add one.
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-sm">
               <thead className="bg-orange-50/60 text-slate-600">
                 <tr>
                   <th className="text-left px-4 py-2 font-semibold">Name</th>
@@ -233,7 +233,7 @@ export default function AmenityCatalog() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           )}
         </div>
       </div>

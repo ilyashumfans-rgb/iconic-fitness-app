@@ -271,7 +271,7 @@ export default function AdminNotifications() {
             <span className="text-xs text-slate-500">{sent.length} batches</span>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wide text-slate-500 border-b border-orange-100">
                   <th className="px-5 py-3">Sent</th>

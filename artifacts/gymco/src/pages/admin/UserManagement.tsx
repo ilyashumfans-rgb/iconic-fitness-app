@@ -19,7 +19,7 @@ export default function AdminUserManagement() {
         Manage user subscriptions — pause, resume, or cancel active plans.
       </p>
       <AdminCard className="overflow-hidden">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-sm">
           <thead>
             <tr className="text-left text-xs uppercase tracking-wide text-slate-500 border-b border-slate-800">
               <th className="px-5 py-3">User</th>
@@ -68,7 +68,7 @@ export default function AdminUserManagement() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </AdminCard>
     </AdminLayout>
   );

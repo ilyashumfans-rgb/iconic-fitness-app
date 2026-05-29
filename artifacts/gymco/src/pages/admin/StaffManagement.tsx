@@ -390,7 +390,7 @@ export default function AdminStaffManagement() {
             <span className="text-xs text-slate-500">{rows.length} total</span>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wide text-slate-500 border-b border-slate-800">
                   <th className="px-5 py-3">Name</th>

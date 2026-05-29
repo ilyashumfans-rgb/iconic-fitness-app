@@ -379,7 +379,8 @@ export default function AdminPartners() {
       )}
 
       <AdminCard className="overflow-hidden">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[760px] text-sm">
           <thead>
             <tr className="text-left text-xs uppercase tracking-wide text-slate-500 border-b border-slate-800">
               <th className="px-5 py-3">Name</th>
@@ -497,6 +498,7 @@ export default function AdminPartners() {
             ))}
           </tbody>
         </table>
+        </div>
       </AdminCard>
 
       <style>{`

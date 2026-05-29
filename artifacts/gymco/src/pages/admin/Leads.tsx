@@ -189,7 +189,7 @@ export default function AdminLeads() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full min-w-[640px] text-sm">
                 <thead className="bg-orange-50/60 text-slate-600">
                   <tr className="text-left">
                     <th className="px-4 py-3 font-bold uppercase tracking-wider text-[11px]">Lead</th>

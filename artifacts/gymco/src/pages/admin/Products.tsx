@@ -255,7 +255,7 @@ export default function AdminProducts() {
             No products yet. Click "New Product" to add one.
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-sm">
             <thead>
               <tr className="text-left text-xs uppercase tracking-wide text-slate-500 border-b border-slate-800">
                 <th className="px-5 py-3">Product</th>
@@ -328,7 +328,7 @@ export default function AdminProducts() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         )}
       </AdminCard>
     </AdminLayout>
