@@ -402,6 +402,19 @@ function EditGymModal({
     ]);
   };
 
+  const addSessionAllDays = (workoutId: number) => {
+    setWorkoutSessions((prev) => [
+      ...prev,
+      ...DAY_NAMES.map((_, dayOfWeek) => ({
+        workoutId,
+        dayOfWeek,
+        startMinute: 360,
+        endMinute: 420,
+        instructor: "",
+      })),
+    ]);
+  };
+
   const updateSession = (idx: number, patch: Partial<WorkoutSession>) => {
     setWorkoutSessions((prev) =>
       prev.map((s, i) => (i === idx ? { ...s, ...patch } : s)),
@@ -984,13 +997,22 @@ function EditGymModal({
                               {w.name}
                             </div>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => addSession(w.id)}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-orange-500/15 hover:bg-orange-500/25 text-orange-300 text-[11px] font-bold"
-                          >
-                            <Plus className="h-3 w-3" /> Add slot
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => addSession(w.id)}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-orange-500/15 hover:bg-orange-500/25 text-orange-300 text-[11px] font-bold"
+                            >
+                              <Plus className="h-3 w-3" /> Add slot
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => addSessionAllDays(w.id)}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-orange-500/15 hover:bg-orange-500/25 text-orange-300 text-[11px] font-bold"
+                            >
+                              <Plus className="h-3 w-3" /> All days
+                            </button>
+                          </div>
                         </div>
                         {rows.length === 0 ? (
                           <div className="text-[11px] text-slate-500">
