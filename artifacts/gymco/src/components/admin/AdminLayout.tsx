@@ -22,6 +22,8 @@ import {
   Inbox,
   BookOpen,
   Megaphone,
+  Menu,
+  X,
 } from "lucide-react";
 import { adminApi, type AdminUser } from "@/lib/adminApi";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -198,6 +200,7 @@ export function AdminLayout({
   const [location, navigate] = useLocation();
   const [admin, setAdmin] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     adminApi
@@ -206,6 +209,26 @@ export function AdminLayout({
       .catch(() => navigate("/admin/login"))
       .finally(() => setLoading(false));
   }, [navigate]);
+
+  // Close the mobile drawer whenever the route changes.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location]);
+
+  // Escape to close + lock body scroll while the mobile drawer is open.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [mobileOpen]);
 
   const handleLogout = async () => {
     try {
@@ -225,10 +248,30 @@ export function AdminLayout({
   }
 
   return (
-    <div className="theme-portal min-h-screen bg-orange-50/40 text-slate-900 flex">
+    <div className="theme-portal min-h-screen bg-orange-50/40 text-slate-900 lg:flex">
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 shrink-0 bg-white border-r border-orange-100 flex flex-col">
-        <div className="p-5 border-b border-orange-100">
+      <aside
+        className={`fixed lg:static inset-y-0 left-0 z-50 w-72 max-w-[85vw] lg:w-64 shrink-0 bg-white border-r border-orange-100 flex flex-col transform transition-transform duration-300 ease-out lg:transform-none ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        }`}
+      >
+        <div className="p-5 border-b border-orange-100 relative">
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="lg:hidden absolute top-3 right-3 h-8 w-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-orange-50 hover:text-orange-600"
+            aria-label="Close menu"
+          >
+            <X className="h-5 w-5" />
+          </button>
           <div className="rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 p-4 text-center text-white shadow-[0_12px_30px_-12px_rgba(249,115,22,0.55)]">
             <div className="text-2xl font-extrabold tracking-tight">GYMCO</div>
             <div className="text-[10px] uppercase tracking-[0.2em] text-white/85 mt-1">
@@ -304,11 +347,20 @@ export function AdminLayout({
 
       {/* Main */}
       <main className="flex-1 min-w-0 flex flex-col">
-        <header className="h-16 px-8 flex items-center justify-between border-b border-orange-100 bg-white/85 backdrop-blur">
-          <h1 className="text-xl font-bold text-slate-900">
-            {title ?? "Dashboard"}
-          </h1>
-          <div className="flex items-center gap-3">
+        <header className="h-16 px-4 lg:px-8 flex items-center justify-between border-b border-orange-100 bg-white/85 backdrop-blur sticky top-0 z-30">
+          <div className="flex items-center gap-2 min-w-0">
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="lg:hidden h-9 w-9 flex items-center justify-center rounded-lg border border-orange-200 text-orange-600 hover:bg-orange-50 shrink-0"
+              aria-label="Open menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <h1 className="text-base lg:text-xl font-bold text-slate-900 truncate">
+              {title ?? "Dashboard"}
+            </h1>
+          </div>
+          <div className="flex items-center gap-2 lg:gap-3 shrink-0">
             {actions}
             <NotificationBell
               api={{
@@ -320,14 +372,14 @@ export function AdminLayout({
             />
             <button
               onClick={() => window.location.reload()}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-orange-200 hover:border-orange-500 text-slate-600 hover:text-orange-600 text-sm transition-colors bg-white"
+              className="flex items-center gap-2 px-2.5 lg:px-3 py-1.5 rounded-lg border border-orange-200 hover:border-orange-500 text-slate-600 hover:text-orange-600 text-sm transition-colors bg-white"
             >
               <RefreshCcw className="h-3.5 w-3.5" />
-              Refresh Data
+              <span className="hidden lg:inline">Refresh Data</span>
             </button>
           </div>
         </header>
-        <div className="flex-1 overflow-y-auto p-8">{children}</div>
+        <div className="flex-1 overflow-y-auto p-4 lg:p-8">{children}</div>
       </main>
     </div>
   );

@@ -212,7 +212,8 @@ export default function PartnerDashboard() {
                 No check-ins yet.
               </div>
             ) : (
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[480px]">
                 <thead>
                   <tr className="text-left text-xs uppercase tracking-wide text-slate-500 border-b border-slate-800">
                     <th className="px-5 py-3">When</th>
@@ -242,6 +243,7 @@ export default function PartnerDashboard() {
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </PartnerCard>
         </>

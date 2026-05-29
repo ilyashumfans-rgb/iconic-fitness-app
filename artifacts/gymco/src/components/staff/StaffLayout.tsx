@@ -8,6 +8,8 @@ import {
   FileText,
   LogOut,
   Building2,
+  Menu,
+  X,
 } from "lucide-react";
 import { staffApi, type StaffUser } from "@/lib/staffApi";
 
@@ -78,6 +80,7 @@ export function StaffLayout({
   const [location] = useLocation();
   const [me, setMe] = useState<StaffUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     staffApi
@@ -88,6 +91,26 @@ export function StaffLayout({
       })
       .catch(() => navigate("/staff/login"));
   }, [navigate]);
+
+  // Close the mobile drawer whenever the route changes.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location]);
+
+  // Escape to close + lock body scroll while the mobile drawer is open.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [mobileOpen]);
 
   const logout = async () => {
     try {
@@ -109,15 +132,37 @@ export function StaffLayout({
   const allowedNav = NAV.filter((n) => me.permissions.includes(n.perm));
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex">
-      <aside className="w-64 shrink-0 border-r border-slate-800 bg-slate-900/60 flex flex-col">
-        <div className="px-5 py-5 border-b border-slate-800">
-          <div className="text-xs uppercase tracking-[0.2em] text-orange-400 font-bold">
-            GYMCO
+    <div className="min-h-screen bg-slate-950 text-slate-100 lg:flex">
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden
+        />
+      )}
+
+      <aside
+        className={`fixed lg:static inset-y-0 left-0 z-50 w-72 max-w-[85vw] lg:w-64 shrink-0 border-r border-slate-800 bg-slate-900 lg:bg-slate-900/60 flex flex-col transform transition-transform duration-300 ease-out lg:transform-none ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        }`}
+      >
+        <div className="px-5 py-5 border-b border-slate-800 flex items-start justify-between">
+          <div>
+            <div className="text-xs uppercase tracking-[0.2em] text-orange-400 font-bold">
+              GYMCO
+            </div>
+            <div className="text-sm font-semibold text-white mt-0.5">
+              Staff Portal
+            </div>
           </div>
-          <div className="text-sm font-semibold text-white mt-0.5">
-            Staff Portal
-          </div>
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="lg:hidden h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-800"
+            aria-label="Close menu"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
           <Link
@@ -172,10 +217,19 @@ export function StaffLayout({
         </div>
       </aside>
       <main className="flex-1 min-w-0">
-        <div className="border-b border-slate-800 bg-slate-900/40 px-8 py-5">
-          <h1 className="text-xl font-bold text-white">{title ?? ""}</h1>
+        <div className="border-b border-slate-800 bg-slate-900/80 backdrop-blur px-4 lg:px-8 py-4 lg:py-5 flex items-center gap-3 sticky top-0 z-30">
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="lg:hidden h-9 w-9 flex items-center justify-center rounded-lg border border-slate-700 text-orange-300 hover:bg-slate-800 shrink-0"
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <h1 className="text-lg lg:text-xl font-bold text-white truncate">
+            {title ?? ""}
+          </h1>
         </div>
-        <div className="p-8">{children}</div>
+        <div className="p-4 lg:p-8">{children}</div>
       </main>
     </div>
   );
