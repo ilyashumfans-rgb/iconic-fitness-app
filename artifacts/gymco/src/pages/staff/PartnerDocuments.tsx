@@ -5,6 +5,7 @@ import {
   StaffCard,
   PermissionGate,
 } from "@/components/staff/StaffLayout";
+import FileUpload from "@/components/FileUpload";
 import {
   staffApi,
   type StaffPartner,
@@ -129,18 +130,38 @@ function View() {
               </div>
               <div>
                 <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
-                  Document URL
+                  Document File / URL
                 </label>
+                <div className="flex items-center gap-2 mb-2">
+                  <FileUpload
+                    label="Upload image / file"
+                    accept="image/*,application/pdf"
+                    onUploaded={(paths) => {
+                      const url = paths[0];
+                      if (url)
+                        setForm((f) => ({
+                          ...f,
+                          url,
+                          name: f.name || "Uploaded document",
+                        }));
+                    }}
+                  />
+                  {form.url && (
+                    <span className="text-[11px] text-emerald-400 truncate">
+                      File attached
+                    </span>
+                  )}
+                </div>
                 <input
                   required
-                  type="url"
+                  type="text"
                   className={inputCls}
                   value={form.url}
                   onChange={(e) => setForm({ ...form, url: e.target.value })}
-                  placeholder="https://drive.google.com/…"
+                  placeholder="Upload above, or paste a link (Drive, S3, Dropbox…)"
                 />
                 <div className="text-[11px] text-slate-500 mt-1">
-                  Paste a link to the file (Google Drive, S3, Dropbox…).
+                  Upload an image/PDF directly, or paste a link to the file.
                 </div>
               </div>
               <div>
