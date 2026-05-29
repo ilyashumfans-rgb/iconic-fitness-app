@@ -10,14 +10,17 @@ import {
   Building2,
   Menu,
   X,
+  LifeBuoy,
 } from "lucide-react";
 import { staffApi, type StaffUser } from "@/lib/staffApi";
+import { NotificationBell } from "@/components/NotificationBell";
+import { staffNotificationsApi } from "@/lib/staffNotifications";
 
 type NavItem = {
   label: string;
   href: string;
   icon: ReactNode;
-  perm: string;
+  perm?: string;
 };
 
 const NAV: NavItem[] = [
@@ -50,6 +53,11 @@ const NAV: NavItem[] = [
     href: "/staff/gym-management",
     icon: <Building2 className="h-4 w-4" />,
     perm: "gym.manage",
+  },
+  {
+    label: "Tickets",
+    href: "/staff/tickets",
+    icon: <LifeBuoy className="h-4 w-4" />,
   },
 ];
 
@@ -131,7 +139,9 @@ export function StaffLayout({
   }
   if (!me) return null;
 
-  const allowedNav = NAV.filter((n) => me.permissions.includes(n.perm));
+  const allowedNav = NAV.filter((n) =>
+    n.perm ? me.permissions.includes(n.perm) : true,
+  );
 
   return (
     <div className="min-h-screen bg-orange-50/40 text-slate-900 lg:flex">
@@ -230,7 +240,10 @@ export function StaffLayout({
           <h1 className="text-lg lg:text-xl font-bold text-slate-900 truncate">
             {title ?? ""}
           </h1>
-          {actions && <div className="ml-auto shrink-0">{actions}</div>}
+          <div className="ml-auto flex shrink-0 items-center gap-2">
+            {actions}
+            <NotificationBell api={staffNotificationsApi} />
+          </div>
         </div>
         <div className="p-4 lg:p-8">{children}</div>
       </main>

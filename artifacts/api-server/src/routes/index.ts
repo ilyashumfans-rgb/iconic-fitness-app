@@ -18,6 +18,7 @@ import storageRouter from "./storage";
 import leadsRouter from "./leads";
 import blogsRouter from "./blogs";
 import notificationsRouter from "./notifications";
+import ticketsRouter from "./tickets";
 
 const router: IRouter = Router();
 
@@ -40,5 +41,6 @@ router.use(storageRouter);
 router.use(leadsRouter);
 router.use(blogsRouter);
 router.use(notificationsRouter);
+router.use(ticketsRouter);
 
 export default router;

@@ -1,3 +1,5 @@
+import type { Ticket, TicketDetail, NewTicketInput } from "./tickets";
+
 const BASE = "/api";
 
 export type Partner = {
@@ -434,6 +436,26 @@ export const partnerApi = {
     markAllRead: () =>
       request<{ ok: true }>("/partner/notifications/read-all", {
         method: "POST",
+      }),
+  },
+  tickets: {
+    mine: () => request<Ticket[]>("/partner/tickets/mine"),
+    assigned: () => request<Ticket[]>("/partner/tickets/assigned"),
+    get: (id: number) => request<TicketDetail>(`/partner/tickets/${id}`),
+    create: (body: NewTicketInput) =>
+      request<Ticket>("/partner/tickets", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    comment: (id: number, text: string) =>
+      request<{ id: number }>(`/partner/tickets/${id}/comments`, {
+        method: "POST",
+        body: JSON.stringify({ body: text }),
+      }),
+    setStatus: (id: number, status: string) =>
+      request<{ ok: true }>(`/partner/tickets/${id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
       }),
   },
 };

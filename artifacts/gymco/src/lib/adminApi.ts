@@ -1,3 +1,5 @@
+import type { Ticket, TicketDetail, NewTicketInput } from "./tickets";
+
 const BASE = "/api";
 
 export type AdminUser = {
@@ -350,5 +352,54 @@ export const adminApi = {
         method: "PATCH",
         body: JSON.stringify({ status }),
       }),
+  },
+  tickets: {
+    list: (params?: {
+      status?: string;
+      priority?: string;
+      assignee?: string;
+    }) => {
+      const q = new URLSearchParams();
+      if (params?.status) q.set("status", params.status);
+      if (params?.priority) q.set("priority", params.priority);
+      if (params?.assignee) q.set("assignee", params.assignee);
+      const qs = q.toString();
+      return request<Ticket[]>(`/admin/tickets${qs ? `?${qs}` : ""}`);
+    },
+    get: (id: number) => request<TicketDetail>(`/admin/tickets/${id}`),
+    create: (body: NewTicketInput) =>
+      request<Ticket>("/admin/tickets", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    comment: (id: number, text: string) =>
+      request<{ id: number }>(`/admin/tickets/${id}/comments`, {
+        method: "POST",
+        body: JSON.stringify({ body: text }),
+      }),
+    setStatus: (id: number, status: string) =>
+      request<{ ok: true }>(`/admin/tickets/${id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      }),
+    setPriority: (id: number, priority: string) =>
+      request<{ ok: true }>(`/admin/tickets/${id}/priority`, {
+        method: "PATCH",
+        body: JSON.stringify({ priority }),
+      }),
+    assign: (
+      id: number,
+      assignee: { assigneeRole: string | null; assigneeId: number | null },
+    ) =>
+      request<{ ok: true }>(`/admin/tickets/${id}/assign`, {
+        method: "PATCH",
+        body: JSON.stringify(assignee),
+      }),
+    assignees: () =>
+      request<{
+        staff: { id: number; name: string; email: string }[];
+        partners: { id: number; name: string; email: string }[];
+        admins: { id: number; name: string; email: string }[];
+      }>("/admin/tickets/assignees"),
   },
 };

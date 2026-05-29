@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   Users,
+  LifeBuoy,
 } from "lucide-react";
 import { partnerApi, type Partner } from "@/lib/partnerApi";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -38,6 +39,7 @@ const NAV: Item[] = [
   { label: "Products", href: "/partner/products", icon: <Package className="h-4 w-4" />, perm: "products" },
   { label: "Scan QR", href: "/partner/scan", icon: <QrCode className="h-4 w-4" />, perm: "checkins" },
   { label: "Display gym QR", href: "/partner/display-qr", icon: <QrCode className="h-4 w-4" />, perm: "checkins" },
+  { label: "Tickets", href: "/partner/tickets", icon: <LifeBuoy className="h-4 w-4" /> },
   { label: "Team", href: "/partner/staff", icon: <Users className="h-4 w-4" />, ownerOnly: true },
   { label: "Profile & Settings", href: "/partner/settings", icon: <Settings className="h-4 w-4" />, ownerOnly: true },
 ];

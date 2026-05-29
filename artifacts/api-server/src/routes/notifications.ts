@@ -10,6 +10,7 @@ import {
 } from "@workspace/db";
 import { requireAdmin } from "../lib/adminAuth";
 import { requirePartner } from "../lib/partnerAuth";
+import { requireStaff } from "../lib/staffAuth";
 import { requireUser } from "../lib/currentUser";
 
 const router: IRouter = Router();
@@ -439,6 +440,65 @@ router.post(
         and(
           eq(notificationsTable.recipientType, "admin"),
           eq(notificationsTable.recipientId, req.session.adminId!),
+          isNull(notificationsTable.readAt),
+        ),
+      );
+    res.json({ ok: true });
+  },
+);
+
+// ─────────────────── Staff notifications (staff session) ────────────────────
+
+router.get(
+  "/staff/notifications",
+  requireStaff,
+  async (req: Request, res: Response): Promise<void> => {
+    const rows = await db
+      .select()
+      .from(notificationsTable)
+      .where(
+        and(
+          eq(notificationsTable.recipientType, "staff"),
+          eq(notificationsTable.recipientId, req.session.staffId!),
+        ),
+      )
+      .orderBy(desc(notificationsTable.createdAt))
+      .limit(100);
+    res.json(rows);
+  },
+);
+
+router.post(
+  "/staff/notifications/:id/read",
+  requireStaff,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    await db
+      .update(notificationsTable)
+      .set({ readAt: new Date() })
+      .where(
+        and(
+          eq(notificationsTable.id, id),
+          eq(notificationsTable.recipientType, "staff"),
+          eq(notificationsTable.recipientId, req.session.staffId!),
+          isNull(notificationsTable.readAt),
+        ),
+      );
+    res.json({ ok: true });
+  },
+);
+
+router.post(
+  "/staff/notifications/read-all",
+  requireStaff,
+  async (req: Request, res: Response): Promise<void> => {
+    await db
+      .update(notificationsTable)
+      .set({ readAt: new Date() })
+      .where(
+        and(
+          eq(notificationsTable.recipientType, "staff"),
+          eq(notificationsTable.recipientId, req.session.staffId!),
           isNull(notificationsTable.readAt),
         ),
       );

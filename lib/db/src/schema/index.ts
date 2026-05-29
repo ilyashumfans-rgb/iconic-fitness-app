@@ -487,7 +487,7 @@ export const blogPostsTable = pgTable("blog_posts", {
 
 // In-app notifications. One row per (recipient, notification). For broadcasts,
 // the admin sends one logical message that fans out to N rows sharing a batchId.
-// recipientType is one of: "user" | "partner" | "vendor" | "admin".
+// recipientType is one of: "user" | "partner" | "vendor" | "admin" | "staff".
 // recipientId references the corresponding table (usersTable / partnersTable /
 // partnersTable / adminsTable) by id. No FK is enforced because the target
 // table varies by recipientType.
@@ -520,6 +520,47 @@ export const partnerDocumentsTable = pgTable("partner_documents", {
   uploadedByKind: text("uploaded_by_kind").notNull().default("staff"),
   uploadedByEmail: text("uploaded_by_email").notNull().default(""),
   uploadedAt: timestamp("uploaded_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// Support / task tickets. Any signed-in role can raise a ticket; admins triage,
+// assign, and track them. The requester and (optional) assignee are referenced
+// polymorphically by role + id, reusing the same convention as the
+// notifications table. requesterRole / assigneeRole is one of:
+// "user" | "partner" | "staff" | "admin". No FK is enforced because the target
+// table varies by role. Status moves through: open -> in_progress -> resolved
+// -> closed. Priority is one of: low | medium | high | urgent.
+export const ticketsTable = pgTable("tickets", {
+  id: serial("id").primaryKey(),
+  subject: text("subject").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull().default("general"),
+  priority: text("priority").notNull().default("medium"),
+  status: text("status").notNull().default("open"),
+  requesterRole: text("requester_role").notNull(),
+  requesterId: integer("requester_id").notNull(),
+  assigneeRole: text("assignee_role"),
+  assigneeId: integer("assignee_id"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  closedAt: timestamp("closed_at", { withTimezone: true }),
+});
+
+export const ticketCommentsTable = pgTable("ticket_comments", {
+  id: serial("id").primaryKey(),
+  ticketId: integer("ticket_id")
+    .notNull()
+    .references(() => ticketsTable.id, { onDelete: "cascade" }),
+  authorRole: text("author_role").notNull(),
+  authorId: integer("author_id").notNull(),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
 });

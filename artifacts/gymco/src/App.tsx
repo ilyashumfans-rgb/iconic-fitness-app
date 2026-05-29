@@ -80,6 +80,10 @@ import StaffPartners from "@/pages/staff/Partners";
 import StaffPartnerDocuments from "@/pages/staff/PartnerDocuments";
 import StaffResetPartnerPassword from "@/pages/staff/ResetPartnerPassword";
 import StaffGymManagement from "@/pages/staff/GymManagement";
+import Support from "@/pages/Support";
+import AdminTickets from "@/pages/admin/Tickets";
+import StaffTickets from "@/pages/staff/Tickets";
+import PartnerTickets from "@/pages/partner/Tickets";
 
 const queryClient = new QueryClient();
 
@@ -226,6 +230,7 @@ function MemberShellRoutes() {
         <Route path="/trainers/:trainerId" component={TrainerDetail} />
         <Route path="/wallet" component={Wallet} />
         <Route path="/profile" component={Profile} />
+        <Route path="/support" component={Support} />
         <Route path="/blog" component={Blog} />
         <Route path="/blog/:slug" component={BlogDetail} />
         <Route path="/store" component={Store} />
@@ -281,6 +286,7 @@ function AppShell() {
         <Route path="/partner/scan" component={PartnerScanner} />
         <Route path="/partner/display-qr" component={PartnerDisplayQr} />
         <Route path="/partner/staff" component={PartnerTeam} />
+        <Route path="/partner/tickets" component={PartnerTickets} />
         <Route path="/partner/settings" component={PartnerSettings} />
         <Route component={NotFound} />
       </Switch>
@@ -326,6 +332,7 @@ function AppShell() {
         <Route path="/admin/notifications" component={AdminNotifications} />
         <Route path="/admin/leads" component={AdminLeads} />
         <Route path="/admin/blogs" component={AdminBlogManagement} />
+        <Route path="/admin/tickets" component={AdminTickets} />
         <Route component={NotFound} />
       </Switch>
     );
@@ -341,6 +348,7 @@ function AppShell() {
         <Route path="/staff/partner-documents" component={StaffPartnerDocuments} />
         <Route path="/staff/reset-partner-password" component={StaffResetPartnerPassword} />
         <Route path="/staff/gym-management" component={StaffGymManagement} />
+        <Route path="/staff/tickets" component={StaffTickets} />
         <Route component={NotFound} />
       </Switch>
     );

@@ -30,7 +30,15 @@ _Populate as you build — non-obvious choices a reader couldn't infer from the 
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+GYMCO is a multi-role gym marketplace: members discover/join gyms, partners manage their gyms, staff support partners, and admins run the platform.
+
+### Ticket & task system
+
+Unified support tickets across all roles. Members raise/view tickets on `/support`; partners on `/partner/tickets`; staff on `/staff/tickets` (raised + assigned-to-me); admins triage on `/admin/tickets` (filters: status/priority/assignee, change status/priority, assign/reassign to staff/partner/admin). In-app notifications fire on create (→ all admins), assign (→ assignee), status-change and comment (→ participants).
+
+- DB: `ticketsTable` + `ticketCommentsTable` (`lib/db/src/schema/index.ts`), polymorphic `requesterRole/requesterId` + `assigneeRole/assigneeId`.
+- API: `artifacts/api-server/src/routes/tickets.ts` (role-scoped); staff notification feed in `notifications.ts`.
+- Frontend: shared types/badges in `src/lib/tickets.ts`; components in `src/components/tickets/`; ticket methods on adminApi/staffApi/partnerApi and member `ticketsApi.ts`.
 
 ## User preferences
 

@@ -9,6 +9,7 @@ import {
   Crown,
   ShoppingBag,
   LogOut,
+  LifeBuoy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
@@ -60,6 +61,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/wallet", label: "Wallet", icon: Wallet },
     { href: "/store", label: "Store", icon: ShoppingBag },
     { href: "/memberships", label: "Memberships", icon: Crown },
+    { href: "/support", label: "Support", icon: LifeBuoy },
   ];
 
   return (

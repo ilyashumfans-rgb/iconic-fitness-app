@@ -22,6 +22,7 @@ import {
   Inbox,
   BookOpen,
   Megaphone,
+  LifeBuoy,
   Menu,
   X,
 } from "lucide-react";
@@ -153,6 +154,11 @@ const SECTIONS: Section[] = [
         label: "Leads (CRM)",
         href: "/admin/leads",
         icon: <Inbox className="h-4 w-4" />,
+      },
+      {
+        label: "Tickets",
+        href: "/admin/tickets",
+        icon: <LifeBuoy className="h-4 w-4" />,
       },
     ],
   },

@@ -1,3 +1,5 @@
+import type { Ticket, TicketDetail, NewTicketInput } from "./tickets";
+
 const BASE = "/api";
 
 export type StaffUser = {
@@ -146,6 +148,26 @@ export const staffApi = {
     removeDocument: (id: number, docId: number) =>
       request<{ ok: true }>(`/staff/partners/${id}/documents/${docId}`, {
         method: "DELETE",
+      }),
+  },
+  tickets: {
+    mine: () => request<Ticket[]>("/staff/tickets/mine"),
+    assigned: () => request<Ticket[]>("/staff/tickets/assigned"),
+    get: (id: number) => request<TicketDetail>(`/staff/tickets/${id}`),
+    create: (body: NewTicketInput) =>
+      request<Ticket>("/staff/tickets", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    comment: (id: number, text: string) =>
+      request<{ id: number }>(`/staff/tickets/${id}/comments`, {
+        method: "POST",
+        body: JSON.stringify({ body: text }),
+      }),
+    setStatus: (id: number, status: string) =>
+      request<{ ok: true }>(`/staff/tickets/${id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
       }),
   },
 };
