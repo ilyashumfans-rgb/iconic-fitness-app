@@ -108,6 +108,19 @@ export const staffApi = {
         method: "POST",
         body: JSON.stringify(body),
       }),
+    update: (
+      id: number,
+      body: { name?: string; phone?: string; city?: string; status?: string },
+    ) =>
+      request<StaffPartner>(`/staff/partners/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    impersonate: (id: number) =>
+      request<{ ok: true; redirectTo: string }>(
+        `/staff/partners/${id}/impersonate`,
+        { method: "POST" },
+      ),
     resetPassword: (id: number, password: string) =>
       request<{ ok: true }>(`/staff/partners/${id}/reset-password`, {
         method: "POST",

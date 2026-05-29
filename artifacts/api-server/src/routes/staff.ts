@@ -19,6 +19,7 @@ import {
 const router: IRouter = Router();
 
 const VALID_KINDS = new Set(["gym", "vendor", "both"]);
+const VALID_PARTNER_STATUSES = new Set(["pending", "active", "suspended"]);
 
 // ───────────────────────────── Auth ─────────────────────────────
 
@@ -239,6 +240,89 @@ router.post(
       return;
     }
     res.json({ ok: true });
+  },
+);
+
+router.patch(
+  "/staff/partners/:id",
+  requireStaffPermission("partner.onboard"),
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id) || id <= 0) {
+      res.status(400).json({ error: "Invalid partner id" });
+      return;
+    }
+    const { name, phone, city, status } = (req.body ?? {}) as Record<
+      string,
+      string | undefined
+    >;
+    const patch: Record<string, string> = {};
+    if (name !== undefined) patch.name = String(name);
+    if (phone !== undefined) patch.phone = String(phone);
+    if (city !== undefined) patch.city = String(city);
+    if (status !== undefined) {
+      if (!VALID_PARTNER_STATUSES.has(String(status))) {
+        res.status(400).json({ error: "Invalid status" });
+        return;
+      }
+      patch.status = String(status);
+    }
+    if (Object.keys(patch).length === 0) {
+      res.status(400).json({ error: "No fields to update" });
+      return;
+    }
+    const [updated] = await db
+      .update(partnersTable)
+      .set(patch)
+      .where(eq(partnersTable.id, id))
+      .returning({
+        id: partnersTable.id,
+        name: partnersTable.name,
+        email: partnersTable.email,
+        phone: partnersTable.phone,
+        status: partnersTable.status,
+        city: partnersTable.city,
+        kind: partnersTable.kind,
+        createdAt: partnersTable.createdAt,
+      });
+    if (!updated) {
+      res.status(404).json({ error: "Partner not found" });
+      return;
+    }
+    res.json(updated);
+  },
+);
+
+// Sign in as a partner: opens the partner's session in the same browser.
+// Staff and partner sessions are independent, so the staff member stays
+// signed in to /staff after this call.
+router.post(
+  "/staff/partners/:id/impersonate",
+  requireStaffPermission("partner.assign_login"),
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id) || id <= 0) {
+      res.status(400).json({ error: "Invalid partner id" });
+      return;
+    }
+    const [partner] = await db
+      .select()
+      .from(partnersTable)
+      .where(eq(partnersTable.id, id));
+    if (!partner) {
+      res.status(404).json({ error: "Partner not found" });
+      return;
+    }
+    if (partner.status === "suspended") {
+      res.status(400).json({
+        error: "Cannot sign in as a suspended partner. Reactivate first.",
+      });
+      return;
+    }
+    req.session.partnerId = partner.id;
+    req.session.partnerEmail = partner.email;
+    req.session.partnerName = partner.name;
+    res.json({ ok: true, redirectTo: "/partner" });
   },
 );
 
