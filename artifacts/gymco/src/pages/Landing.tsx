@@ -299,7 +299,7 @@ function Hero() {
           </span>
         </motion.div>
 
-        <h1 className="text-[2rem] xs:text-[2.25rem] leading-[1.02] sm:text-6xl md:text-7xl xl:text-[6rem] font-black tracking-[-0.04em] md:leading-[0.95] uppercase text-foreground whitespace-nowrap sm:whitespace-normal">
+        <h1 className="text-[1.75rem] xs:text-[2rem] leading-[1.02] sm:text-5xl md:text-6xl xl:text-[4.5rem] font-black tracking-[-0.04em] md:leading-[0.95] uppercase text-foreground whitespace-nowrap sm:whitespace-normal">
           <motion.span
             initial={{ opacity: 0, y: 30, filter: "blur(12px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
