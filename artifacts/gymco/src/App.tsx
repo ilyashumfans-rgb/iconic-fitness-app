@@ -36,6 +36,7 @@ import PartnerCheckins from "@/pages/partner/Checkins";
 import PartnerClasses from "@/pages/partner/Classes";
 import PartnerProducts from "@/pages/partner/PartnerProducts";
 import PartnerSettings from "@/pages/partner/Settings";
+import PartnerTeam from "@/pages/partner/Team";
 import VendorLogin from "@/pages/vendor/Login";
 import VendorDashboard from "@/pages/vendor/Dashboard";
 import VendorProducts from "@/pages/vendor/Products";
@@ -279,6 +280,7 @@ function AppShell() {
         <Route path="/partner/products" component={PartnerProducts} />
         <Route path="/partner/scan" component={PartnerScanner} />
         <Route path="/partner/display-qr" component={PartnerDisplayQr} />
+        <Route path="/partner/staff" component={PartnerTeam} />
         <Route path="/partner/settings" component={PartnerSettings} />
         <Route component={NotFound} />
       </Switch>

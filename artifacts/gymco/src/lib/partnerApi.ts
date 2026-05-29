@@ -11,6 +11,36 @@ export type Partner = {
   kind?: "gym" | "vendor" | "both";
   notes?: string;
   createdAt?: string;
+  // Present when the signed-in account is a partner-created team member.
+  isStaff?: boolean;
+  // Areas this session is allowed to access. For the owner this is the full
+  // set; for a team member it is whatever the owner granted.
+  permissions?: string[];
+};
+
+export type PartnerStaff = {
+  id: number;
+  name: string;
+  email: string;
+  permissions: string[];
+  isActive: boolean;
+  createdAt: string;
+};
+
+export const PARTNER_STAFF_PERMISSIONS = [
+  "gyms",
+  "bookings",
+  "checkins",
+  "classes",
+  "products",
+] as const;
+
+export const PARTNER_STAFF_PERMISSION_LABELS: Record<string, string> = {
+  gyms: "My Gyms",
+  bookings: "Bookings",
+  checkins: "Check-ins & QR",
+  classes: "Classes",
+  products: "Products",
 };
 
 export type PartnerStats = {
@@ -189,6 +219,34 @@ export const partnerApi = {
       method: "POST",
       body: JSON.stringify({ currentPassword, newPassword }),
     }),
+  staff: {
+    list: () => request<PartnerStaff[]>("/partner/staff"),
+    create: (body: {
+      name: string;
+      email: string;
+      password: string;
+      permissions: string[];
+    }) =>
+      request<PartnerStaff>("/partner/staff", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (
+      id: number,
+      body: Partial<{ name: string; permissions: string[]; isActive: boolean }>,
+    ) =>
+      request<PartnerStaff>(`/partner/staff/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    resetPassword: (id: number, newPassword: string) =>
+      request<{ ok: true }>(`/partner/staff/${id}/reset-password`, {
+        method: "POST",
+        body: JSON.stringify({ newPassword }),
+      }),
+    remove: (id: number) =>
+      request<{ ok: true }>(`/partner/staff/${id}`, { method: "DELETE" }),
+  },
   stats: () => request<PartnerStats>("/partner/stats"),
   earnings: () => request<PartnerEarnings>("/partner/earnings"),
   gyms: {

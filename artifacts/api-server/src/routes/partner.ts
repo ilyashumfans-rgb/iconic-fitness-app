@@ -21,12 +21,19 @@ import {
   workoutsTable,
   gymWorkoutsTable,
   gymWorkoutSessionsTable,
+  partnerStaffTable,
 } from "@workspace/db";
 import {
   hashPassword,
   verifyPassword,
 } from "../lib/adminAuth";
-import { requirePartner } from "../lib/partnerAuth";
+import {
+  requirePartner,
+  requirePartnerOwner,
+  requirePartnerPerm,
+  clearPartnerSession,
+  PARTNER_STAFF_PERMISSIONS,
+} from "../lib/partnerAuth";
 
 const router: IRouter = Router();
 
@@ -47,14 +54,12 @@ router.post(
     // that share an email). We try each row and accept the first whose
     // password verifies. Vendor-only and suspended rows are skipped so a
     // valid gym-partner record under the same email can still sign in.
+    // Note: an empty candidate list is NOT an early failure — the email may
+    // belong to a partner-created team member, handled in the `!partner` block.
     const candidates = await db
       .select()
       .from(partnersTable)
       .where(eq(partnersTable.email, email.toLowerCase().trim()));
-    if (candidates.length === 0) {
-      res.status(401).json({ error: "Invalid credentials" });
-      return;
-    }
     let partner: (typeof candidates)[number] | null = null;
     let sawSuspended = false;
     let sawVendorOnly = false;
@@ -73,6 +78,52 @@ router.post(
       }
     }
     if (!partner) {
+      // No direct partner match — try partner-created team member (sub-account)
+      // logins. These act on behalf of their parent partner.
+      const [staff] = await db
+        .select()
+        .from(partnerStaffTable)
+        .where(eq(partnerStaffTable.email, email.toLowerCase().trim()));
+      if (staff && staff.isActive && (await verifyPassword(password, staff.passwordHash))) {
+        const [parent] = await db
+          .select()
+          .from(partnersTable)
+          .where(eq(partnersTable.id, staff.partnerId));
+        if (!parent) {
+          res.status(401).json({ error: "Invalid credentials" });
+          return;
+        }
+        if (parent.status === "suspended") {
+          res.status(403).json({
+            error: "This partner account is suspended. Contact GYMCO support.",
+          });
+          return;
+        }
+        if (parent.kind === "vendor") {
+          res.status(403).json({
+            error:
+              "This account belongs to a store vendor and cannot use the partner portal.",
+          });
+          return;
+        }
+        req.session.partnerId = parent.id;
+        req.session.partnerEmail = staff.email;
+        req.session.partnerName = staff.name;
+        req.session.partnerStaffId = staff.id;
+        req.session.partnerStaffPermissions = staff.permissions;
+        res.json({
+          id: parent.id,
+          email: staff.email,
+          name: staff.name,
+          phone: parent.phone,
+          city: parent.city,
+          status: parent.status,
+          kind: parent.kind,
+          isStaff: true,
+          permissions: staff.permissions,
+        });
+        return;
+      }
       if (sawSuspended && !sawVendorOnly) {
         res.status(403).json({
           error: "Your partner account is suspended. Contact GYMCO support.",
@@ -92,6 +143,9 @@ router.post(
     req.session.partnerId = partner.id;
     req.session.partnerEmail = partner.email;
     req.session.partnerName = partner.name;
+    // This is the brand owner, not a team member — clear any stale staff flags.
+    delete req.session.partnerStaffId;
+    delete req.session.partnerStaffPermissions;
     res.json({
       id: partner.id,
       email: partner.email,
@@ -175,6 +229,8 @@ router.post(
     req.session.partnerId = partner.id;
     req.session.partnerEmail = partner.email;
     req.session.partnerName = partner.name;
+    delete req.session.partnerStaffId;
+    delete req.session.partnerStaffPermissions;
     res.json({
       id: partner.id,
       email: partner.email,
@@ -250,6 +306,8 @@ router.post(
     req.session.partnerId = partner.id;
     req.session.partnerEmail = partner.email;
     req.session.partnerName = partner.name;
+    delete req.session.partnerStaffId;
+    delete req.session.partnerStaffPermissions;
     res.json({
       id: partner.id,
       email: partner.email,
@@ -293,17 +351,13 @@ router.get(
 );
 
 router.post("/vendor/logout", (req: Request, res: Response): void => {
-  delete req.session.partnerId;
-  delete req.session.partnerEmail;
-  delete req.session.partnerName;
+  clearPartnerSession(req);
   res.json({ ok: true });
 });
 
 router.post("/partner/logout", (req: Request, res: Response): void => {
   // Only kill partner session keys; keep admin session intact in case both exist.
-  delete req.session.partnerId;
-  delete req.session.partnerEmail;
-  delete req.session.partnerName;
+  clearPartnerSession(req);
   res.json({ ok: true });
 });
 
@@ -323,10 +377,11 @@ router.get(
       res.status(403).json({ error: "Not a gym partner account" });
       return;
     }
+    const isStaff = Boolean(req.session.partnerStaffId);
     res.json({
       id: partner.id,
-      email: partner.email,
-      name: partner.name,
+      email: isStaff ? req.session.partnerEmail! : partner.email,
+      name: isStaff ? req.session.partnerName! : partner.name,
       phone: partner.phone,
       city: partner.city,
       status: partner.status,
@@ -334,6 +389,10 @@ router.get(
       avatarUrl: partner.avatarUrl,
       notes: partner.notes,
       createdAt: partner.createdAt,
+      isStaff,
+      permissions: isStaff
+        ? (req.session.partnerStaffPermissions ?? [])
+        : [...PARTNER_STAFF_PERMISSIONS],
     });
   },
 );
@@ -341,6 +400,7 @@ router.get(
 router.post(
   "/partner/change-password",
   requirePartner,
+  requirePartnerOwner,
   async (req: Request, res: Response): Promise<void> => {
     const { currentPassword, newPassword } = (req.body ?? {}) as {
       currentPassword?: string;
@@ -377,6 +437,7 @@ router.post(
 router.patch(
   "/partner/me",
   requirePartner,
+  requirePartnerOwner,
   async (req: Request, res: Response): Promise<void> => {
     const { name, phone, city, avatarUrl } = (req.body ?? {}) as Record<
       string,
@@ -409,6 +470,294 @@ router.patch(
     });
   },
 );
+
+// ─── Team (partner-created staff sub-accounts) ───
+// All routes here are owner-only: a partner-created team member cannot manage
+// other team members.
+
+function sanitizePerms(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  return PARTNER_STAFF_PERMISSIONS.filter((p) => input.includes(p));
+}
+
+router.get(
+  "/partner/staff",
+  requirePartner,
+  requirePartnerOwner,
+  async (req: Request, res: Response): Promise<void> => {
+    const rows = await db
+      .select({
+        id: partnerStaffTable.id,
+        name: partnerStaffTable.name,
+        email: partnerStaffTable.email,
+        permissions: partnerStaffTable.permissions,
+        isActive: partnerStaffTable.isActive,
+        createdAt: partnerStaffTable.createdAt,
+      })
+      .from(partnerStaffTable)
+      .where(eq(partnerStaffTable.partnerId, req.session.partnerId!))
+      .orderBy(asc(partnerStaffTable.name));
+    res.json(rows);
+  },
+);
+
+router.post(
+  "/partner/staff",
+  requirePartner,
+  requirePartnerOwner,
+  async (req: Request, res: Response): Promise<void> => {
+    const { name, email, password, permissions } = (req.body ?? {}) as {
+      name?: string;
+      email?: string;
+      password?: string;
+      permissions?: unknown;
+    };
+    const cleanName = (name ?? "").trim();
+    const cleanEmail = (email ?? "").toLowerCase().trim();
+    if (!cleanName || !cleanEmail || !password || password.length < 6) {
+      res.status(400).json({
+        error: "Name, email and a password (6+ characters) are required.",
+      });
+      return;
+    }
+    // Email must be unique across both partner logins and team accounts so the
+    // login route can resolve it unambiguously.
+    const [existingPartner] = await db
+      .select({ id: partnersTable.id })
+      .from(partnersTable)
+      .where(eq(partnersTable.email, cleanEmail));
+    const [existingStaff] = await db
+      .select({ id: partnerStaffTable.id })
+      .from(partnerStaffTable)
+      .where(eq(partnerStaffTable.email, cleanEmail));
+    if (existingPartner || existingStaff) {
+      res.status(409).json({ error: "That email is already in use." });
+      return;
+    }
+    const passwordHash = await hashPassword(password);
+    const [created] = await db
+      .insert(partnerStaffTable)
+      .values({
+        partnerId: req.session.partnerId!,
+        name: cleanName,
+        email: cleanEmail,
+        passwordHash,
+        permissions: sanitizePerms(permissions),
+      })
+      .returning({
+        id: partnerStaffTable.id,
+        name: partnerStaffTable.name,
+        email: partnerStaffTable.email,
+        permissions: partnerStaffTable.permissions,
+        isActive: partnerStaffTable.isActive,
+        createdAt: partnerStaffTable.createdAt,
+      });
+    res.status(201).json(created);
+  },
+);
+
+router.patch(
+  "/partner/staff/:id",
+  requirePartner,
+  requirePartnerOwner,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+    const [existing] = await db
+      .select()
+      .from(partnerStaffTable)
+      .where(
+        and(
+          eq(partnerStaffTable.id, id),
+          eq(partnerStaffTable.partnerId, req.session.partnerId!),
+        ),
+      );
+    if (!existing) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    const { name, permissions, isActive } = (req.body ?? {}) as {
+      name?: string;
+      permissions?: unknown;
+      isActive?: boolean;
+    };
+    const [updated] = await db
+      .update(partnerStaffTable)
+      .set({
+        ...(name !== undefined && { name: name.trim() }),
+        ...(permissions !== undefined && {
+          permissions: sanitizePerms(permissions),
+        }),
+        ...(isActive !== undefined && { isActive: Boolean(isActive) }),
+      })
+      .where(eq(partnerStaffTable.id, id))
+      .returning({
+        id: partnerStaffTable.id,
+        name: partnerStaffTable.name,
+        email: partnerStaffTable.email,
+        permissions: partnerStaffTable.permissions,
+        isActive: partnerStaffTable.isActive,
+        createdAt: partnerStaffTable.createdAt,
+      });
+    res.json(updated);
+  },
+);
+
+router.post(
+  "/partner/staff/:id/reset-password",
+  requirePartner,
+  requirePartnerOwner,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+    const { newPassword } = (req.body ?? {}) as { newPassword?: string };
+    if (!newPassword || newPassword.length < 6) {
+      res
+        .status(400)
+        .json({ error: "New password (6+ characters) is required." });
+      return;
+    }
+    const [existing] = await db
+      .select({ id: partnerStaffTable.id })
+      .from(partnerStaffTable)
+      .where(
+        and(
+          eq(partnerStaffTable.id, id),
+          eq(partnerStaffTable.partnerId, req.session.partnerId!),
+        ),
+      );
+    if (!existing) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    const passwordHash = await hashPassword(newPassword);
+    await db
+      .update(partnerStaffTable)
+      .set({ passwordHash })
+      .where(eq(partnerStaffTable.id, id));
+    res.json({ ok: true });
+  },
+);
+
+router.delete(
+  "/partner/staff/:id",
+  requirePartner,
+  requirePartnerOwner,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+    const result = await db
+      .delete(partnerStaffTable)
+      .where(
+        and(
+          eq(partnerStaffTable.id, id),
+          eq(partnerStaffTable.partnerId, req.session.partnerId!),
+        ),
+      )
+      .returning({ id: partnerStaffTable.id });
+    if (result.length === 0) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    res.json({ ok: true });
+  },
+);
+
+// Centralized access gate for partner-created team members. The owner
+// (no partnerStaffId) always passes. Auth, profile, password and team routes
+// are all registered above this point, so they are unaffected. Every
+// operational route below maps to a permission; routes a team member must
+// never reach (brand documents) are owner-only.
+//
+// This guard is FAIL-CLOSED: a staff member may only reach a `/partner/*`
+// route that is explicitly permission-mapped here OR explicitly listed in
+// STAFF_OPEN_PREFIXES (dashboard data everyone sees). Any new operational
+// route that is added later and left unclassified is denied for staff by
+// default, so mapping drift can never silently widen staff access.
+const STAFF_PERMISSION_PREFIXES: ReadonlyArray<[string, string]> = [
+  ["/partner/gyms", "gyms"],
+  ["/partner/amenities", "gyms"],
+  ["/partner/workouts", "gyms"],
+  ["/partner/bookings", "bookings"],
+  ["/partner/checkins", "checkins"],
+  ["/partner/classes", "classes"],
+  ["/partner/trainers", "classes"],
+  ["/partner/products", "products"],
+  ["/partner/orders", "products"],
+];
+const STAFF_OWNER_ONLY_PREFIXES: ReadonlyArray<string> = ["/partner/documents"];
+// Routes open to every signed-in team member regardless of permissions
+// (the dashboard summary cards). These need no specific permission.
+const STAFF_OPEN_PREFIXES: ReadonlyArray<string> = [
+  "/partner/stats",
+  "/partner/earnings",
+];
+
+function matchesPrefix(path: string, prefix: string): boolean {
+  return path === prefix || path.startsWith(prefix + "/");
+}
+
+// Note: this guard runs before each operational route's own `requirePartner`,
+// so it must source permissions from the DB itself (not the session snapshot)
+// to make grants/revocations and disabling take effect immediately.
+router.use(async (req: Request, res: Response, next): Promise<void> => {
+  if (!req.session.partnerStaffId) {
+    next();
+    return;
+  }
+  // Non-operational routes (login/logout/me/etc.) are registered before this
+  // guard and never reach it; only `/partner/*` operational routes do.
+  if (!matchesPrefix(req.path, "/partner")) {
+    next();
+    return;
+  }
+  if (STAFF_OWNER_ONLY_PREFIXES.some((p) => matchesPrefix(req.path, p))) {
+    res
+      .status(403)
+      .json({ error: "Only the partner account owner can do this." });
+    return;
+  }
+  if (STAFF_OPEN_PREFIXES.some((p) => matchesPrefix(req.path, p))) {
+    next();
+    return;
+  }
+  const matched = STAFF_PERMISSION_PREFIXES.find(([prefix]) =>
+    matchesPrefix(req.path, prefix),
+  );
+  if (!matched) {
+    // Fail closed: unclassified operational route is off-limits to staff.
+    res.status(403).json({ error: "You do not have access to this section." });
+    return;
+  }
+  const [staff] = await db
+    .select({
+      isActive: partnerStaffTable.isActive,
+      partnerId: partnerStaffTable.partnerId,
+      permissions: partnerStaffTable.permissions,
+    })
+    .from(partnerStaffTable)
+    .where(eq(partnerStaffTable.id, req.session.partnerStaffId));
+  if (!staff || !staff.isActive || staff.partnerId !== req.session.partnerId) {
+    clearPartnerSession(req);
+    res.status(401).json({ error: "Your access has been revoked." });
+    return;
+  }
+  req.session.partnerStaffPermissions = staff.permissions;
+  if (!staff.permissions.includes(matched[1])) {
+    res.status(403).json({ error: "You do not have access to this section." });
+    return;
+  }
+  next();
+});
 
 // ─── Helpers ───
 

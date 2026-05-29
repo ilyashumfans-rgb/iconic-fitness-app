@@ -14,22 +14,32 @@ import {
   QrCode,
   Menu,
   X,
+  Users,
 } from "lucide-react";
 import { partnerApi, type Partner } from "@/lib/partnerApi";
 import { NotificationBell } from "@/components/NotificationBell";
 
-type Item = { label: string; href: string; icon: ReactNode };
+type Item = {
+  label: string;
+  href: string;
+  icon: ReactNode;
+  // Permission a team member needs to see this item. Items with no `perm` are
+  // always visible. `ownerOnly` items are hidden from team members entirely.
+  perm?: string;
+  ownerOnly?: boolean;
+};
 
 const NAV: Item[] = [
   { label: "Dashboard", href: "/partner", icon: <LayoutDashboard className="h-4 w-4" /> },
-  { label: "My Gyms", href: "/partner/gyms", icon: <Building2 className="h-4 w-4" /> },
-  { label: "Bookings", href: "/partner/bookings", icon: <Calendar className="h-4 w-4" /> },
-  { label: "Check-ins", href: "/partner/checkins", icon: <CheckCircle2 className="h-4 w-4" /> },
-  { label: "Classes", href: "/partner/classes", icon: <Dumbbell className="h-4 w-4" /> },
-  { label: "Products", href: "/partner/products", icon: <Package className="h-4 w-4" /> },
-  { label: "Scan QR", href: "/partner/scan", icon: <QrCode className="h-4 w-4" /> },
-  { label: "Display gym QR", href: "/partner/display-qr", icon: <QrCode className="h-4 w-4" /> },
-  { label: "Profile & Settings", href: "/partner/settings", icon: <Settings className="h-4 w-4" /> },
+  { label: "My Gyms", href: "/partner/gyms", icon: <Building2 className="h-4 w-4" />, perm: "gyms" },
+  { label: "Bookings", href: "/partner/bookings", icon: <Calendar className="h-4 w-4" />, perm: "bookings" },
+  { label: "Check-ins", href: "/partner/checkins", icon: <CheckCircle2 className="h-4 w-4" />, perm: "checkins" },
+  { label: "Classes", href: "/partner/classes", icon: <Dumbbell className="h-4 w-4" />, perm: "classes" },
+  { label: "Products", href: "/partner/products", icon: <Package className="h-4 w-4" />, perm: "products" },
+  { label: "Scan QR", href: "/partner/scan", icon: <QrCode className="h-4 w-4" />, perm: "checkins" },
+  { label: "Display gym QR", href: "/partner/display-qr", icon: <QrCode className="h-4 w-4" />, perm: "checkins" },
+  { label: "Team", href: "/partner/staff", icon: <Users className="h-4 w-4" />, ownerOnly: true },
+  { label: "Profile & Settings", href: "/partner/settings", icon: <Settings className="h-4 w-4" />, ownerOnly: true },
 ];
 
 export function PartnerLayout({
@@ -128,7 +138,12 @@ export function PartnerLayout({
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-          {NAV.map((item) => {
+          {NAV.filter((item) => {
+            if (!partner?.isStaff) return true;
+            if (item.ownerOnly) return false;
+            if (!item.perm) return true;
+            return (partner.permissions ?? []).includes(item.perm);
+          }).map((item) => {
             const active =
               item.href === "/partner"
                 ? location === "/partner"

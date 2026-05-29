@@ -443,6 +443,27 @@ export const partnerLoginTokensTable = pgTable("partner_login_tokens", {
     .defaultNow(),
 });
 
+// Sub-accounts created BY a partner for their own team members (e.g. front-desk
+// staff, branch managers). They sign in through the same partner portal login
+// but act on behalf of their parent partner with a limited set of permissions.
+export const partnerStaffTable = pgTable("partner_staff", {
+  id: serial("id").primaryKey(),
+  partnerId: integer("partner_id")
+    .notNull()
+    .references(() => partnersTable.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  permissions: text("permissions")
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const blogPostsTable = pgTable("blog_posts", {
   id: serial("id").primaryKey(),
   slug: text("slug").notNull().unique(),
