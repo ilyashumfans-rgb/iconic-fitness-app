@@ -62,7 +62,7 @@ export function StaffCard({
 }) {
   return (
     <div
-      className={`bg-slate-900/60 border border-slate-800 rounded-2xl ${className}`}
+      className={`bg-white border border-slate-200 rounded-2xl ${className}`}
     >
       {children}
     </div>
@@ -124,7 +124,7 @@ export function StaffLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-400 flex items-center justify-center">
+      <div className="min-h-screen bg-orange-50/40 text-slate-500 flex items-center justify-center">
         Loading…
       </div>
     );
@@ -134,7 +134,7 @@ export function StaffLayout({
   const allowedNav = NAV.filter((n) => me.permissions.includes(n.perm));
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 lg:flex">
+    <div className="min-h-screen bg-orange-50/40 text-slate-900 lg:flex">
       {/* Mobile backdrop */}
       {mobileOpen && (
         <div
@@ -145,22 +145,22 @@ export function StaffLayout({
       )}
 
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-72 max-w-[85vw] lg:w-64 shrink-0 border-r border-slate-800 bg-slate-900 lg:bg-slate-900/60 flex flex-col transform transition-transform duration-300 ease-out lg:transform-none ${
+        className={`fixed lg:static inset-y-0 left-0 z-50 w-72 max-w-[85vw] lg:w-64 shrink-0 border-r border-slate-200 bg-white lg:bg-white flex flex-col transform transition-transform duration-300 ease-out lg:transform-none ${
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
-        <div className="px-5 py-5 border-b border-slate-800 flex items-start justify-between">
+        <div className="px-5 py-5 border-b border-slate-200 flex items-start justify-between">
           <div>
-            <div className="text-xs uppercase tracking-[0.2em] text-orange-400 font-bold">
+            <div className="text-xs uppercase tracking-[0.2em] text-orange-600 font-bold">
               GYMCO
             </div>
-            <div className="text-sm font-semibold text-white mt-0.5">
+            <div className="text-sm font-semibold text-slate-900 mt-0.5">
               Staff Portal
             </div>
           </div>
           <button
             onClick={() => setMobileOpen(false)}
-            className="lg:hidden h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-800"
+            className="lg:hidden h-8 w-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-white"
             aria-label="Close menu"
           >
             <X className="h-5 w-5" />
@@ -171,8 +171,8 @@ export function StaffLayout({
             href="/staff"
             className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
               location === "/staff"
-                ? "bg-orange-500/15 text-orange-300 border border-orange-500/30"
-                : "text-slate-300 hover:bg-slate-800/60"
+                ? "bg-orange-100 text-orange-700 border border-orange-200"
+                : "text-slate-600 hover:bg-orange-100"
             }`}
           >
             <LayoutDashboard className="h-4 w-4" />
@@ -191,8 +191,8 @@ export function StaffLayout({
                   href={item.href}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                     active
-                      ? "bg-orange-500/15 text-orange-300 border border-orange-500/30"
-                      : "text-slate-300 hover:bg-slate-800/60"
+                      ? "bg-orange-100 text-orange-700 border border-orange-200"
+                      : "text-slate-600 hover:bg-orange-100"
                   }`}
                 >
                   {item.icon}
@@ -202,32 +202,32 @@ export function StaffLayout({
             })
           )}
         </nav>
-        <div className="px-3 py-4 border-t border-slate-800">
-          <div className="px-3 py-2 text-xs text-slate-400">
+        <div className="px-3 py-4 border-t border-slate-200">
+          <div className="px-3 py-2 text-xs text-slate-500">
             Signed in as
-            <div className="text-sm text-white font-medium truncate">
+            <div className="text-sm text-slate-900 font-medium truncate">
               {me.name}
             </div>
             <div className="truncate">{me.email}</div>
           </div>
           <button
             onClick={logout}
-            className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 hover:border-orange-500/40 text-sm text-slate-200"
+            className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white border border-slate-300 hover:border-orange-500/40 text-sm text-slate-700"
           >
             <LogOut className="h-4 w-4" /> Sign out
           </button>
         </div>
       </aside>
       <main className="flex-1 min-w-0">
-        <div className="border-b border-slate-800 bg-slate-900/80 backdrop-blur px-4 lg:px-8 py-4 lg:py-5 flex items-center gap-3 sticky top-0 z-30">
+        <div className="border-b border-slate-200 bg-white/90 backdrop-blur px-4 lg:px-8 py-4 lg:py-5 flex items-center gap-3 sticky top-0 z-30">
           <button
             onClick={() => setMobileOpen(true)}
-            className="lg:hidden h-9 w-9 flex items-center justify-center rounded-lg border border-slate-700 text-orange-300 hover:bg-slate-800 shrink-0"
+            className="lg:hidden h-9 w-9 flex items-center justify-center rounded-lg border border-slate-300 text-orange-700 hover:bg-white shrink-0"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />
           </button>
-          <h1 className="text-lg lg:text-xl font-bold text-white truncate">
+          <h1 className="text-lg lg:text-xl font-bold text-slate-900 truncate">
             {title ?? ""}
           </h1>
           {actions && <div className="ml-auto shrink-0">{actions}</div>}
@@ -263,12 +263,12 @@ export function PermissionGate({
     return (
       <StaffLayout title="Access denied">
         <StaffCard className="p-8 max-w-xl">
-          <h2 className="text-lg font-bold text-white mb-2">
+          <h2 className="text-lg font-bold text-slate-900 mb-2">
             Permission required
           </h2>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-slate-500">
             You don't have access to this feature. Ask an admin to grant the{" "}
-            <code className="text-orange-300">{perm}</code> permission to your
+            <code className="text-orange-700">{perm}</code> permission to your
             account.
           </p>
         </StaffCard>

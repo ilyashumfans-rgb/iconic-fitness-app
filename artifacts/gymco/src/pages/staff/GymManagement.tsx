@@ -124,10 +124,10 @@ function Inner() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search gym, city, area, partner…"
-              className="w-full pl-9 pr-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+              className="w-full pl-9 pr-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
             />
           </div>
-          <div className="inline-flex rounded-lg border border-slate-700 bg-slate-800 p-0.5 text-xs font-semibold">
+          <div className="inline-flex rounded-lg border border-slate-300 bg-white p-0.5 text-xs font-semibold">
             {([
               ["all", `All (${counts.all})`],
               ["verified", `Verified (${counts.verified})`],
@@ -139,14 +139,14 @@ function Inner() {
                 className={`px-3 py-1.5 rounded-md transition-colors ${
                   filter === k
                     ? "bg-orange-500 text-white"
-                    : "text-slate-300 hover:text-white"
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 {label}
               </button>
             ))}
           </div>
-          <div className="text-xs text-slate-400">
+          <div className="text-xs text-slate-500">
             {loading ? "Loading…" : `${filtered.length} of ${gyms.length} gyms`}
           </div>
           <button
@@ -156,28 +156,28 @@ function Inner() {
             <Plus className="h-4 w-4" /> Add Gym
           </button>
         </div>
-        <div className="mt-3 text-[11px] text-slate-400">
-          Only <span className="text-emerald-400 font-semibold">verified</span>{" "}
+        <div className="mt-3 text-[11px] text-slate-500">
+          Only <span className="text-emerald-700 font-semibold">verified</span>{" "}
           gyms appear to members anywhere in the app. Unverified gyms remain
           hidden until you verify them.
         </div>
       </StaffCard>
 
       {err && (
-        <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {err}
         </div>
       )}
 
       {loading ? (
-        <div className="text-sm text-slate-400 flex items-center gap-2">
+        <div className="text-sm text-slate-500 flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin" /> Fetching gyms…
         </div>
       ) : filtered.length === 0 ? (
         <StaffCard className="p-10 text-center">
           <Building2 className="h-10 w-10 mx-auto text-slate-600 mb-3" />
-          <div className="text-white font-semibold">No gyms found</div>
-          <div className="text-sm text-slate-400 mt-1">
+          <div className="text-slate-900 font-semibold">No gyms found</div>
+          <div className="text-sm text-slate-500 mt-1">
             Try a different search term.
           </div>
         </StaffCard>
@@ -185,7 +185,7 @@ function Inner() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map((g) => (
             <StaffCard key={g.id} className="overflow-hidden flex flex-col">
-              <div className="relative h-36 bg-slate-800">
+              <div className="relative h-36 bg-white">
                 {g.heroImage ? (
                   <img
                     src={g.heroImage}
@@ -227,18 +227,18 @@ function Inner() {
                 </div>
               </div>
               <div className="p-4 flex-1 flex flex-col">
-                <div className="text-[11px] text-slate-400 uppercase tracking-wider font-bold">
+                <div className="text-[11px] text-slate-500 uppercase tracking-wider font-bold">
                   Partner
                 </div>
-                <div className="text-sm text-white font-medium truncate">
+                <div className="text-sm text-slate-900 font-medium truncate">
                   {g.partnerName ?? "— unassigned —"}
                 </div>
-                <div className="mt-3 flex items-center justify-end text-xs text-slate-300">
+                <div className="mt-3 flex items-center justify-end text-xs text-slate-600">
                   <span
                     className={`px-2 py-0.5 rounded-full font-bold ${
                       g.openNow
-                        ? "bg-emerald-500/20 text-emerald-300"
-                        : "bg-slate-700 text-slate-300"
+                        ? "bg-emerald-100 text-emerald-700"
+                        : "bg-slate-100 text-slate-600"
                     }`}
                   >
                     {g.openNow ? "Open now" : "Closed"}
@@ -256,8 +256,8 @@ function Inner() {
                     disabled={toggling === g.id}
                     className={`inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition disabled:opacity-60 ${
                       g.isVerified
-                        ? "bg-rose-500/15 text-rose-300 border border-rose-500/40 hover:bg-rose-500/25"
-                        : "bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/25"
+                        ? "bg-rose-100 text-rose-700 border border-rose-200 hover:bg-rose-200"
+                        : "bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-200"
                     }`}
                   >
                     {toggling === g.id ? (
@@ -760,7 +760,7 @@ function Field({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60 focus:border-orange-400"
+        className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder:text-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60 focus:border-orange-400"
       />
     </div>
   );

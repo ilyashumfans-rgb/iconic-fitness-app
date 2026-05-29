@@ -74,20 +74,20 @@ function Form() {
   };
 
   const inputCls =
-    "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
+    "w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
   const showAmenities = form.kind === "gym" || form.kind === "both";
 
   return (
     <StaffLayout title="Partner Onboarding">
       <StaffCard className="p-6 max-w-3xl">
-        <p className="text-sm text-slate-400 mb-6">
+        <p className="text-sm text-slate-500 mb-6">
           Create a new partner gym account. They'll be able to log in to the
           partner dashboard with the credentials below.
         </p>
         <form onSubmit={submit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+              <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5">
                 Studio Name
               </label>
               <input
@@ -99,7 +99,7 @@ function Form() {
               />
             </div>
             <div>
-              <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+              <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5">
                 Email
               </label>
               <input
@@ -112,7 +112,7 @@ function Form() {
               />
             </div>
             <div>
-              <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+              <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5">
                 Phone
               </label>
               <input
@@ -124,7 +124,7 @@ function Form() {
               />
             </div>
             <div>
-              <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+              <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5">
                 City
               </label>
               <input
@@ -136,7 +136,7 @@ function Form() {
               />
             </div>
             <div className="sm:col-span-2">
-              <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+              <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5">
                 Account type
               </label>
               <select
@@ -155,7 +155,7 @@ function Form() {
               </select>
             </div>
             <div className="sm:col-span-2">
-              <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+              <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5">
                 Initial Password
               </label>
               <input
@@ -171,7 +171,7 @@ function Form() {
               />
             </div>
             <div className="sm:col-span-2">
-              <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+              <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5">
                 Notes
               </label>
               <textarea
@@ -184,8 +184,8 @@ function Form() {
           </div>
 
           {showAmenities && amenities.length > 0 && (
-            <div className="rounded-2xl border border-slate-700 bg-slate-900/40 p-5">
-              <div className="text-sm font-bold uppercase tracking-wider text-orange-400 mb-3">
+            <div className="rounded-2xl border border-slate-300 bg-white/40 p-5">
+              <div className="text-sm font-bold uppercase tracking-wider text-orange-600 mb-3">
                 Gym Amenities
               </div>
               <p className="text-xs text-slate-500 mb-4">
@@ -201,16 +201,16 @@ function Form() {
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border cursor-pointer transition-colors ${
                         active
                           ? "bg-gradient-to-r from-orange-500/15 to-orange-600/10 border-orange-500/60"
-                          : "bg-slate-800 border-slate-700 hover:border-orange-500/40"
+                          : "bg-white border-slate-300 hover:border-orange-500/40"
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={active}
                         onChange={() => toggle(a.id)}
-                        className="rounded border-slate-600 bg-slate-900 text-orange-500 focus:ring-orange-500/60"
+                        className="rounded border-slate-300 bg-white text-orange-500 focus:ring-orange-500/60"
                       />
-                      <span className="text-sm font-semibold text-slate-100 truncate">
+                      <span className="text-sm font-semibold text-slate-900 truncate">
                         {a.name}
                       </span>
                     </label>
@@ -221,12 +221,12 @@ function Form() {
           )}
 
           {err && (
-            <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
               {err}
             </div>
           )}
           {ok && (
-            <div className="text-sm text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3">
+            <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-3">
               Partner created. Redirecting…
             </div>
           )}

@@ -81,20 +81,20 @@ function View() {
   };
 
   const inputCls =
-    "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
+    "w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
 
   return (
     <StaffLayout title="Partner Documents">
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <StaffCard className="p-6 lg:col-span-2">
-          <h2 className="text-base font-bold text-white mb-4">Upload Document</h2>
+          <h2 className="text-base font-bold text-slate-900 mb-4">Upload Document</h2>
           <div className="space-y-4">
             <div>
-              <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+              <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5">
                 Partner
               </label>
               {partnersErr ? (
-                <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg p-2.5">
+                <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-2.5">
                   {partnersErr}
                 </div>
               ) : (
@@ -117,7 +117,7 @@ function View() {
             </div>
             <form onSubmit={submit} className="space-y-4">
               <div>
-                <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+                <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5">
                   Document Name
                 </label>
                 <input
@@ -129,7 +129,7 @@ function View() {
                 />
               </div>
               <div>
-                <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+                <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5">
                   Document File / URL
                 </label>
                 <div className="flex items-center gap-2 mb-2">
@@ -147,7 +147,7 @@ function View() {
                     }}
                   />
                   {form.url && (
-                    <span className="text-[11px] text-emerald-400 truncate">
+                    <span className="text-[11px] text-emerald-700 truncate">
                       File attached
                     </span>
                   )}
@@ -165,7 +165,7 @@ function View() {
                 </div>
               </div>
               <div>
-                <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+                <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5">
                   Notes (optional)
                 </label>
                 <textarea
@@ -176,12 +176,12 @@ function View() {
                 />
               </div>
               {err && (
-                <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+                <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
                   {err}
                 </div>
               )}
               {ok && (
-                <div className="text-sm text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3">
+                <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-3">
                   Document uploaded.
                 </div>
               )}
@@ -196,8 +196,8 @@ function View() {
         </StaffCard>
 
         <StaffCard className="p-0 lg:col-span-3 overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-800">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+          <div className="px-5 py-4 border-b border-slate-200">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-600">
               {typeof selected === "number"
                 ? "Documents on file"
                 : "Select a partner to view documents"}
@@ -221,17 +221,17 @@ function View() {
                 {docs.map((d) => (
                   <li
                     key={d.id}
-                    className="flex items-start gap-3 p-3 rounded-xl border border-slate-700 bg-slate-800/60"
+                    className="flex items-start gap-3 p-3 rounded-xl border border-slate-300 bg-orange-100"
                   >
-                    <div className="h-9 w-9 rounded-lg bg-orange-500/15 text-orange-300 border border-orange-500/30 flex items-center justify-center shrink-0">
+                    <div className="h-9 w-9 rounded-lg bg-orange-100 text-orange-700 border border-orange-200 flex items-center justify-center shrink-0">
                       <FileText className="h-4 w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-white truncate">
+                      <div className="font-medium text-slate-900 truncate">
                         {d.name}
                       </div>
                       {d.notes && (
-                        <div className="text-xs text-slate-400 mt-0.5">
+                        <div className="text-xs text-slate-500 mt-0.5">
                           {d.notes}
                         </div>
                       )}
@@ -244,13 +244,13 @@ function View() {
                       href={d.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-xs px-2.5 py-1 rounded bg-slate-700/60 text-slate-200 border border-slate-600/60 hover:border-orange-500/40 inline-flex items-center gap-1 shrink-0"
+                      className="text-xs px-2.5 py-1 rounded bg-slate-100/60 text-slate-700 border border-slate-300/60 hover:border-orange-500/40 inline-flex items-center gap-1 shrink-0"
                     >
                       <ExternalLink className="h-3 w-3" /> Open
                     </a>
                     <button
                       onClick={() => remove(d.id)}
-                      className="text-xs px-2.5 py-1 rounded bg-red-500/10 text-red-300 border border-red-500/30 hover:bg-red-500/20 inline-flex items-center gap-1 shrink-0"
+                      className="text-xs px-2.5 py-1 rounded bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 inline-flex items-center gap-1 shrink-0"
                     >
                       <Trash2 className="h-3 w-3" />
                     </button>

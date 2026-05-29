@@ -211,12 +211,12 @@ function View() {
       }
     >
       {err && (
-        <div className="mb-4 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-sm print:hidden">
+        <div className="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm print:hidden">
           {err}
         </div>
       )}
       {msg && (
-        <div className="mb-4 px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-sm print:hidden">
+        <div className="mb-4 px-4 py-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm print:hidden">
           {msg}
         </div>
       )}
@@ -225,7 +225,7 @@ function View() {
       {resetting && (
         <StaffCard className="p-5 mb-5">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-white">
+            <h3 className="font-semibold text-slate-900">
               Reset password — {resetting.name}
             </h3>
             <button
@@ -233,7 +233,7 @@ function View() {
                 setResetting(null);
                 setPwd("");
               }}
-              className="text-slate-400 hover:text-white"
+              className="text-slate-500 hover:text-slate-900"
             >
               <X className="h-4 w-4" />
             </button>
@@ -250,7 +250,7 @@ function View() {
               placeholder="New password (min 6 chars)"
               minLength={6}
               required
-              className="flex-1 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+              className="flex-1 px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/60"
             />
             <button className="px-5 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold">
               Update password
@@ -270,7 +270,7 @@ function View() {
           onClick={() => setEditing(null)}
         >
           <div
-            className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl"
+            className="w-full max-w-md rounded-2xl bg-white border border-slate-300 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-5 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white flex items-center justify-between rounded-t-2xl">
@@ -288,7 +288,7 @@ function View() {
             </div>
             <form onSubmit={submitEdit} className="p-5 space-y-4">
               <div>
-                <label className="text-[10px] uppercase tracking-wide text-slate-400 font-bold mb-1.5 block">
+                <label className="text-[10px] uppercase tracking-wide text-slate-500 font-bold mb-1.5 block">
                   Name
                 </label>
                 <input
@@ -296,12 +296,12 @@ function View() {
                   onChange={(e) =>
                     setEditForm((f) => ({ ...f, name: e.target.value }))
                   }
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
                   required
                 />
               </div>
               <div>
-                <label className="text-[10px] uppercase tracking-wide text-slate-400 font-bold mb-1.5 block">
+                <label className="text-[10px] uppercase tracking-wide text-slate-500 font-bold mb-1.5 block">
                   Phone
                 </label>
                 <input
@@ -309,11 +309,11 @@ function View() {
                   onChange={(e) =>
                     setEditForm((f) => ({ ...f, phone: e.target.value }))
                   }
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
                 />
               </div>
               <div>
-                <label className="text-[10px] uppercase tracking-wide text-slate-400 font-bold mb-1.5 block">
+                <label className="text-[10px] uppercase tracking-wide text-slate-500 font-bold mb-1.5 block">
                   City
                 </label>
                 <input
@@ -321,7 +321,7 @@ function View() {
                   onChange={(e) =>
                     setEditForm((f) => ({ ...f, city: e.target.value }))
                   }
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
                 />
               </div>
               <p className="text-xs text-slate-500">
@@ -332,7 +332,7 @@ function View() {
                 <button
                   type="button"
                   onClick={() => setEditing(null)}
-                  className="px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 text-sm hover:bg-slate-700"
+                  className="px-4 py-2 rounded-lg bg-white border border-slate-300 text-slate-600 text-sm hover:bg-slate-100"
                 >
                   Cancel
                 </button>
@@ -377,7 +377,7 @@ function View() {
             </div>
 
             {qrLoading ? (
-              <div className="p-16 text-center text-slate-400 text-sm">
+              <div className="p-16 text-center text-slate-500 text-sm">
                 Loading partner's gyms…
               </div>
             ) : partnerGyms.length === 0 ? (
@@ -437,21 +437,21 @@ function View() {
       )}
 
       <StaffCard className="p-0 overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between gap-4">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+        <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between gap-4">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-600">
             All Partners
           </h2>
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search by name, email, city…"
-            className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60 w-72"
+            className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60 w-72"
           />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[820px] text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-slate-500 border-b border-slate-800">
+              <tr className="text-left text-xs uppercase tracking-wide text-slate-500 border-b border-slate-200">
                 <th className="px-5 py-3">Name</th>
                 <th className="px-5 py-3">Email</th>
                 <th className="px-5 py-3">Phone</th>
@@ -486,20 +486,20 @@ function View() {
                 filtered.map((p) => (
                   <tr
                     key={p.id}
-                    className="border-b border-slate-800/60 hover:bg-slate-800/30"
+                    className="border-b border-slate-200/60 hover:bg-white/30"
                   >
-                    <td className="px-5 py-3 font-medium text-white">
+                    <td className="px-5 py-3 font-medium text-slate-900">
                       {p.name}
                     </td>
-                    <td className="px-5 py-3 text-slate-300">{p.email}</td>
-                    <td className="px-5 py-3 text-slate-400">{p.phone}</td>
-                    <td className="px-5 py-3 text-slate-400">{p.city}</td>
+                    <td className="px-5 py-3 text-slate-600">{p.email}</td>
+                    <td className="px-5 py-3 text-slate-500">{p.phone}</td>
+                    <td className="px-5 py-3 text-slate-500">{p.city}</td>
                     <td className="px-5 py-3">
                       {canManage ? (
                         <select
                           value={p.status}
                           onChange={(e) => updateStatus(p.id, e.target.value)}
-                          className="bg-slate-800 border border-slate-700 rounded-md px-2 py-1 text-xs text-slate-200"
+                          className="bg-white border border-slate-300 rounded-md px-2 py-1 text-xs text-slate-700"
                         >
                           <option value="pending">Pending</option>
                           <option value="active">Active</option>
@@ -509,10 +509,10 @@ function View() {
                         <span
                           className={`text-[11px] px-2 py-0.5 rounded-md border ${
                             p.status === "active"
-                              ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                               : p.status === "suspended"
-                                ? "bg-red-500/10 text-red-300 border-red-500/30"
-                                : "bg-slate-700/40 text-slate-300 border-slate-600/40"
+                                ? "bg-red-50 text-red-700 border-red-200"
+                                : "bg-slate-100/40 text-slate-600 border-slate-300/40"
                           }`}
                         >
                           {p.status}
@@ -530,7 +530,7 @@ function View() {
                           <button
                             onClick={() => openEdit(p)}
                             title="Edit partner name, phone, city"
-                            className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 mr-1"
+                            className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-100 mr-1"
                           >
                             <Pencil className="h-3.5 w-3.5" /> Edit
                           </button>
@@ -543,7 +543,7 @@ function View() {
                               )
                             }
                             title="Add a new gym branch under this partner"
-                            className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-orange-500/15 text-orange-300 border border-orange-500/30 hover:bg-orange-500/25 mr-1"
+                            className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-orange-100 text-orange-700 border border-orange-200 hover:bg-orange-200 mr-1"
                           >
                             <Building2 className="h-3.5 w-3.5" /> Add branch
                           </button>
@@ -552,7 +552,7 @@ function View() {
                           <button
                             onClick={() => duplicate(p)}
                             title="Onboard a new partner pre-filled with this partner's details (use a different email)"
-                            className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 mr-1"
+                            className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-100 mr-1"
                           >
                             <Copy className="h-3.5 w-3.5" /> Duplicate
                           </button>
@@ -561,7 +561,7 @@ function View() {
                           <button
                             onClick={() => openQrFor(p)}
                             title="Print branded gym check-in QR poster"
-                            className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-orange-500/15 text-orange-300 border border-orange-500/30 hover:bg-orange-500/25 mr-1"
+                            className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-orange-100 text-orange-700 border border-orange-200 hover:bg-orange-200 mr-1"
                           >
                             <QrCode className="h-3.5 w-3.5" /> Print QR
                           </button>
@@ -575,7 +575,7 @@ function View() {
                                 ? "Suspended partners cannot be signed in"
                                 : "Sign in as this partner in a new tab"
                             }
-                            className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-orange-500/15 text-orange-300 border border-orange-500/30 hover:bg-orange-500/25 mr-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-orange-100 text-orange-700 border border-orange-200 hover:bg-orange-200 mr-1 disabled:opacity-40 disabled:cursor-not-allowed"
                           >
                             <LogIn className="h-3.5 w-3.5" /> Sign in as
                           </button>
@@ -588,7 +588,7 @@ function View() {
                               setMsg(null);
                             }}
                             title="Reset partner password"
-                            className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 mr-1"
+                            className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-100 mr-1"
                           >
                             <KeyRound className="h-3.5 w-3.5" /> Reset
                           </button>
@@ -596,7 +596,7 @@ function View() {
                         {canManage && (
                           <button
                             onClick={() => remove(p)}
-                            className="p-1.5 rounded-md text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                            className="p-1.5 rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50"
                             title="Delete partner"
                           >
                             <Trash2 className="h-4 w-4" />

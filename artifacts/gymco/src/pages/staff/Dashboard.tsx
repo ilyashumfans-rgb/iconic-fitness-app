@@ -59,16 +59,16 @@ export default function StaffDashboard() {
   return (
     <StaffLayout title="Dashboard">
       <div className="mb-6">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-500">
           Welcome{me ? `, ${me.name}` : ""}. Here's what you have access to.
         </p>
       </div>
       {allowed.length === 0 ? (
         <StaffCard className="p-8 max-w-xl">
-          <h2 className="text-lg font-bold text-white mb-2">
+          <h2 className="text-lg font-bold text-slate-900 mb-2">
             No features assigned yet
           </h2>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-slate-500">
             Ask an admin to grant you permissions in the Admin → Staff
             Management panel.
           </p>
@@ -82,13 +82,13 @@ export default function StaffDashboard() {
               className="group"
             >
               <StaffCard className="p-5 hover:border-orange-500/50 transition-colors h-full">
-                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/10 border border-orange-500/30 text-orange-300 flex items-center justify-center mb-4">
+                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-400/10 border border-orange-200 text-orange-700 flex items-center justify-center mb-4">
                   {t.icon}
                 </div>
-                <div className="text-base font-bold text-white mb-1">
+                <div className="text-base font-bold text-slate-900 mb-1">
                   {t.label}
                 </div>
-                <div className="text-xs text-slate-400">{t.desc}</div>
+                <div className="text-xs text-slate-500">{t.desc}</div>
               </StaffCard>
             </Link>
           ))}
@@ -104,7 +104,7 @@ export default function StaffDashboard() {
             {me.permissions.map((p) => (
               <span
                 key={p}
-                className="text-[11px] px-2 py-0.5 rounded-md bg-orange-500/15 text-orange-300 border border-orange-500/30"
+                className="text-[11px] px-2 py-0.5 rounded-md bg-orange-100 text-orange-700 border border-orange-200"
               >
                 {PERMISSION_LABELS[p] ?? p}
               </span>

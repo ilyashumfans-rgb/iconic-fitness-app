@@ -49,18 +49,18 @@ function View() {
   };
 
   const inputCls =
-    "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
+    "w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
 
   return (
     <StaffLayout title="Reset Partner Password">
       <StaffCard className="p-6 max-w-xl">
-        <p className="text-sm text-slate-400 mb-6">
+        <p className="text-sm text-slate-500 mb-6">
           Select a partner and set a new password. They'll be required to use
           this on their next login.
         </p>
         <form onSubmit={submit} className="space-y-4">
           <div>
-            <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+            <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5">
               Partner
             </label>
             {partnersErr ? (
@@ -98,7 +98,7 @@ function View() {
             )}
           </div>
           <div>
-            <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+            <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5">
               New Password
             </label>
             <input
@@ -115,8 +115,8 @@ function View() {
             <div
               className={`text-sm rounded-lg p-3 border ${
                 msg.kind === "ok"
-                  ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/30"
-                  : "text-red-400 bg-red-500/10 border-red-500/30"
+                  ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+                  : "text-red-600 bg-red-50 border-red-200"
               }`}
             >
               {msg.text}
