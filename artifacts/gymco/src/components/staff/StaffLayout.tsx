@@ -72,9 +72,11 @@ export function StaffCard({
 export function StaffLayout({
   children,
   title,
+  actions,
 }: {
   children: ReactNode;
   title?: string;
+  actions?: ReactNode;
 }) {
   const [, navigate] = useLocation();
   const [location] = useLocation();
@@ -228,6 +230,7 @@ export function StaffLayout({
           <h1 className="text-lg lg:text-xl font-bold text-white truncate">
             {title ?? ""}
           </h1>
+          {actions && <div className="ml-auto shrink-0">{actions}</div>}
         </div>
         <div className="p-4 lg:p-8">{children}</div>
       </main>

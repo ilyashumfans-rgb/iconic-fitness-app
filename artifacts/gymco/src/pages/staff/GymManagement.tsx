@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearch } from "wouter";
 import {
   StaffLayout,
   StaffCard,
@@ -33,13 +34,17 @@ export default function StaffGymManagementPage() {
 }
 
 function Inner() {
+  const search = useSearch();
+  const prefillOwnerPartnerId = new URLSearchParams(search).get(
+    "ownerPartnerId",
+  );
   const [gyms, setGyms] = useState<StaffGym[]>([]);
   const [partners, setPartners] = useState<StaffPartner[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<StaffGym | null>(null);
-  const [creating, setCreating] = useState(false);
+  const [creating, setCreating] = useState(Boolean(prefillOwnerPartnerId));
   const [filter, setFilter] = useState<"all" | "verified" | "unverified">("all");
   const [toggling, setToggling] = useState<number | null>(null);
 
@@ -215,7 +220,7 @@ function Inner() {
                       <Navigation className="h-3 w-3" /> PINNED
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/90 text-white text-[10px] font-bold">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-500/90 text-white text-[10px] font-bold">
                       NO LOCATION
                     </span>
                   )}
@@ -291,6 +296,7 @@ function Inner() {
       {creating && (
         <CreateGymModal
           partners={partners}
+          initialOwnerPartnerId={prefillOwnerPartnerId ?? ""}
           onClose={() => setCreating(false)}
           onCreated={(gym) => {
             setGyms((prev) => [gym, ...prev]);
@@ -594,10 +600,12 @@ function EditGymModal({
 
 function CreateGymModal({
   partners,
+  initialOwnerPartnerId = "",
   onClose,
   onCreated,
 }: {
   partners: StaffPartner[];
+  initialOwnerPartnerId?: string;
   onClose: () => void;
   onCreated: (g: StaffGym) => void;
 }) {
@@ -606,7 +614,7 @@ function CreateGymModal({
   const [city, setCity] = useState("Bangalore");
   const [address, setAddress] = useState("");
   const [priceFrom, setPriceFrom] = useState("999");
-  const [ownerPartnerId, setOwnerPartnerId] = useState("");
+  const [ownerPartnerId, setOwnerPartnerId] = useState(initialOwnerPartnerId);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 

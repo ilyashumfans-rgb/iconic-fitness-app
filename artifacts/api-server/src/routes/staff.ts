@@ -111,6 +111,7 @@ router.get(
         status: partnersTable.status,
         city: partnersTable.city,
         kind: partnersTable.kind,
+        notes: partnersTable.notes,
         createdAt: partnersTable.createdAt,
       })
       .from(partnersTable)
@@ -323,6 +324,20 @@ router.post(
     req.session.partnerEmail = partner.email;
     req.session.partnerName = partner.name;
     res.json({ ok: true, redirectTo: "/partner" });
+  },
+);
+
+router.delete(
+  "/staff/partners/:id",
+  requireStaffPermission("partner.onboard"),
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id) || id <= 0) {
+      res.status(400).json({ error: "Invalid partner id" });
+      return;
+    }
+    await db.delete(partnersTable).where(eq(partnersTable.id, id));
+    res.json({ ok: true });
   },
 );
 

@@ -15,6 +15,7 @@ export type StaffPartner = {
   status: string;
   city: string;
   kind: string;
+  notes?: string;
   createdAt: string;
 };
 
@@ -121,6 +122,8 @@ export const staffApi = {
         `/staff/partners/${id}/impersonate`,
         { method: "POST" },
       ),
+    remove: (id: number) =>
+      request<{ ok: true }>(`/staff/partners/${id}`, { method: "DELETE" }),
     resetPassword: (id: number, password: string) =>
       request<{ ok: true }>(`/staff/partners/${id}/reset-password`, {
         method: "POST",

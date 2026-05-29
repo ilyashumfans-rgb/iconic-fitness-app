@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import {
   StaffLayout,
   StaffCard,
@@ -15,14 +15,20 @@ type Amenity = {
 
 function Form() {
   const [, navigate] = useLocation();
+  const search = useSearch();
+  const params = new URLSearchParams(search);
+  const dupKind = params.get("kind");
   const [form, setForm] = useState({
-    name: "",
+    name: params.get("name") ?? "",
     email: "",
-    phone: "",
-    city: "",
+    phone: params.get("phone") ?? "",
+    city: params.get("city") ?? "",
     password: "",
-    notes: "",
-    kind: "gym" as "gym" | "vendor" | "both",
+    notes: params.get("notes") ?? "",
+    kind: (dupKind === "vendor" || dupKind === "both" ? dupKind : "gym") as
+      | "gym"
+      | "vendor"
+      | "both",
   });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -194,7 +200,7 @@ function Form() {
                       key={a.id}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border cursor-pointer transition-colors ${
                         active
-                          ? "bg-gradient-to-r from-orange-500/15 to-amber-500/10 border-orange-500/60"
+                          ? "bg-gradient-to-r from-orange-500/15 to-orange-600/10 border-orange-500/60"
                           : "bg-slate-800 border-slate-700 hover:border-orange-500/40"
                       }`}
                     >
