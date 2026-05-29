@@ -130,11 +130,11 @@ export function SiteFooter() {
           {/* Brand column */}
           <div className="col-span-2">
             <Link href="/" className="flex flex-col gap-1 mb-5">
-              <span className="text-[9px] uppercase tracking-[0.22em] font-bold text-muted-foreground leading-none">
-                Go to any gym
-              </span>
               <span className="text-2xl font-black tracking-tight text-gradient-brand leading-tight">
                 GYMCO
+              </span>
+              <span className="text-[9px] uppercase tracking-[0.22em] font-bold text-muted-foreground leading-none">
+                Go to any gym
               </span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
