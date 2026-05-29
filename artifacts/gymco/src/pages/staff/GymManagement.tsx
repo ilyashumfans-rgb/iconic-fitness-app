@@ -323,7 +323,13 @@ function EditGymModal({
   const [address, setAddress] = useState(gym.address);
   const [area, setArea] = useState(gym.area);
   const [city, setCity] = useState(gym.city);
-  const [priceFrom, setPriceFrom] = useState(String(gym.priceFrom ?? 0));
+  const [payoutAmount, setPayoutAmount] = useState(
+    String(gym.payoutPerVisitInr ?? 0),
+  );
+  const [payoutTaxPct, setPayoutTaxPct] = useState(
+    String(gym.payoutTaxPct ?? 18),
+  );
+  const [payoutInclTax, setPayoutInclTax] = useState(false);
   const [openNow, setOpenNow] = useState(gym.openNow);
   const [ownerPartnerId, setOwnerPartnerId] = useState(
     gym.ownerPartnerId != null ? String(gym.ownerPartnerId) : "",
@@ -400,7 +406,8 @@ function EditGymModal({
         address,
         area,
         city,
-        priceFrom: Number(priceFrom) || 0,
+        payoutPerVisitInr: payoutBaseInr(payoutAmount, payoutTaxPct, payoutInclTax),
+        payoutTaxPct: Number(payoutTaxPct) || 0,
         openNow,
         ownerPartnerId: ownerPartnerId === "" ? null : Number(ownerPartnerId),
         ...(latNum !== undefined && Number.isFinite(latNum) ? { lat: latNum } : {}),
@@ -539,11 +546,13 @@ function EditGymModal({
               )}
             </div>
 
-            <Field
-              label="Starting price (₹)"
-              value={priceFrom}
-              onChange={setPriceFrom}
-              type="number"
+            <PayoutFields
+              amount={payoutAmount}
+              onAmount={setPayoutAmount}
+              taxPct={payoutTaxPct}
+              onTaxPct={setPayoutTaxPct}
+              inclTax={payoutInclTax}
+              onInclTax={setPayoutInclTax}
             />
             <button
               type="button"
@@ -613,7 +622,9 @@ function CreateGymModal({
   const [area, setArea] = useState("");
   const [city, setCity] = useState("Bangalore");
   const [address, setAddress] = useState("");
-  const [priceFrom, setPriceFrom] = useState("999");
+  const [payoutAmount, setPayoutAmount] = useState("0");
+  const [payoutTaxPct, setPayoutTaxPct] = useState("18");
+  const [payoutInclTax, setPayoutInclTax] = useState(false);
   const [ownerPartnerId, setOwnerPartnerId] = useState(initialOwnerPartnerId);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -631,7 +642,8 @@ function CreateGymModal({
         area: area.trim(),
         city: city.trim(),
         address: address.trim(),
-        priceFrom: Number(priceFrom) || 999,
+        payoutPerVisitInr: payoutBaseInr(payoutAmount, payoutTaxPct, payoutInclTax),
+        payoutTaxPct: Number(payoutTaxPct) || 0,
         ownerPartnerId: ownerPartnerId === "" ? null : Number(ownerPartnerId),
       });
       onCreated(gym);
@@ -689,12 +701,16 @@ function CreateGymModal({
               onChange={setAddress}
               className="sm:col-span-2"
             />
-            <Field
-              label="Price from (₹)"
-              value={priceFrom}
-              onChange={setPriceFrom}
-              type="number"
-            />
+            <div className="sm:col-span-2">
+              <PayoutFields
+                amount={payoutAmount}
+                onAmount={setPayoutAmount}
+                taxPct={payoutTaxPct}
+                onTaxPct={setPayoutTaxPct}
+                inclTax={payoutInclTax}
+                onInclTax={setPayoutInclTax}
+              />
+            </div>
 
             <div>
               <label className="text-xs uppercase tracking-wide text-slate-600 font-semibold mb-1.5 block flex items-center gap-1.5">
@@ -733,6 +749,87 @@ function CreateGymModal({
             Create gym
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// Given the amount staff typed, the tax %, and whether that amount already
+// includes tax, return the base (tax-exclusive) payout to store on the gym.
+function payoutBaseInr(amount: string, taxPct: string, inclTax: boolean): number {
+  const amt = Number(amount) || 0;
+  const tax = Number(taxPct) || 0;
+  if (inclTax) {
+    return Math.round(amt / (1 + tax / 100));
+  }
+  return Math.round(amt);
+}
+
+function PayoutFields({
+  amount,
+  onAmount,
+  taxPct,
+  onTaxPct,
+  inclTax,
+  onInclTax,
+}: {
+  amount: string;
+  onAmount: (v: string) => void;
+  taxPct: string;
+  onTaxPct: (v: string) => void;
+  inclTax: boolean;
+  onInclTax: (v: boolean) => void;
+}) {
+  const base = payoutBaseInr(amount, taxPct, inclTax);
+  const tax = Number(taxPct) || 0;
+  const taxInr = Math.round((base * tax) / 100);
+  const total = base + taxInr;
+  return (
+    <div className="sm:col-span-2 rounded-xl border border-orange-100 bg-orange-50/40 p-3 space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <Field
+          label="Partner Payout per Visit (₹)"
+          value={amount}
+          onChange={onAmount}
+          type="number"
+        />
+        <Field label="GST (%)" value={taxPct} onChange={onTaxPct} type="number" />
+      </div>
+      <div>
+        <span className="text-xs uppercase tracking-wide text-slate-600 font-semibold mb-1.5 block">
+          Amount entered is
+        </span>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => onInclTax(false)}
+            className={`px-3 py-2 rounded-lg border text-sm font-semibold transition ${
+              !inclTax
+                ? "bg-orange-500 border-orange-500 text-white"
+                : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+            }`}
+          >
+            Without tax (base)
+          </button>
+          <button
+            type="button"
+            onClick={() => onInclTax(true)}
+            className={`px-3 py-2 rounded-lg border text-sm font-semibold transition ${
+              inclTax
+                ? "bg-orange-500 border-orange-500 text-white"
+                : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+            }`}
+          >
+            Including tax
+          </button>
+        </div>
+      </div>
+      <div className="text-[12px] text-slate-700 font-medium">
+        Base ₹{base.toLocaleString("en-IN")} + GST ₹
+        {taxInr.toLocaleString("en-IN")} ({tax}%) ={" "}
+        <span className="font-bold text-orange-700">
+          ₹{total.toLocaleString("en-IN")} per visit
+        </span>
       </div>
     </div>
   );

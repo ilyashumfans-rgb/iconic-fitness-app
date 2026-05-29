@@ -510,6 +510,8 @@ router.get(
         heroImage: gymsTable.heroImage,
         logoUrl: gymsTable.logoUrl,
         priceFrom: gymsTable.priceFrom,
+        payoutPerVisitInr: gymsTable.payoutPerVisitInr,
+        payoutTaxPct: gymsTable.payoutTaxPct,
         openNow: gymsTable.openNow,
         rating: gymsTable.rating,
         lat: gymsTable.lat,
@@ -565,6 +567,8 @@ router.post(
         rating: 4.5,
         reviewsCount: 0,
         priceFrom: Number(b.priceFrom ?? 999),
+        payoutPerVisitInr: Math.max(0, Math.round(Number(b.payoutPerVisitInr ?? 0)) || 0),
+        payoutTaxPct: Math.min(100, Math.max(0, Math.round(Number(b.payoutTaxPct ?? 18)) || 0)),
         categories: ["gym"],
         amenities: [],
         distanceKm: 2.5,
@@ -607,6 +611,16 @@ router.patch(
       if (b[k] !== undefined) patch[k] = String(b[k]);
     }
     if (b.priceFrom !== undefined) patch.priceFrom = Number(b.priceFrom);
+    if (b.payoutPerVisitInr !== undefined)
+      patch.payoutPerVisitInr = Math.max(
+        0,
+        Math.round(Number(b.payoutPerVisitInr)) || 0,
+      );
+    if (b.payoutTaxPct !== undefined)
+      patch.payoutTaxPct = Math.min(
+        100,
+        Math.max(0, Math.round(Number(b.payoutTaxPct)) || 0),
+      );
     for (const k of ["lat", "lng"]) {
       if (b[k] !== undefined && b[k] !== null && b[k] !== "") {
         const n = Number(b[k]);

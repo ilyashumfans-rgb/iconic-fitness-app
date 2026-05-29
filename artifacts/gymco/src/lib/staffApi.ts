@@ -29,6 +29,8 @@ export type StaffGym = {
   heroImage: string;
   logoUrl: string | null;
   priceFrom: number;
+  payoutPerVisitInr: number;
+  payoutTaxPct: number;
   openNow: boolean;
   rating: number;
   lat: number | null;
