@@ -21,7 +21,6 @@ import {
   Building2,
   Copy,
   KeyRound,
-  Trash2,
 } from "lucide-react";
 import {
   GymQrPoster,
@@ -129,18 +128,6 @@ function View() {
       setMsg(`Password updated for ${resetting.name}.`);
       setResetting(null);
       setPwd("");
-    } catch (e: any) {
-      setErr(e?.message ?? String(e));
-    }
-  };
-
-  const remove = async (p: StaffPartner) => {
-    if (!confirm(`Delete partner "${p.name}"? This cannot be undone.`)) return;
-    setErr(null);
-    try {
-      await staffApi.partners.remove(p.id);
-      setMsg(`Deleted ${p.name}.`);
-      load();
     } catch (e: any) {
       setErr(e?.message ?? String(e));
     }
@@ -591,15 +578,6 @@ function View() {
                             className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-100 mr-1"
                           >
                             <KeyRound className="h-3.5 w-3.5" /> Reset
-                          </button>
-                        )}
-                        {canManage && (
-                          <button
-                            onClick={() => remove(p)}
-                            className="p-1.5 rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50"
-                            title="Delete partner"
-                          >
-                            <Trash2 className="h-4 w-4" />
                           </button>
                         )}
                       </td>
