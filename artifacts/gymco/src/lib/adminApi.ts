@@ -92,6 +92,20 @@ export const adminApi = {
       }>(`/admin/partners/${id}/qr-login`, { method: "POST" }),
     remove: (id: number) =>
       request<{ ok: true }>(`/admin/partners/${id}`, { method: "DELETE" }),
+    documents: (id: number) =>
+      request<{
+        partner: { id: number; name: string };
+        documents: Array<{
+          id: number;
+          partnerId: number;
+          name: string;
+          url: string;
+          notes: string;
+          uploadedByKind: string;
+          uploadedByEmail: string;
+          uploadedAt: string;
+        }>;
+      }>(`/admin/partners/${id}/documents`),
   },
   products: {
     list: () => request<any[]>("/admin/products"),

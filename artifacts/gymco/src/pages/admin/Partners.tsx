@@ -14,6 +14,8 @@ import {
   Pencil,
   Building2,
   Copy,
+  FileText,
+  ExternalLink,
 } from "lucide-react";
 import {
   GymQrPoster,
@@ -40,6 +42,27 @@ export default function AdminPartners() {
     city: "",
   });
   const [editBusy, setEditBusy] = useState(false);
+  const [docsFor, setDocsFor] = useState<any | null>(null);
+  const [docs, setDocs] = useState<
+    Awaited<ReturnType<typeof adminApi.partners.documents>>["documents"]
+  >([]);
+  const [docsLoading, setDocsLoading] = useState(false);
+  const [docsErr, setDocsErr] = useState<string | null>(null);
+
+  const openDocs = async (p: any) => {
+    setDocsFor(p);
+    setDocs([]);
+    setDocsErr(null);
+    setDocsLoading(true);
+    try {
+      const r = await adminApi.partners.documents(p.id);
+      setDocs(r.documents);
+    } catch (e) {
+      setDocsErr(e instanceof Error ? e.message : "Failed to load documents");
+    } finally {
+      setDocsLoading(false);
+    }
+  };
 
   const openEdit = (p: any) => {
     setEditing(p);
@@ -441,6 +464,13 @@ export default function AdminPartners() {
                     <Building2 className="h-3.5 w-3.5" /> Add branch
                   </button>
                   <button
+                    onClick={() => openDocs(p)}
+                    title="View documents uploaded for this partner"
+                    className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-orange-500/15 text-orange-700 border border-orange-500/30 hover:bg-orange-500/25 mr-1"
+                  >
+                    <FileText className="h-3.5 w-3.5" /> Documents
+                  </button>
+                  <button
                     onClick={() => {
                       const qs = new URLSearchParams({
                         duplicateOf: String(p.id),
@@ -500,6 +530,80 @@ export default function AdminPartners() {
         </table>
         </div>
       </AdminCard>
+
+      {docsFor && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setDocsFor(null)}
+        >
+          <div
+            className="w-full max-w-2xl rounded-xl bg-white shadow-xl border border-slate-200 max-h-[85vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+              <div>
+                <h3 className="text-base font-semibold text-slate-900">
+                  Documents
+                </h3>
+                <p className="text-xs text-slate-500">{docsFor.name}</p>
+              </div>
+              <button
+                onClick={() => setDocsFor(null)}
+                className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-5 overflow-y-auto">
+              {docsLoading ? (
+                <p className="text-sm text-slate-500">Loading documents...</p>
+              ) : docsErr ? (
+                <p className="text-sm text-red-600">{docsErr}</p>
+              ) : docs.length === 0 ? (
+                <p className="text-sm text-slate-500">
+                  No documents have been uploaded for this partner yet.
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {docs.map((d) => (
+                    <li
+                      key={d.id}
+                      className="flex items-start justify-between gap-3 rounded-lg border border-slate-200 p-3"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-orange-600 shrink-0" />
+                          <span className="font-medium text-slate-900 truncate">
+                            {d.name}
+                          </span>
+                        </div>
+                        {d.notes && (
+                          <p className="mt-1 text-xs text-slate-600">
+                            {d.notes}
+                          </p>
+                        )}
+                        <p className="mt-1 text-xs text-slate-400">
+                          Uploaded by {d.uploadedByKind}
+                          {d.uploadedByEmail ? ` (${d.uploadedByEmail})` : ""} on{" "}
+                          {new Date(d.uploadedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <a
+                        href={d.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded bg-orange-500/15 text-orange-700 border border-orange-500/30 hover:bg-orange-500/25 shrink-0"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" /> Open
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         @media print {

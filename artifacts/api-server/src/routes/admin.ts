@@ -19,6 +19,7 @@ import {
   amenitiesTable,
   workoutsTable,
   staffTable,
+  partnerDocumentsTable,
 } from "@workspace/db";
 import {
   hashPassword,
@@ -655,6 +656,34 @@ router.delete(
     const id = Number(req.params.id);
     await db.delete(partnersTable).where(eq(partnersTable.id, id));
     res.json({ ok: true });
+  },
+);
+
+// Documents a partner (or staff on their behalf) has uploaded. Read-only for
+// admins so they can review/verify partner paperwork.
+router.get(
+  "/admin/partners/:id/documents",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id) || id <= 0) {
+      res.status(400).json({ error: "Invalid partner id" });
+      return;
+    }
+    const [partner] = await db
+      .select({ id: partnersTable.id, name: partnersTable.name })
+      .from(partnersTable)
+      .where(eq(partnersTable.id, id));
+    if (!partner) {
+      res.status(404).json({ error: "Partner not found" });
+      return;
+    }
+    const documents = await db
+      .select()
+      .from(partnerDocumentsTable)
+      .where(eq(partnerDocumentsTable.partnerId, id))
+      .orderBy(desc(partnerDocumentsTable.uploadedAt));
+    res.json({ partner, documents });
   },
 );
 
