@@ -133,7 +133,7 @@ export function SiteFooter() {
               <span className="text-2xl font-black tracking-tight text-gradient-brand leading-tight">
                 GYMCO
               </span>
-              <span className="text-xs uppercase tracking-[0.22em] font-bold text-muted-foreground leading-none">
+              <span className="text-[9px] uppercase tracking-[0.22em] font-bold text-muted-foreground leading-none">
                 Go to any gym
               </span>
             </Link>
