@@ -130,7 +130,13 @@ export function SiteFooter() {
           {/* Brand column */}
           <div className="col-span-2">
             <Link href="/" className="flex flex-col gap-1 mb-5">
-              <span className="text-2xl font-black tracking-tight text-gradient-brand leading-tight">
+              <span
+                className="text-2xl font-black tracking-tight leading-tight bg-clip-text text-transparent"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(95deg, hsl(22 100% 64%) 0%, hsl(32 100% 68%) 50%, hsl(42 100% 72%) 100%)",
+                }}
+              >
                 GYMCO
               </span>
               <span className="text-[9px] uppercase tracking-[0.22em] font-bold text-muted-foreground leading-none">
