@@ -41,15 +41,6 @@ import { useTheme } from "@/lib/theme";
 
 const popularCities = ["Bangalore"];
 
-const partnerGyms = [
-  { name: "Cult.fit", letters: "CULT" },
-  { name: "Gold's Gym", letters: "GOLD'S" },
-  { name: "Anytime Fitness", letters: "ANYTIME" },
-  { name: "Snap Fitness", letters: "SNAP" },
-  { name: "Talwalkars", letters: "TALWALKARS" },
-  { name: "F45", letters: "F45" },
-];
-
 const stats = [
   { value: "500+", label: "Premium gyms" },
   { value: "12", label: "Cities live" },
@@ -489,39 +480,6 @@ function Hero() {
             <Volume2 className="h-4 w-4" />
           )}
         </button>
-      </div>
-    </section>
-  );
-}
-
-function PartnerStrip() {
-  // Two identical tracks side-by-side. We translate the wrapper by exactly
-  // one track's width (-50%) so the second track lands where the first started
-  // — seamless, no phase mismatch regardless of internal gaps.
-  const Track = () => (
-    <div className="flex shrink-0 items-center gap-16 pr-16">
-      {partnerGyms.map((g, i) => (
-        <div
-          key={`${g.name}-${i}`}
-          className="text-2xl md:text-3xl font-black tracking-wider text-foreground/40 hover:text-foreground transition-colors whitespace-nowrap"
-        >
-          {g.letters}
-        </div>
-      ))}
-    </div>
-  );
-  return (
-    <section className="border-y border-border bg-secondary/30 py-10">
-      <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <div className="text-center text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground mb-8">
-          Trusted by India's best fitness brands
-        </div>
-        <div className="relative overflow-hidden marquee-mask">
-          <div className="flex w-max animate-marquee" aria-hidden="true">
-            <Track />
-            <Track />
-          </div>
-        </div>
       </div>
     </section>
   );
@@ -1247,7 +1205,6 @@ export default function Landing() {
     <div className="min-h-screen bg-background text-foreground">
       <TopNav />
       <Hero />
-      <PartnerStrip />
       <NearbyGyms />
       <FeaturedGyms />
       <HowItWorks />
