@@ -41,6 +41,11 @@ export default function ClassDetail() {
             origin: { y: 0.6 },
             colors: ['#ccff00', '#ffffff', '#000000'] // primary color
           });
+        },
+        onError: () => {
+          // Most likely the class filled up — refresh the seat count so the
+          // UI reflects the latest availability and disables booking if full.
+          queryClient.invalidateQueries({ queryKey: getGetClassQueryKey(id) });
         }
       }
     );
@@ -246,6 +251,11 @@ export default function ClassDetail() {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+              {createBooking.isError && (
+                <p className="mt-3 text-sm font-semibold text-red-500 text-center">
+                  This class is full. No seats are available.
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>

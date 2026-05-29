@@ -602,7 +602,7 @@ export default function PartnerClasses() {
                 />
               </div>
               <div>
-                <Label>Capacity</Label>
+                <Label>Seats (capacity)</Label>
                 <input
                   type="number"
                   min={1}

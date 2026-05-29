@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, ne, sql } from "drizzle-orm";
 import { randomBytes } from "node:crypto";
 import {
   db,
@@ -74,47 +74,80 @@ router.post("/bookings", requireUser, async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [c] = await db
-    .select()
-    .from(classSessionsTable)
-    .where(eq(classSessionsTable.id, parsed.data.classId));
-  if (!c) {
-    res.status(404).json({ error: "Class not found" });
+  // Run the seat check and the insert atomically. We lock the class_sessions
+  // row (FOR UPDATE) so concurrent bookings for the same class are serialized
+  // and we can never oversell beyond the available seats.
+  const outcome = await db.transaction(async (tx) => {
+    const [c] = await tx
+      .select()
+      .from(classSessionsTable)
+      .where(eq(classSessionsTable.id, parsed.data.classId))
+      .for("update");
+    if (!c) {
+      return { kind: "error" as const, status: 404, error: "Class not found" };
+    }
+    const [g] = await tx
+      .select({ isVerified: gymsTable.isVerified })
+      .from(gymsTable)
+      .where(eq(gymsTable.id, c.gymId));
+    if (!g || !g.isVerified) {
+      return {
+        kind: "error" as const,
+        status: 403,
+        error: "This gym is not yet verified.",
+      };
+    }
+    // If the member already holds an active booking for this class, return it
+    // (idempotent) instead of creating a duplicate or consuming another seat.
+    const [activeExisting] = await tx
+      .select()
+      .from(bookingsTable)
+      .where(
+        and(
+          eq(bookingsTable.userId, req.userId!),
+          eq(bookingsTable.classId, parsed.data.classId),
+          ne(bookingsTable.status, "cancelled"),
+        ),
+      )
+      .limit(1);
+    if (activeExisting) {
+      return { kind: "booking" as const, booking: activeExisting };
+    }
+    // Enforce seat capacity: only allow a booking if a seat is available.
+    const [{ active }] = await tx
+      .select({ active: sql<number>`count(*)::int` })
+      .from(bookingsTable)
+      .where(
+        and(
+          eq(bookingsTable.classId, parsed.data.classId),
+          ne(bookingsTable.status, "cancelled"),
+        ),
+      );
+    if (active >= c.capacity) {
+      return {
+        kind: "error" as const,
+        status: 409,
+        error: "This class is full. No seats are available.",
+      };
+    }
+    const qr = `GYMCO-${randomBytes(6).toString("hex").toUpperCase()}`;
+    const [b] = await tx
+      .insert(bookingsTable)
+      .values({
+        userId: req.userId!,
+        classId: parsed.data.classId,
+        status: "confirmed",
+        qrCode: qr,
+      })
+      .returning();
+    return { kind: "booking" as const, booking: b };
+  });
+
+  if (outcome.kind === "error") {
+    res.status(outcome.status).json({ error: outcome.error });
     return;
   }
-  const [g] = await db
-    .select({ isVerified: gymsTable.isVerified })
-    .from(gymsTable)
-    .where(eq(gymsTable.id, c.gymId));
-  if (!g || !g.isVerified) {
-    res.status(403).json({ error: "This gym is not yet verified." });
-    return;
-  }
-  const [existing] = await db
-    .select()
-    .from(bookingsTable)
-    .where(
-      and(
-        eq(bookingsTable.userId, req.userId!),
-        eq(bookingsTable.classId, parsed.data.classId),
-      ),
-    );
-  if (existing && existing.status !== "cancelled") {
-    const dto = await toBookingDto(existing);
-    res.status(201).json(dto);
-    return;
-  }
-  const qr = `GYMCO-${randomBytes(6).toString("hex").toUpperCase()}`;
-  const [b] = await db
-    .insert(bookingsTable)
-    .values({
-      userId: req.userId!,
-      classId: parsed.data.classId,
-      status: "confirmed",
-      qrCode: qr,
-    })
-    .returning();
-  const dto = await toBookingDto(b);
+  const dto = await toBookingDto(outcome.booking);
   res.status(201).json(dto);
 });
 
