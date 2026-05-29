@@ -87,6 +87,11 @@ export const staffApi = {
       request<StaffGym[]>(
         partnerId ? `/staff/gyms?partnerId=${partnerId}` : "/staff/gyms",
       ),
+    create: (body: Record<string, unknown>) =>
+      request<StaffGym>("/staff/gyms", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
     update: (id: number, body: Partial<StaffGym>) =>
       request<StaffGym>(`/staff/gyms/${id}`, {
         method: "PATCH",
@@ -96,6 +101,8 @@ export const staffApi = {
 
   partners: {
     list: () => request<StaffPartner[]>("/staff/partners"),
+    listForGymAssignment: () =>
+      request<StaffPartner[]>("/staff/gym-partners"),
     create: (body: Record<string, unknown>) =>
       request<StaffPartner>("/staff/partners", {
         method: "POST",

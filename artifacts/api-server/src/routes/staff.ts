@@ -340,6 +340,52 @@ router.delete(
 
 // ───────────────────────────── Gym Management ─────────────────────────────
 
+// Resolves an incoming ownerPartnerId value to either null (unassigned),
+// a validated existing partner id, or an error string.
+async function resolveOwnerPartnerId(
+  value: unknown,
+): Promise<{ ok: true; value: number | null } | { ok: false; error: string }> {
+  if (value === undefined || value === null || value === "") {
+    return { ok: true, value: null };
+  }
+  const n = Number(value);
+  if (!Number.isInteger(n) || n <= 0) {
+    return { ok: false, error: "Invalid ownerPartnerId" };
+  }
+  const [partner] = await db
+    .select({ id: partnersTable.id })
+    .from(partnersTable)
+    .where(eq(partnersTable.id, n))
+    .limit(1);
+  if (!partner) {
+    return { ok: false, error: "Partner not found" };
+  }
+  return { ok: true, value: n };
+}
+
+// Lightweight partner list for the gym assignment dropdown, available to
+// staff with gym.manage (who may not have partner.view).
+router.get(
+  "/staff/gym-partners",
+  requireStaffPermission("gym.manage"),
+  async (_req: Request, res: Response): Promise<void> => {
+    const rows = await db
+      .select({
+        id: partnersTable.id,
+        name: partnersTable.name,
+        email: partnersTable.email,
+        phone: partnersTable.phone,
+        status: partnersTable.status,
+        city: partnersTable.city,
+        kind: partnersTable.kind,
+        createdAt: partnersTable.createdAt,
+      })
+      .from(partnersTable)
+      .orderBy(desc(partnersTable.createdAt));
+    res.json(rows);
+  },
+);
+
 router.get(
   "/staff/gyms",
   requireStaffPermission("gym.manage"),
@@ -383,6 +429,61 @@ router.get(
   },
 );
 
+router.post(
+  "/staff/gyms",
+  requireStaffPermission("gym.manage"),
+  async (req: Request, res: Response): Promise<void> => {
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    if (!b.name || !b.city || !b.area) {
+      res.status(400).json({ error: "name, city, area required" });
+      return;
+    }
+    const slug =
+      (b.slug as string | undefined) ??
+      String(b.name)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+    const latNum = b.lat === undefined || b.lat === null || b.lat === "" ? undefined : Number(b.lat);
+    const lngNum = b.lng === undefined || b.lng === null || b.lng === "" ? undefined : Number(b.lng);
+    const owner = await resolveOwnerPartnerId(b.ownerPartnerId);
+    if (!owner.ok) {
+      res.status(400).json({ error: owner.error });
+      return;
+    }
+    const [created] = await db
+      .insert(gymsTable)
+      .values({
+        name: String(b.name),
+        slug,
+        city: String(b.city),
+        area: String(b.area),
+        address: String(b.address ?? ""),
+        heroImage: String(
+          b.heroImage ??
+            "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200",
+        ),
+        rating: 4.5,
+        reviewsCount: 0,
+        priceFrom: Number(b.priceFrom ?? 999),
+        categories: ["gym"],
+        amenities: [],
+        distanceKm: 2.5,
+        openNow: b.openNow === undefined ? true : Boolean(b.openNow),
+        about: String(b.about ?? ""),
+        gallery: [],
+        hours: String(b.hours ?? "6am – 11pm"),
+        lat: latNum !== undefined && Number.isFinite(latNum) ? latNum : 12.97,
+        lng: lngNum !== undefined && Number.isFinite(lngNum) ? lngNum : 77.59,
+        isVerified: Boolean(b.isVerified ?? false),
+        ownerPartnerId:
+          owner.value,
+      })
+      .returning();
+    res.status(201).json(created);
+  },
+);
+
 router.patch(
   "/staff/gyms/:id",
   requireStaffPermission("gym.manage"),
@@ -415,6 +516,14 @@ router.patch(
     }
     if (b.openNow !== undefined) patch.openNow = Boolean(b.openNow);
     if (b.isVerified !== undefined) patch.isVerified = Boolean(b.isVerified);
+    if (b.ownerPartnerId !== undefined) {
+      const owner = await resolveOwnerPartnerId(b.ownerPartnerId);
+      if (!owner.ok) {
+        res.status(400).json({ error: owner.error });
+        return;
+      }
+      patch.ownerPartnerId = owner.value;
+    }
     if (Object.keys(patch).length === 0) {
       res.status(400).json({ error: "No fields to update" });
       return;
