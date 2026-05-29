@@ -1,0 +1,31 @@
+kind = "video"
+previewPath = "/gymco-promo/"
+title = "GYMCO Promo Video"
+version = "1.0.0"
+id = "artifacts/gymco-promo"
+router = "path"
+
+[[integratedSkills]]
+name = "video-js"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/gymco-promo/" ]
+localPort = 24907
+
+[services.development]
+run = "pnpm --filter @workspace/gymco-promo run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/gymco-promo", "run", "build" ]
+publicDir = "artifacts/gymco-promo/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24907"
+BASE_PATH = "/gymco-promo/"

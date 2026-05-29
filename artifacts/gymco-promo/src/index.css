@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+:root {
+  --color-primary: #FF6A1A;
+  --color-accent: #FF8000;
+  
+  --color-bg-dark: #09090b;
+  --color-bg-light: #ffffff;
+  --color-bg-muted: #18181b;
+
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #a1a1aa;
+  --color-text-inverse: #09090b;
+
+  --font-display: 'Plus Jakarta Sans', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+@theme inline {
+  --color-primary: var(--color-primary);
+  --color-accent: var(--color-accent);
+  --color-bg-dark: var(--color-bg-dark);
+  --color-bg-light: var(--color-bg-light);
+  --color-bg-muted: var(--color-bg-muted);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-inverse: var(--color-text-inverse);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.brand-gradient {
+  background: linear-gradient(95deg, hsl(14 100% 52%), hsl(22 100% 55%), hsl(38 100% 58%));
+}
+
+.text-brand-gradient {
+  background: linear-gradient(95deg, hsl(14 100% 52%), hsl(22 100% 55%), hsl(38 100% 58%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
