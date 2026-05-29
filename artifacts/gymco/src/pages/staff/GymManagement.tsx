@@ -228,8 +228,7 @@ function Inner() {
                 <div className="text-sm text-white font-medium truncate">
                   {g.partnerName ?? "— unassigned —"}
                 </div>
-                <div className="mt-3 flex items-center justify-between text-xs text-slate-300">
-                  <span>From ₹{g.priceFrom?.toLocaleString("en-IN") ?? 0}/mo</span>
+                <div className="mt-3 flex items-center justify-end text-xs text-slate-300">
                   <span
                     className={`px-2 py-0.5 rounded-full font-bold ${
                       g.openNow
