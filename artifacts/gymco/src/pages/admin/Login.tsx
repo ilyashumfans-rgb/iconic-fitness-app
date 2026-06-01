@@ -167,21 +167,21 @@ export default function AdminLogin() {
   }, [clerkAvailable, isSignedInToClerk]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-lime-50 via-white to-green-50 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 shadow-lg shadow-orange-500/30">
+          <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-br from-lime-500 to-green-500 shadow-lg shadow-lime-500/30">
             <ShieldCheck className="h-7 w-7 text-white" />
           </div>
-          <div className="mt-4 text-3xl font-extrabold tracking-tight bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
-            GYMCO
+          <div className="mt-4 text-3xl font-extrabold tracking-tight bg-gradient-to-r from-lime-500 to-green-500 bg-clip-text text-transparent">
+            Iconic Fitness
           </div>
-          <div className="text-xs uppercase tracking-[0.25em] text-orange-600 font-bold mt-1">
+          <div className="text-xs uppercase tracking-[0.25em] text-lime-600 font-bold mt-1">
             Admin Portal
           </div>
         </div>
 
-        <div className="bg-white border border-orange-100 rounded-2xl p-7 space-y-5 shadow-[0_20px_60px_-20px_rgba(249,115,22,0.25)]">
+        <div className="bg-white border border-lime-100 rounded-2xl p-7 space-y-5 shadow-[0_20px_60px_-20px_rgba(101, 163, 13,0.25)]">
           {clerkAvailable && (
             <>
               {isSignedInToClerk ? (
@@ -196,7 +196,7 @@ export default function AdminLogin() {
                     type="button"
                     onClick={continueAsClerkUser}
                     disabled={googleBusy}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-white text-slate-900 font-semibold border border-slate-200 hover:bg-orange-50 hover:border-orange-300 transition disabled:opacity-60"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-white text-slate-900 font-semibold border border-slate-200 hover:bg-lime-50 hover:border-lime-300 transition disabled:opacity-60"
                   >
                     {googleBusy ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -208,7 +208,7 @@ export default function AdminLogin() {
                   <button
                     type="button"
                     onClick={() => clerk?.signOut()}
-                    className="w-full text-xs text-slate-500 hover:text-orange-600"
+                    className="w-full text-xs text-slate-500 hover:text-lime-600"
                   >
                     Use a different Google account
                   </button>
@@ -218,7 +218,7 @@ export default function AdminLogin() {
                   type="button"
                   onClick={startGoogle}
                   disabled={googleBusy}
-                  className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg bg-white text-slate-900 font-semibold border border-slate-200 hover:bg-orange-50 hover:border-orange-300 transition disabled:opacity-60"
+                  className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg bg-white text-slate-900 font-semibold border border-slate-200 hover:bg-lime-50 hover:border-lime-300 transition disabled:opacity-60"
                 >
                   {googleBusy ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -246,8 +246,8 @@ export default function AdminLogin() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/60 focus:border-orange-500/60"
-                placeholder="you@gymco.in"
+                className="w-full px-4 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-lime-500/60 focus:border-lime-500/60"
+                placeholder="you@iconicfitnessindia.com"
                 autoComplete="username"
                 required
               />
@@ -260,7 +260,7 @@ export default function AdminLogin() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/60 focus:border-orange-500/60"
+                className="w-full px-4 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-lime-500/60 focus:border-lime-500/60"
                 placeholder="••••••••"
                 autoComplete="current-password"
                 required
@@ -276,7 +276,7 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={busy}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-semibold transition-colors disabled:opacity-60"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 hover:from-lime-400 hover:to-lime-500 text-white font-semibold transition-colors disabled:opacity-60"
             >
               {busy && <Loader2 className="h-4 w-4 animate-spin" />}
               Sign In

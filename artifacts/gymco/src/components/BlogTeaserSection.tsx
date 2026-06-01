@@ -19,7 +19,7 @@ const FALLBACK =
   "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1400&q=80";
 
 export function BlogTeaserSection({
-  title = "From the GYMCO Journal",
+  title = "From the Iconic Fitness Journal",
   subtitle = "Workouts, nutrition and recovery tips from our coaches.",
   limit = 4,
 }: {
@@ -46,7 +46,7 @@ export function BlogTeaserSection({
     <section className="py-4">
       <div className="flex items-end justify-between mb-4 md:mb-6">
         <div>
-          <div className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.28em] text-orange-600 mb-1.5 md:mb-2 flex items-center gap-1.5">
+          <div className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.28em] text-lime-600 mb-1.5 md:mb-2 flex items-center gap-1.5">
             <BookOpen className="h-3 w-3 md:h-3.5 md:w-3.5" /> Journal
           </div>
           <h2 className="text-xl md:text-4xl font-black tracking-[-0.02em] leading-tight">
@@ -58,7 +58,7 @@ export function BlogTeaserSection({
         </div>
         <Link
           href="/blog"
-          className="hidden sm:inline-flex items-center text-sm text-orange-600 font-bold hover:gap-2 transition-all"
+          className="hidden sm:inline-flex items-center text-sm text-lime-600 font-bold hover:gap-2 transition-all"
         >
           View all articles <ArrowRight className="h-4 w-4 ml-1" />
         </Link>
@@ -91,7 +91,7 @@ export function BlogTeaserSection({
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-transparent" />
                   <div className="absolute inset-x-0 bottom-0 p-4 md:p-8">
-                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 md:px-2.5 md:py-1 rounded-full bg-orange-500 text-white text-[9px] md:text-[10px] font-black tracking-[0.2em] uppercase mb-2 md:mb-3 shadow-lg">
+                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 md:px-2.5 md:py-1 rounded-full bg-lime-500 text-white text-[9px] md:text-[10px] font-black tracking-[0.2em] uppercase mb-2 md:mb-3 shadow-lg">
                       Featured · {feature.category}
                     </div>
                     <h3 className="text-lg md:text-4xl font-black text-white tracking-tight leading-[1.12] drop-shadow-[0_3px_14px_rgba(0,0,0,0.5)] line-clamp-2">
@@ -114,7 +114,7 @@ export function BlogTeaserSection({
                           <span className="truncate">{feature.author}</span>
                         </>
                       )}
-                      <span className="ml-auto inline-flex items-center gap-1 text-orange-300 group-hover:translate-x-1 transition-transform">
+                      <span className="ml-auto inline-flex items-center gap-1 text-lime-300 group-hover:translate-x-1 transition-transform">
                         Read <ArrowRight className="h-4 w-4" />
                       </span>
                     </div>
@@ -134,7 +134,7 @@ export function BlogTeaserSection({
               transition={{ delay: 0.05 * i }}
             >
               <Link href={`/blog/${p.slug}`}>
-                <div className="group relative flex gap-4 p-3 rounded-2xl bg-card border border-border/60 hover:border-orange-500/50 hover:shadow-[0_18px_40px_-22px_rgba(249,115,22,0.45)] transition-all cursor-pointer h-full">
+                <div className="group relative flex gap-4 p-3 rounded-2xl bg-card border border-border/60 hover:border-lime-500/50 hover:shadow-[0_18px_40px_-22px_rgba(101, 163, 13,0.45)] transition-all cursor-pointer h-full">
                   <div className="relative w-28 h-28 md:w-32 md:h-32 shrink-0 rounded-xl overflow-hidden bg-muted">
                     <img
                       src={p.coverImage || FALLBACK}
@@ -144,10 +144,10 @@ export function BlogTeaserSection({
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   </div>
                   <div className="flex-1 min-w-0 py-1 flex flex-col">
-                    <div className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-600 mb-1">
+                    <div className="text-[10px] font-black uppercase tracking-[0.18em] text-lime-600 mb-1">
                       {p.category}
                     </div>
-                    <h3 className="font-black leading-snug line-clamp-2 text-base md:text-lg tracking-tight group-hover:text-orange-600 transition-colors">
+                    <h3 className="font-black leading-snug line-clamp-2 text-base md:text-lg tracking-tight group-hover:text-lime-600 transition-colors">
                       {p.title}
                     </h3>
                     <p className="text-xs text-muted-foreground mt-1 line-clamp-2 hidden md:block">
@@ -159,7 +159,7 @@ export function BlogTeaserSection({
                         month: "short",
                         day: "numeric",
                       })}
-                      <ArrowRight className="h-3.5 w-3.5 ml-auto text-orange-500 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                      <ArrowRight className="h-3.5 w-3.5 ml-auto text-lime-500 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
                     </div>
                   </div>
                 </div>
@@ -172,7 +172,7 @@ export function BlogTeaserSection({
       <div className="mt-6 sm:hidden">
         <Link
           href="/blog"
-          className="inline-flex items-center text-sm text-orange-600 font-bold"
+          className="inline-flex items-center text-sm text-lime-600 font-bold"
         >
           View all articles <ArrowRight className="h-4 w-4 ml-1" />
         </Link>

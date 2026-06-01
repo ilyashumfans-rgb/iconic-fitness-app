@@ -5,7 +5,7 @@ import { storeApi } from "@/lib/storeApi";
 import { CheckCircle2, ArrowRight } from "lucide-react";
 
 const INPUT =
-  "w-full px-3 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/60";
+  "w-full px-3 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-lime-500/60";
 
 export default function Checkout() {
   const cart = useCart();
@@ -76,7 +76,7 @@ export default function Checkout() {
         <p className="text-muted-foreground">Your cart is empty.</p>
         <Link
           href="/store"
-          className="inline-block mt-4 text-sm font-semibold text-orange-500 hover:underline"
+          className="inline-block mt-4 text-sm font-semibold text-lime-500 hover:underline"
         >
           Browse the store
         </Link>
@@ -159,7 +159,7 @@ export default function Checkout() {
           <div className="text-xs uppercase tracking-wider text-muted-foreground font-bold pt-2">
             Payment method
           </div>
-          <div className="p-3 rounded-lg border-2 border-orange-500/60 bg-orange-500/5">
+          <div className="p-3 rounded-lg border-2 border-lime-500/60 bg-lime-500/5">
             <div className="font-bold text-foreground">Cash on Delivery</div>
             <div className="text-xs text-muted-foreground mt-0.5">
               Pay in cash when your order arrives. Online payment coming soon.
@@ -203,7 +203,7 @@ export default function Checkout() {
           <button
             type="submit"
             disabled={busy}
-            className="mt-5 w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-brand text-white font-bold shadow-[0_8px_24px_-8px_hsl(18_100%_55%/0.7)] hover:opacity-95 disabled:opacity-50"
+            className="mt-5 w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-brand text-white font-bold shadow-[0_8px_24px_-8px_hsl(96_56%_55%/0.7)] hover:opacity-95 disabled:opacity-50"
           >
             {busy ? "Placing order…" : "Place order"}
           </button>

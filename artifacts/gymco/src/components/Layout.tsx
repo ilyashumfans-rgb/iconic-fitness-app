@@ -2,7 +2,6 @@ import { Link, useLocation } from "wouter";
 import {
   Home,
   MapPin,
-  QrCode,
   Calendar,
   User,
   Wallet,
@@ -17,6 +16,7 @@ import { toast } from "sonner";
 import { useClerk } from "@clerk/react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { userNotificationsApi } from "@/lib/userNotifications";
+import { BrandLogo } from "@/components/BrandLogo";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -31,16 +31,7 @@ export function useSignOut() {
 }
 
 function BrandMark({ className }: { className?: string }) {
-  return (
-    <Link href="/" className={cn("flex flex-col leading-none group", className)}>
-      <span className="text-[9px] uppercase tracking-[0.22em] font-bold text-muted-foreground">
-        Go to any gym
-      </span>
-      <span className="text-2xl font-black tracking-tight text-gradient-brand transition-transform group-hover:scale-[1.02] origin-left">
-        GYMCO
-      </span>
-    </Link>
-  );
+  return <BrandLogo className={className} tagline />;
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -51,7 +42,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { href: "/", label: "Home", icon: Home },
     { href: "/explore", label: "Explore", icon: MapPin },
-    { href: "/checkin", label: "Check-in", icon: QrCode },
     { href: "/bookings", label: "Bookings", icon: Calendar },
     { href: "/profile", label: "Profile", icon: User },
   ];
@@ -80,7 +70,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 className={cn(
                   "relative flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium overflow-hidden",
                   isActive
-                    ? "bg-gradient-brand text-primary-foreground shadow-[0_8px_24px_-8px_hsl(18_100%_55%/0.6)]"
+                    ? "bg-gradient-brand text-primary-foreground shadow-[0_8px_24px_-8px_hsl(96_56%_55%/0.6)]"
                     : "hover:bg-sidebar-accent/60 text-muted-foreground hover:text-sidebar-accent-foreground",
                 )}
               >
@@ -161,35 +151,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
           >
             {navItems.map((item) => {
               const isActive = location === item.href;
-              const isCenter = item.href === "/checkin";
-
-              if (isCenter) {
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    aria-label={item.label}
-                    className="relative -mt-7 flex flex-col items-center"
-                  >
-                    <span
-                      className={cn(
-                        "h-14 w-14 rounded-full bg-gradient-brand flex items-center justify-center text-white shadow-[0_14px_30px_-6px_hsl(18_100%_55%/0.7)] ring-4 ring-background transition-transform",
-                        isActive ? "scale-105" : "active:scale-95 hover:scale-105",
-                      )}
-                    >
-                      <item.icon className="h-6 w-6" />
-                    </span>
-                    <span
-                      className={cn(
-                        "text-[10px] font-bold uppercase tracking-wider mt-1",
-                        isActive ? "text-primary" : "text-muted-foreground",
-                      )}
-                    >
-                      {item.label}
-                    </span>
-                  </Link>
-                );
-              }
 
               return (
                 <Link
@@ -201,12 +162,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   )}
                 >
                   {isActive && (
-                    <span className="absolute inset-x-3 top-1 h-1 rounded-full bg-gradient-brand shadow-[0_0_10px_hsl(18_100%_55%/0.8)]" />
+                    <span className="absolute inset-x-3 top-1 h-1 rounded-full bg-gradient-brand shadow-[0_0_10px_hsl(96_56%_55%/0.8)]" />
                   )}
                   <item.icon
                     className={cn(
                       "h-5 w-5 transition-transform",
-                      isActive && "drop-shadow-[0_0_8px_hsl(18_100%_55%/0.7)] scale-110",
+                      isActive && "drop-shadow-[0_0_8px_hsl(96_56%_55%/0.7)] scale-110",
                     )}
                   />
                   <span className="text-[10px] font-semibold">{item.label}</span>

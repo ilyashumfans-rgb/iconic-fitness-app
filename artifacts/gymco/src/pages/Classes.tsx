@@ -21,7 +21,7 @@ export default function Classes() {
   const getIntensityColor = (intensity: string) => {
     switch (intensity) {
       case 'high': return 'bg-red-500/20 text-red-500 border-red-500/20';
-      case 'medium': return 'bg-orange-500/20 text-orange-500 border-orange-500/20';
+      case 'medium': return 'bg-lime-500/20 text-lime-500 border-lime-500/20';
       case 'low': return 'bg-green-500/20 text-green-500 border-green-500/20';
       default: return 'bg-primary/20 text-primary border-primary/20';
     }

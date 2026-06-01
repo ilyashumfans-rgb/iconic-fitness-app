@@ -50,7 +50,7 @@ export default function AdminGymVerification() {
                       <ShieldCheck className="h-3 w-3" /> Verified
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                    <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-green-500/15 text-green-400 border border-green-500/30">
                       <ShieldX className="h-3 w-3" /> Unverified
                     </span>
                   )}

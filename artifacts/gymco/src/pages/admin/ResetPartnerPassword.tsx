@@ -35,7 +35,7 @@ export default function AdminResetPartnerPassword() {
   };
 
   const inputCls =
-    "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
+    "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-lime-500/60";
 
   return (
     <AdminLayout title="Reset Partner Password">
@@ -94,7 +94,7 @@ export default function AdminResetPartnerPassword() {
 
           <button
             disabled={busy}
-            className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold disabled:opacity-60"
+            className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white font-semibold disabled:opacity-60"
           >
             {busy ? "Updating…" : "Reset Password"}
           </button>

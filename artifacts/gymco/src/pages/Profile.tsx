@@ -120,7 +120,7 @@ export default function Profile() {
               </div>
               <div className="text-center border-l border-border">
                 <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Streak</div>
-                <div className="font-bold text-orange-500">{user.streakDays} <span className="text-xs text-muted-foreground">days</span></div>
+                <div className="font-bold text-lime-500">{user.streakDays} <span className="text-xs text-muted-foreground">days</span></div>
               </div>
               <div className="text-center border-l border-border">
                 <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Score</div>
@@ -208,7 +208,7 @@ export default function Profile() {
                 <LogOut className="h-5 w-5 text-primary" /> Sign out
               </h3>
               <p className="text-sm text-muted-foreground mt-1">
-                You'll be returned to the GYMCO home page.
+                You'll be returned to the Iconic Fitness home page.
               </p>
             </div>
             <Button

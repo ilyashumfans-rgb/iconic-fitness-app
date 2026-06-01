@@ -40,7 +40,7 @@ type InfoContent = {
 const CONTENT: Record<string, InfoContent> = {
   about: {
     slug: "about",
-    eyebrow: "About GYMCO",
+    eyebrow: "About Iconic Fitness",
     title: "One membership. Unlimited gyms in Bangalore.",
     icon: Building2,
     subtitle:
@@ -48,7 +48,7 @@ const CONTENT: Record<string, InfoContent> = {
     sections: [
       {
         heading: "Our story",
-        body: "GYMCO started in 2024 in Indiranagar with a simple idea: people don't want to be locked into one gym. They want to train near home on weekdays, by the office at lunch, and try yoga or MMA on weekends. We partnered with the city's best studios so one pass unlocks them all.",
+        body: "Iconic Fitness started in 2024 in Indiranagar with a simple idea: people don't want to be locked into one gym. They want to train near home on weekdays, by the office at lunch, and try yoga or MMA on weekends. We partnered with the city's best studios so one pass unlocks them all.",
       },
       {
         heading: "What we believe",
@@ -68,7 +68,7 @@ const CONTENT: Record<string, InfoContent> = {
   press: {
     slug: "press",
     eyebrow: "Press",
-    title: "GYMCO in the news",
+    title: "Iconic Fitness in the news",
     icon: Newspaper,
     subtitle:
       "Media kit, founder interviews and press inquiries — everything in one place.",
@@ -76,14 +76,14 @@ const CONTENT: Record<string, InfoContent> = {
       {
         heading: "Recent coverage",
         body: [
-          "YourStory · How GYMCO is rewriting the gym membership in India",
+          "YourStory · How Iconic Fitness is rewriting the gym membership in India",
           "Inc42 · 120 gyms, one pass: Bangalore's fitness experiment",
           "Economic Times · The rise of the all-access fitness membership",
         ],
       },
       {
         heading: "Press inquiries",
-        body: "For interviews, quotes or media assets, write to press@gymco.in. We respond within one business day.",
+        body: "For interviews, quotes or media assets, write to press@iconicfitnessindia.com. We respond within one business day.",
       },
       {
         heading: "Brand assets",
@@ -110,19 +110,19 @@ const CONTENT: Record<string, InfoContent> = {
         ],
       },
       {
-        heading: "Why GYMCO",
+        heading: "Why Iconic Fitness",
         body: "Free Elite membership for every employee · Annual learning budget · Health insurance for you and your family · Real ownership through ESOPs.",
       },
       {
         heading: "Apply",
-        body: "Send your resume and a short note to careers@gymco.in with the role in the subject line.",
+        body: "Send your resume and a short note to careers@iconicfitnessindia.com with the role in the subject line.",
       },
     ],
   },
   "become-a-trainer": {
     slug: "become-a-trainer",
     eyebrow: "For trainers",
-    title: "Coach on GYMCO",
+    title: "Coach on Iconic Fitness",
     icon: GraduationCap,
     subtitle:
       "Get discovered by members across Bangalore who are looking for serious coaching.",
@@ -142,7 +142,7 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         heading: "Apply",
-        body: "Use the form below or email trainers@gymco.in with your certifications and a short bio.",
+        body: "Use the form below or email trainers@iconicfitnessindia.com with your certifications and a short bio.",
       },
     ],
     showContactForm: true,
@@ -156,7 +156,7 @@ const CONTENT: Record<string, InfoContent> = {
       "Give your employees access to 120+ gyms in Bangalore — one bill, full visibility.",
     sections: [
       {
-        heading: "Why companies choose GYMCO",
+        heading: "Why companies choose Iconic Fitness",
         body: [
           "Up to 25% off retail pricing on bulk seats.",
           "Live engagement dashboard for HR.",
@@ -171,7 +171,7 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         heading: "Request a proposal",
-        body: "Fill the form below or email corporate@gymco.in.",
+        body: "Fill the form below or email corporate@iconicfitnessindia.com.",
       },
     ],
     showContactForm: true,
@@ -186,16 +186,12 @@ const CONTENT: Record<string, InfoContent> = {
     sections: [],
     showFaq: [
       {
-        q: "How do check-ins work?",
-        a: "Open the GYMCO app, tap Check-in, scan the QR code at the gym's front desk. You're in.",
-      },
-      {
         q: "Can I freeze my membership?",
         a: "Yes — pause for up to 30 days per year from Profile → Membership.",
       },
       {
         q: "Do I need to book in advance?",
-        a: "Gym entries are walk-in. Group classes and trainer sessions need to be booked in the app.",
+        a: "Gym access is included with your pass — just show your membership. Group classes and trainer sessions need to be booked in the app.",
       },
       {
         q: "What if a gym is full?",
@@ -218,11 +214,11 @@ const CONTENT: Record<string, InfoContent> = {
       {
         heading: "Reach us directly",
         body: [
-          "Members — hello@gymco.in",
-          "Partner gyms — partner@gymco.in",
-          "Corporate — corporate@gymco.in",
-          "Press — press@gymco.in",
-          "Careers — careers@gymco.in",
+          "Members — hello@iconicfitnessindia.com",
+          "Partner gyms — partner@iconicfitnessindia.com",
+          "Corporate — corporate@iconicfitnessindia.com",
+          "Press — press@iconicfitnessindia.com",
+          "Careers — careers@iconicfitnessindia.com",
         ],
       },
       {
@@ -231,7 +227,7 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         heading: "Office",
-        body: "GYMCO India Pvt. Ltd., 100 Feet Road, Indiranagar, Bangalore 560038",
+        body: "Iconic Fitness India Pvt. Ltd., 100 Feet Road, Indiranagar, Bangalore 560038",
       },
     ],
     showContactForm: true,
@@ -241,11 +237,11 @@ const CONTENT: Record<string, InfoContent> = {
     eyebrow: "FAQs",
     title: "Frequently asked questions",
     icon: HelpCircle,
-    subtitle: "Everything you need to know about GYMCO.",
+    subtitle: "Everything you need to know about Iconic Fitness.",
     sections: [],
     showFaq: [
       {
-        q: "What is GYMCO?",
+        q: "What is Iconic Fitness?",
         a: "One membership that unlocks 120+ premium gyms, studios and trainers across Bangalore.",
       },
       {
@@ -270,7 +266,7 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         q: "Is there a mobile app?",
-        a: "Yes — GYMCO is available on iOS and Android. Web works too.",
+        a: "Yes — Iconic Fitness is available on iOS and Android. Web works too.",
       },
     ],
   },
@@ -287,7 +283,7 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         heading: "Annual memberships",
-        body: "Annual plans are non-refundable after 7 days of purchase. Within the first 7 days, you may cancel and receive a full refund minus any check-ins already used at retail rates.",
+        body: "Annual plans are non-refundable after 7 days of purchase. Within the first 7 days, you may cancel and receive a full refund minus any gym visits already used at retail rates.",
       },
       {
         heading: "Class booking cancellation",
@@ -299,7 +295,7 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         heading: "Need help cancelling?",
-        body: "Email hello@gymco.in and we'll process it the same day.",
+        body: "Email hello@iconicfitnessindia.com and we'll process it the same day.",
       },
     ],
   },
@@ -333,7 +329,7 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         heading: "Reporting incidents",
-        body: "If you witness or are involved in any incident, notify the gym immediately and email safety@gymco.in. We take every report seriously.",
+        body: "If you witness or are involved in any incident, notify the gym immediately and email safety@iconicfitnessindia.com. We take every report seriously.",
       },
     ],
   },
@@ -362,7 +358,7 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         heading: "Disputes",
-        body: "If you believe you've been charged incorrectly, email billing@gymco.in within 30 days of the charge.",
+        body: "If you believe you've been charged incorrectly, email billing@iconicfitnessindia.com within 30 days of the charge.",
       },
     ],
   },
@@ -375,7 +371,7 @@ const CONTENT: Record<string, InfoContent> = {
     sections: [
       {
         heading: "What we collect",
-        body: "Account info (name, email, phone), check-in history, payment info (processed by our payment partners — we never store full card numbers), device and usage data, and optional location data for finding nearby gyms.",
+        body: "Account info (name, email, phone), visit history, payment info (processed by our payment partners — we never store full card numbers), device and usage data, and optional location data for finding nearby gyms.",
       },
       {
         heading: "How we use it",
@@ -383,15 +379,15 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         heading: "Who we share with",
-        body: "Partner gyms receive your name and member ID at check-in. Payment processors handle billing. We never sell your data to advertisers.",
+        body: "Partner gyms receive your name and member ID when you visit. Payment processors handle billing. We never sell your data to advertisers.",
       },
       {
         heading: "Your rights",
-        body: "Access, export or delete your data anytime from Profile → Privacy. Or email privacy@gymco.in.",
+        body: "Access, export or delete your data anytime from Profile → Privacy. Or email privacy@iconicfitnessindia.com.",
       },
       {
         heading: "Contact",
-        body: "Questions about privacy? Reach our Data Protection Officer at privacy@gymco.in.",
+        body: "Questions about privacy? Reach our Data Protection Officer at privacy@iconicfitnessindia.com.",
       },
     ],
   },
@@ -404,7 +400,7 @@ const CONTENT: Record<string, InfoContent> = {
     sections: [
       {
         heading: "Acceptance",
-        body: "By creating a GYMCO account, you agree to these terms. If you don't agree, please don't use the service.",
+        body: "By creating a Iconic Fitness account, you agree to these terms. If you don't agree, please don't use the service.",
       },
       {
         heading: "Eligibility",
@@ -420,7 +416,7 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         heading: "Liability",
-        body: "Exercise carries inherent risk. By using GYMCO you acknowledge that GYMCO and its partners are not liable for injury sustained during workouts. Always train within your ability.",
+        body: "Exercise carries inherent risk. By using Iconic Fitness you acknowledge that Iconic Fitness and its partners are not liable for injury sustained during workouts. Always train within your ability.",
       },
       {
         heading: "Governing law",
@@ -500,7 +496,7 @@ function ContactForm({ topic }: { topic: string }) {
     } catch {
       toast({
         title: "Couldn't send",
-        description: "Please email us directly at hello@gymco.in.",
+        description: "Please email us directly at hello@iconicfitnessindia.com.",
         variant: "destructive",
       });
     } finally {
@@ -580,7 +576,7 @@ export default function InfoPage({ slug }: { slug: string }) {
         <h1 className="text-3xl font-black">Page not found</h1>
         <Link
           href="/"
-          className="inline-flex items-center gap-1 mt-4 text-orange-600 font-bold"
+          className="inline-flex items-center gap-1 mt-4 text-lime-600 font-bold"
         >
           Back home <ArrowRight className="h-4 w-4" />
         </Link>
@@ -594,7 +590,7 @@ export default function InfoPage({ slug }: { slug: string }) {
     <>
       <div className="max-w-4xl mx-auto py-6 md:py-10">
         <div className="mb-10 md:mb-14">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/30 text-[10.5px] font-black tracking-[0.22em] text-orange-600 uppercase mb-5">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-lime-500/10 border border-lime-500/30 text-[10.5px] font-black tracking-[0.22em] text-lime-600 uppercase mb-5">
             <Icon className="h-3.5 w-3.5" /> {content.eyebrow}
           </div>
           <h1 className="text-4xl md:text-6xl font-black tracking-[-0.03em] leading-[1.05]">
@@ -620,7 +616,7 @@ export default function InfoPage({ slug }: { slug: string }) {
                       key={k}
                       className="flex gap-3 text-muted-foreground leading-relaxed"
                     >
-                      <span className="mt-2.5 h-1.5 w-1.5 rounded-full bg-orange-500 shrink-0" />
+                      <span className="mt-2.5 h-1.5 w-1.5 rounded-full bg-lime-500 shrink-0" />
                       <span>{line}</span>
                     </li>
                   ))}
@@ -639,7 +635,7 @@ export default function InfoPage({ slug }: { slug: string }) {
             {content.showFaq.map((f, i) => (
               <Card
                 key={i}
-                className="p-5 md:p-6 border-border/60 hover:border-orange-500/40 transition-colors"
+                className="p-5 md:p-6 border-border/60 hover:border-lime-500/40 transition-colors"
               >
                 <h3 className="font-black tracking-tight text-base md:text-lg">
                   {f.q}
@@ -659,21 +655,21 @@ export default function InfoPage({ slug }: { slug: string }) {
         )}
 
         {/* Quick contact strip */}
-        <Card className="mt-12 p-6 md:p-8 bg-gradient-to-br from-orange-500/8 via-card to-card border-orange-500/30">
+        <Card className="mt-12 p-6 md:p-8 bg-gradient-to-br from-lime-500/8 via-card to-card border-lime-500/30">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             <a
-              href="mailto:hello@gymco.in"
+              href="mailto:hello@iconicfitnessindia.com"
               className="flex items-start gap-3 group"
             >
-              <div className="h-10 w-10 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center shrink-0">
+              <div className="h-10 w-10 rounded-xl bg-lime-500/10 text-lime-600 flex items-center justify-center shrink-0">
                 <Mail className="h-5 w-5" />
               </div>
               <div>
                 <div className="text-xs font-black uppercase tracking-wider text-muted-foreground">
                   Email
                 </div>
-                <div className="font-bold group-hover:text-orange-600 transition-colors">
-                  hello@gymco.in
+                <div className="font-bold group-hover:text-lime-600 transition-colors">
+                  hello@iconicfitnessindia.com
                 </div>
               </div>
             </a>
@@ -681,20 +677,20 @@ export default function InfoPage({ slug }: { slug: string }) {
               href="tel:+919916232827"
               className="flex items-start gap-3 group"
             >
-              <div className="h-10 w-10 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center shrink-0">
+              <div className="h-10 w-10 rounded-xl bg-lime-500/10 text-lime-600 flex items-center justify-center shrink-0">
                 <Phone className="h-5 w-5" />
               </div>
               <div>
                 <div className="text-xs font-black uppercase tracking-wider text-muted-foreground">
                   Phone
                 </div>
-                <div className="font-bold group-hover:text-orange-600 transition-colors">
+                <div className="font-bold group-hover:text-lime-600 transition-colors">
                   +91 99162 32827
                 </div>
               </div>
             </a>
             <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center shrink-0">
+              <div className="h-10 w-10 rounded-xl bg-lime-500/10 text-lime-600 flex items-center justify-center shrink-0">
                 <MapPin className="h-5 w-5" />
               </div>
               <div>

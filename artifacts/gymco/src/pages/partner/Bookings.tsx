@@ -38,7 +38,7 @@ export default function PartnerBookings() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search by user, class, or gym…"
-            className="w-full pl-10 pr-3 py-2.5 rounded-lg bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+            className="w-full pl-10 pr-3 py-2.5 rounded-lg bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
           />
         </div>
         <select

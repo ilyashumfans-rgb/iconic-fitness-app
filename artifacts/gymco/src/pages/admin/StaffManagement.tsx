@@ -24,7 +24,7 @@ const ALL_PERMS = [
 ];
 
 const inputCls =
-  "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
+  "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-lime-500/60";
 
 function PermissionCheckboxes({
   value,
@@ -46,15 +46,15 @@ function PermissionCheckboxes({
             key={p}
             className={`flex items-center gap-3 px-3 py-2 rounded-xl border cursor-pointer transition-colors ${
               on
-                ? "bg-gradient-to-r from-orange-500/15 to-amber-500/10 border-orange-500/60"
-                : "bg-slate-800 border-slate-700 hover:border-orange-500/40"
+                ? "bg-gradient-to-r from-lime-500/15 to-green-500/10 border-lime-500/60"
+                : "bg-slate-800 border-slate-700 hover:border-lime-500/40"
             }`}
           >
             <input
               type="checkbox"
               checked={on}
               onChange={() => toggle(p)}
-              className="rounded border-slate-600 bg-slate-900 text-orange-500 focus:ring-orange-500/60"
+              className="rounded border-slate-600 bg-slate-900 text-lime-500 focus:ring-lime-500/60"
             />
             <span className="text-sm font-medium text-slate-100">
               {PERMISSION_LABELS[p] ?? p}
@@ -103,7 +103,7 @@ function CreateStaffForm({ onCreated }: { onCreated: () => void }) {
   return (
     <AdminCard className="p-6">
       <div className="flex items-center gap-2 mb-4">
-        <UserPlus className="h-5 w-5 text-orange-400" />
+        <UserPlus className="h-5 w-5 text-lime-400" />
         <h2 className="text-lg font-bold text-white">Create Staff Member</h2>
       </div>
       <form onSubmit={submit} className="space-y-4">
@@ -130,7 +130,7 @@ function CreateStaffForm({ onCreated }: { onCreated: () => void }) {
               className={inputCls}
               value={f.email}
               onChange={(e) => setF({ ...f, email: e.target.value })}
-              placeholder="staff@gymco.in"
+              placeholder="staff@iconicfitnessindia.com"
             />
           </div>
           <div className="sm:col-span-2">
@@ -173,7 +173,7 @@ function CreateStaffForm({ onCreated }: { onCreated: () => void }) {
         )}
         <button
           disabled={busy}
-          className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-semibold transition-colors disabled:opacity-60"
+          className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 hover:from-lime-400 hover:to-lime-500 text-white font-semibold transition-colors disabled:opacity-60"
         >
           {busy ? "Creating…" : "Create Staff"}
         </button>
@@ -253,7 +253,7 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
             {row.permissions.map((p) => (
               <span
                 key={p}
-                className="text-[11px] px-2 py-0.5 rounded-md bg-orange-500/15 text-orange-300 border border-orange-500/30"
+                className="text-[11px] px-2 py-0.5 rounded-md bg-lime-500/15 text-lime-300 border border-lime-500/30"
               >
                 {PERMISSION_LABELS[p] ?? p}
               </span>
@@ -268,7 +268,7 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
               type="checkbox"
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
-              className="rounded border-slate-600 bg-slate-900 text-orange-500 focus:ring-orange-500/60"
+              className="rounded border-slate-600 bg-slate-900 text-lime-500 focus:ring-lime-500/60"
             />
             Active
           </label>
@@ -291,7 +291,7 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
               <button
                 onClick={save}
                 disabled={busy}
-                className="text-xs px-3 py-1.5 rounded bg-orange-500/20 text-orange-300 border border-orange-500/40 hover:bg-orange-500/30 disabled:opacity-60"
+                className="text-xs px-3 py-1.5 rounded bg-lime-500/20 text-lime-300 border border-lime-500/40 hover:bg-lime-500/30 disabled:opacity-60"
               >
                 Save
               </button>
@@ -310,7 +310,7 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
           ) : (
             <button
               onClick={() => setEditing(true)}
-              className="text-xs px-3 py-1.5 rounded bg-slate-700/60 text-slate-200 border border-slate-600/60 hover:border-orange-500/40 w-fit"
+              className="text-xs px-3 py-1.5 rounded bg-slate-700/60 text-slate-200 border border-slate-600/60 hover:border-lime-500/40 w-fit"
             >
               Edit
             </button>
@@ -327,7 +327,7 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
               <button
                 onClick={resetPwd}
                 disabled={busy || newPwd.length < 6}
-                className="text-xs px-2 py-1 rounded bg-orange-500/20 text-orange-300 border border-orange-500/40 disabled:opacity-40"
+                className="text-xs px-2 py-1 rounded bg-lime-500/20 text-lime-300 border border-lime-500/40 disabled:opacity-40"
               >
                 Set
               </button>
@@ -344,7 +344,7 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
           ) : (
             <button
               onClick={() => setResetting(true)}
-              className="text-xs px-3 py-1.5 rounded bg-slate-700/60 text-slate-200 border border-slate-600/60 hover:border-orange-500/40 inline-flex items-center gap-1 w-fit"
+              className="text-xs px-3 py-1.5 rounded bg-slate-700/60 text-slate-200 border border-slate-600/60 hover:border-lime-500/40 inline-flex items-center gap-1 w-fit"
             >
               <KeyRound className="h-3 w-3" /> Reset Password
             </button>

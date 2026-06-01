@@ -36,8 +36,8 @@ export default function Blog() {
     <div className="max-w-7xl mx-auto px-4 md:px-8 py-10 md:py-16">
       {/* Header */}
       <div className="text-center mb-10 md:mb-14">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/30 text-[10.5px] font-black tracking-[0.22em] text-orange-600 uppercase mb-4">
-          <BookOpen className="h-3.5 w-3.5" /> GYMCO Journal
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-lime-500/10 border border-lime-500/30 text-[10.5px] font-black tracking-[0.22em] text-lime-600 uppercase mb-4">
+          <BookOpen className="h-3.5 w-3.5" /> Iconic Fitness Journal
         </div>
         <h1 className="text-4xl md:text-6xl font-black tracking-[-0.03em] leading-[1.05]">
           Train smarter. <span className="text-gradient-brand">Recover better.</span>
@@ -79,7 +79,7 @@ export default function Blog() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-transparent" />
                   <div className="absolute inset-x-0 bottom-0 p-6 md:p-10">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-500 text-white text-[10px] font-black tracking-[0.22em] uppercase mb-3 shadow-lg">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-lime-500 text-white text-[10px] font-black tracking-[0.22em] uppercase mb-3 shadow-lg">
                       Featured · {featured.category}
                     </div>
                     <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-[1.05] max-w-3xl drop-shadow-[0_4px_18px_rgba(0,0,0,0.45)]">
@@ -98,7 +98,7 @@ export default function Blog() {
                       </span>
                       <span>·</span>
                       <span>{featured.author}</span>
-                      <span className="ml-auto inline-flex items-center gap-1 text-orange-300 group-hover:translate-x-1 transition-transform">
+                      <span className="ml-auto inline-flex items-center gap-1 text-lime-300 group-hover:translate-x-1 transition-transform">
                         Read article <ArrowRight className="h-4 w-4" />
                       </span>
                     </div>
@@ -128,7 +128,7 @@ export default function Blog() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-transparent" />
                       <div className="absolute inset-x-0 bottom-0 p-4 md:p-5">
-                        <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-orange-300 mb-1.5">
+                        <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-lime-300 mb-1.5">
                           {p.category}
                         </div>
                         <h3 className="text-lg md:text-2xl font-black text-white tracking-tight leading-tight line-clamp-2 drop-shadow-[0_3px_12px_rgba(0,0,0,0.45)]">

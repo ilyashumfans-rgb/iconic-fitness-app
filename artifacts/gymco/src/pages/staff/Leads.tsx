@@ -37,7 +37,7 @@ type Lead = {
 
 const STATUSES = [
   { key: "new", label: "New", color: "bg-blue-100 text-blue-700 border-blue-200" },
-  { key: "contacted", label: "Contacted", color: "bg-amber-100 text-amber-700 border-amber-200" },
+  { key: "contacted", label: "Contacted", color: "bg-green-100 text-green-700 border-green-200" },
   { key: "qualified", label: "Qualified", color: "bg-purple-100 text-purple-700 border-purple-200" },
   { key: "converted", label: "Converted", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
   { key: "lost", label: "Lost", color: "bg-slate-100 text-slate-600 border-slate-200" },
@@ -119,8 +119,8 @@ function StaffLeadsInner() {
             onClick={() => setFilter("all")}
             className={`text-left rounded-2xl p-4 border transition ${
               filter === "all"
-                ? "bg-gradient-to-br from-orange-500 to-amber-500 text-white border-transparent shadow-md"
-                : "bg-white border-orange-100 hover:border-orange-300"
+                ? "bg-gradient-to-br from-lime-500 to-green-500 text-white border-transparent shadow-md"
+                : "bg-white border-lime-100 hover:border-lime-300"
             }`}
           >
             <div className="text-[10px] font-bold uppercase tracking-wider opacity-80">
@@ -134,8 +134,8 @@ function StaffLeadsInner() {
               onClick={() => setFilter(s.key)}
               className={`text-left rounded-2xl p-4 border transition ${
                 filter === s.key
-                  ? "bg-gradient-to-br from-orange-500 to-amber-500 text-white border-transparent shadow-md"
-                  : "bg-white border-orange-100 hover:border-orange-300"
+                  ? "bg-gradient-to-br from-lime-500 to-green-500 text-white border-transparent shadow-md"
+                  : "bg-white border-lime-100 hover:border-lime-300"
               }`}
             >
               <div className="text-[10px] font-bold uppercase tracking-wider opacity-80">
@@ -155,10 +155,10 @@ function StaffLeadsInner() {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Search by name, phone, email, gym, class..."
-                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-orange-100 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/60 text-sm"
+                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-lime-100 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-lime-500/60 text-sm"
               />
             </div>
-            <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-orange-50 border border-orange-100 text-orange-700 text-xs font-bold">
+            <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-lime-50 border border-lime-100 text-lime-700 text-xs font-bold">
               <Filter className="h-3.5 w-3.5" />
               {filter === "all" ? "All statuses" : STATUSES.find((s) => s.key === filter)?.label}
               <span className="ml-1 text-slate-500">({filtered.length})</span>
@@ -181,7 +181,7 @@ function StaffLeadsInner() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="p-12 text-center text-slate-500">
-              <Inbox className="h-10 w-10 mx-auto mb-2 text-orange-400" />
+              <Inbox className="h-10 w-10 mx-auto mb-2 text-lime-400" />
               <div className="font-bold">No leads yet</div>
               <div className="text-sm">
                 When visitors book a free class, their enquiry will appear here.
@@ -190,7 +190,7 @@ function StaffLeadsInner() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[640px] text-sm">
-                <thead className="bg-orange-50/60 text-slate-600">
+                <thead className="bg-lime-50/60 text-slate-600">
                   <tr className="text-left">
                     <th className="px-4 py-3 font-bold uppercase tracking-wider text-[11px]">Lead</th>
                     <th className="px-4 py-3 font-bold uppercase tracking-wider text-[11px]">Interested in</th>
@@ -200,11 +200,11 @@ function StaffLeadsInner() {
                     <th className="px-4 py-3"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-orange-50">
+                <tbody className="divide-y divide-lime-50">
                   {filtered.map((r) => (
                     <tr
                       key={r.id}
-                      className="hover:bg-orange-50/40 cursor-pointer"
+                      className="hover:bg-lime-50/40 cursor-pointer"
                       onClick={() => setEditing(r)}
                     >
                       <td className="px-4 py-3">
@@ -227,11 +227,11 @@ function StaffLeadsInner() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="text-slate-900 flex items-center gap-1">
-                          <Phone className="h-3 w-3 text-orange-500" />
+                          <Phone className="h-3 w-3 text-lime-500" />
                           <a
                             href={`tel:${r.phone}`}
                             onClick={(e) => e.stopPropagation()}
-                            className="font-mono hover:text-orange-600"
+                            className="font-mono hover:text-lime-600"
                           >
                             {r.phone}
                           </a>
@@ -291,7 +291,7 @@ function StaffLeadsInner() {
             className="w-full max-w-md bg-white shadow-2xl h-full overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="sticky top-0 bg-white border-b border-orange-100 p-5 flex items-start justify-between">
+            <div className="sticky top-0 bg-white border-b border-lime-100 p-5 flex items-start justify-between">
               <div>
                 <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   Lead #{editing.id} · {editing.source}
@@ -302,7 +302,7 @@ function StaffLeadsInner() {
               </div>
               <button
                 onClick={() => setEditing(null)}
-                className="p-1 rounded-full hover:bg-orange-50 text-slate-500"
+                className="p-1 rounded-full hover:bg-lime-50 text-slate-500"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -312,7 +312,7 @@ function StaffLeadsInner() {
               <div className="grid grid-cols-2 gap-3">
                 <a
                   href={`tel:${editing.phone}`}
-                  className="rounded-xl border border-orange-100 bg-orange-50/50 p-3 hover:border-orange-300"
+                  className="rounded-xl border border-lime-100 bg-lime-50/50 p-3 hover:border-lime-300"
                 >
                   <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                     Phone
@@ -324,7 +324,7 @@ function StaffLeadsInner() {
                 {editing.email ? (
                   <a
                     href={`mailto:${editing.email}`}
-                    className="rounded-xl border border-orange-100 bg-orange-50/50 p-3 hover:border-orange-300"
+                    className="rounded-xl border border-lime-100 bg-lime-50/50 p-3 hover:border-lime-300"
                   >
                     <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                       Email
@@ -336,7 +336,7 @@ function StaffLeadsInner() {
                 ) : null}
               </div>
 
-              <div className="rounded-xl border border-orange-100 p-4 space-y-2 text-sm">
+              <div className="rounded-xl border border-lime-100 p-4 space-y-2 text-sm">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   Interest
                 </div>
@@ -345,7 +345,7 @@ function StaffLeadsInner() {
                 ) : null}
                 {editing.gymName ? (
                   <div className="text-slate-600 flex items-center gap-1">
-                    <MapPin className="h-3 w-3 text-orange-500" /> {editing.gymName}
+                    <MapPin className="h-3 w-3 text-lime-500" /> {editing.gymName}
                   </div>
                 ) : null}
                 {editing.city ? (
@@ -353,12 +353,12 @@ function StaffLeadsInner() {
                 ) : null}
                 {editing.preferredDate ? (
                   <div className="text-slate-600 flex items-center gap-1">
-                    <Calendar className="h-3 w-3 text-orange-500" />
+                    <Calendar className="h-3 w-3 text-lime-500" />
                     Preferred: {editing.preferredDate}
                   </div>
                 ) : null}
                 {editing.message ? (
-                  <div className="text-slate-700 italic border-l-2 border-orange-300 pl-3 mt-2">
+                  <div className="text-slate-700 italic border-l-2 border-lime-300 pl-3 mt-2">
                     "{editing.message}"
                   </div>
                 ) : null}
@@ -375,7 +375,7 @@ function StaffLeadsInner() {
                       onClick={() => update(editing.id, { status: s.key })}
                       className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider border transition ${
                         editing.status === s.key
-                          ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-transparent shadow"
+                          ? "bg-gradient-to-r from-lime-500 to-green-500 text-white border-transparent shadow"
                           : `${s.color} hover:opacity-80`
                       }`}
                     >
@@ -396,7 +396,7 @@ function StaffLeadsInner() {
                     update(editing.id, { assignedTo: e.target.value })
                   }
                   placeholder="Sales rep name or email"
-                  className="mt-2 w-full px-3 py-2 rounded-xl border border-orange-100 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                  className="mt-2 w-full px-3 py-2 rounded-xl border border-lime-100 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
                 />
               </div>
 
@@ -412,7 +412,7 @@ function StaffLeadsInner() {
                   }
                   rows={5}
                   placeholder="Call notes, follow-up reminders, deal context..."
-                  className="mt-2 w-full px-3 py-2 rounded-xl border border-orange-100 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                  className="mt-2 w-full px-3 py-2 rounded-xl border border-lime-100 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
                 />
                 <div className="text-[10px] text-slate-400 mt-1">
                   Auto-saves when you click out of the field.

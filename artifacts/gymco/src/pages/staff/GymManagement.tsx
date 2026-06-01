@@ -124,7 +124,7 @@ function Inner() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search gym, city, area, partner…"
-              className="w-full pl-9 pr-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+              className="w-full pl-9 pr-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
             />
           </div>
           <div className="inline-flex rounded-lg border border-slate-300 bg-white p-0.5 text-xs font-semibold">
@@ -138,7 +138,7 @@ function Inner() {
                 onClick={() => setFilter(k)}
                 className={`px-3 py-1.5 rounded-md transition-colors ${
                   filter === k
-                    ? "bg-orange-500 text-white"
+                    ? "bg-lime-500 text-white"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
@@ -151,7 +151,7 @@ function Inner() {
           </div>
           <button
             onClick={() => setCreating(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-bold hover:opacity-95"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white text-sm font-bold hover:opacity-95"
           >
             <Plus className="h-4 w-4" /> Add Gym
           </button>
@@ -220,7 +220,7 @@ function Inner() {
                       <Navigation className="h-3 w-3" /> PINNED
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-500/90 text-white text-[10px] font-bold">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-lime-500/90 text-white text-[10px] font-bold">
                       NO LOCATION
                     </span>
                   )}
@@ -247,7 +247,7 @@ function Inner() {
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setEditing(g)}
-                    className="inline-flex items-center justify-center gap-1.5 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-bold hover:opacity-95"
+                    className="inline-flex items-center justify-center gap-1.5 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white text-xs font-bold hover:opacity-95"
                   >
                     <Edit3 className="h-3.5 w-3.5" /> Edit
                   </button>
@@ -428,11 +428,11 @@ function EditGymModal({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white border border-orange-100 shadow-2xl"
+        className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white border border-lime-100 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="relative h-28 bg-gradient-to-r from-orange-500 to-orange-600 text-white p-5">
+        <div className="relative h-28 bg-gradient-to-r from-lime-500 to-lime-600 text-white p-5">
           <div className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
               <Building2 className="h-6 w-6" />
@@ -481,7 +481,7 @@ function EditGymModal({
               <select
                 value={ownerPartnerId}
                 onChange={(e) => setOwnerPartnerId(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-lime-500 focus:ring-1 focus:ring-lime-500 outline-none"
               >
                 <option value="">Unassigned</option>
                 {partners.map((p) => (
@@ -495,10 +495,10 @@ function EditGymModal({
               </div>
             </div>
 
-            <div className="sm:col-span-2 rounded-xl border border-orange-200 bg-orange-50/50 p-4">
+            <div className="sm:col-span-2 rounded-xl border border-lime-200 bg-lime-50/50 p-4">
               <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
                 <div>
-                  <div className="text-xs uppercase tracking-wide text-orange-700 font-bold flex items-center gap-1.5">
+                  <div className="text-xs uppercase tracking-wide text-lime-700 font-bold flex items-center gap-1.5">
                     <MapPin className="h-3.5 w-3.5" />
                     Map location
                   </div>
@@ -511,7 +511,7 @@ function EditGymModal({
                     type="button"
                     onClick={useDeviceLocation}
                     disabled={geoBusy !== "none"}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-orange-300 text-orange-700 text-xs font-semibold hover:bg-orange-100 disabled:opacity-60"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-lime-300 text-lime-700 text-xs font-semibold hover:bg-lime-100 disabled:opacity-60"
                   >
                     <Navigation className="h-3.5 w-3.5" />
                     {geoBusy === "device" ? "Locating…" : "Use my location"}
@@ -520,7 +520,7 @@ function EditGymModal({
                     type="button"
                     onClick={geocodeFromAddress}
                     disabled={geoBusy !== "none"}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-semibold hover:opacity-95 disabled:opacity-60"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white text-xs font-semibold hover:opacity-95 disabled:opacity-60"
                   >
                     <Search className="h-3.5 w-3.5" />
                     {geoBusy === "address" ? "Searching…" : "Find from address"}
@@ -539,7 +539,7 @@ function EditGymModal({
                   href={`https://www.google.com/maps?q=${lat},${lng}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-orange-700 hover:text-orange-800 underline"
+                  className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-lime-700 hover:text-lime-800 underline"
                 >
                   <ExternalLink className="h-3 w-3" /> Preview on Google Maps
                 </a>
@@ -581,7 +581,7 @@ function EditGymModal({
           </div>
         </div>
 
-        <div className="px-5 py-4 border-t border-orange-100 bg-orange-50/30 flex items-center justify-between gap-3">
+        <div className="px-5 py-4 border-t border-lime-100 bg-lime-50/30 flex items-center justify-between gap-3">
           <div className="text-[11px] text-slate-500">
             Staff edit · changes apply immediately to the partner's gym.
           </div>
@@ -595,7 +595,7 @@ function EditGymModal({
             <button
               onClick={save}
               disabled={busy}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-bold disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white text-sm font-bold disabled:opacity-60"
             >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Save changes
@@ -664,9 +664,9 @@ function CreateGymModal({
         className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-5 py-4 border-b border-orange-100 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-lime-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center text-white">
               <Building2 className="h-5 w-5" />
             </div>
             <div>
@@ -720,7 +720,7 @@ function CreateGymModal({
               <select
                 value={ownerPartnerId}
                 onChange={(e) => setOwnerPartnerId(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-lime-500 focus:ring-1 focus:ring-lime-500 outline-none"
               >
                 <option value="">Unassigned</option>
                 {partners.map((p) => (
@@ -733,7 +733,7 @@ function CreateGymModal({
           </div>
         </div>
 
-        <div className="px-5 py-4 border-t border-orange-100 bg-orange-50/30 flex items-center justify-end gap-2">
+        <div className="px-5 py-4 border-t border-lime-100 bg-lime-50/30 flex items-center justify-end gap-2">
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 text-sm font-semibold hover:bg-slate-50"
@@ -743,7 +743,7 @@ function CreateGymModal({
           <button
             onClick={create}
             disabled={busy}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-bold disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white text-sm font-bold disabled:opacity-60"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
             Create gym
@@ -785,7 +785,7 @@ function PayoutFields({
   const taxInr = Math.round((base * tax) / 100);
   const total = base + taxInr;
   return (
-    <div className="sm:col-span-2 rounded-xl border border-orange-100 bg-orange-50/40 p-3 space-y-3">
+    <div className="sm:col-span-2 rounded-xl border border-lime-100 bg-lime-50/40 p-3 space-y-3">
       <div className="grid grid-cols-2 gap-3">
         <Field
           label="Partner Payout per Visit (₹)"
@@ -805,7 +805,7 @@ function PayoutFields({
             onClick={() => onInclTax(false)}
             className={`px-3 py-2 rounded-lg border text-sm font-semibold transition ${
               !inclTax
-                ? "bg-orange-500 border-orange-500 text-white"
+                ? "bg-lime-500 border-lime-500 text-white"
                 : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
             }`}
           >
@@ -816,7 +816,7 @@ function PayoutFields({
             onClick={() => onInclTax(true)}
             className={`px-3 py-2 rounded-lg border text-sm font-semibold transition ${
               inclTax
-                ? "bg-orange-500 border-orange-500 text-white"
+                ? "bg-lime-500 border-lime-500 text-white"
                 : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
             }`}
           >
@@ -827,7 +827,7 @@ function PayoutFields({
       <div className="text-[12px] text-slate-700 font-medium">
         Base ₹{base.toLocaleString("en-IN")} + GST ₹
         {taxInr.toLocaleString("en-IN")} ({tax}%) ={" "}
-        <span className="font-bold text-orange-700">
+        <span className="font-bold text-lime-700">
           ₹{total.toLocaleString("en-IN")} per visit
         </span>
       </div>
@@ -857,7 +857,7 @@ function Field({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder:text-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60 focus:border-orange-400"
+        className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder:text-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60 focus:border-lime-400"
       />
     </div>
   );

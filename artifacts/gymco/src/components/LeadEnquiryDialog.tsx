@@ -129,7 +129,7 @@ export function LeadEnquiryDialog(props: Props) {
         ) : (
           <form onSubmit={submit} className="space-y-4">
             <DialogHeader>
-              <div className="inline-flex items-center gap-1.5 self-start px-2.5 py-1 rounded-full bg-orange-100 text-orange-700 text-[10px] font-black uppercase tracking-wider">
+              <div className="inline-flex items-center gap-1.5 self-start px-2.5 py-1 rounded-full bg-lime-100 text-lime-700 text-[10px] font-black uppercase tracking-wider">
                 <Sparkles className="h-3 w-3" />
                 {props.badgeLabel ?? "Free Trial"}
               </div>
@@ -140,13 +140,13 @@ export function LeadEnquiryDialog(props: Props) {
                 {props.description ??
                   "Share a few details and our team will call to confirm your free trial."}
                 {props.planName ? (
-                  <span className="mt-2 flex items-center justify-between gap-3 rounded-lg border border-orange-200 bg-orange-50 dark:bg-orange-950/30 dark:border-orange-900/50 px-3 py-2">
+                  <span className="mt-2 flex items-center justify-between gap-3 rounded-lg border border-lime-200 bg-lime-50 dark:bg-lime-950/30 dark:border-lime-900/50 px-3 py-2">
                     <span className="text-foreground font-bold text-sm">
                       {props.planName}
                     </span>
                     {typeof props.planPriceInr === "number" &&
                       props.planPriceInr > 0 && (
-                        <span className="text-orange-600 dark:text-orange-300 font-black text-sm">
+                        <span className="text-lime-600 dark:text-lime-300 font-black text-sm">
                           ₹{props.planPriceInr.toLocaleString("en-IN")}
                         </span>
                       )}

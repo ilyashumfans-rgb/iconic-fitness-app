@@ -9,7 +9,7 @@ import {
 } from "@/lib/tickets";
 
 const inputCls =
-  "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100";
+  "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-lime-400 focus:ring-2 focus:ring-lime-100";
 const labelCls = "block text-sm font-medium text-slate-700 mb-1.5";
 
 export function NewTicketForm({
@@ -45,7 +45,7 @@ export function NewTicketForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {err && (
-        <div className="rounded-xl border border-orange-200 bg-orange-50 px-3.5 py-2.5 text-sm text-orange-700">
+        <div className="rounded-xl border border-lime-200 bg-lime-50 px-3.5 py-2.5 text-sm text-lime-700">
           {err}
         </div>
       )}
@@ -112,7 +112,7 @@ export function NewTicketForm({
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-xl bg-lime-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-lime-600 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {submitting ? "Submitting..." : "Submit ticket"}
         </button>

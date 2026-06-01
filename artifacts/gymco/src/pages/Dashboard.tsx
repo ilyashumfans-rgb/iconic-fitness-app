@@ -54,7 +54,7 @@ export default function Dashboard() {
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.2 }}>
           <Card className="bg-card">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4 text-orange-500">
+              <div className="flex items-center justify-between mb-4 text-lime-500">
                 <Flame className="h-6 w-6" />
                 <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Streak</span>
               </div>
@@ -146,7 +146,7 @@ export default function Dashboard() {
                       <h3 className="font-bold text-lg leading-tight">{g.name}</h3>
                       <div className="flex items-center gap-3 text-sm opacity-90 mt-1">
                         <span className="inline-flex items-center gap-1">
-                          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                          <Star className="h-3.5 w-3.5 fill-green-400 text-green-400" />
                           {g.rating?.toFixed?.(1) ?? g.rating}
                         </span>
                         {typeof g.distanceKm === "number" && (

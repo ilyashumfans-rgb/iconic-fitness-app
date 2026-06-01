@@ -105,12 +105,12 @@
   --popover-foreground: 240 10% 3.9%;
   --popover-border: 240 5.9% 90%;
   
-  /* GYMCO Orange — taken from logo */
-  --primary: 18 100% 55%;
+  /* Iconic Fitness green — taken from logo */
+  --primary: 96 56% 38%;
   --primary-foreground: 0 0% 100%;
-  /* GYMCO accent — warm amber (companion to primary orange) */
-  --brand-purple: 32 100% 50%;
-  --brand-purple-foreground: 0 0% 100%;
+  /* Iconic Fitness accent — bright lime (companion to primary green) */
+  --brand-purple: 84 60% 50%;
+  --brand-purple-foreground: 96 60% 10%;
   
   --secondary: 240 4.8% 95.9%;
   --secondary-foreground: 240 5.9% 10%;
@@ -125,12 +125,12 @@
   --destructive-foreground: 0 0% 98%;
   
   --input: 240 5.9% 90%;
-  --ring: 18 100% 55%;
-  --chart-1: 18 100% 55%;
-  --chart-2: 32 100% 50%;
-  --chart-3: 290 70% 60%;
-  --chart-4: 32 96% 60%;
-  --chart-5: 250 65% 60%;
+  --ring: 96 56% 38%;
+  --chart-1: 96 56% 42%;
+  --chart-2: 84 60% 50%;
+  --chart-3: 152 50% 42%;
+  --chart-4: 70 65% 48%;
+  --chart-5: 120 40% 38%;
 
   --app-font-sans: 'Plus Jakarta Sans', 'Inter', sans-serif;
   --app-font-serif: Georgia, serif;
@@ -198,20 +198,20 @@
   --sidebar: 260 22% 5%;
   --sidebar-foreground: 240 5% 75%;
   --sidebar-border: 260 12% 14%;
-  --sidebar-primary: 18 100% 55%;
+  --sidebar-primary: 96 56% 45%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 260 14% 13%;
   --sidebar-accent-foreground: 0 0% 98%;
-  --sidebar-ring: 18 100% 55%;
+  --sidebar-ring: 96 56% 45%;
   
   --popover: 260 22% 6%;
   --popover-foreground: 0 0% 98%;
   --popover-border: 260 12% 16%;
   
-  --primary: 18 100% 55%;
+  --primary: 96 56% 45%;
   --primary-foreground: 0 0% 100%;
-  --brand-purple: 32 100% 55%;
-  --brand-purple-foreground: 0 0% 100%;
+  --brand-purple: 84 60% 52%;
+  --brand-purple-foreground: 96 60% 10%;
   
   --secondary: 260 14% 14%;
   --secondary-foreground: 0 0% 98%;
@@ -219,19 +219,19 @@
   --muted: 260 14% 14%;
   --muted-foreground: 240 5% 70%;
   
-  --accent: 32 100% 55%;
-  --accent-foreground: 0 0% 100%;
+  --accent: 84 60% 52%;
+  --accent-foreground: 96 60% 10%;
   
   --destructive: 0 70% 50%;
   --destructive-foreground: 0 0% 98%;
   
   --input: 260 14% 16%;
-  --ring: 18 100% 55%;
-  --chart-1: 18 100% 55%;
-  --chart-2: 32 100% 55%;
-  --chart-3: 290 70% 65%;
-  --chart-4: 32 96% 62%;
-  --chart-5: 250 65% 65%;
+  --ring: 96 56% 45%;
+  --chart-1: 96 56% 48%;
+  --chart-2: 84 60% 52%;
+  --chart-3: 152 50% 48%;
+  --chart-4: 70 65% 52%;
+  --chart-5: 120 40% 45%;
 
   --shadow-2xs: 0px 2px 0px 0px rgba(0,0,0,0.4);
   --shadow-xs: 0px 2px 0px 0px rgba(0,0,0,0.6);
@@ -270,22 +270,22 @@
 
 @layer utilities {
   .text-gradient-brand {
-    background-image: linear-gradient(95deg, hsl(14 100% 52%) 0%, hsl(22 100% 55%) 50%, hsl(38 100% 58%) 100%);
+    background-image: linear-gradient(95deg, hsl(99 60% 36%) 0%, hsl(88 62% 42%) 50%, hsl(78 68% 46%) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
   .bg-gradient-brand {
-    background-image: linear-gradient(135deg, hsl(14 100% 50%) 0%, hsl(22 100% 55%) 50%, hsl(36 100% 55%) 100%);
+    background-image: linear-gradient(135deg, hsl(99 60% 32%) 0%, hsl(90 56% 38%) 50%, hsl(82 60% 44%) 100%);
   }
   .bg-gradient-brand-soft {
-    background-image: linear-gradient(135deg, hsl(18 100% 55% / 0.18) 0%, hsl(36 100% 55% / 0.18) 100%);
+    background-image: linear-gradient(135deg, hsl(96 56% 42% / 0.18) 0%, hsl(82 62% 50% / 0.18) 100%);
   }
   .ring-glow-brand {
     box-shadow:
-      0 0 0 1px hsl(18 100% 55% / 0.3),
-      0 10px 40px -10px hsl(18 100% 55% / 0.4),
-      0 20px 60px -20px hsl(36 100% 55% / 0.45);
+      0 0 0 1px hsl(96 56% 42% / 0.3),
+      0 10px 40px -10px hsl(96 56% 42% / 0.4),
+      0 20px 60px -20px hsl(82 60% 46% / 0.45);
   }
   .border-gradient-brand {
     position: relative;
@@ -297,7 +297,7 @@
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(135deg, hsl(18 100% 55%), hsl(32 100% 58%));
+    background: linear-gradient(135deg, hsl(96 56% 42%), hsl(82 62% 48%));
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
             mask-composite: exclude;
@@ -518,14 +518,14 @@
 .theme-portal .bg-slate-800\/30,
 .theme-portal .bg-slate-800\/40,
 .theme-portal .bg-slate-800\/60,
-.theme-portal .bg-slate-800\/70 { background-color: #fff7ed !important; }
+.theme-portal .bg-slate-800\/70 { background-color: #f7fee7 !important; }
 .theme-portal .bg-slate-700,
-.theme-portal .bg-slate-700\/40 { background-color: #ffedd5 !important; }
+.theme-portal .bg-slate-700\/40 { background-color: #ecfccb !important; }
 .theme-portal .hover\:bg-slate-700:hover,
 .theme-portal .hover\:bg-slate-800:hover,
 .theme-portal .hover\:bg-slate-800\/30:hover,
 .theme-portal .hover\:bg-slate-800\/40:hover,
-.theme-portal .hover\:bg-slate-800\/70:hover { background-color: #ffedd5 !important; }
+.theme-portal .hover\:bg-slate-800\/70:hover { background-color: #ecfccb !important; }
 
 /* Text: light slate → readable dark. `.text-white` is repainted to dark by default
    because most uses were on dark slate cards that are now white. We then restore
@@ -577,7 +577,14 @@
 .theme-portal .border-slate-800\/60,
 .theme-portal .border-slate-700,
 .theme-portal .border-slate-600,
-.theme-portal .border-slate-600\/40 { border-color: #fed7aa !important; }
+.theme-portal .border-slate-600\/40 { border-color: #d9f99d !important; }
 
-/* Focus rings that referenced purple in old portal code now glow orange. */
-.theme-portal .focus\:ring-purple-500\/60:focus { --tw-ring-color: rgb(249 115 22 / 0.6) !important; }
+/* Focus rings that referenced purple in old portal code now glow green. */
+.theme-portal .focus\:ring-purple-500\/60:focus { --tw-ring-color: rgb(101 163 13 / 0.6) !important; }
+
+/* Iconic Fitness brand surfaces (lime) keep white text inside portals,
+   mirroring the green/emerald/blue rules above after the orange→lime rebrand. */
+.theme-portal [class*="from-lime-"].text-white,
+.theme-portal [class*="bg-lime-"].text-white,
+.theme-portal [class*="from-lime-"] .text-white,
+.theme-portal [class*="bg-lime-"] .text-white { color: #ffffff !important; }

@@ -53,7 +53,7 @@ export default function BlogDetail() {
         <p className="text-muted-foreground mb-4">
           {err ?? "Post not found"}
         </p>
-        <Link href="/blog" className="text-orange-600 font-semibold">
+        <Link href="/blog" className="text-lime-600 font-semibold">
           ← Back to blog
         </Link>
       </div>
@@ -68,7 +68,7 @@ export default function BlogDetail() {
       >
         <ArrowLeft className="h-4 w-4" /> All articles
       </Link>
-      <div className="text-xs font-bold uppercase tracking-[0.25em] text-orange-600 mb-3">
+      <div className="text-xs font-bold uppercase tracking-[0.25em] text-lime-600 mb-3">
         {post.category}
       </div>
       <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-tight">

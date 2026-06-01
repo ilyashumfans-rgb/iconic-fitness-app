@@ -20,7 +20,7 @@ type Product = {
 type Partner = { id: number; name: string; city: string; status: string };
 
 const INPUT =
-  "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
+  "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-lime-500/60";
 
 const blank = () => ({
   vendorPartnerId: 0,
@@ -101,7 +101,7 @@ export default function AdminProducts() {
       actions={
         <button
           onClick={startCreate}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-medium shadow"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white text-sm font-medium shadow"
         >
           <Plus className="h-3.5 w-3.5" /> New Product
         </button>
@@ -239,7 +239,7 @@ export default function AdminProducts() {
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-semibold"
+                className="px-5 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white text-sm font-semibold"
               >
                 {creating ? "Create product" : "Save changes"}
               </button>

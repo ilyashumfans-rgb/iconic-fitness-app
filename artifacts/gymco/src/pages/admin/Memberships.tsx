@@ -4,7 +4,7 @@ import { adminApi } from "@/lib/adminApi";
 import { Check, Plus, Tag, Trash2, X } from "lucide-react";
 
 const inputCls =
-  "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
+  "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-lime-500/60";
 
 function PlanForm({
   initial,
@@ -79,7 +79,7 @@ function PlanForm({
             type="checkbox"
             checked={f.popular}
             onChange={(e) => setF({ ...f, popular: e.target.checked })}
-            className="h-4 w-4 accent-orange-500"
+            className="h-4 w-4 accent-lime-500"
           />
           Mark as popular
         </label>
@@ -87,7 +87,7 @@ function PlanForm({
       <div className="flex gap-2 pt-2">
         <button
           disabled={busy}
-          className="px-5 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold disabled:opacity-60"
+          className="px-5 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white font-semibold disabled:opacity-60"
         >
           {busy ? "Saving…" : "Save"}
         </button>
@@ -183,7 +183,7 @@ function InlinePrice({
             type="number"
             value={price}
             onChange={(e) => setPrice(Number(e.target.value))}
-            className="w-full mt-1 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+            className="w-full mt-1 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
           />
         </label>
         <label className="text-[10px] text-slate-500">
@@ -192,14 +192,14 @@ function InlinePrice({
             type="number"
             value={orig}
             onChange={(e) => setOrig(Number(e.target.value))}
-            className="w-full mt-1 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+            className="w-full mt-1 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
           />
         </label>
       </div>
       <button
         onClick={save}
         disabled={!dirty || busy}
-        className="mt-2 w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-semibold disabled:opacity-40"
+        className="mt-2 w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded bg-gradient-to-r from-lime-500 to-lime-600 text-white text-xs font-semibold disabled:opacity-40"
       >
         {ok ? <Check className="h-3.5 w-3.5" /> : null}
         {busy ? "Saving…" : ok ? "Saved" : "Save price"}
@@ -231,7 +231,7 @@ export default function AdminMemberships() {
             setCreating(true);
             setEditing(null);
           }}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-medium"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white text-sm font-medium"
         >
           <Plus className="h-3.5 w-3.5" />
           Add Plan
@@ -275,7 +275,7 @@ export default function AdminMemberships() {
         {rows.map((p) => (
           <AdminCard key={p.id} className="p-5 relative">
             {p.popular && (
-              <span className="absolute top-3 right-3 text-[10px] px-2 py-0.5 rounded bg-orange-500/20 text-orange-300 border border-orange-500/40">
+              <span className="absolute top-3 right-3 text-[10px] px-2 py-0.5 rounded bg-lime-500/20 text-lime-300 border border-lime-500/40">
                 POPULAR
               </span>
             )}

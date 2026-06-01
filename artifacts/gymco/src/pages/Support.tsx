@@ -88,7 +88,7 @@ export default function Support() {
     <div className="mx-auto max-w-3xl px-4 py-6 sm:py-10">
       <div className="mb-6 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-100 text-orange-600">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-lime-100 text-lime-600">
             <LifeBuoy className="h-5 w-5" />
           </span>
           <div>
@@ -101,7 +101,7 @@ export default function Support() {
         {!creating && openId == null && (
           <button
             onClick={() => setCreating(true)}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-lime-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-lime-600"
           >
             <Plus className="h-4 w-4" /> New ticket
           </button>
@@ -109,13 +109,13 @@ export default function Support() {
       </div>
 
       {err && (
-        <div className="mb-4 rounded-xl border border-orange-200 bg-orange-50 px-3.5 py-2.5 text-sm text-orange-700">
+        <div className="mb-4 rounded-xl border border-lime-200 bg-lime-50 px-3.5 py-2.5 text-sm text-lime-700">
           {err}
         </div>
       )}
 
       {creating ? (
-        <div className="rounded-2xl border border-orange-100 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-lime-100 bg-white p-5 shadow-sm">
           <h2 className="mb-4 text-base font-semibold text-slate-900">
             New support ticket
           </h2>
@@ -126,14 +126,14 @@ export default function Support() {
           />
         </div>
       ) : openId != null ? (
-        <div className="rounded-2xl border border-orange-100 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-lime-100 bg-white p-5 shadow-sm">
           <button
             onClick={() => {
               setOpenId(null);
               navigate("/support");
               load();
             }}
-            className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-orange-600 hover:text-orange-700"
+            className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-lime-600 hover:text-lime-700"
           >
             <ArrowLeft className="h-4 w-4" /> Back to tickets
           </button>
@@ -150,7 +150,7 @@ export default function Support() {
       ) : loading ? (
         <p className="text-sm text-slate-400">Loading...</p>
       ) : rows.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-orange-200 bg-orange-50/40 p-10 text-center">
+        <div className="rounded-2xl border border-dashed border-lime-200 bg-lime-50/40 p-10 text-center">
           <p className="text-sm text-slate-600">
             You haven't raised any tickets yet.
           </p>
@@ -161,7 +161,7 @@ export default function Support() {
             <li key={t.id}>
               <button
                 onClick={() => setOpenId(t.id)}
-                className="flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-orange-300 hover:shadow-sm"
+                className="flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-lime-300 hover:shadow-sm"
               >
                 <div className="min-w-0">
                   <p className="truncate font-medium text-slate-900">

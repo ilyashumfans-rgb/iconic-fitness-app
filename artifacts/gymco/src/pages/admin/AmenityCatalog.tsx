@@ -96,7 +96,7 @@ export default function AmenityCatalog() {
       actions={
         <button
           onClick={startCreate}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-semibold shadow"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-green-500 text-white text-sm font-semibold shadow"
         >
           <Plus className="h-4 w-4" /> New amenity
         </button>
@@ -104,15 +104,15 @@ export default function AmenityCatalog() {
     >
       <div className="space-y-4">
         {(creating || editing) && (
-          <div className="bg-white border border-orange-200 rounded-2xl p-5 shadow-sm">
+          <div className="bg-white border border-lime-200 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2 text-slate-800 font-bold">
-                <Sparkles className="h-4 w-4 text-orange-500" />
+                <Sparkles className="h-4 w-4 text-lime-500" />
                 {editing ? `Edit "${editing.name}"` : "Create amenity"}
               </div>
               <button
                 onClick={cancel}
-                className="p-1.5 rounded-md hover:bg-orange-50 text-slate-500"
+                className="p-1.5 rounded-md hover:bg-lime-50 text-slate-500"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -153,7 +153,7 @@ export default function AmenityCatalog() {
                     setDraft({ ...draft, description: e.target.value })
                   }
                   rows={2}
-                  className="w-full px-3 py-2 rounded-lg bg-orange-50/60 border border-orange-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                  className="w-full px-3 py-2 rounded-lg bg-lime-50/60 border border-lime-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
                 />
               </div>
             </div>
@@ -171,7 +171,7 @@ export default function AmenityCatalog() {
               </button>
               <button
                 onClick={save}
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-semibold inline-flex items-center gap-2"
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-green-500 text-white text-sm font-semibold inline-flex items-center gap-2"
               >
                 <Save className="h-4 w-4" /> Save
               </button>
@@ -179,7 +179,7 @@ export default function AmenityCatalog() {
           </div>
         )}
 
-        <div className="bg-white border border-orange-100 rounded-2xl overflow-hidden shadow-sm">
+        <div className="bg-white border border-lime-100 rounded-2xl overflow-hidden shadow-sm">
           {loading ? (
             <div className="p-8 text-center text-slate-500">Loading…</div>
           ) : rows.length === 0 ? (
@@ -188,7 +188,7 @@ export default function AmenityCatalog() {
             </div>
           ) : (
             <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-sm">
-              <thead className="bg-orange-50/60 text-slate-600">
+              <thead className="bg-lime-50/60 text-slate-600">
                 <tr>
                   <th className="text-left px-4 py-2 font-semibold">Name</th>
                   <th className="text-left px-4 py-2 font-semibold">Slug</th>
@@ -199,7 +199,7 @@ export default function AmenityCatalog() {
               </thead>
               <tbody>
                 {rows.map((a) => (
-                  <tr key={a.id} className="border-t border-orange-50">
+                  <tr key={a.id} className="border-t border-lime-50">
                     <td className="px-4 py-2 font-medium text-slate-800">
                       {a.name}
                     </td>
@@ -219,7 +219,7 @@ export default function AmenityCatalog() {
                     <td className="px-4 py-2 text-right">
                       <button
                         onClick={() => startEdit(a)}
-                        className="px-2 py-1 rounded-md text-orange-600 hover:bg-orange-50 text-xs font-semibold mr-1"
+                        className="px-2 py-1 rounded-md text-lime-600 hover:bg-lime-50 text-xs font-semibold mr-1"
                       >
                         Edit
                       </button>
@@ -261,7 +261,7 @@ function Field({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 rounded-lg bg-orange-50/60 border border-orange-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+        className="w-full px-3 py-2 rounded-lg bg-lime-50/60 border border-lime-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
       />
     </div>
   );

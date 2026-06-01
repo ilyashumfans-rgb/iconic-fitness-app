@@ -189,7 +189,7 @@ function View() {
         canManage ? (
           <Link
             href="/staff/partner-onboarding"
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-medium shadow"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white text-sm font-medium shadow"
           >
             <UserPlus className="h-3.5 w-3.5" />
             Onboard Partner
@@ -237,9 +237,9 @@ function View() {
               placeholder="New password (min 6 chars)"
               minLength={6}
               required
-              className="flex-1 px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+              className="flex-1 px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-lime-500/60"
             />
-            <button className="px-5 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold">
+            <button className="px-5 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white font-semibold">
               Update password
             </button>
           </form>
@@ -260,7 +260,7 @@ function View() {
             className="w-full max-w-md rounded-2xl bg-white border border-slate-300 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-5 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white flex items-center justify-between rounded-t-2xl">
+            <div className="px-5 py-4 bg-gradient-to-r from-lime-500 to-lime-600 text-white flex items-center justify-between rounded-t-2xl">
               <div className="flex items-center gap-2">
                 <Pencil className="h-4 w-4" />
                 <span className="font-semibold">Edit partner</span>
@@ -283,7 +283,7 @@ function View() {
                   onChange={(e) =>
                     setEditForm((f) => ({ ...f, name: e.target.value }))
                   }
-                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
                   required
                 />
               </div>
@@ -296,7 +296,7 @@ function View() {
                   onChange={(e) =>
                     setEditForm((f) => ({ ...f, phone: e.target.value }))
                   }
-                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
                 />
               </div>
               <div>
@@ -308,7 +308,7 @@ function View() {
                   onChange={(e) =>
                     setEditForm((f) => ({ ...f, city: e.target.value }))
                   }
-                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
                 />
               </div>
               <p className="text-xs text-slate-500">
@@ -326,7 +326,7 @@ function View() {
                 <button
                   type="submit"
                   disabled={editBusy || !editForm.name.trim()}
-                  className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold disabled:opacity-50"
+                  className="px-4 py-2 rounded-lg bg-lime-500 hover:bg-lime-600 text-white text-sm font-bold disabled:opacity-50"
                 >
                   {editBusy ? "Saving…" : "Save changes"}
                 </button>
@@ -346,7 +346,7 @@ function View() {
             className="staff-qr-sheet w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-3xl bg-white shadow-2xl print:max-w-none print:max-h-none print:overflow-visible print:shadow-none print:rounded-none"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-6 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white flex items-center justify-between print:hidden">
+            <div className="px-6 py-4 bg-gradient-to-r from-lime-500 to-lime-600 text-white flex items-center justify-between print:hidden">
               <div className="flex items-center gap-2">
                 <Printer className="h-5 w-5" />
                 <div>
@@ -382,7 +382,7 @@ function View() {
                     <select
                       value={qrGymId}
                       onChange={(e) => setQrGymId(Number(e.target.value))}
-                      className="w-full px-3 py-2 rounded-lg bg-white border border-orange-200 text-slate-900 text-sm focus:border-orange-500 focus:outline-none"
+                      className="w-full px-3 py-2 rounded-lg bg-white border border-lime-200 text-slate-900 text-sm focus:border-lime-500 focus:outline-none"
                     >
                       {partnerGyms.map((g) => (
                         <option key={g.id} value={g.id}>
@@ -395,7 +395,7 @@ function View() {
                     type="button"
                     onClick={() => window.print()}
                     disabled={!qrGymId}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold disabled:opacity-50"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-lime-500 hover:bg-lime-600 text-white text-sm font-bold disabled:opacity-50"
                   >
                     <Printer className="h-4 w-4" /> Print poster
                   </button>
@@ -406,7 +406,7 @@ function View() {
                       if (g) downloadGymQrSvg(g, "staff-gym-qr-svg");
                     }}
                     disabled={!qrGymId}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-orange-200 hover:border-orange-500 text-orange-700 text-sm font-bold disabled:opacity-50"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-lime-200 hover:border-lime-500 text-lime-700 text-sm font-bold disabled:opacity-50"
                   >
                     <Download className="h-4 w-4" /> Download SVG
                   </button>
@@ -432,7 +432,7 @@ function View() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search by name, email, city…"
-            className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60 w-72"
+            className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60 w-72"
           />
         </div>
         <div className="overflow-x-auto">
@@ -530,7 +530,7 @@ function View() {
                               )
                             }
                             title="Add a new gym branch under this partner"
-                            className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-orange-100 text-orange-700 border border-orange-200 hover:bg-orange-200 mr-1"
+                            className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-lime-100 text-lime-700 border border-lime-200 hover:bg-lime-200 mr-1"
                           >
                             <Building2 className="h-3.5 w-3.5" /> Add branch
                           </button>
@@ -548,7 +548,7 @@ function View() {
                           <button
                             onClick={() => openQrFor(p)}
                             title="Print branded gym check-in QR poster"
-                            className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-orange-100 text-orange-700 border border-orange-200 hover:bg-orange-200 mr-1"
+                            className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-lime-100 text-lime-700 border border-lime-200 hover:bg-lime-200 mr-1"
                           >
                             <QrCode className="h-3.5 w-3.5" /> Print QR
                           </button>
@@ -562,7 +562,7 @@ function View() {
                                 ? "Suspended partners cannot be signed in"
                                 : "Sign in as this partner in a new tab"
                             }
-                            className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-orange-100 text-orange-700 border border-orange-200 hover:bg-orange-200 mr-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-lime-100 text-lime-700 border border-lime-200 hover:bg-lime-200 mr-1 disabled:opacity-40 disabled:cursor-not-allowed"
                           >
                             <LogIn className="h-3.5 w-3.5" /> Sign in as
                           </button>

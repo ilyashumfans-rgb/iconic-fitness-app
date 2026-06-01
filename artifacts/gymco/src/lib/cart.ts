@@ -11,8 +11,8 @@ export type CartItem = {
   qty: number;
 };
 
-const KEY = "gymco.cart.v1";
-const EVT = "gymco.cart.change";
+const KEY = "iconic.cart.v1";
+const EVT = "iconic.cart.change";
 
 function read(): CartItem[] {
   if (typeof window === "undefined") return [];

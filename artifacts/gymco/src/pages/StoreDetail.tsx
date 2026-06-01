@@ -29,7 +29,7 @@ export default function StoreDetail() {
         <p className="text-muted-foreground">{err}</p>
         <Link
           href="/store"
-          className="inline-block mt-4 text-sm font-semibold text-orange-500 hover:underline"
+          className="inline-block mt-4 text-sm font-semibold text-lime-500 hover:underline"
         >
           ← Back to store
         </Link>
@@ -165,7 +165,7 @@ export default function StoreDetail() {
             <button
               onClick={buyNow}
               disabled={outOfStock}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-brand text-white font-bold shadow-[0_8px_24px_-8px_hsl(18_100%_55%/0.7)] hover:opacity-95 disabled:opacity-40"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-brand text-white font-bold shadow-[0_8px_24px_-8px_hsl(96_56%_55%/0.7)] hover:opacity-95 disabled:opacity-40"
             >
               Buy now
             </button>

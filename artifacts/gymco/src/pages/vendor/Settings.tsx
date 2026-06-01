@@ -4,7 +4,7 @@ import { vendorApi, type Vendor } from "@/lib/vendorApi";
 import { KeyRound, Store } from "lucide-react";
 
 const INPUT =
-  "w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
+  "w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-lime-500/60";
 
 export default function VendorSettings() {
   const [me, setMe] = useState<Vendor | null>(null);
@@ -42,7 +42,7 @@ export default function VendorSettings() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-4xl">
         <VendorCard className="p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Store className="h-5 w-5 text-orange-600" />
+            <Store className="h-5 w-5 text-lime-600" />
             <div className="text-base font-bold">Vendor profile</div>
           </div>
           {me ? (
@@ -77,8 +77,8 @@ export default function VendorSettings() {
                 </dt>
                 <dd className="text-slate-700 capitalize">{me.kind}</dd>
               </div>
-              <div className="pt-3 border-t border-orange-100 text-xs text-slate-500">
-                To update your business details, contact your GYMCO account
+              <div className="pt-3 border-t border-lime-100 text-xs text-slate-500">
+                To update your business details, contact your Iconic Fitness account
                 manager.
               </div>
             </dl>
@@ -89,7 +89,7 @@ export default function VendorSettings() {
 
         <VendorCard className="p-6">
           <div className="flex items-center gap-2 mb-4">
-            <KeyRound className="h-5 w-5 text-orange-600" />
+            <KeyRound className="h-5 w-5 text-lime-600" />
             <div className="text-base font-bold">Change password</div>
           </div>
           <div className="space-y-3">
@@ -134,7 +134,7 @@ export default function VendorSettings() {
               disabled={
                 pwBusy || !currentPassword || newPassword.length < 6
               }
-              className="px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-semibold shadow-md shadow-orange-500/20 disabled:opacity-60"
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white text-sm font-semibold shadow-md shadow-lime-500/20 disabled:opacity-60"
             >
               {pwBusy ? "Updating…" : "Update password"}
             </button>

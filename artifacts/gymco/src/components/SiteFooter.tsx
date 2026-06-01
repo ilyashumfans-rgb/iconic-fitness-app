@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { BrandLogo } from "@/components/BrandLogo";
 import {
   Instagram,
   Twitter,
@@ -23,7 +24,7 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
       { label: "Browse gyms", href: "/explore" },
       { label: "Store", href: "/store" },
       { label: "Memberships", href: "/memberships" },
-      { label: "GYMCO Wallet", href: "/wallet" },
+      { label: "Iconic Fitness Wallet", href: "/wallet" },
       { label: "Corporate plans", href: "/corporate" },
     ],
   },
@@ -81,7 +82,7 @@ export function SiteFooter() {
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-16 pb-12">
         <div className="relative overflow-hidden rounded-3xl bg-card border border-border p-8 md:p-12 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.18)]">
           <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/15 blur-3xl" />
-          <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-[hsl(32_100%_55%/0.18)] blur-3xl" />
+          <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-[hsl(84_60%_55%/0.18)] blur-3xl" />
           <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             <div>
               <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary mb-3">
@@ -129,20 +130,9 @@ export function SiteFooter() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-10">
           {/* Brand column */}
           <div className="col-span-2">
-            <Link href="/" className="flex flex-col gap-1 mb-5">
-              <span
-                className="text-2xl font-black tracking-tight leading-tight bg-clip-text text-transparent"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(95deg, hsl(22 100% 64%) 0%, hsl(32 100% 68%) 50%, hsl(42 100% 72%) 100%)",
-                }}
-              >
-                GYMCO
-              </span>
-              <span className="text-[9px] uppercase tracking-[0.22em] font-bold text-muted-foreground leading-none">
-                Go to any gym
-              </span>
-            </Link>
+            <div className="mb-5">
+              <BrandLogo tagline />
+            </div>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
               One membership, unlimited gyms across India. Built for people who
               actually train.
@@ -154,11 +144,11 @@ export function SiteFooter() {
                 <span>Indiranagar, Bangalore 560038</span>
               </div>
               <a
-                href="mailto:hello@gymco.in"
+                href="mailto:hello@iconicfitnessindia.com"
                 className="flex items-center gap-2.5 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Mail className="h-4 w-4 text-primary shrink-0" />
-                hello@gymco.in
+                hello@iconicfitnessindia.com
               </a>
               <a
                 href="tel:+919916232827"
@@ -231,7 +221,7 @@ export function SiteFooter() {
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 flex flex-col md:flex-row items-center justify-between gap-5">
           <div className="flex items-center gap-2 flex-wrap justify-center md:justify-start">
             <span className="text-xs text-muted-foreground">
-              © {new Date().getFullYear()} GYMCO India Pvt. Ltd. ·
+              © {new Date().getFullYear()} Iconic Fitness India Pvt. Ltd. ·
             </span>
             <Link href="/privacy" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               Privacy

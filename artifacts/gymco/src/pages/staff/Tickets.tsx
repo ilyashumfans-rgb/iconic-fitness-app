@@ -27,7 +27,7 @@ function TicketList({
 }) {
   if (rows.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-orange-200 bg-orange-50/40 p-10 text-center text-sm text-slate-600">
+      <div className="rounded-2xl border border-dashed border-lime-200 bg-lime-50/40 p-10 text-center text-sm text-slate-600">
         No tickets here.
       </div>
     );
@@ -38,7 +38,7 @@ function TicketList({
         <li key={t.id}>
           <button
             onClick={() => onOpen(t.id)}
-            className="flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-orange-300 hover:shadow-sm"
+            className="flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-lime-300 hover:shadow-sm"
           >
             <div className="min-w-0">
               <p className="truncate font-medium text-slate-900">{t.subject}</p>
@@ -163,7 +163,7 @@ export default function StaffTickets() {
         !creating && openId == null ? (
           <button
             onClick={() => setCreating(true)}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-lime-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-lime-600"
           >
             <Plus className="h-4 w-4" /> New ticket
           </button>
@@ -171,7 +171,7 @@ export default function StaffTickets() {
       }
     >
       {err && (
-        <div className="mb-4 rounded-xl border border-orange-200 bg-orange-50 px-3.5 py-2.5 text-sm text-orange-700">
+        <div className="mb-4 rounded-xl border border-lime-200 bg-lime-50 px-3.5 py-2.5 text-sm text-lime-700">
           {err}
         </div>
       )}
@@ -196,7 +196,7 @@ export default function StaffTickets() {
               navigate("/staff/tickets");
               load();
             }}
-            className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-orange-600 hover:text-orange-700"
+            className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-lime-600 hover:text-lime-700"
           >
             <ArrowLeft className="h-4 w-4" /> Back to tickets
           </button>
@@ -209,7 +209,7 @@ export default function StaffTickets() {
               commenting={commenting}
               headerExtra={
                 isAssignee ? (
-                  <div className="flex flex-wrap items-center gap-2 rounded-xl border border-orange-100 bg-orange-50/50 p-3">
+                  <div className="flex flex-wrap items-center gap-2 rounded-xl border border-lime-100 bg-lime-50/50 p-3">
                     <span className="text-xs font-medium text-slate-600">
                       Update status:
                     </span>
@@ -218,7 +218,7 @@ export default function StaffTickets() {
                         key={s}
                         disabled={statusBusy || detail.ticket.status === s}
                         onClick={() => changeStatus(s)}
-                        className="rounded-lg border border-orange-200 bg-white px-2.5 py-1 text-xs font-medium text-orange-700 transition hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-40"
+                        className="rounded-lg border border-lime-200 bg-white px-2.5 py-1 text-xs font-medium text-lime-700 transition hover:bg-lime-100 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         {STATUS_LABELS[s as TicketStatus]}
                       </button>
@@ -236,7 +236,7 @@ export default function StaffTickets() {
               onClick={() => setTab("assigned")}
               className={`rounded-lg px-4 py-1.5 text-sm font-medium transition ${
                 tab === "assigned"
-                  ? "bg-orange-500 text-white"
+                  ? "bg-lime-500 text-white"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
@@ -246,7 +246,7 @@ export default function StaffTickets() {
               onClick={() => setTab("raised")}
               className={`rounded-lg px-4 py-1.5 text-sm font-medium transition ${
                 tab === "raised"
-                  ? "bg-orange-500 text-white"
+                  ? "bg-lime-500 text-white"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >

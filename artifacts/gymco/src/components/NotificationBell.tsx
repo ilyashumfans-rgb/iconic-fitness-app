@@ -117,7 +117,7 @@ export function NotificationBell({
 
   const buttonCls =
     theme === "portal"
-      ? "relative flex items-center justify-center h-9 w-9 rounded-lg border border-orange-200 hover:border-orange-500 text-slate-600 hover:text-orange-600 bg-white transition-colors"
+      ? "relative flex items-center justify-center h-9 w-9 rounded-lg border border-lime-200 hover:border-lime-500 text-slate-600 hover:text-lime-600 bg-white transition-colors"
       : "relative flex items-center justify-center h-9 w-9 rounded-full text-foreground/70 hover:text-foreground hover:bg-muted transition-colors";
 
   return (
@@ -130,7 +130,7 @@ export function NotificationBell({
       >
         <Bell className="h-4 w-4" />
         {unread > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-orange-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-lime-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">
             {unread > 99 ? "99+" : unread}
           </span>
         )}
@@ -142,7 +142,7 @@ export function NotificationBell({
             {unread > 0 && (
               <button
                 onClick={handleMarkAll}
-                className="text-xs text-orange-600 hover:text-orange-700 font-semibold inline-flex items-center gap-1"
+                className="text-xs text-lime-600 hover:text-lime-700 font-semibold inline-flex items-center gap-1"
               >
                 <CheckCheck className="h-3.5 w-3.5" />
                 Mark all read
@@ -163,13 +163,13 @@ export function NotificationBell({
                 <button
                   key={n.id}
                   onClick={() => handleItemClick(n)}
-                  className={`w-full text-left px-4 py-3 border-b border-slate-100 hover:bg-orange-50/60 transition-colors flex gap-3 ${
-                    n.readAt ? "" : "bg-orange-50/30"
+                  className={`w-full text-left px-4 py-3 border-b border-slate-100 hover:bg-lime-50/60 transition-colors flex gap-3 ${
+                    n.readAt ? "" : "bg-lime-50/30"
                   }`}
                 >
                   <span
                     className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${
-                      n.readAt ? "bg-transparent" : "bg-orange-500"
+                      n.readAt ? "bg-transparent" : "bg-lime-500"
                     }`}
                   />
                   <div className="min-w-0 flex-1">

@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, LayoutDashboard, LogOut } from "lucide-react";
 import { SiteFooter } from "@/components/SiteFooter";
+import { BrandLogo } from "@/components/BrandLogo";
 import { useUser, useClerk } from "@clerk/react";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -47,12 +48,7 @@ function PublicNav() {
   return (
     <header className="sticky top-0 inset-x-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
-        <Link
-          href="/"
-          className="text-2xl font-black tracking-tight text-gradient-brand"
-        >
-          GYMCO
-        </Link>
+        <BrandLogo />
         <nav className="hidden md:flex items-center gap-7">
           {links.map((l) => (
             <Link
@@ -103,7 +99,7 @@ function PublicNav() {
                 </button>
               </div>
               <Link href="/dashboard" className="sm:hidden">
-                <Button className="bg-gradient-brand text-white border-none font-bold shadow-[0_8px_24px_-8px_hsl(18_100%_55%/0.7)] hover:opacity-95">
+                <Button className="bg-gradient-brand text-white border-none font-bold shadow-[0_8px_24px_-8px_hsl(96_56%_55%/0.7)] hover:opacity-95">
                   Open app <ArrowRight className="h-4 w-4 ml-1.5" />
                 </Button>
               </Link>
@@ -116,7 +112,7 @@ function PublicNav() {
                 </Button>
               </Link>
               <Link href="/sign-up">
-                <Button className="bg-gradient-brand text-white border-none font-bold shadow-[0_8px_24px_-8px_hsl(18_100%_55%/0.7)] hover:opacity-95">
+                <Button className="bg-gradient-brand text-white border-none font-bold shadow-[0_8px_24px_-8px_hsl(96_56%_55%/0.7)] hover:opacity-95">
                   Get started <ArrowRight className="h-4 w-4 ml-1.5" />
                 </Button>
               </Link>

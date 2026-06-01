@@ -17,7 +17,7 @@ type Product = {
 };
 
 const INPUT =
-  "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
+  "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-lime-500/60";
 
 const blank = () => ({
   name: "",
@@ -96,14 +96,14 @@ export default function PartnerProducts() {
       actions={
         <button
           onClick={startCreate}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-medium shadow"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white text-sm font-medium shadow"
         >
           <Plus className="h-3.5 w-3.5" /> New Product
         </button>
       }
     >
       <div className="mb-4 text-xs text-slate-400 bg-slate-900/60 border border-slate-800 rounded-lg p-3">
-        Products you add here appear on the public GYMCO Store with your vendor
+        Products you add here appear on the public Iconic Fitness Store with your vendor
         name. You receive orders for your products only.
       </div>
 
@@ -219,7 +219,7 @@ export default function PartnerProducts() {
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-semibold"
+                className="px-5 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white text-sm font-semibold"
               >
                 {creating ? "Create" : "Save"}
               </button>

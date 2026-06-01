@@ -128,26 +128,26 @@ export default function NearbyGyms({
   const styles = isDark
     ? {
         section: "bg-slate-950 text-white",
-        eyebrow: "text-orange-400",
+        eyebrow: "text-lime-400",
         heading: "text-white",
         subtitle: "text-slate-300",
-        card: "bg-slate-900/60 border border-white/10 hover:border-orange-500/60",
+        card: "bg-slate-900/60 border border-white/10 hover:border-lime-500/60",
         input:
           "bg-slate-900 border-white/15 text-white placeholder:text-slate-500",
         chip: "bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10",
-        chipActive: "bg-orange-500 text-white border-orange-500",
+        chipActive: "bg-lime-500 text-white border-lime-500",
         muted: "text-slate-400",
       }
     : {
         section: "bg-white text-slate-900",
-        eyebrow: "text-orange-600",
+        eyebrow: "text-lime-600",
         heading: "text-slate-900",
         subtitle: "text-slate-600",
-        card: "bg-white border border-orange-100 hover:border-orange-300 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.12)]",
+        card: "bg-white border border-lime-100 hover:border-lime-300 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.12)]",
         input:
-          "bg-white border-orange-100 text-slate-900 placeholder:text-slate-400",
-        chip: "bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-100",
-        chipActive: "bg-orange-500 text-white border-orange-500",
+          "bg-white border-lime-100 text-slate-900 placeholder:text-slate-400",
+        chip: "bg-lime-50 hover:bg-lime-100 text-lime-700 border border-lime-100",
+        chipActive: "bg-lime-500 text-white border-lime-500",
         muted: "text-slate-500",
       };
 
@@ -175,7 +175,7 @@ export default function NearbyGyms({
             type="button"
             onClick={useLocation}
             disabled={geoStatus === "loading"}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-sm font-bold shadow-[0_10px_25px_-10px_rgba(249,115,22,0.6)] disabled:opacity-60 shrink-0"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-lime-500 to-green-500 hover:from-lime-600 hover:to-green-600 text-white text-sm font-bold shadow-[0_10px_25px_-10px_rgba(101, 163, 13,0.6)] disabled:opacity-60 shrink-0"
           >
             {geoStatus === "loading" ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -190,7 +190,7 @@ export default function NearbyGyms({
           </button>
         </div>
 
-        <div className="rounded-2xl border border-orange-100 bg-white p-3 sm:p-4 shadow-[0_8px_30px_-12px_rgba(15,23,42,0.12)] mb-6">
+        <div className="rounded-2xl border border-lime-100 bg-white p-3 sm:p-4 shadow-[0_8px_30px_-12px_rgba(15,23,42,0.12)] mb-6">
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -198,7 +198,7 @@ export default function NearbyGyms({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search gym name, area, or activity"
-                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-orange-100 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/60 text-sm"
+                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-lime-100 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-lime-500/60 text-sm"
               />
             </div>
             <select
@@ -207,7 +207,7 @@ export default function NearbyGyms({
                 setCityTouched(true);
                 setCity(e.target.value || undefined);
               }}
-              className="px-3 py-2.5 rounded-xl bg-white border border-orange-100 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+              className="px-3 py-2.5 rounded-xl bg-white border border-lime-100 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
             >
               <option value="">All cities</option>
               {(cityCatalog.length
@@ -254,7 +254,7 @@ export default function NearbyGyms({
                   >
                     {c}
                     {isDef && !active && (
-                      <span className="ml-1 text-amber-500">★</span>
+                      <span className="ml-1 text-green-500">★</span>
                     )}
                   </button>
                 );
@@ -263,13 +263,13 @@ export default function NearbyGyms({
         </div>
 
         {geoStatus === "denied" && (
-          <div className="mb-4 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          <div className="mb-4 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
             Location permission was denied. We're showing the closest gyms based
             on your selected city instead.
           </div>
         )}
         {geoStatus === "unsupported" && (
-          <div className="mb-4 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          <div className="mb-4 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
             Your browser doesn't support location. Pick a city above to narrow
             results.
           </div>
@@ -288,7 +288,7 @@ export default function NearbyGyms({
           <div
             className={`rounded-2xl ${styles.card} p-10 text-center`}
           >
-            <MapPin className="h-8 w-8 text-orange-500 mx-auto mb-2" />
+            <MapPin className="h-8 w-8 text-lime-500 mx-auto mb-2" />
             <div className="text-base font-bold">No gyms match yet</div>
             <div className={`text-sm mt-1 ${styles.muted}`}>
               Try a different city or clear your search to see all gyms.
@@ -318,11 +318,11 @@ export default function NearbyGyms({
                       />
                     </div>
                   ) : null}
-                  <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 text-[11px] font-bold text-amber-700 shadow">
-                    <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                  <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 text-[11px] font-bold text-green-700 shadow">
+                    <Star className="h-3 w-3 fill-green-500 text-green-500" />
                     {g.rating.toFixed(1)}
                   </div>
-                  <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-500 text-white text-[11px] font-bold shadow">
+                  <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-lime-500 text-white text-[11px] font-bold shadow">
                     <Navigation className="h-3 w-3" />
                     {g.distanceKm.toFixed(1)} km
                   </div>
@@ -338,24 +338,24 @@ export default function NearbyGyms({
                     {g.name}
                   </div>
                   <div className="mt-1 text-xs text-slate-500 flex items-center gap-1">
-                    <MapPin className="h-3 w-3 text-orange-500" />
+                    <MapPin className="h-3 w-3 text-lime-500" />
                     {g.area}, {g.city}
                   </div>
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {g.categories.slice(0, 3).map((c) => (
                       <span
                         key={c}
-                        className="px-2 py-0.5 rounded-md bg-orange-50 border border-orange-100 text-[10px] uppercase tracking-wide font-bold text-orange-700"
+                        className="px-2 py-0.5 rounded-md bg-lime-50 border border-lime-100 text-[10px] uppercase tracking-wide font-bold text-lime-700"
                       >
                         {c}
                       </span>
                     ))}
                   </div>
                   <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-orange-50 border border-orange-100 text-[10px] uppercase tracking-wider font-bold text-orange-700">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-lime-50 border border-lime-100 text-[10px] uppercase tracking-wider font-bold text-lime-700">
                       Included with plan
                     </span>
-                    <span className="inline-flex items-center gap-1 text-orange-600 text-xs font-bold">
+                    <span className="inline-flex items-center gap-1 text-lime-600 text-xs font-bold">
                       View
                       <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
                     </span>

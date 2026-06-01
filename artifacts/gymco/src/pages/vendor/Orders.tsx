@@ -4,7 +4,7 @@ import { vendorApi, type VendorOrder } from "@/lib/vendorApi";
 import { ReceiptText, Printer } from "lucide-react";
 
 const STATUS_STYLES: Record<string, string> = {
-  placed: "bg-orange-50 text-orange-700 border-orange-200",
+  placed: "bg-lime-50 text-lime-700 border-lime-200",
   shipped: "bg-blue-50 text-blue-700 border-blue-200",
   delivered: "bg-emerald-50 text-emerald-700 border-emerald-200",
   cancelled: "bg-red-50 text-red-600 border-red-200",
@@ -35,8 +35,8 @@ export default function VendorOrders() {
   return (
     <VendorLayout title="Orders & Bills">
       <VendorCard className="overflow-hidden">
-        <div className="px-5 py-4 border-b border-orange-100 flex items-center gap-2">
-          <ReceiptText className="h-4 w-4 text-orange-500" />
+        <div className="px-5 py-4 border-b border-lime-100 flex items-center gap-2">
+          <ReceiptText className="h-4 w-4 text-lime-500" />
           <div className="text-sm font-bold">Orders containing your items</div>
           <div className="text-xs text-slate-500">({orders.length})</div>
         </div>
@@ -50,7 +50,7 @@ export default function VendorOrders() {
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-slate-400 border-b border-orange-100">
+              <tr className="text-left text-xs uppercase tracking-wide text-slate-400 border-b border-lime-100">
                 <th className="px-5 py-3">Order</th>
                 <th className="px-5 py-3">Customer</th>
                 <th className="px-5 py-3">Ship to</th>
@@ -64,7 +64,7 @@ export default function VendorOrders() {
               {orders.map((o) => (
                 <tr
                   key={o.id}
-                  className="border-b border-orange-100/60 hover:bg-orange-50/50"
+                  className="border-b border-lime-100/60 hover:bg-lime-50/50"
                 >
                   <td className="px-5 py-3">
                     <div className="font-bold">#{o.id}</div>
@@ -100,7 +100,7 @@ export default function VendorOrders() {
                   <td className="px-5 py-3 text-right">
                     <button
                       onClick={() => setOpen(o)}
-                      className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100"
+                      className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-lime-50 text-lime-700 border border-lime-200 hover:bg-lime-100"
                     >
                       <ReceiptText className="h-3.5 w-3.5" /> View bill
                     </button>
@@ -114,19 +114,19 @@ export default function VendorOrders() {
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 print:bg-transparent print:p-0">
-          <div className="bg-white border border-orange-100 rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl print:shadow-none print:border-0 print:max-h-none print:rounded-none">
-            <div className="px-5 py-4 border-b border-orange-100 flex items-center justify-between print:hidden">
+          <div className="bg-white border border-lime-100 rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl print:shadow-none print:border-0 print:max-h-none print:rounded-none">
+            <div className="px-5 py-4 border-b border-lime-100 flex items-center justify-between print:hidden">
               <div className="text-sm font-bold">Order bill</div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => window.print()}
-                  className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100"
+                  className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-lime-50 text-lime-700 border border-lime-200 hover:bg-lime-100"
                 >
                   <Printer className="h-3.5 w-3.5" /> Print
                 </button>
                 <button
                   onClick={() => setOpen(null)}
-                  className="text-xs px-2 py-1 rounded hover:bg-orange-50 text-slate-500"
+                  className="text-xs px-2 py-1 rounded hover:bg-lime-50 text-slate-500"
                 >
                   Close
                 </button>
@@ -135,10 +135,10 @@ export default function VendorOrders() {
             <div className="p-6 space-y-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <div className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
-                    GYMCO
+                  <div className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-lime-500 to-green-500 bg-clip-text text-transparent">
+                    Iconic Fitness
                   </div>
-                  <div className="text-[10px] uppercase tracking-[0.25em] text-orange-600 font-bold">
+                  <div className="text-[10px] uppercase tracking-[0.25em] text-lime-600 font-bold">
                     Vendor Bill
                   </div>
                 </div>
@@ -149,7 +149,7 @@ export default function VendorOrders() {
               </div>
 
               <div className="grid grid-cols-2 gap-4 text-xs">
-                <div className="rounded-lg border border-orange-100 p-3">
+                <div className="rounded-lg border border-lime-100 p-3">
                   <div className="font-bold text-slate-500 uppercase tracking-wide mb-1">
                     Bill to
                   </div>
@@ -159,7 +159,7 @@ export default function VendorOrders() {
                   <div className="text-slate-600">{open.customerEmail}</div>
                   <div className="text-slate-600">{open.customerPhone}</div>
                 </div>
-                <div className="rounded-lg border border-orange-100 p-3">
+                <div className="rounded-lg border border-lime-100 p-3">
                   <div className="font-bold text-slate-500 uppercase tracking-wide mb-1">
                     Ship to
                   </div>
@@ -172,7 +172,7 @@ export default function VendorOrders() {
 
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-xs uppercase tracking-wide text-slate-400 border-b border-orange-100">
+                  <tr className="text-left text-xs uppercase tracking-wide text-slate-400 border-b border-lime-100">
                     <th className="py-2">Item</th>
                     <th className="py-2 text-right">Qty</th>
                     <th className="py-2 text-right">Unit</th>
@@ -181,7 +181,7 @@ export default function VendorOrders() {
                 </thead>
                 <tbody>
                   {open.items.map((it) => (
-                    <tr key={it.id} className="border-b border-orange-100/60">
+                    <tr key={it.id} className="border-b border-lime-100/60">
                       <td className="py-2">{it.productName}</td>
                       <td className="py-2 text-right">{it.qty}</td>
                       <td className="py-2 text-right">
@@ -198,14 +198,14 @@ export default function VendorOrders() {
                     <td colSpan={3} className="pt-3 text-right font-bold">
                       Subtotal (your items)
                     </td>
-                    <td className="pt-3 text-right font-extrabold text-orange-600">
+                    <td className="pt-3 text-right font-extrabold text-lime-600">
                       {inr.format(myTotal(open))}
                     </td>
                   </tr>
                 </tfoot>
               </table>
 
-              <div className="text-[11px] text-slate-500 pt-2 border-t border-orange-100">
+              <div className="text-[11px] text-slate-500 pt-2 border-t border-lime-100">
                 Payment method: {open.paymentMethod.toUpperCase()} · Status:{" "}
                 {open.status.toUpperCase()}
               </div>

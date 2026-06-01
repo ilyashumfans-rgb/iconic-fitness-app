@@ -157,7 +157,7 @@ export default function AdminPartnerOnboarding() {
   };
 
   const inputCls =
-    "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
+    "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-lime-500/60";
 
   const showAmenitiesSection =
     form.kind === "gym" || form.kind === "both";
@@ -170,7 +170,7 @@ export default function AdminPartnerOnboarding() {
           partner dashboard with the credentials below.
         </p>
         {duplicatedFromName && (
-          <div className="mb-6 rounded-xl border border-orange-500/40 bg-orange-500/10 px-4 py-3 text-sm text-orange-200">
+          <div className="mb-6 rounded-xl border border-lime-500/40 bg-lime-500/10 px-4 py-3 text-sm text-lime-200">
             Duplicated from{" "}
             <span className="font-semibold text-white">
               {duplicatedFromName}
@@ -242,7 +242,7 @@ export default function AdminPartnerOnboarding() {
                 ))}
               </select>
               {cities.length === 0 && (
-                <p className="text-xs text-amber-400 mt-1.5">
+                <p className="text-xs text-green-400 mt-1.5">
                   No cities available yet. Add one under Locations first.
                 </p>
               )}
@@ -312,8 +312,8 @@ export default function AdminPartnerOnboarding() {
           {showAmenitiesSection && (
             <div className="rounded-2xl border border-slate-700 bg-slate-900/40 p-5">
               <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="h-4 w-4 text-orange-400" />
-                <h3 className="text-sm font-bold uppercase tracking-wider text-orange-400">
+                <Sparkles className="h-4 w-4 text-lime-400" />
+                <h3 className="text-sm font-bold uppercase tracking-wider text-lime-400">
                   Gym Amenities
                 </h3>
               </div>
@@ -335,20 +335,20 @@ export default function AdminPartnerOnboarding() {
                         key={a.id}
                         className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border cursor-pointer transition-colors ${
                           active
-                            ? "bg-gradient-to-r from-orange-500/15 to-amber-500/10 border-orange-500/60"
-                            : "bg-slate-800 border-slate-700 hover:border-orange-500/40"
+                            ? "bg-gradient-to-r from-lime-500/15 to-green-500/10 border-lime-500/60"
+                            : "bg-slate-800 border-slate-700 hover:border-lime-500/40"
                         }`}
                       >
                         <input
                           type="checkbox"
                           checked={active}
                           onChange={() => toggleAmenity(a.id)}
-                          className="rounded border-slate-600 bg-slate-900 text-orange-500 focus:ring-orange-500/60"
+                          className="rounded border-slate-600 bg-slate-900 text-lime-500 focus:ring-lime-500/60"
                         />
                         <span
                           className={`h-8 w-8 rounded-full inline-flex items-center justify-center shrink-0 ${
                             active
-                              ? "bg-orange-500/20 text-orange-300"
+                              ? "bg-lime-500/20 text-lime-300"
                               : "bg-slate-700/60 text-slate-300"
                           }`}
                         >
@@ -438,7 +438,7 @@ export default function AdminPartnerOnboarding() {
 
           <button
             disabled={busy}
-            className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-semibold transition-colors disabled:opacity-60"
+            className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 hover:from-lime-400 hover:to-lime-500 text-white font-semibold transition-colors disabled:opacity-60"
           >
             {busy ? "Creating…" : "Create Partner"}
           </button>

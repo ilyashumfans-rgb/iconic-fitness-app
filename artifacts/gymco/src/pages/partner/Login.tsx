@@ -3,7 +3,6 @@ import { useLocation } from "wouter";
 import { partnerApi } from "@/lib/partnerApi";
 import {
   Loader2,
-  Handshake,
   ShieldCheck,
   Zap,
   QrCode,
@@ -133,7 +132,7 @@ export default function PartnerLogin() {
     <div className="relative min-h-screen overflow-hidden bg-[#0b0b14] text-white">
       {/* Brand background — full-bleed, mobile-first wow */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(249,115,22,0.35),transparent_60%),radial-gradient(ellipse_at_bottom,rgba(217,70,239,0.18),transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(101, 163, 13,0.35),transparent_60%),radial-gradient(ellipse_at_bottom,rgba(101, 163, 13,0.18),transparent_55%)]" />
         <div
           className="absolute inset-0 opacity-[0.07]"
           style={{
@@ -144,29 +143,25 @@ export default function PartnerLogin() {
               "radial-gradient(ellipse 80% 60% at 50% 30%, black, transparent 80%)",
           }}
         />
-        <div className="absolute -top-32 -left-20 h-72 w-72 rounded-full bg-orange-500/30 blur-3xl" />
-        <div className="absolute top-24 -right-20 h-80 w-80 rounded-full bg-amber-400/20 blur-3xl" />
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-72 w-[120%] bg-gradient-to-t from-orange-600/30 to-transparent blur-3xl" />
+        <div className="absolute -top-32 -left-20 h-72 w-72 rounded-full bg-lime-500/30 blur-3xl" />
+        <div className="absolute top-24 -right-20 h-80 w-80 rounded-full bg-green-400/20 blur-3xl" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-72 w-[120%] bg-gradient-to-t from-lime-600/30 to-transparent blur-3xl" />
       </div>
 
       <div className="relative flex min-h-screen items-center justify-center px-5 py-8 sm:py-12">
         <div className="w-full max-w-md">
           {/* Hero */}
           <div className="text-center mb-7">
-            <div className="relative inline-flex items-center justify-center">
-              <div className="absolute -inset-3 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 blur-xl opacity-60" />
-              <div className="relative h-16 w-16 rounded-2xl bg-gradient-to-br from-orange-500 via-orange-500 to-amber-500 shadow-[0_15px_40px_-12px_rgba(249,115,22,0.7)] flex items-center justify-center ring-1 ring-white/20">
-                <Handshake className="h-8 w-8 text-white" />
-              </div>
-            </div>
-            <div className="mt-5 text-4xl font-black tracking-tight bg-gradient-to-r from-orange-300 via-orange-400 to-amber-300 bg-clip-text text-transparent">
-              GYMCO
-            </div>
-            <div className="text-[11px] uppercase tracking-[0.32em] text-orange-300/90 font-bold mt-1.5">
+            <img
+              src={`${import.meta.env.BASE_URL}media/iconic-fitness-logo-transparent.png`}
+              alt="Iconic Fitness"
+              className="mx-auto h-24 w-auto"
+            />
+            <div className="text-[11px] uppercase tracking-[0.32em] text-lime-300/90 font-bold mt-4">
               Partner Portal
             </div>
             <p className="text-sm text-slate-300/80 mt-3 max-w-xs mx-auto leading-relaxed">
-              Run your gym, classes, and check-ins from one calm dashboard.
+              Run your gym, classes, and bookings from one calm dashboard.
             </p>
           </div>
 
@@ -176,8 +171,8 @@ export default function PartnerLogin() {
             onClick={openScanner}
             className="group relative w-full mb-5 overflow-hidden rounded-2xl border border-white/15 bg-white/[0.06] backdrop-blur-xl p-4 flex items-center gap-4 text-left hover:bg-white/[0.09] transition-colors"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/15 via-transparent to-amber-500/15 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-500/30 shrink-0">
+            <div className="absolute inset-0 bg-gradient-to-r from-lime-500/15 via-transparent to-green-500/15 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="relative h-12 w-12 rounded-xl bg-gradient-to-br from-lime-500 to-green-500 flex items-center justify-center shadow-lg shadow-lime-500/30 shrink-0">
               <QrCode className="h-6 w-6 text-white" />
             </div>
             <div className="relative flex-1 min-w-0">
@@ -185,13 +180,13 @@ export default function PartnerLogin() {
                 <span className="font-semibold text-white">
                   Scan QR to sign in
                 </span>
-                <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+                <Sparkles className="h-3.5 w-3.5 text-green-300" />
               </div>
               <div className="text-xs text-slate-300/80 mt-0.5">
                 One-tap login — point camera at the code from your admin
               </div>
             </div>
-            <div className="relative text-[10px] uppercase tracking-wider font-bold text-orange-300 bg-orange-500/15 border border-orange-400/30 rounded-full px-2 py-1">
+            <div className="relative text-[10px] uppercase tracking-wider font-bold text-lime-300 bg-lime-500/15 border border-lime-400/30 rounded-full px-2 py-1">
               Fast
             </div>
           </button>
@@ -219,7 +214,7 @@ export default function PartnerLogin() {
                   inputMode="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-3 py-3 rounded-xl bg-black/30 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60 focus:border-orange-500/60 text-base"
+                  className="w-full pl-10 pr-3 py-3 rounded-xl bg-black/30 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-lime-500/60 focus:border-lime-500/60 text-base"
                   placeholder="you@yourgym.in"
                   autoComplete="username"
                   required
@@ -236,7 +231,7 @@ export default function PartnerLogin() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-3 py-3 rounded-xl bg-black/30 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60 focus:border-orange-500/60 text-base"
+                  className="w-full pl-10 pr-3 py-3 rounded-xl bg-black/30 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-lime-500/60 focus:border-lime-500/60 text-base"
                   placeholder="••••••••"
                   autoComplete="current-password"
                   required
@@ -253,7 +248,7 @@ export default function PartnerLogin() {
             <button
               type="submit"
               disabled={busy}
-              className="relative w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-gradient-to-r from-orange-500 via-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white font-semibold transition-all shadow-[0_12px_30px_-10px_rgba(249,115,22,0.7)] active:scale-[0.99] disabled:opacity-60"
+              className="relative w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-gradient-to-r from-lime-500 via-lime-500 to-green-500 hover:from-lime-400 hover:to-green-400 text-white font-semibold transition-all shadow-[0_12px_30px_-10px_rgba(101, 163, 13,0.7)] active:scale-[0.99] disabled:opacity-60"
             >
               {busy && <Loader2 className="h-4 w-4 animate-spin" />}
               Sign in to portal
@@ -271,7 +266,7 @@ export default function PartnerLogin() {
               </div>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 flex items-center gap-2.5">
-              <Zap className="h-4 w-4 text-amber-300 shrink-0" />
+              <Zap className="h-4 w-4 text-green-300 shrink-0" />
               <div className="text-xs text-slate-300 leading-tight">
                 Real-time
                 <br />
@@ -281,7 +276,7 @@ export default function PartnerLogin() {
           </div>
 
           <p className="mt-6 text-center text-xs text-slate-400 leading-relaxed">
-            New gym partner? Contact your GYMCO account manager for credentials.
+            New gym partner? Contact your Iconic Fitness account manager for credentials.
             <br />
             Forgot password? Admin can reset it or issue a one-time QR.
           </p>
@@ -294,7 +289,7 @@ export default function PartnerLogin() {
           <div className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-[#0f0f1a] border border-white/10 shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
               <div className="flex items-center gap-2">
-                <QrCode className="h-5 w-5 text-orange-400" />
+                <QrCode className="h-5 w-5 text-lime-400" />
                 <div className="font-semibold text-white">
                   Scan login QR
                 </div>
@@ -313,10 +308,10 @@ export default function PartnerLogin() {
                 <div id="partner-login-qr" className="absolute inset-0" />
                 {/* Viewfinder corners */}
                 <div className="pointer-events-none absolute inset-6 rounded-xl">
-                  <span className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-orange-400 rounded-tl-xl" />
-                  <span className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-orange-400 rounded-tr-xl" />
-                  <span className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-orange-400 rounded-bl-xl" />
-                  <span className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-orange-400 rounded-br-xl" />
+                  <span className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-lime-400 rounded-tl-xl" />
+                  <span className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-lime-400 rounded-tr-xl" />
+                  <span className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-lime-400 rounded-bl-xl" />
+                  <span className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-lime-400 rounded-br-xl" />
                 </div>
                 {scanBusy && (
                   <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white gap-2">
@@ -327,7 +322,7 @@ export default function PartnerLogin() {
               </div>
 
               <p className="text-xs text-slate-400 text-center mt-4 leading-relaxed">
-                Ask your GYMCO admin to open Partners → "QR sign-in" and hold
+                Ask your Iconic Fitness admin to open Partners → "QR sign-in" and hold
                 the code in front of your camera.
               </p>
 

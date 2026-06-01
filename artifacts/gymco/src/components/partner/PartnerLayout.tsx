@@ -4,14 +4,12 @@ import {
   LayoutDashboard,
   Building2,
   Calendar,
-  CheckCircle2,
   Dumbbell,
   Package,
   Settings,
   LogOut,
   RefreshCcw,
   Handshake,
-  QrCode,
   Menu,
   X,
   Users,
@@ -34,11 +32,8 @@ const NAV: Item[] = [
   { label: "Dashboard", href: "/partner", icon: <LayoutDashboard className="h-4 w-4" /> },
   { label: "My Gyms", href: "/partner/gyms", icon: <Building2 className="h-4 w-4" />, perm: "gyms" },
   { label: "Bookings", href: "/partner/bookings", icon: <Calendar className="h-4 w-4" />, perm: "bookings" },
-  { label: "Check-ins", href: "/partner/checkins", icon: <CheckCircle2 className="h-4 w-4" />, perm: "checkins" },
   { label: "Classes", href: "/partner/classes", icon: <Dumbbell className="h-4 w-4" />, perm: "classes" },
   { label: "Products", href: "/partner/products", icon: <Package className="h-4 w-4" />, perm: "products" },
-  { label: "Scan QR", href: "/partner/scan", icon: <QrCode className="h-4 w-4" />, perm: "checkins" },
-  { label: "Display gym QR", href: "/partner/display-qr", icon: <QrCode className="h-4 w-4" />, perm: "checkins" },
   { label: "Tickets", href: "/partner/tickets", icon: <LifeBuoy className="h-4 w-4" /> },
   { label: "Team", href: "/partner/staff", icon: <Users className="h-4 w-4" />, ownerOnly: true },
   { label: "Profile & Settings", href: "/partner/settings", icon: <Settings className="h-4 w-4" />, ownerOnly: true },
@@ -97,14 +92,14 @@ export function PartnerLayout({
 
   if (loading) {
     return (
-      <div className="theme-portal min-h-screen bg-orange-50 flex items-center justify-center text-slate-500">
+      <div className="theme-portal min-h-screen bg-lime-50 flex items-center justify-center text-slate-500">
         Loading partner portal...
       </div>
     );
   }
 
   return (
-    <div className="theme-portal min-h-screen bg-orange-50/40 text-slate-900 lg:flex">
+    <div className="theme-portal min-h-screen bg-lime-50/40 text-slate-900 lg:flex">
       {/* Mobile backdrop */}
       {mobileOpen && (
         <div
@@ -115,20 +110,20 @@ export function PartnerLayout({
       )}
 
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-72 max-w-[85vw] lg:w-64 shrink-0 bg-white border-r border-orange-100 flex flex-col transform transition-transform duration-300 ease-out lg:transform-none ${
+        className={`fixed lg:static inset-y-0 left-0 z-50 w-72 max-w-[85vw] lg:w-64 shrink-0 bg-white border-r border-lime-100 flex flex-col transform transition-transform duration-300 ease-out lg:transform-none ${
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
-        <div className="p-5 border-b border-orange-100 relative">
+        <div className="p-5 border-b border-lime-100 relative">
           <button
             onClick={() => setMobileOpen(false)}
-            className="lg:hidden absolute top-3 right-3 h-8 w-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-orange-50 hover:text-orange-600"
+            className="lg:hidden absolute top-3 right-3 h-8 w-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-lime-50 hover:text-lime-600"
             aria-label="Close menu"
           >
             <X className="h-5 w-5" />
           </button>
-          <div className="rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 p-4 text-center text-white shadow-[0_12px_30px_-12px_rgba(249,115,22,0.55)]">
-            <div className="text-2xl font-extrabold tracking-tight">GYMCO</div>
+          <div className="rounded-xl bg-gradient-to-br from-lime-500 to-green-500 p-4 text-center text-white shadow-[0_12px_30px_-12px_rgba(101, 163, 13,0.55)]">
+            <div className="text-2xl font-extrabold tracking-tight">Iconic Fitness</div>
             <div className="text-[10px] uppercase tracking-[0.2em] text-white/85 mt-1">
               Go To Any Gym
             </div>
@@ -156,8 +151,8 @@ export function PartnerLayout({
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   active
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md shadow-orange-500/30"
-                    : "text-slate-600 hover:bg-orange-50 hover:text-orange-600"
+                    ? "bg-gradient-to-r from-lime-500 to-lime-600 text-white shadow-md shadow-lime-500/30"
+                    : "text-slate-600 hover:bg-lime-50 hover:text-lime-600"
                 }`}
               >
                 {item.icon}
@@ -167,13 +162,13 @@ export function PartnerLayout({
           })}
         </nav>
 
-        <div className="p-4 border-t border-orange-100 space-y-3">
-          <div className="rounded-lg bg-orange-50 border border-orange-100 p-3">
+        <div className="p-4 border-t border-lime-100 space-y-3">
+          <div className="rounded-lg bg-lime-50 border border-lime-100 p-3">
             <div className="text-[10px] uppercase tracking-[0.2em] text-slate-400 mb-2 font-bold">
               Signed In As
             </div>
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white text-sm font-bold">
+              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-lime-500 to-green-500 flex items-center justify-center text-white text-sm font-bold">
                 {partner?.name?.[0]?.toUpperCase() ?? "P"}
               </div>
               <div className="min-w-0">
@@ -186,14 +181,14 @@ export function PartnerLayout({
               </div>
             </div>
             {partner?.status && partner.status !== "active" && (
-              <div className="mt-2 text-[10px] uppercase tracking-wide text-amber-600 font-bold">
+              <div className="mt-2 text-[10px] uppercase tracking-wide text-green-600 font-bold">
                 Status: {partner.status}
               </div>
             )}
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-700 text-sm font-semibold border border-orange-100 transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-lime-50 hover:bg-lime-100 text-lime-700 text-sm font-semibold border border-lime-100 transition-colors"
           >
             <LogOut className="h-4 w-4" />
             Logout
@@ -202,11 +197,11 @@ export function PartnerLayout({
       </aside>
 
       <main className="flex-1 min-w-0 flex flex-col">
-        <header className="h-16 px-4 lg:px-8 flex items-center justify-between border-b border-orange-100 bg-white/85 backdrop-blur sticky top-0 z-30">
+        <header className="h-16 px-4 lg:px-8 flex items-center justify-between border-b border-lime-100 bg-white/85 backdrop-blur sticky top-0 z-30">
           <div className="flex items-center gap-2 min-w-0">
             <button
               onClick={() => setMobileOpen(true)}
-              className="lg:hidden h-9 w-9 flex items-center justify-center rounded-lg border border-orange-200 text-orange-600 hover:bg-orange-50 shrink-0"
+              className="lg:hidden h-9 w-9 flex items-center justify-center rounded-lg border border-lime-200 text-lime-600 hover:bg-lime-50 shrink-0"
               aria-label="Open menu"
             >
               <Menu className="h-5 w-5" />
@@ -227,7 +222,7 @@ export function PartnerLayout({
             />
             <button
               onClick={() => window.location.reload()}
-              className="flex items-center gap-2 px-2.5 lg:px-3 py-1.5 rounded-lg border border-orange-200 hover:border-orange-500 text-slate-600 hover:text-orange-600 text-sm transition-colors bg-white"
+              className="flex items-center gap-2 px-2.5 lg:px-3 py-1.5 rounded-lg border border-lime-200 hover:border-lime-500 text-slate-600 hover:text-lime-600 text-sm transition-colors bg-white"
             >
               <RefreshCcw className="h-3.5 w-3.5" />
               <span className="hidden lg:inline">Refresh</span>
@@ -249,7 +244,7 @@ export function PartnerCard({
 }) {
   return (
     <div
-      className={`rounded-2xl bg-white border border-orange-100 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.04)] ${className}`}
+      className={`rounded-2xl bg-white border border-lime-100 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.04)] ${className}`}
     >
       {children}
     </div>

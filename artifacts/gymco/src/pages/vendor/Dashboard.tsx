@@ -91,21 +91,21 @@ export default function VendorDashboard() {
               label="Products"
               value={stats.products}
               hint={`${stats.activeProducts} active`}
-              iconBg="bg-orange-500"
+              iconBg="bg-lime-500"
               icon={<Package className="h-5 w-5 text-white" />}
             />
             <StatTile
               label="Low / Out of Stock"
               value={`${stats.lowStock} / ${stats.outOfStock}`}
               hint="Restock soon"
-              iconBg="bg-amber-500"
+              iconBg="bg-green-500"
               icon={<AlertTriangle className="h-5 w-5 text-white" />}
             />
             <StatTile
               label="Orders"
               value={stats.orders}
               hint="All-time"
-              iconBg="bg-orange-500"
+              iconBg="bg-lime-500"
               icon={<ReceiptText className="h-5 w-5 text-white" />}
             />
             <StatTile
@@ -119,21 +119,21 @@ export default function VendorDashboard() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <VendorCard>
-              <div className="px-5 py-4 border-b border-orange-100 flex items-center justify-between">
+              <div className="px-5 py-4 border-b border-lime-100 flex items-center justify-between">
                 <div>
                   <div className="text-sm font-bold">Low stock alerts</div>
                   <div className="text-xs text-slate-500">
                     Items with fewer than 5 units left
                   </div>
                 </div>
-                <TrendingUp className="h-4 w-4 text-orange-500" />
+                <TrendingUp className="h-4 w-4 text-lime-500" />
               </div>
               {products.filter((p) => p.stock < 5).length === 0 ? (
                 <div className="p-6 text-sm text-slate-500">
                   Everything in stock. Nice work.
                 </div>
               ) : (
-                <ul className="divide-y divide-orange-100">
+                <ul className="divide-y divide-lime-100">
                   {products
                     .filter((p) => p.stock < 5)
                     .slice(0, 8)
@@ -154,7 +154,7 @@ export default function VendorDashboard() {
                           className={`text-xs font-bold px-2 py-1 rounded-md ${
                             p.stock === 0
                               ? "bg-red-50 text-red-600 border border-red-200"
-                              : "bg-amber-50 text-amber-700 border border-amber-200"
+                              : "bg-green-50 text-green-700 border border-green-200"
                           }`}
                         >
                           {p.stock === 0 ? "Out of stock" : `${p.stock} left`}
@@ -166,7 +166,7 @@ export default function VendorDashboard() {
             </VendorCard>
 
             <VendorCard>
-              <div className="px-5 py-4 border-b border-orange-100">
+              <div className="px-5 py-4 border-b border-lime-100">
                 <div className="text-sm font-bold">Recent orders</div>
                 <div className="text-xs text-slate-500">
                   Last 8 orders containing your items
@@ -177,7 +177,7 @@ export default function VendorDashboard() {
                   No orders yet.
                 </div>
               ) : (
-                <ul className="divide-y divide-orange-100">
+                <ul className="divide-y divide-lime-100">
                   {orders.slice(0, 8).map((o) => {
                     const myTotal = o.items.reduce(
                       (s, it) => s + it.unitPriceInr * it.qty,

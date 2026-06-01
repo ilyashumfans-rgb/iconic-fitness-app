@@ -84,18 +84,18 @@ export default function PartnerGyms() {
         </div>
       )}
       {rows.length === 0 && !busy ? (
-        <div className="relative overflow-hidden rounded-3xl border border-orange-200/70 bg-gradient-to-br from-white via-orange-50/60 to-amber-50 p-12 text-center shadow-[0_30px_60px_-30px_rgba(249,115,22,0.35)]">
-          <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-orange-200/40 blur-3xl" />
-          <div className="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-amber-200/40 blur-3xl" />
+        <div className="relative overflow-hidden rounded-3xl border border-lime-200/70 bg-gradient-to-br from-white via-lime-50/60 to-green-50 p-12 text-center shadow-[0_30px_60px_-30px_rgba(101, 163, 13,0.35)]">
+          <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-lime-200/40 blur-3xl" />
+          <div className="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-green-200/40 blur-3xl" />
           <div className="relative">
-            <div className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white shadow-[0_15px_30px_-10px_rgba(249,115,22,0.6)]">
+            <div className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-br from-lime-500 to-green-500 flex items-center justify-center text-white shadow-[0_15px_30px_-10px_rgba(101, 163, 13,0.6)]">
               <Building2 className="h-8 w-8" />
             </div>
             <div className="mt-5 text-xl font-bold text-slate-900">
               No gyms assigned yet
             </div>
             <div className="text-sm text-slate-600 mt-2 max-w-md mx-auto">
-              Once GYMCO admin assigns gyms to your partner account, they'll
+              Once Iconic Fitness admin assigns gyms to your partner account, they'll
               appear here for you to brand, manage, and grow.
             </div>
           </div>
@@ -105,7 +105,7 @@ export default function PartnerGyms() {
           {rows.map((g) => (
             <div
               key={g.id}
-              className="group relative overflow-hidden rounded-2xl bg-white border border-orange-100 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.15)] hover:shadow-[0_24px_50px_-20px_rgba(249,115,22,0.45)] hover:-translate-y-1 transition-all duration-300 flex flex-col"
+              className="group relative overflow-hidden rounded-2xl bg-white border border-lime-100 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.15)] hover:shadow-[0_24px_50px_-20px_rgba(101, 163, 13,0.45)] hover:-translate-y-1 transition-all duration-300 flex flex-col"
             >
               <div className="relative h-44 overflow-hidden">
                 <img
@@ -115,8 +115,8 @@ export default function PartnerGyms() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/85 via-slate-900/20 to-transparent" />
                 <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur text-[11px] font-bold text-amber-700 shadow">
-                    <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur text-[11px] font-bold text-green-700 shadow">
+                    <Star className="h-3 w-3 fill-green-500 text-green-500" />
                     {g.rating.toFixed(1)}
                   </div>
                   <div
@@ -142,7 +142,7 @@ export default function PartnerGyms() {
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="h-full w-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white font-extrabold text-lg">
+                    <div className="h-full w-full bg-gradient-to-br from-lime-500 to-green-500 flex items-center justify-center text-white font-extrabold text-lg">
                       {g.name[0]?.toUpperCase() ?? "G"}
                     </div>
                   )}
@@ -154,7 +154,7 @@ export default function PartnerGyms() {
                   {g.name}
                 </h3>
                 <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                  <MapPin className="h-3 w-3 text-orange-500" />
+                  <MapPin className="h-3 w-3 text-lime-500" />
                   {g.area}, {g.city}
                 </div>
 
@@ -162,7 +162,7 @@ export default function PartnerGyms() {
                   {g.categories.slice(0, 3).map((c) => (
                     <span
                       key={c}
-                      className="px-2 py-0.5 rounded-md bg-orange-50 border border-orange-100 text-[10px] uppercase tracking-wide font-bold text-orange-700"
+                      className="px-2 py-0.5 rounded-md bg-lime-50 border border-lime-100 text-[10px] uppercase tracking-wide font-bold text-lime-700"
                     >
                       {c}
                     </span>
@@ -175,7 +175,7 @@ export default function PartnerGyms() {
                       Hours
                     </div>
                     <div className="text-slate-900 font-semibold truncate flex items-center gap-1">
-                      <Clock className="h-3 w-3 text-orange-500 shrink-0" />
+                      <Clock className="h-3 w-3 text-lime-500 shrink-0" />
                       {g.hours}
                     </div>
                   </div>
@@ -184,7 +184,7 @@ export default function PartnerGyms() {
                 <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2">
                   <button
                     onClick={() => setEditing(g)}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold shadow-[0_8px_20px_-8px_rgba(249,115,22,0.6)]"
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-lime-500 to-green-500 hover:from-lime-600 hover:to-green-600 text-white text-xs font-bold shadow-[0_8px_20px_-8px_rgba(101, 163, 13,0.6)]"
                   >
                     <Edit3 className="h-3.5 w-3.5" />
                     Manage gym
@@ -536,7 +536,7 @@ function EditGymModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(15,23,42,0.55)", backdropFilter: "blur(4px)" }}>
-      <div className="bg-white border border-orange-100 rounded-3xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col shadow-[0_40px_80px_-20px_rgba(15,23,42,0.35)]">
+      <div className="bg-white border border-lime-100 rounded-3xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col shadow-[0_40px_80px_-20px_rgba(15,23,42,0.35)]">
         <div className="relative">
           <div className="h-32 bg-cover bg-center" style={{ backgroundImage: `url(${heroImage || gym.heroImage})` }} />
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/70 to-slate-900/40" />
@@ -551,27 +551,27 @@ function EditGymModal({
               {logoUrl ? (
                 <img src={logoUrl} alt="" className="h-full w-full object-cover" />
               ) : (
-                <div className="h-full w-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white font-extrabold text-xl">
+                <div className="h-full w-full bg-gradient-to-br from-lime-500 to-green-500 flex items-center justify-center text-white font-extrabold text-xl">
                   {gym.name[0]?.toUpperCase() ?? "G"}
                 </div>
               )}
             </div>
             <div className="min-w-0">
-              <div className="text-[10px] uppercase tracking-[0.2em] text-orange-300 font-bold">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-lime-300 font-bold">
                 Editing
               </div>
               <div className="text-xl font-extrabold text-white truncate">
                 {name || gym.name}
               </div>
               <div className="text-xs text-slate-200 flex items-center gap-1 mt-0.5">
-                <MapPin className="h-3 w-3 text-orange-400" />
+                <MapPin className="h-3 w-3 text-lime-400" />
                 {area || gym.area}, {city || gym.city}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="px-4 pt-3 border-b border-orange-100 bg-white overflow-x-auto">
+        <div className="px-4 pt-3 border-b border-lime-100 bg-white overflow-x-auto">
           <div className="flex gap-1 min-w-max">
             {TABS.map((t) => (
               <button
@@ -580,7 +580,7 @@ function EditGymModal({
                 onClick={() => setTab(t.id)}
                 className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-bold border-b-2 transition-colors -mb-px ${
                   tab === t.id
-                    ? "border-orange-500 text-orange-600"
+                    ? "border-lime-500 text-lime-600"
                     : "border-transparent text-slate-500 hover:text-slate-700"
                 }`}
               >
@@ -598,8 +598,8 @@ function EditGymModal({
           )}
 
           {tab === "media" && (
-          <div className="sm:col-span-2 rounded-xl border border-orange-100 p-4 bg-white">
-            <div className="text-xs uppercase tracking-wide text-orange-500 font-bold mb-3">
+          <div className="sm:col-span-2 rounded-xl border border-lime-100 p-4 bg-white">
+            <div className="text-xs uppercase tracking-wide text-lime-500 font-bold mb-3">
               Media assets
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -611,7 +611,7 @@ function EditGymModal({
                   value={logoUrl}
                   onChange={(e) => setLogoUrl(e.target.value)}
                   placeholder="Upload or paste a URL"
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
                 />
                 <div className="mt-2 flex items-start gap-3">
                   <div className="h-24 w-24 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center shrink-0">
@@ -641,7 +641,7 @@ function EditGymModal({
                   value={heroImage}
                   onChange={(e) => setHeroImage(e.target.value)}
                   placeholder="Upload or paste a URL"
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
                 />
                 <div className="mt-2 flex items-start gap-3">
                   <div className="h-24 flex-1 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden">
@@ -682,7 +682,7 @@ function EditGymModal({
                   onChange={(e) => setGalleryText(e.target.value)}
                   rows={4}
                   placeholder="Upload photos or paste one image URL per line"
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60 font-mono"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60 font-mono"
                 />
                 {galleryList.length > 0 && (
                   <div className="mt-2 grid grid-cols-4 sm:grid-cols-6 gap-2">
@@ -714,10 +714,10 @@ function EditGymModal({
           <Field label="City" value={city} onChange={setCity} />
           <Field label="Address" value={address} onChange={setAddress} className="sm:col-span-2" />
 
-          <div className="sm:col-span-2 rounded-xl border border-orange-200 bg-orange-50/50 p-4">
+          <div className="sm:col-span-2 rounded-xl border border-lime-200 bg-lime-50/50 p-4">
             <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
               <div>
-                <div className="text-xs uppercase tracking-wide text-orange-700 font-bold flex items-center gap-1.5">
+                <div className="text-xs uppercase tracking-wide text-lime-700 font-bold flex items-center gap-1.5">
                   <MapPin className="h-3.5 w-3.5" />
                   Map location
                 </div>
@@ -730,7 +730,7 @@ function EditGymModal({
                   type="button"
                   onClick={useDeviceLocation}
                   disabled={geoBusy !== "none"}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-orange-300 text-orange-700 text-xs font-semibold hover:bg-orange-100 disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-lime-300 text-lime-700 text-xs font-semibold hover:bg-lime-100 disabled:opacity-60"
                 >
                   <Navigation className="h-3.5 w-3.5" />
                   {geoBusy === "device" ? "Locating…" : "Use my location"}
@@ -739,7 +739,7 @@ function EditGymModal({
                   type="button"
                   onClick={geocodeFromAddress}
                   disabled={geoBusy !== "none"}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-semibold hover:opacity-95 disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white text-xs font-semibold hover:opacity-95 disabled:opacity-60"
                 >
                   <Search className="h-3.5 w-3.5" />
                   {geoBusy === "address" ? "Searching…" : "Find from address"}
@@ -768,7 +768,7 @@ function EditGymModal({
                 href={`https://www.google.com/maps?q=${lat},${lng}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-orange-700 hover:text-orange-800 underline"
+                className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-lime-700 hover:text-lime-800 underline"
               >
                 Preview on Google Maps →
               </a>
@@ -784,7 +784,7 @@ function EditGymModal({
               value={about}
               onChange={(e) => setAbout(e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+              className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
             />
           </div>
           <button
@@ -818,8 +818,8 @@ function EditGymModal({
           )}
 
           {tab === "amenities" && (
-          <div className="sm:col-span-2 rounded-xl border border-orange-100 p-4 bg-white">
-            <div className="text-xs uppercase tracking-wide text-orange-500 font-bold mb-3">
+          <div className="sm:col-span-2 rounded-xl border border-lime-100 p-4 bg-white">
+            <div className="text-xs uppercase tracking-wide text-lime-500 font-bold mb-3">
               Amenities (from catalog)
             </div>
             {amenityCatalog.length === 0 ? (
@@ -837,8 +837,8 @@ function EditGymModal({
                       onClick={() => toggleAmenity(a.id)}
                       className={`px-3 py-1.5 rounded-full border text-xs font-semibold transition-colors ${
                         active
-                          ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-transparent"
-                          : "bg-slate-800 text-slate-300 border-slate-700 hover:border-orange-500/60"
+                          ? "bg-gradient-to-r from-lime-500 to-green-500 text-white border-transparent"
+                          : "bg-slate-800 text-slate-300 border-slate-700 hover:border-lime-500/60"
                       }`}
                     >
                       {a.name}
@@ -849,7 +849,7 @@ function EditGymModal({
             )}
 
             <div className="mt-5">
-              <div className="text-xs uppercase tracking-wide text-orange-500 font-bold mb-2">
+              <div className="text-xs uppercase tracking-wide text-lime-500 font-bold mb-2">
                 Custom amenities
               </div>
               {customAmenities.length > 0 && (
@@ -891,7 +891,7 @@ function EditGymModal({
                     setCustomDraft({ ...customDraft, name: e.target.value })
                   }
                   placeholder="Name (e.g. Rooftop Sauna)"
-                  className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                  className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
                 />
                 <input
                   value={customDraft.icon}
@@ -899,7 +899,7 @@ function EditGymModal({
                     setCustomDraft({ ...customDraft, icon: e.target.value })
                   }
                   placeholder="Icon (Lucide name)"
-                  className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                  className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
                 />
                 <input
                   value={customDraft.description}
@@ -910,13 +910,13 @@ function EditGymModal({
                     })
                   }
                   placeholder="Description (optional)"
-                  className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                  className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
                 />
               </div>
               <button
                 type="button"
                 onClick={addCustomAmenity}
-                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-orange-400 text-xs font-bold border border-slate-700"
+                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-lime-400 text-xs font-bold border border-slate-700"
               >
                 Add custom amenity
               </button>
@@ -925,8 +925,8 @@ function EditGymModal({
           )}
 
           {tab === "workouts" && (
-          <div className="sm:col-span-2 rounded-xl border border-orange-100 p-4 bg-white">
-            <div className="text-xs uppercase tracking-wide text-orange-500 font-bold mb-3 flex items-center gap-2">
+          <div className="sm:col-span-2 rounded-xl border border-lime-100 p-4 bg-white">
+            <div className="text-xs uppercase tracking-wide text-lime-500 font-bold mb-3 flex items-center gap-2">
               <Activity className="h-4 w-4" /> Workout types
             </div>
             <p className="text-[11px] text-slate-500 mb-3">
@@ -949,8 +949,8 @@ function EditGymModal({
                       onClick={() => toggleWorkout(w.id)}
                       className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
                         active
-                          ? "border-orange-500/70 bg-gradient-to-br from-orange-500/15 to-amber-500/10"
-                          : "border-slate-700 bg-slate-800 hover:border-orange-500/40"
+                          ? "border-lime-500/70 bg-gradient-to-br from-lime-500/15 to-green-500/10"
+                          : "border-slate-700 bg-slate-800 hover:border-lime-500/40"
                       }`}
                     >
                       <div
@@ -969,7 +969,7 @@ function EditGymModal({
 
             {selectedWorkoutIds.size > 0 && (
               <div className="mt-5 space-y-4">
-                <div className="text-xs uppercase tracking-wide text-orange-500 font-bold">
+                <div className="text-xs uppercase tracking-wide text-lime-500 font-bold">
                   Session times
                 </div>
                 {workoutCatalog
@@ -1001,14 +1001,14 @@ function EditGymModal({
                             <button
                               type="button"
                               onClick={() => addSession(w.id)}
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-orange-500/15 hover:bg-orange-500/25 text-orange-300 text-[11px] font-bold"
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-lime-500/15 hover:bg-lime-500/25 text-lime-300 text-[11px] font-bold"
                             >
                               <Plus className="h-3 w-3" /> Add slot
                             </button>
                             <button
                               type="button"
                               onClick={() => addSessionAllDays(w.id)}
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-orange-500/15 hover:bg-orange-500/25 text-orange-300 text-[11px] font-bold"
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-lime-500/15 hover:bg-lime-500/25 text-lime-300 text-[11px] font-bold"
                             >
                               <Plus className="h-3 w-3" /> All days
                             </button>
@@ -1041,8 +1041,8 @@ function EditGymModal({
           )}
 
           {tab === "hours" && (
-          <div className="sm:col-span-2 rounded-xl border border-orange-100 p-4 bg-white">
-            <div className="text-xs uppercase tracking-wide text-orange-500 font-bold mb-3">
+          <div className="sm:col-span-2 rounded-xl border border-lime-100 p-4 bg-white">
+            <div className="text-xs uppercase tracking-wide text-lime-500 font-bold mb-3">
               Weekly hours
             </div>
             {weeklyHours.length === 0 ? (
@@ -1070,7 +1070,7 @@ function EditGymModal({
           )}
         </div>
         </div>
-        <div className="px-6 py-4 border-t border-orange-100 flex items-center justify-between gap-2 bg-white">
+        <div className="px-6 py-4 border-t border-lime-100 flex items-center justify-between gap-2 bg-white">
           <div className="text-[11px] text-slate-500 hidden sm:block">
             Changes save across all tabs at once.
           </div>
@@ -1084,7 +1084,7 @@ function EditGymModal({
           <button
             onClick={save}
             disabled={busy}
-            className="px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-semibold flex items-center gap-2 disabled:opacity-60"
+            className="px-4 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-green-500 text-white text-sm font-semibold flex items-center gap-2 disabled:opacity-60"
           >
             <Save className="h-4 w-4" />
             {busy ? "Saving…" : "Save changes"}
@@ -1120,7 +1120,7 @@ function Field({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60 focus:border-orange-400"
+        className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60 focus:border-lime-400"
       />
     </div>
   );
@@ -1161,7 +1161,7 @@ function SessionRow({
       <select
         value={row.dayOfWeek}
         onChange={(e) => onChange({ dayOfWeek: Number(e.target.value) })}
-        className="col-span-3 px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+        className="col-span-3 px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-lime-500/60"
       >
         {DAY_NAMES.map((d, i) => (
           <option key={i} value={i}>
@@ -1175,7 +1175,7 @@ function SessionRow({
         onChange={(e) =>
           onChange({ startMinute: hhmmToMinutes(e.target.value) })
         }
-        className="col-span-3 px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+        className="col-span-3 px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-lime-500/60"
       />
       <input
         type="time"
@@ -1183,13 +1183,13 @@ function SessionRow({
         onChange={(e) =>
           onChange({ endMinute: hhmmToMinutes(e.target.value) })
         }
-        className="col-span-3 px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+        className="col-span-3 px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-lime-500/60"
       />
       <input
         value={row.instructor}
         onChange={(e) => onChange({ instructor: e.target.value })}
         placeholder="Coach"
-        className="col-span-2 px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+        className="col-span-2 px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-lime-500/60"
       />
       <button
         type="button"
@@ -1240,7 +1240,7 @@ function HourRow({
         disabled={row.isClosed}
         value={minutesToHHMM(row.openMinute)}
         onChange={(e) => onChange({ openMinute: hhmmToMinutes(e.target.value) })}
-        className="col-span-3 px-2 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/60 disabled:opacity-40"
+        className="col-span-3 px-2 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-lime-500/60 disabled:opacity-40"
       />
       <input
         type="time"
@@ -1249,7 +1249,7 @@ function HourRow({
         onChange={(e) =>
           onChange({ closeMinute: hhmmToMinutes(e.target.value) })
         }
-        className="col-span-3 px-2 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/60 disabled:opacity-40"
+        className="col-span-3 px-2 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-lime-500/60 disabled:opacity-40"
       />
     </div>
   );

@@ -20,7 +20,7 @@ type Sent = {
 };
 
 const inputCls =
-  "w-full px-3 py-2 rounded-lg bg-white border border-orange-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
+  "w-full px-3 py-2 rounded-lg bg-white border border-lime-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-lime-500/60";
 
 const TYPE_LABELS: Record<RType, string> = {
   user: "Members",
@@ -90,7 +90,7 @@ function Composer({ onSent }: { onSent: () => void }) {
   return (
     <AdminCard className="p-6">
       <div className="flex items-center gap-2 mb-5">
-        <Megaphone className="h-5 w-5 text-orange-500" />
+        <Megaphone className="h-5 w-5 text-lime-500" />
         <h2 className="text-lg font-bold text-slate-900">Compose Notification</h2>
       </div>
       <form onSubmit={submit} className="space-y-5">
@@ -121,8 +121,8 @@ function Composer({ onSent }: { onSent: () => void }) {
                 onClick={() => setMode("broadcast")}
                 className={`flex-1 px-3 py-2 rounded-lg border text-sm font-semibold transition-colors inline-flex items-center justify-center gap-2 ${
                   mode === "broadcast"
-                    ? "bg-orange-500 text-white border-orange-500"
-                    : "bg-white text-slate-700 border-orange-200 hover:border-orange-400"
+                    ? "bg-lime-500 text-white border-lime-500"
+                    : "bg-white text-slate-700 border-lime-200 hover:border-lime-400"
                 }`}
               >
                 <Megaphone className="h-3.5 w-3.5" />
@@ -133,8 +133,8 @@ function Composer({ onSent }: { onSent: () => void }) {
                 onClick={() => setMode("individual")}
                 className={`flex-1 px-3 py-2 rounded-lg border text-sm font-semibold transition-colors inline-flex items-center justify-center gap-2 ${
                   mode === "individual"
-                    ? "bg-orange-500 text-white border-orange-500"
-                    : "bg-white text-slate-700 border-orange-200 hover:border-orange-400"
+                    ? "bg-lime-500 text-white border-lime-500"
+                    : "bg-white text-slate-700 border-lime-200 hover:border-lime-400"
                 }`}
               >
                 <Users className="h-3.5 w-3.5" />
@@ -232,7 +232,7 @@ function Composer({ onSent }: { onSent: () => void }) {
 
         <button
           disabled={busy}
-          className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-semibold transition-colors disabled:opacity-60 inline-flex items-center gap-2"
+          className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 hover:from-lime-400 hover:to-lime-500 text-white font-semibold transition-colors disabled:opacity-60 inline-flex items-center gap-2"
         >
           <Send className="h-4 w-4" />
           {busy ? "Sending..." : "Send Notification"}
@@ -264,7 +264,7 @@ export default function AdminNotifications() {
         <Composer onSent={load} />
 
         <AdminCard className="p-0 overflow-hidden">
-          <div className="px-5 py-4 border-b border-orange-100 flex items-center justify-between">
+          <div className="px-5 py-4 border-b border-lime-100 flex items-center justify-between">
             <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">
               Recent Sends
             </h2>
@@ -273,7 +273,7 @@ export default function AdminNotifications() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-slate-500 border-b border-orange-100">
+                <tr className="text-left text-xs uppercase tracking-wide text-slate-500 border-b border-lime-100">
                   <th className="px-5 py-3">Sent</th>
                   <th className="px-5 py-3">Audience</th>
                   <th className="px-5 py-3">Title / Message</th>
@@ -308,13 +308,13 @@ export default function AdminNotifications() {
                     return (
                       <tr
                         key={s.batchId}
-                        className="border-b border-orange-50/80 align-top"
+                        className="border-b border-lime-50/80 align-top"
                       >
                         <td className="px-5 py-4 text-xs text-slate-500 whitespace-nowrap">
                           {new Date(s.createdAt).toLocaleString()}
                         </td>
                         <td className="px-5 py-4">
-                          <span className="text-[11px] px-2 py-1 rounded-md bg-orange-100 text-orange-700 border border-orange-200 font-semibold capitalize">
+                          <span className="text-[11px] px-2 py-1 rounded-md bg-lime-100 text-lime-700 border border-lime-200 font-semibold capitalize">
                             {s.recipientType}
                           </span>
                         </td>
@@ -326,7 +326,7 @@ export default function AdminNotifications() {
                             {s.body}
                           </div>
                           {s.link && (
-                            <div className="text-[11px] text-orange-600 mt-1 truncate">
+                            <div className="text-[11px] text-lime-600 mt-1 truncate">
                               → {s.link}
                             </div>
                           )}
@@ -343,7 +343,7 @@ export default function AdminNotifications() {
                           </div>
                           <div className="mt-1 h-1.5 bg-slate-100 rounded-full overflow-hidden w-24">
                             <div
-                              className="h-full bg-gradient-to-r from-orange-400 to-orange-600"
+                              className="h-full bg-gradient-to-r from-lime-400 to-lime-600"
                               style={{ width: `${pct}%` }}
                             />
                           </div>

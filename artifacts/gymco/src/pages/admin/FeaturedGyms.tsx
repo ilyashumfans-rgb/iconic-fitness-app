@@ -35,7 +35,7 @@ export default function AdminFeaturedGyms() {
                 onClick={() => toggle(g)}
                 className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   g.featured
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white"
+                    ? "bg-gradient-to-r from-lime-500 to-lime-600 text-white"
                     : "bg-slate-800 hover:bg-slate-700 text-slate-200"
                 }`}
               >

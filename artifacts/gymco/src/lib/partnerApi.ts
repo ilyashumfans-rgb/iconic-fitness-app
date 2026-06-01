@@ -32,7 +32,6 @@ export type PartnerStaff = {
 export const PARTNER_STAFF_PERMISSIONS = [
   "gyms",
   "bookings",
-  "checkins",
   "classes",
   "products",
 ] as const;
@@ -40,7 +39,6 @@ export const PARTNER_STAFF_PERMISSIONS = [
 export const PARTNER_STAFF_PERMISSION_LABELS: Record<string, string> = {
   gyms: "My Gyms",
   bookings: "Bookings",
-  checkins: "Check-ins & QR",
   classes: "Classes",
   products: "Products",
 };
@@ -49,17 +47,8 @@ export type PartnerStats = {
   totalGyms: number;
   totalClasses: number;
   totalBookings: number;
-  totalCheckins: number;
   revenueInr: number;
-  activitySeries: { day: string; checkins: number; bookings: number }[];
-  topGyms: { gymId: number; name: string; checkins: number }[];
-  recentCheckins: {
-    id: number;
-    userId: number;
-    gymId: number;
-    checkedInAt: string;
-    method: string;
-  }[];
+  activitySeries: { day: string; bookings: number }[];
 };
 
 export type PartnerGym = {
@@ -117,20 +106,6 @@ export type PartnerBooking = {
   gymName: string;
   userName: string;
   userEmail: string;
-};
-
-export type PartnerCheckin = {
-  id: number;
-  checkedInAt: string;
-  method: string;
-  gymId: number;
-  gymName: string;
-  userName: string;
-  userEmail: string;
-  baseInr: number;
-  taxPct: number;
-  taxInr: number;
-  payoutInr: number;
 };
 
 export type PartnerEarnings = {
@@ -260,19 +235,6 @@ export const partnerApi = {
       }),
   },
   bookings: () => request<PartnerBooking[]>("/partner/bookings"),
-  checkins: () => request<PartnerCheckin[]>("/partner/checkins"),
-  scanCheckin: (token: string, gymId: number) =>
-    request<{
-      id: number;
-      gymId: number;
-      gymName: string;
-      memberCode: string;
-      userName: string;
-      checkedInAt: string;
-    }>("/partner/checkins/scan", {
-      method: "POST",
-      body: JSON.stringify({ token, gymId }),
-    }),
   trainers: () => request<PartnerTrainer[]>("/partner/trainers"),
   classes: {
     list: () => request<PartnerClass[]>("/partner/classes"),

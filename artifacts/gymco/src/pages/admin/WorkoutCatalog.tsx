@@ -21,18 +21,18 @@ const EMPTY: Omit<Workout, "id"> = {
   slug: "",
   description: "",
   icon: "Dumbbell",
-  color: "from-orange-500 to-amber-500",
+  color: "from-lime-500 to-green-500",
   imageUrl: "",
   isActive: true,
   sortOrder: 0,
 };
 
 const COLOR_PRESETS = [
-  { label: "Orange", value: "from-orange-500 to-amber-500" },
+  { label: "Orange", value: "from-lime-500 to-green-500" },
   { label: "Blue", value: "from-blue-500 to-indigo-500" },
   { label: "Violet", value: "from-violet-500 to-purple-500" },
   { label: "Red", value: "from-red-500 to-rose-500" },
-  { label: "Yellow", value: "from-yellow-400 to-orange-400" },
+  { label: "Yellow", value: "from-yellow-400 to-lime-400" },
   { label: "Pink", value: "from-pink-500 to-rose-500" },
   { label: "Emerald", value: "from-emerald-500 to-teal-500" },
   { label: "Slate", value: "from-slate-700 to-slate-900" },
@@ -130,7 +130,7 @@ export default function WorkoutCatalog() {
       actions={
         <button
           onClick={startCreate}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-semibold shadow"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-green-500 text-white text-sm font-semibold shadow"
         >
           <Plus className="h-4 w-4" /> New workout
         </button>
@@ -138,15 +138,15 @@ export default function WorkoutCatalog() {
     >
       <div className="space-y-4">
         {(creating || editing) && (
-          <div className="bg-white border border-orange-200 rounded-2xl p-5 shadow-sm">
+          <div className="bg-white border border-lime-200 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2 text-slate-800 font-bold">
-                <Activity className="h-4 w-4 text-orange-500" />
+                <Activity className="h-4 w-4 text-lime-500" />
                 {editing ? `Edit "${editing.name}"` : "Create workout"}
               </div>
               <button
                 onClick={cancel}
-                className="p-1.5 rounded-md hover:bg-orange-50 text-slate-500"
+                className="p-1.5 rounded-md hover:bg-lime-50 text-slate-500"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -188,7 +188,7 @@ export default function WorkoutCatalog() {
                       onClick={() => setDraft({ ...draft, color: p.value })}
                       className={`px-2 py-2 rounded-lg text-white text-xs font-semibold bg-gradient-to-br ${p.value} ${
                         draft.color === p.value
-                          ? "ring-2 ring-offset-2 ring-orange-500"
+                          ? "ring-2 ring-offset-2 ring-lime-500"
                           : ""
                       }`}
                     >
@@ -201,7 +201,7 @@ export default function WorkoutCatalog() {
                   onChange={(e) =>
                     setDraft({ ...draft, color: e.target.value })
                   }
-                  className="mt-2 w-full px-3 py-2 rounded-lg bg-orange-50/60 border border-orange-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60 font-mono"
+                  className="mt-2 w-full px-3 py-2 rounded-lg bg-lime-50/60 border border-lime-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60 font-mono"
                 />
               </div>
               <Field
@@ -229,7 +229,7 @@ export default function WorkoutCatalog() {
                     setDraft({ ...draft, description: e.target.value })
                   }
                   rows={2}
-                  className="w-full px-3 py-2 rounded-lg bg-orange-50/60 border border-orange-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                  className="w-full px-3 py-2 rounded-lg bg-lime-50/60 border border-lime-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
                 />
               </div>
 
@@ -264,7 +264,7 @@ export default function WorkoutCatalog() {
               </button>
               <button
                 onClick={save}
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-semibold inline-flex items-center gap-2"
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-green-500 text-white text-sm font-semibold inline-flex items-center gap-2"
               >
                 <Save className="h-4 w-4" /> Save
               </button>
@@ -272,7 +272,7 @@ export default function WorkoutCatalog() {
           </div>
         )}
 
-        <div className="bg-white border border-orange-100 rounded-2xl overflow-hidden shadow-sm">
+        <div className="bg-white border border-lime-100 rounded-2xl overflow-hidden shadow-sm">
           {loading ? (
             <div className="p-8 text-center text-slate-500">Loading…</div>
           ) : rows.length === 0 ? (
@@ -281,7 +281,7 @@ export default function WorkoutCatalog() {
             </div>
           ) : (
             <div className="overflow-x-auto"><table className="w-full min-w-[640px] text-sm">
-              <thead className="bg-orange-50/60 text-slate-600">
+              <thead className="bg-lime-50/60 text-slate-600">
                 <tr>
                   <th className="text-left px-4 py-2 font-semibold">Preview</th>
                   <th className="text-left px-4 py-2 font-semibold">Name</th>
@@ -294,7 +294,7 @@ export default function WorkoutCatalog() {
               </thead>
               <tbody>
                 {rows.map((w) => (
-                  <tr key={w.id} className="border-t border-orange-50">
+                  <tr key={w.id} className="border-t border-lime-50">
                     <td className="px-4 py-2">
                       <div
                         className={`h-9 w-9 rounded-lg bg-gradient-to-br ${w.color || EMPTY.color} flex items-center justify-center text-white`}
@@ -322,7 +322,7 @@ export default function WorkoutCatalog() {
                     <td className="px-4 py-2 text-right">
                       <button
                         onClick={() => startEdit(w)}
-                        className="px-2 py-1 rounded-md text-orange-600 hover:bg-orange-50 text-xs font-semibold mr-1"
+                        className="px-2 py-1 rounded-md text-lime-600 hover:bg-lime-50 text-xs font-semibold mr-1"
                       >
                         Edit
                       </button>
@@ -364,7 +364,7 @@ function Field({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 rounded-lg bg-orange-50/60 border border-orange-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+        className="w-full px-3 py-2 rounded-lg bg-lime-50/60 border border-lime-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
       />
     </div>
   );

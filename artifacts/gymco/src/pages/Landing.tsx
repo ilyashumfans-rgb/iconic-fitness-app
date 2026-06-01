@@ -12,7 +12,6 @@ import {
   ArrowRight,
   MapPin,
   Calendar,
-  QrCode,
   Flame,
   Dumbbell,
   Heart,
@@ -99,9 +98,9 @@ const steps = [
     body: "Yoga to MMA, sunrise to midnight. Reserve a spot in seconds with live capacity.",
   },
   {
-    icon: QrCode,
-    title: "Walk in. Train.",
-    body: "Flash your rotating QR at the front desk. No signups, no paperwork, ever.",
+    icon: Dumbbell,
+    title: "Train your way",
+    body: "One pass, every gym. Just show your membership at the front desk — no contracts, ever.",
   },
 ];
 
@@ -110,7 +109,7 @@ const testimonials = [
     name: "Priya Sharma",
     role: "Product Designer · Bangalore",
     quote:
-      "I switched between three gyms in one week — strength on Monday, reformer on Wednesday, MMA on Saturday. GYMCO made it feel effortless.",
+      "I switched between three gyms in one week — strength on Monday, reformer on Wednesday, MMA on Saturday. Iconic Fitness made it feel effortless.",
     avatar:
       "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80",
   },
@@ -170,7 +169,7 @@ function TopNav() {
           href="/"
           className="text-2xl font-black tracking-tight text-gradient-brand"
         >
-          GYMCO
+          Iconic Fitness
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
           <Link href="/explore" className="hover:text-foreground transition-colors">
@@ -197,7 +196,7 @@ function TopNav() {
             </Button>
           </Link>
           <Link href="/sign-up">
-            <Button className="bg-gradient-brand text-white border-none font-bold shadow-[0_8px_24px_-8px_hsl(18_100%_55%/0.7)] hover:opacity-95">
+            <Button className="bg-gradient-brand text-white border-none font-bold shadow-[0_8px_24px_-8px_hsl(96_56%_55%/0.7)] hover:opacity-95">
               Get started <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </Link>
@@ -265,7 +264,7 @@ function Hero() {
 
       {/* Premium mobile backdrop — subtle peach/orange wash behind headline (desktop unchanged) */}
       <div className="pointer-events-none absolute inset-0 z-0 md:hidden">
-        <div className="absolute -top-24 left-1/2 -translate-x-1/2 h-[480px] w-[480px] rounded-full bg-[radial-gradient(closest-side,hsl(18_100%_60%/0.18),transparent_70%)] dark:bg-[radial-gradient(closest-side,hsl(18_100%_60%/0.25),transparent_70%)]" />
+        <div className="absolute -top-24 left-1/2 -translate-x-1/2 h-[480px] w-[480px] rounded-full bg-[radial-gradient(closest-side,hsl(96_56%_60%/0.18),transparent_70%)] dark:bg-[radial-gradient(closest-side,hsl(96_56%_60%/0.25),transparent_70%)]" />
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-background" />
       </div>
 
@@ -319,8 +318,8 @@ function Hero() {
         </h1>
 
         <p className="mt-6 md:mt-7 text-base md:text-xl text-muted-foreground max-w-2xl leading-relaxed px-1">
-          Access India's best gyms and studios on a single pass. Book any class,
-          walk in with a QR — from sunrise yoga to midnight MMA.
+          Access India's best gyms and studios on a single pass. Book any class
+          — from sunrise yoga to midnight MMA.
         </p>
 
         {/* Search bar */}
@@ -331,7 +330,7 @@ function Hero() {
           transition={{ delay: 0.25, duration: 0.6 }}
           className="mt-8 md:mt-10 w-full max-w-3xl"
         >
-          <div className="rounded-2xl md:rounded-2xl bg-card/95 backdrop-blur-xl border border-border/80 p-2 shadow-[0_20px_60px_-20px_hsl(18_100%_55%/0.25)] md:shadow-[0_30px_80px_-30px_rgba(0,0,0,0.25)] flex flex-col md:flex-row gap-2">
+          <div className="rounded-2xl md:rounded-2xl bg-card/95 backdrop-blur-xl border border-border/80 p-2 shadow-[0_20px_60px_-20px_hsl(96_56%_55%/0.25)] md:shadow-[0_30px_80px_-30px_rgba(0,0,0,0.25)] flex flex-col md:flex-row gap-2">
             <div className="flex-1 flex items-center gap-3 px-4 py-1.5 bg-secondary rounded-xl text-left">
               <Search className="h-5 w-5 text-primary shrink-0" />
               <Input
@@ -353,7 +352,7 @@ function Hero() {
             <Button
               type="submit"
               size="lg"
-              className="bg-gradient-brand text-white border-none h-14 md:h-14 px-8 text-base font-black tracking-wide shadow-[0_10px_30px_-10px_hsl(18_100%_55%/0.8)] hover:opacity-95 rounded-xl"
+              className="bg-gradient-brand text-white border-none h-14 md:h-14 px-8 text-base font-black tracking-wide shadow-[0_10px_30px_-10px_hsl(96_56%_55%/0.8)] hover:opacity-95 rounded-xl"
             >
               <Search className="h-5 w-5 mr-2" /> Search
             </Button>
@@ -383,9 +382,9 @@ function Hero() {
           <Link href="/memberships" className="w-full sm:w-auto">
             <Button
               size="lg"
-              className="bg-gradient-brand text-white border-none h-14 px-8 text-base font-black tracking-wide shadow-[0_16px_50px_-12px_hsl(18_100%_55%/0.6)] hover:opacity-95 w-full sm:w-auto"
+              className="bg-gradient-brand text-white border-none h-14 px-8 text-base font-black tracking-wide shadow-[0_16px_50px_-12px_hsl(96_56%_55%/0.6)] hover:opacity-95 w-full sm:w-auto"
             >
-              Get GYMCO Pass <ArrowRight className="h-5 w-5 ml-2" />
+              Get Iconic Fitness Pass <ArrowRight className="h-5 w-5 ml-2" />
             </Button>
           </Link>
           <Link href="/explore" className="w-full sm:w-auto">
@@ -434,7 +433,7 @@ function Hero() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.7 }}
-          className="mt-12 md:mt-20 w-full grid grid-cols-2 md:grid-cols-4 gap-px rounded-2xl overflow-hidden bg-border border border-border shadow-[0_20px_60px_-30px_hsl(18_100%_55%/0.4)] md:shadow-[0_30px_80px_-40px_rgba(0,0,0,0.2)]"
+          className="mt-12 md:mt-20 w-full grid grid-cols-2 md:grid-cols-4 gap-px rounded-2xl overflow-hidden bg-border border border-border shadow-[0_20px_60px_-30px_hsl(96_56%_55%/0.4)] md:shadow-[0_30px_80px_-40px_rgba(0,0,0,0.2)]"
         >
           {stats.map((s) => (
             <div key={s.label} className="bg-card/95 backdrop-blur p-5 md:p-8 text-left">
@@ -530,7 +529,7 @@ const liveTicks = [
   { name: "Priya", action: "booked Sunrise Yoga", city: "Koramangala" },
   { name: "Kabir", action: "earned a 30-day streak", city: "Bandra West" },
   { name: "Meera", action: "started a HIIT class", city: "HSR Layout" },
-  { name: "Rohan", action: "joined GYMCO Elite", city: "Powai" },
+  { name: "Rohan", action: "joined Iconic Fitness Elite", city: "Powai" },
   { name: "Ananya", action: "redeemed wallet cashback", city: "Indiranagar" },
 ];
 
@@ -671,7 +670,7 @@ function FeaturedGyms() {
                         ))}
                       </div>
                       <div className="text-right">
-                        <span className="inline-flex items-center text-[10px] uppercase tracking-wider font-bold text-primary bg-orange-50 border border-orange-100 px-2 py-1 rounded">
+                        <span className="inline-flex items-center text-[10px] uppercase tracking-wider font-bold text-primary bg-lime-50 border border-lime-100 px-2 py-1 rounded">
                           Included with plan
                         </span>
                       </div>
@@ -717,7 +716,7 @@ function HowItWorks() {
                   <div className="text-7xl font-black text-foreground/[0.04] absolute -top-4 -right-2 select-none">
                     0{i + 1}
                   </div>
-                  <div className="h-14 w-14 rounded-2xl bg-gradient-brand flex items-center justify-center mb-6 shadow-[0_10px_30px_-10px_hsl(18_100%_55%/0.7)]">
+                  <div className="h-14 w-14 rounded-2xl bg-gradient-brand flex items-center justify-center mb-6 shadow-[0_10px_30px_-10px_hsl(96_56%_55%/0.7)]">
                     <step.icon className="h-7 w-7 text-white" />
                   </div>
                   <h3 className="text-2xl font-black mb-3">{step.title}</h3>
@@ -842,7 +841,7 @@ function FeatureBlock() {
             className="md:col-span-3 md:row-span-2 relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-secondary/40 p-8 md:p-10"
           >
             <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
-            <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-[hsl(32_100%_55%/0.22)] blur-3xl" />
+            <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-[hsl(84_60%_55%/0.22)] blur-3xl" />
             <div className="relative">
               <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 mb-4">
                 <Smartphone className="h-3 w-3 text-primary" />
@@ -855,7 +854,7 @@ function FeatureBlock() {
                 <span className="text-gradient-brand">one tap away.</span>
               </h3>
               <p className="text-muted-foreground leading-relaxed mb-6 max-w-md">
-                Live class capacity, rotating QR check-in, and an AI coach that
+                Live class capacity, instant booking, and an AI coach that
                 learns from every session — built into a single, beautiful app.
               </p>
             </div>
@@ -888,7 +887,7 @@ function FeatureBlock() {
                         Iron Republic, Indiranagar
                       </div>
                       <div className="mt-2 inline-flex items-center gap-1 text-[9px] font-black bg-white/20 px-2 py-0.5 rounded-full">
-                        Check in
+                        Booked
                       </div>
                     </div>
                     <div className="rounded-xl border border-border p-3">
@@ -1060,7 +1059,7 @@ function FeatureBlock() {
           >
             <div className="absolute inset-0 opacity-30 pointer-events-none">
               <div className="absolute -top-20 right-10 h-60 w-60 rounded-full bg-primary/40 blur-3xl" />
-              <div className="absolute -bottom-20 left-10 h-60 w-60 rounded-full bg-[hsl(32_100%_55%/0.5)] blur-3xl" />
+              <div className="absolute -bottom-20 left-10 h-60 w-60 rounded-full bg-[hsl(84_60%_55%/0.5)] blur-3xl" />
             </div>
             <div className="relative flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-8">
               <div className="flex-1">
@@ -1165,7 +1164,7 @@ function CTA() {
           <div className="absolute -bottom-32 -right-32 h-80 w-80 rounded-full bg-black/30 blur-3xl" />
           <div className="relative max-w-3xl mx-auto">
             <div className="text-white text-3xl md:text-4xl font-black tracking-[0.18em] mb-6 drop-shadow-2xl">
-              GYMCO
+              Iconic Fitness
             </div>
             <h2 className="text-4xl md:text-6xl font-black tracking-tight text-white leading-[1.05] mb-6">
               Your next workout is one tap away.

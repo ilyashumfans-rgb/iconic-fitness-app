@@ -24,7 +24,7 @@ type Assignees = {
 };
 
 const selectCls =
-  "rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100";
+  "rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-lime-400 focus:ring-2 focus:ring-lime-100";
 
 export default function AdminTickets() {
   const [location, navigate] = useLocation();
@@ -160,7 +160,7 @@ export default function AdminTickets() {
   return (
     <AdminLayout title="Tickets">
       {err && (
-        <div className="mb-4 rounded-xl border border-orange-200 bg-orange-50 px-3.5 py-2.5 text-sm text-orange-700">
+        <div className="mb-4 rounded-xl border border-lime-200 bg-lime-50 px-3.5 py-2.5 text-sm text-lime-700">
           {err}
         </div>
       )}
@@ -174,7 +174,7 @@ export default function AdminTickets() {
               navigate("/admin/tickets");
               load();
             }}
-            className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-orange-600 hover:text-orange-700"
+            className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-lime-600 hover:text-lime-700"
           >
             <ArrowLeft className="h-4 w-4" /> Back to tickets
           </button>
@@ -186,7 +186,7 @@ export default function AdminTickets() {
               onComment={comment}
               commenting={commenting}
               headerExtra={
-                <div className="grid gap-3 rounded-xl border border-orange-100 bg-orange-50/50 p-3 sm:grid-cols-3">
+                <div className="grid gap-3 rounded-xl border border-lime-100 bg-lime-50/50 p-3 sm:grid-cols-3">
                   <div>
                     <label className="mb-1 block text-xs font-medium text-slate-600">
                       Status
@@ -347,13 +347,13 @@ export default function AdminTickets() {
           {loading ? (
             <p className="text-sm text-slate-400">Loading...</p>
           ) : rows.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-orange-200 bg-orange-50/40 p-10 text-center text-sm text-slate-600">
+            <div className="rounded-2xl border border-dashed border-lime-200 bg-lime-50/40 p-10 text-center text-sm text-slate-600">
               No tickets match these filters.
             </div>
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-orange-100 bg-white">
+            <div className="overflow-hidden rounded-2xl border border-lime-100 bg-white">
               <table className="w-full text-left text-sm">
-                <thead className="bg-orange-50/60 text-xs uppercase tracking-wide text-slate-500">
+                <thead className="bg-lime-50/60 text-xs uppercase tracking-wide text-slate-500">
                   <tr>
                     <th className="px-4 py-3 font-medium">Subject</th>
                     <th className="px-4 py-3 font-medium">Requester</th>
@@ -368,7 +368,7 @@ export default function AdminTickets() {
                     <tr
                       key={t.id}
                       onClick={() => openDetail(t.id)}
-                      className="cursor-pointer transition hover:bg-orange-50/40"
+                      className="cursor-pointer transition hover:bg-lime-50/40"
                     >
                       <td className="px-4 py-3">
                         <p className="font-medium text-slate-900">{t.subject}</p>

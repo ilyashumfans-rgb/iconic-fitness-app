@@ -117,7 +117,7 @@ export default function PartnerTeam() {
       <div className="max-w-4xl space-y-6">
         <PartnerCard className="p-5">
           <div className="flex items-center gap-2 mb-1">
-            <UserPlus className="h-5 w-5 text-orange-600" />
+            <UserPlus className="h-5 w-5 text-lime-600" />
             <h2 className="text-lg font-bold text-slate-900">
               Create a team login
             </h2>
@@ -136,7 +136,7 @@ export default function PartnerTeam() {
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-lg border border-orange-200 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                  className="w-full rounded-lg border border-lime-200 px-3 py-2 text-sm focus:border-lime-500 focus:outline-none focus:ring-1 focus:ring-lime-500"
                   placeholder="Front desk"
                 />
               </div>
@@ -148,7 +148,7 @@ export default function PartnerTeam() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-lg border border-orange-200 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                  className="w-full rounded-lg border border-lime-200 px-3 py-2 text-sm focus:border-lime-500 focus:outline-none focus:ring-1 focus:ring-lime-500"
                   placeholder="staff@yourgym.com"
                 />
               </div>
@@ -160,7 +160,7 @@ export default function PartnerTeam() {
                   type="text"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-lg border border-orange-200 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                  className="w-full rounded-lg border border-lime-200 px-3 py-2 text-sm focus:border-lime-500 focus:outline-none focus:ring-1 focus:ring-lime-500"
                   placeholder="At least 6 characters"
                 />
               </div>
@@ -180,8 +180,8 @@ export default function PartnerTeam() {
                       onClick={() => togglePerm(perm)}
                       className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium border transition-colors ${
                         on
-                          ? "bg-orange-500 border-orange-500 text-white"
-                          : "bg-white border-orange-200 text-slate-600 hover:border-orange-400"
+                          ? "bg-lime-500 border-lime-500 text-white"
+                          : "bg-white border-lime-200 text-slate-600 hover:border-lime-400"
                       }`}
                     >
                       {on ? (
@@ -209,7 +209,7 @@ export default function PartnerTeam() {
             <button
               type="submit"
               disabled={creating}
-              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-orange-500/30 disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-lime-500/30 disabled:opacity-60"
             >
               {creating ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -223,7 +223,7 @@ export default function PartnerTeam() {
 
         <PartnerCard className="p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Users className="h-5 w-5 text-orange-600" />
+            <Users className="h-5 w-5 text-lime-600" />
             <h2 className="text-lg font-bold text-slate-900">Your team</h2>
           </div>
           {listMsg && listMsg.type === "err" && (
@@ -327,7 +327,7 @@ function StaffRow({
   };
 
   return (
-    <div className="rounded-xl border border-orange-100 p-4">
+    <div className="rounded-xl border border-lime-100 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
@@ -351,7 +351,7 @@ function StaffRow({
                 member.permissions.map((p) => (
                   <span
                     key={p}
-                    className="rounded-full bg-orange-50 px-2 py-0.5 text-[11px] font-medium text-orange-700"
+                    className="rounded-full bg-lime-50 px-2 py-0.5 text-[11px] font-medium text-lime-700"
                   >
                     {PARTNER_STAFF_PERMISSION_LABELS[p] ?? p}
                   </span>
@@ -367,21 +367,21 @@ function StaffRow({
               setEditing((v) => !v);
             }}
             disabled={busy}
-            className="rounded-lg border border-orange-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:border-orange-400"
+            className="rounded-lg border border-lime-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:border-lime-400"
           >
             {editing ? "Cancel" : "Edit access"}
           </button>
           <button
             onClick={toggleActive}
             disabled={busy}
-            className="rounded-lg border border-orange-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:border-orange-400"
+            className="rounded-lg border border-lime-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:border-lime-400"
           >
             {member.isActive ? "Disable" : "Enable"}
           </button>
           <button
             onClick={resetPassword}
             disabled={busy}
-            className="inline-flex items-center gap-1 rounded-lg border border-orange-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:border-orange-400"
+            className="inline-flex items-center gap-1 rounded-lg border border-lime-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:border-lime-400"
           >
             <KeyRound className="h-3.5 w-3.5" /> Password
           </button>
@@ -396,7 +396,7 @@ function StaffRow({
       </div>
 
       {editing && (
-        <div className="mt-3 border-t border-orange-100 pt-3">
+        <div className="mt-3 border-t border-lime-100 pt-3">
           <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
             Sections this person can access
           </div>
@@ -410,8 +410,8 @@ function StaffRow({
                   onClick={() => togglePerm(perm)}
                   className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium border transition-colors ${
                     on
-                      ? "bg-orange-500 border-orange-500 text-white"
-                      : "bg-white border-orange-200 text-slate-600 hover:border-orange-400"
+                      ? "bg-lime-500 border-lime-500 text-white"
+                      : "bg-white border-lime-200 text-slate-600 hover:border-lime-400"
                   }`}
                 >
                   {on ? (
@@ -427,7 +427,7 @@ function StaffRow({
           <button
             onClick={savePerms}
             disabled={busy}
-            className="mt-3 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-60"
+            className="mt-3 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-60"
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Save access

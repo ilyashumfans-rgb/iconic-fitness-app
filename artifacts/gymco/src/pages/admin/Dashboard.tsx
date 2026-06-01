@@ -46,7 +46,7 @@ const STAT_DEFS: {
     key: "totalGyms",
     label: "Total Gyms",
     hint: "Gym locations",
-    iconBg: "bg-orange-500",
+    iconBg: "bg-lime-500",
     icon: <Building2 className="h-5 w-5 text-white" />,
     growth: "+15.3% this month",
   },
@@ -76,14 +76,14 @@ const STAT_DEFS: {
     key: "monthlyRevenue",
     label: "Monthly Revenue",
     hint: "Total earnings",
-    iconBg: "bg-orange-500",
+    iconBg: "bg-lime-500",
     icon: <CreditCard className="h-5 w-5 text-white" />,
     format: (n) => `₹${n.toLocaleString("en-IN")}`,
     growth: "+18.4% vs last month",
   },
 ];
 
-const PIE_COLORS = ["#f97316", "#fb923c", "#f59e0b", "#fbbf24", "#fdba74"];
+const PIE_COLORS = ["#65a30d", "#84cc16", "#f59e0b", "#fbbf24", "#bef264"];
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
@@ -140,9 +140,9 @@ export default function AdminDashboard() {
         <AdminCard className="lg:col-span-2 p-5">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <div className="font-semibold text-white">Activity (7 days)</div>
+              <div className="font-semibold text-white">Bookings (7 days)</div>
               <div className="text-xs text-slate-400">
-                Check-ins & bookings
+                Class bookings
               </div>
             </div>
           </div>
@@ -150,13 +150,9 @@ export default function AdminDashboard() {
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={stats?.activitySeries ?? []}>
                 <defs>
-                  <linearGradient id="grad-c" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#fb923c" stopOpacity={0.7} />
-                    <stop offset="100%" stopColor="#fb923c" stopOpacity={0} />
-                  </linearGradient>
                   <linearGradient id="grad-b" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#f97316" stopOpacity={0.6} />
-                    <stop offset="100%" stopColor="#f97316" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#65a30d" stopOpacity={0.6} />
+                    <stop offset="100%" stopColor="#65a30d" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
@@ -172,16 +168,8 @@ export default function AdminDashboard() {
                 />
                 <Area
                   type="monotone"
-                  dataKey="checkins"
-                  stroke="#fb923c"
-                  strokeWidth={2}
-                  fill="url(#grad-c)"
-                  name="Check-ins"
-                />
-                <Area
-                  type="monotone"
                   dataKey="bookings"
-                  stroke="#f97316"
+                  stroke="#65a30d"
                   strokeWidth={2}
                   fill="url(#grad-b)"
                   name="Bookings"

@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 
 const INPUT =
-  "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60";
+  "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60";
 
 const CATEGORIES = [
   "Strength",
@@ -211,7 +211,7 @@ export default function PartnerClasses() {
         <button
           onClick={openNew}
           disabled={gyms.length === 0}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-semibold shadow-md shadow-orange-500/20 disabled:opacity-60"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white text-sm font-semibold shadow-md shadow-lime-500/20 disabled:opacity-60"
         >
           <Plus className="h-4 w-4" /> New class
         </button>
@@ -230,7 +230,7 @@ export default function PartnerClasses() {
             onClick={() => setFilter(f)}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide ${
               filter === f
-                ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md shadow-orange-500/20"
+                ? "bg-gradient-to-r from-lime-500 to-lime-600 text-white shadow-md shadow-lime-500/20"
                 : "bg-slate-800 text-slate-300 hover:bg-slate-700"
             }`}
           >
@@ -262,7 +262,7 @@ export default function PartnerClasses() {
             <PartnerCard key={c.id} className="p-5">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <div className="text-xs uppercase tracking-wide text-orange-600 font-semibold">
+                  <div className="text-xs uppercase tracking-wide text-lime-600 font-semibold">
                     {c.category}
                   </div>
                   <h3 className="text-white font-semibold mt-1 truncate">
@@ -275,7 +275,7 @@ export default function PartnerClasses() {
                     c.intensity === "high"
                       ? "bg-red-500/15 text-red-300"
                       : c.intensity === "medium"
-                        ? "bg-amber-500/15 text-amber-300"
+                        ? "bg-green-500/15 text-green-300"
                         : "bg-emerald-500/15 text-emerald-300"
                   }`}
                 >
@@ -310,7 +310,7 @@ export default function PartnerClasses() {
               <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
                 <button
                   onClick={() => openAttendees(c)}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded bg-orange-500/10 text-orange-400 hover:bg-orange-500/20"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded bg-lime-500/10 text-lime-400 hover:bg-lime-500/20"
                 >
                   <Users className="h-3.5 w-3.5" />
                   Attendees ({c.bookedCount})
@@ -340,7 +340,7 @@ export default function PartnerClasses() {
           <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between sticky top-0 bg-slate-900 z-10">
               <div className="min-w-0">
-                <div className="text-xs uppercase tracking-wide text-orange-500 font-semibold">
+                <div className="text-xs uppercase tracking-wide text-lime-500 font-semibold">
                   {attendeesFor.category} ·{" "}
                   {new Date(attendeesFor.startsAt).toLocaleString([], {
                     month: "short",
@@ -383,7 +383,7 @@ export default function PartnerClasses() {
                       key={a.id}
                       className="py-3 flex items-center gap-3"
                     >
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 overflow-hidden shrink-0 flex items-center justify-center text-white text-sm font-bold">
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-lime-500 to-green-500 overflow-hidden shrink-0 flex items-center justify-center text-white text-sm font-bold">
                         {a.userAvatar ? (
                           <img
                             src={a.userAvatar}
@@ -569,8 +569,8 @@ export default function PartnerClasses() {
                   ))}
                 </select>
                 {editing.gymId && trainersForGym(editing.gymId).length === 0 && (
-                  <div className="text-[11px] text-amber-400 mt-1">
-                    No trainers attached to this gym yet. Ask GYMCO admin to
+                  <div className="text-[11px] text-green-400 mt-1">
+                    No trainers attached to this gym yet. Ask Iconic Fitness admin to
                     add one.
                   </div>
                 )}
@@ -705,7 +705,7 @@ export default function PartnerClasses() {
               </button>
               <button
                 onClick={save}
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-semibold"
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-green-500 text-white text-sm font-semibold"
               >
                 {editing.id ? "Save changes" : "Schedule class"}
               </button>
@@ -731,7 +731,7 @@ function StatusBadge({ status }: { status: string }) {
       ? "bg-emerald-500/15 text-emerald-300"
       : status === "cancelled"
         ? "bg-red-500/15 text-red-300"
-        : "bg-orange-500/15 text-orange-300";
+        : "bg-lime-500/15 text-lime-300";
   return (
     <span
       className={`text-[10px] uppercase tracking-wide font-bold px-2 py-0.5 rounded ${tone}`}
@@ -753,7 +753,7 @@ function CapacityBar({
     pct >= 100
       ? "bg-red-500"
       : pct >= 75
-        ? "bg-amber-500"
+        ? "bg-green-500"
         : "bg-emerald-500";
   return (
     <div className="mt-2 h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">

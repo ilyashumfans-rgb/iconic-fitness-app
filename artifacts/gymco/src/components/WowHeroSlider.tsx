@@ -144,7 +144,7 @@ export function WowHeroSlider({
 
   return (
     <div
-      className="relative h-[340px] md:h-[400px] w-full rounded-3xl overflow-hidden shadow-[0_30px_80px_-30px_hsl(18_100%_55%/0.55)] ring-1 ring-border/60"
+      className="relative h-[340px] md:h-[400px] w-full rounded-3xl overflow-hidden shadow-[0_30px_80px_-30px_hsl(96_56%_55%/0.55)] ring-1 ring-border/60"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -166,7 +166,7 @@ export function WowHeroSlider({
             className="absolute inset-0 h-full w-full object-cover"
           />
           {/* brand-tinted gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[hsl(18_100%_50%/0.85)] via-[hsl(18_100%_45%/0.75)] to-black/70 mix-blend-multiply" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[hsl(96_56%_50%/0.85)] via-[hsl(96_56%_45%/0.75)] to-black/70 mix-blend-multiply" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           {/* subtle grain via radial dots */}
           <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-white/15 blur-3xl" />
@@ -218,7 +218,7 @@ export function WowHeroSlider({
               {active.cta && (
                 <Link
                   href={active.cta.href}
-                  className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-full bg-white text-[hsl(18_100%_45%)] text-sm font-bold shadow-lg hover:scale-[1.02] active:scale-95 transition"
+                  className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-full bg-white text-[hsl(96_56%_45%)] text-sm font-bold shadow-lg hover:scale-[1.02] active:scale-95 transition"
                 >
                   {active.cta.label}
                   <ChevronRight className="h-4 w-4" />

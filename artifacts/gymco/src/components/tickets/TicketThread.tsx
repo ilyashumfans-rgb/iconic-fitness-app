@@ -70,7 +70,7 @@ export function TicketThread({
         {headerExtra}
       </div>
 
-      <div className="rounded-2xl border border-orange-100 bg-orange-50/40 p-4">
+      <div className="rounded-2xl border border-lime-100 bg-lime-50/40 p-4">
         <div className="mb-1.5 flex items-center gap-2 text-xs text-slate-500">
           <RoleBadge role={ticket.requesterRole} />
           <span className="font-medium text-slate-700">
@@ -115,7 +115,7 @@ export function TicketThread({
       {onComment && ticket.status !== "closed" && (
         <form onSubmit={submit} className="space-y-2">
           <textarea
-            className="min-h-[90px] w-full resize-y rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+            className="min-h-[90px] w-full resize-y rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-lime-400 focus:ring-2 focus:ring-lime-100"
             placeholder="Write a reply..."
             maxLength={5000}
             value={reply}
@@ -125,7 +125,7 @@ export function TicketThread({
             <button
               type="submit"
               disabled={commenting || !reply.trim()}
-              className="rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-xl bg-lime-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-lime-600 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {commenting ? "Sending..." : "Send reply"}
             </button>

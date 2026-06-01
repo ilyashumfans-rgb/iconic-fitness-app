@@ -26,7 +26,7 @@ export default function AdminUsers() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search users…"
-          className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+          className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-lime-500/60"
         />
       }
     >
@@ -61,7 +61,7 @@ export default function AdminUsers() {
                 <td className="px-5 py-3 text-slate-400">{u.city}</td>
                 <td className="px-5 py-3">
                   {u.planName ? (
-                    <span className="text-xs px-2 py-1 rounded bg-orange-500/15 text-orange-700 border border-orange-500/30">
+                    <span className="text-xs px-2 py-1 rounded bg-lime-500/15 text-lime-700 border border-lime-500/30">
                       {u.planName}
                     </span>
                   ) : (

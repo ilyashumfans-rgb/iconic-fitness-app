@@ -55,7 +55,7 @@ export default function FileUpload({
         type="button"
         disabled={busy}
         onClick={() => inputRef.current?.click()}
-        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white text-xs font-semibold"
+        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-lime-500 hover:bg-lime-600 disabled:opacity-60 text-white text-xs font-semibold"
       >
         {busy ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin" />

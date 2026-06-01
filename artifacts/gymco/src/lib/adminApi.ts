@@ -53,15 +53,8 @@ export const adminApi = {
       totalActivities: number;
       activeMembers: number;
       monthlyRevenue: number;
-      activitySeries: { day: string; checkins: number; bookings: number }[];
+      activitySeries: { day: string; bookings: number }[];
       membershipTypes: { name: string; value: number }[];
-      recentCheckins: {
-        id: number;
-        userId: number;
-        gymId: number;
-        checkedInAt: string;
-        method: string;
-      }[];
     }>("/admin/stats"),
   partners: {
     list: () => request<any[]>("/admin/partners"),

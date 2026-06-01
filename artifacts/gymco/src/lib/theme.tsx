@@ -15,7 +15,7 @@ type ThemeContextValue = {
   toggleTheme: () => void;
 };
 
-const STORAGE_KEY = "gymco-theme";
+const STORAGE_KEY = "iconic-theme";
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 

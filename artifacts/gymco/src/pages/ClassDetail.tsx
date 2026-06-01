@@ -54,7 +54,7 @@ export default function ClassDetail() {
   const getIntensityColor = (intensity: string) => {
     switch (intensity) {
       case 'high': return 'bg-red-500/20 text-red-500 border-red-500/20';
-      case 'medium': return 'bg-orange-500/20 text-orange-500 border-orange-500/20';
+      case 'medium': return 'bg-lime-500/20 text-lime-500 border-lime-500/20';
       case 'low': return 'bg-green-500/20 text-green-500 border-green-500/20';
       default: return 'bg-primary/20 text-primary border-primary/20';
     }
@@ -142,7 +142,7 @@ export default function ClassDetail() {
             </div>
             <div>
               <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Burn Est.</div>
-              <div className="font-bold text-orange-500 flex items-center"><Zap className="h-4 w-4 mr-1" /> {cls.calorieEstimate} kcal</div>
+              <div className="font-bold text-lime-500 flex items-center"><Zap className="h-4 w-4 mr-1" /> {cls.calorieEstimate} kcal</div>
             </div>
           </div>
 
@@ -218,7 +218,7 @@ export default function ClassDetail() {
                 trigger={
                   <Button
                     type="button"
-                    className="w-full h-14 text-lg font-black tracking-wide mb-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-[0_12px_30px_-12px_rgba(249,115,22,0.7)]"
+                    className="w-full h-14 text-lg font-black tracking-wide mb-3 bg-gradient-to-r from-lime-500 to-green-500 hover:from-lime-600 hover:to-green-600 text-white shadow-[0_12px_30px_-12px_rgba(101, 163, 13,0.7)]"
                   >
                     <Sparkles className="h-4 w-4 mr-2" />
                     BOOK FREE CLASS

@@ -146,7 +146,7 @@ export function StaffLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-orange-50/40 text-slate-500 flex items-center justify-center">
+      <div className="min-h-screen bg-lime-50/40 text-slate-500 flex items-center justify-center">
         Loading…
       </div>
     );
@@ -158,7 +158,7 @@ export function StaffLayout({
   );
 
   return (
-    <div className="min-h-screen bg-orange-50/40 text-slate-900 lg:flex">
+    <div className="min-h-screen bg-lime-50/40 text-slate-900 lg:flex">
       {/* Mobile backdrop */}
       {mobileOpen && (
         <div
@@ -175,8 +175,8 @@ export function StaffLayout({
       >
         <div className="px-5 py-5 border-b border-slate-200 flex items-start justify-between">
           <div>
-            <div className="text-xs uppercase tracking-[0.2em] text-orange-600 font-bold">
-              GYMCO
+            <div className="text-xs uppercase tracking-[0.2em] text-lime-600 font-bold">
+              Iconic Fitness
             </div>
             <div className="text-sm font-semibold text-slate-900 mt-0.5">
               Staff Portal
@@ -195,8 +195,8 @@ export function StaffLayout({
             href="/staff"
             className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
               location === "/staff"
-                ? "bg-orange-100 text-orange-700 border border-orange-200"
-                : "text-slate-600 hover:bg-orange-100"
+                ? "bg-lime-100 text-lime-700 border border-lime-200"
+                : "text-slate-600 hover:bg-lime-100"
             }`}
           >
             <LayoutDashboard className="h-4 w-4" />
@@ -215,8 +215,8 @@ export function StaffLayout({
                   href={item.href}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                     active
-                      ? "bg-orange-100 text-orange-700 border border-orange-200"
-                      : "text-slate-600 hover:bg-orange-100"
+                      ? "bg-lime-100 text-lime-700 border border-lime-200"
+                      : "text-slate-600 hover:bg-lime-100"
                   }`}
                 >
                   {item.icon}
@@ -236,7 +236,7 @@ export function StaffLayout({
           </div>
           <button
             onClick={logout}
-            className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white border border-slate-300 hover:border-orange-500/40 text-sm text-slate-700"
+            className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white border border-slate-300 hover:border-lime-500/40 text-sm text-slate-700"
           >
             <LogOut className="h-4 w-4" /> Sign out
           </button>
@@ -246,7 +246,7 @@ export function StaffLayout({
         <div className="border-b border-slate-200 bg-white/90 backdrop-blur px-4 lg:px-8 py-4 lg:py-5 flex items-center gap-3 sticky top-0 z-30">
           <button
             onClick={() => setMobileOpen(true)}
-            className="lg:hidden h-9 w-9 flex items-center justify-center rounded-lg border border-slate-300 text-orange-700 hover:bg-white shrink-0"
+            className="lg:hidden h-9 w-9 flex items-center justify-center rounded-lg border border-slate-300 text-lime-700 hover:bg-white shrink-0"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />
@@ -295,7 +295,7 @@ export function PermissionGate({
           </h2>
           <p className="text-sm text-slate-500">
             You don't have access to this feature. Ask an admin to grant the{" "}
-            <code className="text-orange-700">{perm}</code> permission to your
+            <code className="text-lime-700">{perm}</code> permission to your
             account.
           </p>
         </StaffCard>

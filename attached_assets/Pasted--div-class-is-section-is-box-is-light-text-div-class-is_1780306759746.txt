@@ -1,0 +1,114 @@
+<div class="is-section is-box is-light-text"><div class="is-overlay"><div class="is-overlay" style="background-image: url(&quot;uploads/2747/neon-purple-modern-gym--fitness-video-2-jtsfmy.png&quot;); background-position: 50% 10%;"><div class="is-overlay-color" style="opacity:0.80; background-color: rgb(124, 225, 68);"></div></div></div>
+	<div class="is-boxes">
+		<div class="is-box-centered">
+			<div class="is-container container is-content-1400" style="max-width: 1200px;">
+				<div class="row clearfix"><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="mix-blend-mode: darken; position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><div class="column full" spellcheck="false"><h1><span style="font-size: 36px; letter-spacing: 1px;">Be a Member</span></h1>
+						<p style="border-top-color: rgb(129, 195, 65); letter-spacing: 1px;"></p><div style="border-top: 2px solid rgb(129, 195, 65);"><span class="size-16"><br><br></span></div><span></span></div></div>
+			<link href="//fonts.googleapis.com/css?family=Archivo Narrow" rel="stylesheet" property="stylesheet" type="text/css"></div>
+		</div>
+	</div>
+</div>
+
+<div class="is-section is-box is-bg-dark is-light-text bw-ai-active">
+	<div class="is-boxes">
+		<div class="is-box-centered">
+			<div class="is-container container is-content-1400" style="max-width: 1400px;">
+				<div class="row clearfix"><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="mix-blend-mode: darken; position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension>
+					<div class="column full" spellcheck="false"><div class="container" style=" border:none">
+                <div class="inner">
+                    <header class="major" style="color: rgb(120, 191, 70);">
+                        <div><b><span style="color: rgb(128, 195, 81);"><br></span></b></div>
+                    </header>
+                    <iframe width="100%" height="600" src="https://www.yoactiv.com/busprofilenew.aspx?adminid=rluTL4jfpHwHqOp8CCgxtA==" frameborder="0" __gcrchildframeremotetoken="b9530114c3f7f867126e22aea298e0d3"></iframe>
+                </div>
+            </div></div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="is-section is-box is-light-text" style="background-color: rgb(0, 0, 0);">
+	<div class="is-boxes">
+		<div class="is-box-centered">
+			<div class="is-container container is-content-1400" style="max-width: 1200px;">
+				<div class="row clearfix"><div class="column full"><h1><span class="size-32"><span style="font-weight: bold;" class="size-24"><span style="font-family: &quot;Archivo Narrow&quot;, sans-serif; letter-spacing: 1px;">FREQUENTLY ASKED&nbsp;<span style="color: rgb(55, 228, 37);" class="size-48">QUESTIONS</span></span></span><br></span></h1>
+						<p style="border-top-color: rgb(129, 195, 65); letter-spacing: 1px; border-bottom: 2px solid rgb(129, 195, 65); width: 34em;"></p><div class="spacer height-60"></div><span></span></div></div><div class="row clearfix"><div class="column full"><p class="size-18"><b><span style="font-family: &quot;Archivo Narrow&quot;, sans-serif; letter-spacing: 1px;">1) What kind of workout formats are available at Iconic Fitness?</span></b></p><div class="size-16"><span style="font-family: &quot;Archivo Narrow&quot;, sans-serif;" class="size-18"><br>At Iconic Fitness, we offer a wide range of fitness programs including Strength &amp; Conditioning, Dance Fitness, Yoga, Aerobics, Pilates to rightly address the needs of our customers.<br></span></div><p></p><p class="size-18"><b><span style="font-family: &quot;Archivo Narrow&quot;, sans-serif; letter-spacing: 1px;">2) Is Iconic Fitness good for beginners?</span></b></p><div class="size-16"><span style="font-family: &quot;Archivo Narrow&quot;, sans-serif;"><span class="size-18"><br><span class="size-18">Yes. We have a group of friendly and professional trainers to help beginners in choosing suitable fitness programs to get fit faster.</span></span></span></div><p class="size-18"><b><span style="font-family: &quot;Archivo Narrow&quot;, sans-serif; letter-spacing: 1px;">3) How much does Iconic Fitness membership cost? </span></b></p><div class="size-16"><span style="font-family: &quot;Archivo Narrow&quot;, sans-serif;"><br><span class="size-18">We offer different membership plans valid for varied durations like 1 month, 3 months, 6 months and 12 months. Besides, we have separate membership slots for corporates and personal training. You can purchase the one that suits you best.<br></span></span></div><p></p><p class="size-18"><b><span style="font-family: &quot;Archivo Narrow&quot;, sans-serif; letter-spacing: 1px;">4) Does Iconic Fitness offer personal training? </span></b></p><div class="size-16"><span style="font-family: &quot;Archivo Narrow&quot;, sans-serif;"><br><span class="size-18">Yes. We offer one-on-one personal training sessions for our customers. Under personal training, our certified professionals suggest workouts and personalized diet plans for fitness enthusiasts to help them achieve desired goals.</span></span></div></div></div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="is-section is-shadow-1 is-bg-grey is-section-75" style="display: none;">
+	<div class="is-boxes">
+		<div class="is-box is-light-text is-box-7"><div class="is-overlay"><div class="is-overlay" style="background-image: url(&quot;uploads/2747/orange-and-black-modern-a-day-at-fitness-studio-instagram-reels-video-1-uykbwx.png&quot;);"><div class="bgcolor3"></div></div></div>
+			<div class="is-boxes">
+				<div class="is-box-centered">
+					<div class="is-container container" style="max-width: 640px;">
+						<div class="row clearfix">
+							<div class="column full" style="padding-top: 50px; padding-bottom: 50px;"><h1 style="font-family: &quot;Archivo Narrow&quot;, sans-serif;"><b style="letter-spacing: 1px;"><a href="corporate-wellness" title="" style="color: rgb(255, 255, 255);">Corporate Wellness</a></b></h1>
+								<p class="size-14" style="font-family: &quot;Archivo Narrow&quot;, sans-serif; letter-spacing: 1px; margin-top: 1em; border-top: 2px solid rgb(129, 195, 65);">BOOST YOUR TEAMS MORAL AND IMPROVE PRODUCTIVITY</p></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="is-light-text is-box is-box-5">
+			<div class="is-overlay">
+				
+				
+				<div class="is-overlay-content"></div>
+			<div class="is-overlay" style="background-image: url(&quot;uploads/2747/4d7ec3125208.jpg&quot;);"><div class="bgcolor4"></div></div></div>
+			<div class="is-boxes">
+				<div class="is-box-centered is-opacity-90">
+					<div class="is-container container" style="max-width: 640px;">
+						<div class="row clearfix">
+							<div class="column full" style="padding-top: 50px; padding-bottom: 50px;"><h1 style="font-family: &quot;Archivo Narrow&quot;, sans-serif;"><b style="letter-spacing: 1px;"><a href="fitness-academy" title="" style="color: rgb(255, 255, 255);">Fitness Academy</a></b></h1>
+								<p class="size-14" style="font-family: &quot;Archivo Narrow&quot;, sans-serif; letter-spacing: 1px; margin-top: 1em; border-top: 2px solid rgb(129, 195, 65);">JOIN YOUR FITNESS ACADEMY AND GET CERTIFIED</p></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="is-section is-section-100 is-box is-bg-dark is-dark-text" style="background-image: linear-gradient(0deg, rgb(0, 0, 0), rgb(0, 0, 0));">
+	    <div class="is-overlay">
+	
+	
+		<div class="is-overlay-content"></div>
+		</div>
+		<div class="is-boxes">
+		<div class="is-box-centered is-opacity-95">
+		<div class="is-container container is-content-left" style="max-width: 1437px;"><div class="row clearfix"><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><div class="column half padding-30" spellcheck="false"><div class="column full padding-20 center " style="font-family: Roboto, sans-serif; text-align: left;">
+		<h2 style="font-size: 32px; color: rgb(129, 195, 65); font-weight: bold; font-family: &quot;Abril Fatface&quot;;">Send Message</h2><br>
+		</div>
+<div id="contact" style="padding: 20px;"><form action="#contact" method="POST" class="custom-form" __gchrome_uniqueid="1" __gcruniqueid="1"><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="mix-blend-mode: darken; position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><fieldset><label><i class="fa fa-user-o"></i></label><input type="text" name="name" placeholder="Your Name *" required="" __gchrome_uniqueid="2" __gcruniqueid="2"><div class="clearfix"></div><label><i class="fa fa-mobile"></i>  </label><input type="text" name="mobile" placeholder="Mobile*" required="" __gchrome_uniqueid="3" __gcruniqueid="3"><div class="clearfix"></div><label><i class="fa fa-envelope-o"></i>  </label><input type="text" name="email" placeholder="Email Address*" required="" __gchrome_uniqueid="4" __gcruniqueid="4"><label><i class="icon ion-android-bulb"></i>  </label><input type="text" name="subject" placeholder="Subject" __gchrome_uniqueid="5" __gcruniqueid="5"><textarea cols="40" rows="2" name="massage" placeholder="Additional Information:" required="" spellcheck="false" __gchrome_uniqueid="6" __gcruniqueid="6"></textarea><div class="col-md-3" style="padding-top:25px;"><img src="captcha.php?rand=743561253" id="captchaimg"></div><div class="col-md-5" style="padding-top:25px;"><label><i class="fa fa-question-circle-o"></i>  </label><input name="captcha_code" placeholder="Enter the code here" type="text" __gchrome_uniqueid="7" __gcruniqueid="7"></div><div class="col-md-4" align="right" style="margin-top:-10px;"><br><button class="btn  blue flat-btn" style="padding:10px 20px;">Send <i class="fa fa-angle-right"></i></button></div><div class="col-md-12">Can't read the image? <a style="color:blue;" href="javascript: refreshCaptcha();">click here</a> to refresh.</div></fieldset></form></div></div><div class="column half padding-30" spellcheck="false"><h1 class="size-42 is-title-bold" style="margin-top:0"><br></h1><h1 class="size-42 is-title-bold" style="margin-top:0"><br></h1><h1 class="size-42 is-title-bold" style="margin-top:0"><br></h1><h1 class="size-42 is-title-bold" style="margin-top:0"><br></h1><h1 class="is-title-bold size-38" style="margin-top: 0px; color: rgb(247, 247, 247); font-family: Alegreya, serif;">Do you have something to say?</h1><h1 class="is-title-bold size-38" style="margin-top: 0px; color: rgb(247, 247, 247); font-family: Alegreya, serif;">&nbsp;Contact us!</h1><a href="www.twitter.com" title=""><img src="uploads/2747/screen-shot-2021-12-31-at-9.43.17-pm-ep51sp.png" alt="" <img="" data-filename="Screen Shot 2021-12-31 at 9.43.17 pm.png" style="width: 10.6195%; height: auto;"></a><a href="https://www.facebook.com/iconicfitnesskoramangala" title=""><img src="uploads/2747/screen-shot-2021-12-31-at-9.43.17-pm-mdq7sn.png" alt="" data-filename="Screen Shot 2021-12-31 at 9.43.17 pm.png" style="width: 13.6283%; height: auto;"></a><a href="https://www.instagram.com/iconicfitnesskoramangala/" title=""><img src="uploads/2747/screen-shot-2021-12-31-at-9.43.17-pm-r23mm4.png" alt="" data-filename="Screen Shot 2021-12-31 at 9.43.17 pm.png" style="width: 12.7434%; height: auto;"></a>&nbsp;</div></div><div class="row clearfix"><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: -120px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: -120px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: -120px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: -120px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><grammarly-extension data-grammarly-shadow-root="true" style="position: absolute; top: 0px; left: 0px; pointer-events: none;" class="cGcvT"></grammarly-extension><div class="column third center" spellcheck="false"><i class="icon ion-ios-book-outline size-64" style="color: rgb(136, 136, 136);"></i>
+<h6 style="letter-spacing: 2px; font-weight: normal; color: rgb(247, 247, 247);">OUR LOCATION</h6><p style="letter-spacing: 2px; font-weight: normal; color: rgb(247, 247, 247);">Head Quarter</p><p></p><ul><li><span style="color: rgb(247, 247, 247);">Flat/Door/Block No. 43&nbsp;</span></li><li><span style="color: rgb(247, 247, 247);">Name of Premises/ Building - Village/Town KORMANGALA Block 1st BLOCK Road/Street/Lane - City Bangalore State KARNATAKA District BENGALURU (URBAN) ,&nbsp;</span></li><li><span style="color: rgb(247, 247, 247);">Pin 560034&nbsp;<br></span></li></ul><p></p><p style="color: rgb(129, 195, 65);"><br></p><p style="color: rgb(129, 195, 65);">Mobile 9480000248 Email: suail4u@outlook.com</p><div><br></div><br><p></p></div><div class="column third center" spellcheck="false"><i class="icon ion-ios-telephone-outline size-64" style="color: rgb(136, 136, 136);"></i>
+<h6 style="letter-spacing: 2px; font-weight: normal; color: rgb(247, 247, 247);">CALL US</h6>
+<p style="font-weight: bold; color: rgb(129, 195, 65);">070262 76888</p><p style="font-weight: bold; color: rgb(129, 195, 65);">070263 22322</p></div><div class="column third center" spellcheck="false"><i class="icon ion-ios-compose-outline size-64" style="color: rgb(136, 136, 136);"></i>
+<h6 style="letter-spacing: 2px; font-weight: normal; color: rgb(247, 247, 247);">DROP US A LINE</h6>
+<p style="color: rgb(129, 195, 65);"><a href="mailto:#" style="color: #333"></a><a href="https://iconicfitnessindia.com/#" style="color: rgb(129, 195, 65);">iconicfitnessindia</a>@gmail.com</p></div></div><link href="//fonts.googleapis.com/css?family=Abril Fatface" rel="stylesheet" property="stylesheet" type="text/css"><link href="//fonts.googleapis.com/css?family=Alegreya:400,400i,500,500i,700,700i,800,800i,900,900i" rel="stylesheet" property="stylesheet" type="text/css"></div></div></div></div>
+
+<!---OTHERS--->
+<div class="bgcolor2"></div><style>
+  .ebzoom:hover {  transform: scale(1.05); transition: transform 0.7s; }
+ 
+
+  
+  .bgcolor1 { opacity: 0.85; display: block; position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; overflow: hidden; z-index:2; background-color: #73f325; }
+.column:hover, .bgcolor1:hover { background-color: transparent;}
+  
+   .bgcolor2 { opacity: 0.85; display: block; position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; overflow: hidden; z-index:2; background-color: #428ac5; }
+.column:hover, .bgcolor2:hover { background-color: transparent;}
+  
+   .bgcolor3 { opacity: 0.85; display: block; position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; overflow: hidden; z-index:2; background-color:#84c341; }
+.column:hover, .bgcolor3:hover { background-color: transparent;}
+  
+   .bgcolor4 { opacity: 0.85; display: block; position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; overflow: hidden; z-index:2; background-color: #b574b4; }
+.column:hover, .bgcolor4:hover { background-color: transparent;}
+  
+   .bgcolor5 { opacity: 0.85; display: block; position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; overflow: hidden; z-index:2; background-color:#84c341; }
+.column:hover, .bgcolor5:hover { background-color: transparent;}
+</style>

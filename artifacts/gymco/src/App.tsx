@@ -19,7 +19,6 @@ import Classes from "@/pages/Classes";
 import ClassDetail from "@/pages/ClassDetail";
 import Bookings from "@/pages/Bookings";
 import Memberships from "@/pages/Memberships";
-import Checkin from "@/pages/Checkin";
 import Trainers from "@/pages/Trainers";
 import TrainerDetail from "@/pages/TrainerDetail";
 import Wallet from "@/pages/Wallet";
@@ -32,7 +31,6 @@ import PartnerLogin from "@/pages/partner/Login";
 import PartnerDashboard from "@/pages/partner/Dashboard";
 import PartnerGyms from "@/pages/partner/Gyms";
 import PartnerBookings from "@/pages/partner/Bookings";
-import PartnerCheckins from "@/pages/partner/Checkins";
 import PartnerClasses from "@/pages/partner/Classes";
 import PartnerProducts from "@/pages/partner/PartnerProducts";
 import PartnerSettings from "@/pages/partner/Settings";
@@ -58,8 +56,6 @@ import AdminFeaturedGyms from "@/pages/admin/FeaturedGyms";
 import AdminGymVerification from "@/pages/admin/GymVerification";
 import AdminAmenityCatalog from "@/pages/admin/AmenityCatalog";
 import AdminCityAreaManagement from "@/pages/admin/CityAreaManagement";
-import PartnerScanner from "@/pages/partner/Scanner";
-import PartnerDisplayQr from "@/pages/partner/DisplayQr";
 import AdminWorkoutCatalog from "@/pages/admin/WorkoutCatalog";
 import AdminUsers from "@/pages/admin/Users";
 import AdminUserManagement from "@/pages/admin/UserManagement";
@@ -99,7 +95,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 if (!clerkPubKey && typeof console !== "undefined") {
   // Member auth is disabled without a Clerk key. Admin portal still works.
   console.warn(
-    "[GYMCO] VITE_CLERK_PUBLISHABLE_KEY missing — member sign-in disabled.",
+    "[Iconic Fitness] VITE_CLERK_PUBLISHABLE_KEY missing — member sign-in disabled.",
   );
 }
 
@@ -120,7 +116,7 @@ const clerkAppearance = {
     socialButtonsVariant: "blockButton" as const,
   },
   variables: {
-    colorPrimary: "#FF6B1A",
+    colorPrimary: "#5a9e2e",
     colorForeground: "hsl(222 47% 11%)",
     colorMutedForeground: "hsl(215 16% 47%)",
     colorDanger: "hsl(0 84% 60%)",
@@ -141,10 +137,10 @@ const clerkAppearance = {
     headerSubtitle: "text-slate-500",
     socialButtonsBlockButtonText: "text-slate-700 font-medium",
     formFieldLabel: "text-slate-700 font-medium",
-    footerActionLink: "text-orange-600 hover:text-orange-700 font-semibold",
+    footerActionLink: "text-lime-700 hover:text-lime-800 font-semibold",
     footerActionText: "text-slate-500",
     dividerText: "text-slate-400",
-    identityPreviewEditButton: "text-orange-600",
+    identityPreviewEditButton: "text-lime-700",
     formFieldSuccessText: "text-emerald-600",
     alertText: "text-slate-700",
     logoBox: "h-12 mb-2",
@@ -152,9 +148,9 @@ const clerkAppearance = {
     socialButtonsBlockButton:
       "border border-slate-200 hover:bg-slate-50 transition",
     formButtonPrimary:
-      "!bg-gradient-to-r !from-orange-500 !to-purple-600 hover:!opacity-95 text-white font-semibold",
+      "!bg-gradient-to-r !from-lime-600 !to-green-700 hover:!opacity-95 text-white font-semibold",
     formFieldInput:
-      "border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-orange-500/40",
+      "border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-lime-500/40",
     footerAction: "text-sm",
     dividerLine: "bg-slate-200",
     alert: "bg-red-50 border border-red-200",
@@ -227,7 +223,6 @@ function MemberShellRoutes() {
         <Route path="/classes/:classId" component={ClassDetail} />
         <Route path="/bookings" component={Bookings} />
         <Route path="/memberships" component={Memberships} />
-        <Route path="/checkin" component={Checkin} />
         <Route path="/trainers" component={Trainers} />
         <Route path="/trainers/:trainerId" component={TrainerDetail} />
         <Route path="/wallet" component={Wallet} />
@@ -282,11 +277,8 @@ function AppShell() {
         <Route path="/partner" component={PartnerDashboard} />
         <Route path="/partner/gyms" component={PartnerGyms} />
         <Route path="/partner/bookings" component={PartnerBookings} />
-        <Route path="/partner/checkins" component={PartnerCheckins} />
         <Route path="/partner/classes" component={PartnerClasses} />
         <Route path="/partner/products" component={PartnerProducts} />
-        <Route path="/partner/scan" component={PartnerScanner} />
-        <Route path="/partner/display-qr" component={PartnerDisplayQr} />
         <Route path="/partner/staff" component={PartnerTeam} />
         <Route path="/partner/tickets" component={PartnerTickets} />
         <Route path="/partner/settings" component={PartnerSettings} />

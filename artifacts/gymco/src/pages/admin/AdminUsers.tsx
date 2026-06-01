@@ -12,7 +12,7 @@ type Admin = {
 };
 
 const inputCls =
-  "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
+  "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-lime-500/60";
 
 function CreateAdminForm({ onCreated }: { onCreated: () => void }) {
   const [f, setF] = useState({
@@ -45,7 +45,7 @@ function CreateAdminForm({ onCreated }: { onCreated: () => void }) {
   return (
     <AdminCard className="p-6">
       <div className="flex items-center gap-2 mb-4">
-        <UserPlus className="h-5 w-5 text-orange-400" />
+        <UserPlus className="h-5 w-5 text-lime-400" />
         <h2 className="text-lg font-bold text-white">Create Admin</h2>
       </div>
       <form onSubmit={submit} className="space-y-4">
@@ -72,7 +72,7 @@ function CreateAdminForm({ onCreated }: { onCreated: () => void }) {
               className={inputCls}
               value={f.email}
               onChange={(e) => setF({ ...f, email: e.target.value })}
-              placeholder="name@gymco.in"
+              placeholder="name@iconicfitnessindia.com"
             />
           </div>
           <div>
@@ -117,7 +117,7 @@ function CreateAdminForm({ onCreated }: { onCreated: () => void }) {
         )}
         <button
           disabled={busy}
-          className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-semibold transition-colors disabled:opacity-60"
+          className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 hover:from-lime-400 hover:to-lime-500 text-white font-semibold transition-colors disabled:opacity-60"
         >
           {busy ? "Creating…" : "Create Admin"}
         </button>
@@ -193,7 +193,7 @@ function AdminRow({
         <div className="font-medium text-white">
           {row.name}
           {isSelf && (
-            <span className="ml-2 text-[10px] uppercase tracking-wide text-orange-300 bg-orange-500/15 border border-orange-500/30 rounded px-1.5 py-0.5">
+            <span className="ml-2 text-[10px] uppercase tracking-wide text-lime-300 bg-lime-500/15 border border-lime-500/30 rounded px-1.5 py-0.5">
               You
             </span>
           )}
@@ -204,7 +204,7 @@ function AdminRow({
         <span
           className={`inline-flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-md border ${
             row.role === "superadmin"
-              ? "bg-orange-500/15 text-orange-300 border-orange-500/40"
+              ? "bg-lime-500/15 text-lime-300 border-lime-500/40"
               : "bg-slate-700/40 text-slate-300 border-slate-600/40"
           }`}
         >
@@ -225,7 +225,7 @@ function AdminRow({
             <button
               onClick={toggleRole}
               disabled={busy}
-              className="text-xs px-3 py-1.5 rounded bg-slate-700/60 text-slate-200 border border-slate-600/60 hover:border-orange-500/40 inline-flex items-center gap-1 w-fit disabled:opacity-60"
+              className="text-xs px-3 py-1.5 rounded bg-slate-700/60 text-slate-200 border border-slate-600/60 hover:border-lime-500/40 inline-flex items-center gap-1 w-fit disabled:opacity-60"
             >
               {row.role === "superadmin" ? (
                 <>
@@ -250,7 +250,7 @@ function AdminRow({
               <button
                 onClick={resetPwd}
                 disabled={busy || newPwd.length < 6}
-                className="text-xs px-2 py-1 rounded bg-orange-500/20 text-orange-300 border border-orange-500/40 disabled:opacity-40"
+                className="text-xs px-2 py-1 rounded bg-lime-500/20 text-lime-300 border border-lime-500/40 disabled:opacity-40"
               >
                 Set
               </button>
@@ -268,7 +268,7 @@ function AdminRow({
             isSuper && (
               <button
                 onClick={() => setResetting(true)}
-                className="text-xs px-3 py-1.5 rounded bg-slate-700/60 text-slate-200 border border-slate-600/60 hover:border-orange-500/40 inline-flex items-center gap-1 w-fit"
+                className="text-xs px-3 py-1.5 rounded bg-slate-700/60 text-slate-200 border border-slate-600/60 hover:border-lime-500/40 inline-flex items-center gap-1 w-fit"
               >
                 <KeyRound className="h-3 w-3" /> Reset Password
               </button>
@@ -320,7 +320,7 @@ export default function AdminUsers() {
     <AdminLayout title="Admin Users">
       <div className="space-y-6">
         {!isSuper && me && (
-          <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 px-4 py-3 text-sm text-amber-300">
+          <div className="rounded-lg bg-green-500/10 border border-green-500/30 px-4 py-3 text-sm text-green-300">
             You are signed in as <strong>{me.role}</strong>. Only superadmins
             can create new admins or change roles.
           </div>

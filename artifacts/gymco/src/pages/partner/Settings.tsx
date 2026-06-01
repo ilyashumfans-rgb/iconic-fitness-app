@@ -145,12 +145,12 @@ export default function PartnerSettings() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PartnerCard className="p-6">
           <div className="flex items-center gap-2 mb-5">
-            <UserCog className="h-5 w-5 text-orange-600" />
+            <UserCog className="h-5 w-5 text-lime-600" />
             <h2 className="text-lg font-semibold text-white">Account profile</h2>
           </div>
           <form onSubmit={saveProfile} className="space-y-4">
             <div className="flex items-center gap-4 p-3 rounded-xl bg-slate-800/40 border border-slate-800">
-              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 overflow-hidden flex items-center justify-center text-white text-2xl font-extrabold shrink-0">
+              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-lime-500 to-green-500 overflow-hidden flex items-center justify-center text-white text-2xl font-extrabold shrink-0">
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}
@@ -169,7 +169,7 @@ export default function PartnerSettings() {
                   value={avatarUrl}
                   onChange={(e) => setAvatarUrl(e.target.value)}
                   placeholder="Upload a photo or paste a URL"
-                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
                 />
                 <FileUpload
                   label="Upload photo"
@@ -192,7 +192,7 @@ export default function PartnerSettings() {
             <button
               type="submit"
               disabled={profileBusy}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-semibold disabled:opacity-60"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-green-500 text-white text-sm font-semibold disabled:opacity-60"
             >
               {profileBusy ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -206,7 +206,7 @@ export default function PartnerSettings() {
 
         <PartnerCard className="p-6">
           <div className="flex items-center gap-2 mb-5">
-            <KeyRound className="h-5 w-5 text-orange-600" />
+            <KeyRound className="h-5 w-5 text-lime-600" />
             <h2 className="text-lg font-semibold text-white">
               Change password
             </h2>
@@ -234,7 +234,7 @@ export default function PartnerSettings() {
             <button
               type="submit"
               disabled={pwBusy}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-semibold disabled:opacity-60"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-green-500 text-white text-sm font-semibold disabled:opacity-60"
             >
               {pwBusy ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -248,14 +248,14 @@ export default function PartnerSettings() {
 
         <PartnerCard className="p-6 lg:col-span-2">
           <div className="flex items-center gap-2 mb-2">
-            <FileText className="h-5 w-5 text-orange-600" />
+            <FileText className="h-5 w-5 text-lime-600" />
             <h2 className="text-lg font-semibold text-white">
               Business documents
             </h2>
           </div>
           <div className="text-xs text-slate-400 mb-4">
             Upload PAN, GST certificate, partner agreement, bank proof, or any
-            other KYC document. Files are stored securely and visible to GYMCO
+            other KYC document. Files are stored securely and visible to Iconic Fitness
             staff for verification.
           </div>
 
@@ -264,13 +264,13 @@ export default function PartnerSettings() {
               value={docName}
               onChange={(e) => setDocName(e.target.value)}
               placeholder="Document name (e.g. PAN card)"
-              className="sm:col-span-1 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+              className="sm:col-span-1 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
             />
             <input
               value={docNotes}
               onChange={(e) => setDocNotes(e.target.value)}
               placeholder="Notes (optional)"
-              className="sm:col-span-2 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+              className="sm:col-span-2 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
             />
           </div>
           <FileUpload
@@ -362,7 +362,7 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className={`w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/60 ${
+        className={`w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60 ${
           disabled
             ? "bg-slate-800/40 border-slate-800 text-slate-500"
             : "bg-slate-800 border-slate-700 text-white"

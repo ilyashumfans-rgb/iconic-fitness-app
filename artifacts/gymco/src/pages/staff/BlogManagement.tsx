@@ -37,7 +37,7 @@ const EMPTY: FormState = {
   excerpt: "",
   content: "",
   coverImage: "",
-  author: "GYMCO Team",
+  author: "Iconic Fitness Team",
   category: "Fitness",
   isPublished: true,
 };
@@ -120,7 +120,7 @@ function StaffBlogManagementInner() {
           <BookOpen className="h-4 w-4" />
           {rows.length} {rows.length === 1 ? "post" : "posts"}
         </div>
-        <Button onClick={openCreate} className="bg-orange-600 hover:bg-orange-700">
+        <Button onClick={openCreate} className="bg-lime-600 hover:bg-lime-700">
           <Plus className="h-4 w-4 mr-1.5" /> New post
         </Button>
       </div>
@@ -158,7 +158,7 @@ function StaffBlogManagementInner() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 px-2 py-0.5 rounded">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-lime-600 bg-lime-50 px-2 py-0.5 rounded">
                       {p.category}
                     </span>
                     {!p.isPublished && (
@@ -331,7 +331,7 @@ function StaffBlogManagementInner() {
               <Button
                 onClick={save}
                 disabled={saving || !form.title.trim()}
-                className="bg-orange-600 hover:bg-orange-700"
+                className="bg-lime-600 hover:bg-lime-700"
               >
                 {saving && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
                 {editing ? "Save changes" : "Create post"}

@@ -339,7 +339,7 @@ export default function GymDetail() {
                     title={w.description}
                   >
                     <div
-                      className={`h-14 w-14 rounded-xl bg-gradient-to-br ${w.color || "from-orange-500 to-amber-500"} flex items-center justify-center text-white shadow`}
+                      className={`h-14 w-14 rounded-xl bg-gradient-to-br ${w.color || "from-lime-500 to-green-500"} flex items-center justify-center text-white shadow`}
                     >
                       <AmenityIcon name={w.icon} className="h-6 w-6" />
                     </div>
@@ -389,7 +389,7 @@ export default function GymDetail() {
                                   <div className="flex items-center gap-2 min-w-0">
                                     {w && (
                                       <span
-                                        className={`h-7 w-7 rounded-md bg-gradient-to-br ${w.color || "from-orange-500 to-amber-500"} flex items-center justify-center text-white shrink-0`}
+                                        className={`h-7 w-7 rounded-md bg-gradient-to-br ${w.color || "from-lime-500 to-green-500"} flex items-center justify-center text-white shrink-0`}
                                       >
                                         <AmenityIcon
                                           name={w.icon}
@@ -453,7 +453,7 @@ export default function GymDetail() {
           {/* Enroll CTA */}
           <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-secondary/40 p-8 md:p-10 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.18)]">
             <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
-            <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-[hsl(32_100%_55%/0.22)] blur-3xl" />
+            <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-[hsl(84_60%_55%/0.22)] blur-3xl" />
             <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
               <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4">
@@ -468,12 +468,12 @@ export default function GymDetail() {
                   starting today
                 </h3>
                 <p className="text-muted-foreground mt-3 leading-relaxed">
-                  Activate your GYMCO Pass and walk in with a QR. Cancel anytime
+                  Activate your Iconic Fitness Pass and start training. Cancel anytime
                   — no long contracts, no joining fees.
                 </p>
                 <ul className="mt-5 space-y-2.5">
                   {[
-                    "Unlimited check-ins, 7 days a week",
+                    "Unlimited access, 7 days a week",
                     "Access 500+ partner gyms across India",
                     "Freeze or cancel anytime",
                   ].map((line) => (
@@ -490,22 +490,22 @@ export default function GymDetail() {
 
               <div className="flex flex-col items-stretch gap-3 md:items-end">
                 <div className="rounded-2xl bg-background/80 backdrop-blur border border-border p-6 w-full max-w-sm md:ml-auto shadow-md">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-orange-50 border border-orange-200 text-[11px] font-black uppercase tracking-wider text-primary">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-lime-50 border border-lime-200 text-[11px] font-black uppercase tracking-wider text-primary">
                     <Sparkles className="h-3 w-3" />
-                    Included with GYMCO plan
+                    Included with Iconic Fitness plan
                   </div>
                   <div className="mt-3 text-lg font-black leading-tight">
                     Get unlimited access to this gym
                   </div>
                   <div className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                    One GYMCO membership unlocks this gym plus hundreds more
+                    One Iconic Fitness membership unlocks this gym plus hundreds more
                     across India. Pick a plan that fits — no per-gym fees.
                   </div>
 
                   <Link href="/memberships">
                     <Button
                       size="lg"
-                      className="mt-5 w-full bg-gradient-brand text-white border-none h-14 text-base font-black tracking-wide shadow-[0_16px_50px_-12px_hsl(18_100%_55%/0.6)] hover:opacity-95"
+                      className="mt-5 w-full bg-gradient-brand text-white border-none h-14 text-base font-black tracking-wide shadow-[0_16px_50px_-12px_hsl(96_56%_55%/0.6)] hover:opacity-95"
                     >
                       View plans <ArrowRight className="h-5 w-5 ml-1.5" />
                     </Button>
@@ -570,7 +570,7 @@ export default function GymDetail() {
               <div className="inline-flex items-center gap-1.5 mb-3">
                 <Sparkles className="h-3.5 w-3.5 text-primary" />
                 <span className="text-[11px] font-black uppercase tracking-[0.18em] text-primary">
-                  GYMCO Pass Elite
+                  Iconic Fitness Pass Elite
                 </span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed mb-4">

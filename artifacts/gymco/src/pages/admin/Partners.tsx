@@ -8,20 +8,12 @@ import {
   Trash2,
   UserPlus,
   X,
-  Printer,
-  QrCode,
-  Download,
   Pencil,
   Building2,
   Copy,
   FileText,
   ExternalLink,
 } from "lucide-react";
-import {
-  GymQrPoster,
-  downloadGymQrSvg,
-  type GymQrPosterGym,
-} from "@/components/GymQrPoster";
 
 export default function AdminPartners() {
   const [, navigate] = useLocation();
@@ -31,10 +23,6 @@ export default function AdminPartners() {
   const [resetting, setResetting] = useState<any | null>(null);
   const [pwd, setPwd] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
-  const [qrFor, setQrFor] = useState<any | null>(null);
-  const [partnerGyms, setPartnerGyms] = useState<GymQrPosterGym[]>([]);
-  const [qrGymId, setQrGymId] = useState<number | "">("");
-  const [qrLoading, setQrLoading] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
   const [editForm, setEditForm] = useState({
     name: "",
@@ -96,31 +84,6 @@ export default function AdminPartners() {
     }
   };
 
-  const openQrFor = async (p: any) => {
-    setQrFor(p);
-    setPartnerGyms([]);
-    setQrGymId("");
-    setQrLoading(true);
-    try {
-      const all = await adminApi.gyms.list();
-      const owned: GymQrPosterGym[] = (all ?? [])
-        .filter((g: any) => Number(g.ownerPartnerId) === Number(p.id))
-        .map((g: any) => ({
-          id: g.id,
-          name: g.name,
-          slug: g.slug,
-          city: g.city,
-          area: g.area,
-        }));
-      setPartnerGyms(owned);
-      if (owned.length > 0) setQrGymId(owned[0].id);
-    } catch (e: any) {
-      setErr(e?.message ?? String(e));
-    } finally {
-      setQrLoading(false);
-    }
-  };
-
   const load = () => {
     setBusy(true);
     adminApi.partners
@@ -172,7 +135,7 @@ export default function AdminPartners() {
       actions={
         <Link
           href="/admin/partner-onboarding"
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-medium shadow"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white text-sm font-medium shadow"
         >
           <UserPlus className="h-3.5 w-3.5" />
           Onboard Partner
@@ -215,9 +178,9 @@ export default function AdminPartners() {
               placeholder="New password (min 6 chars)"
               minLength={6}
               required
-              className="flex-1 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+              className="flex-1 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-lime-500/60"
             />
-            <button className="px-5 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold">
+            <button className="px-5 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white font-semibold">
               Update password
             </button>
           </form>
@@ -258,7 +221,7 @@ export default function AdminPartners() {
                 }
                 required
                 minLength={2}
-                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-lime-500/60"
               />
             </div>
             <div>
@@ -271,7 +234,7 @@ export default function AdminPartners() {
                 onChange={(e) =>
                   setEditForm((f) => ({ ...f, phone: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-lime-500/60"
               />
             </div>
             <div>
@@ -284,14 +247,14 @@ export default function AdminPartners() {
                 onChange={(e) =>
                   setEditForm((f) => ({ ...f, city: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-lime-500/60"
               />
             </div>
             <div className="sm:col-span-3 flex gap-2 mt-1">
               <button
                 type="submit"
                 disabled={editBusy || !editForm.name.trim()}
-                className="px-5 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold disabled:opacity-50"
+                className="px-5 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white font-semibold disabled:opacity-50"
               >
                 {editBusy ? "Saving…" : "Save changes"}
               </button>
@@ -320,7 +283,7 @@ export default function AdminPartners() {
             className="admin-qr-sheet w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-3xl bg-white shadow-2xl print:max-w-none print:max-h-none print:overflow-visible print:shadow-none print:rounded-none"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-6 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white flex items-center justify-between print:hidden">
+            <div className="px-6 py-4 bg-gradient-to-r from-lime-500 to-lime-600 text-white flex items-center justify-between print:hidden">
               <div className="flex items-center gap-2">
                 <Printer className="h-5 w-5" />
                 <div>
@@ -358,7 +321,7 @@ export default function AdminPartners() {
                     <select
                       value={qrGymId}
                       onChange={(e) => setQrGymId(Number(e.target.value))}
-                      className="w-full px-3 py-2 rounded-lg bg-white border border-orange-200 text-slate-900 text-sm focus:border-orange-500 focus:outline-none"
+                      className="w-full px-3 py-2 rounded-lg bg-white border border-lime-200 text-slate-900 text-sm focus:border-lime-500 focus:outline-none"
                     >
                       {partnerGyms.map((g) => (
                         <option key={g.id} value={g.id}>
@@ -371,7 +334,7 @@ export default function AdminPartners() {
                     type="button"
                     onClick={() => window.print()}
                     disabled={!qrGymId}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold disabled:opacity-50"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-lime-500 hover:bg-lime-600 text-white text-sm font-bold disabled:opacity-50"
                   >
                     <Printer className="h-4 w-4" /> Print poster
                   </button>
@@ -382,7 +345,7 @@ export default function AdminPartners() {
                       if (g) downloadGymQrSvg(g, "admin-gym-qr-svg");
                     }}
                     disabled={!qrGymId}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-orange-200 hover:border-orange-500 text-orange-700 text-sm font-bold disabled:opacity-50"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-lime-200 hover:border-lime-500 text-lime-700 text-sm font-bold disabled:opacity-50"
                   >
                     <Download className="h-4 w-4" /> Download SVG
                   </button>
@@ -459,14 +422,14 @@ export default function AdminPartners() {
                       navigate(`/admin/gyms?ownerPartnerId=${p.id}`)
                     }
                     title="Add a new gym branch under this partner"
-                    className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-orange-500/15 text-orange-700 border border-orange-500/30 hover:bg-orange-500/25 mr-1"
+                    className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-lime-500/15 text-lime-700 border border-lime-500/30 hover:bg-lime-500/25 mr-1"
                   >
                     <Building2 className="h-3.5 w-3.5" /> Add branch
                   </button>
                   <button
                     onClick={() => openDocs(p)}
                     title="View documents uploaded for this partner"
-                    className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-orange-500/15 text-orange-700 border border-orange-500/30 hover:bg-orange-500/25 mr-1"
+                    className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-lime-500/15 text-lime-700 border border-lime-500/30 hover:bg-lime-500/25 mr-1"
                   >
                     <FileText className="h-3.5 w-3.5" /> Documents
                   </button>
@@ -490,7 +453,7 @@ export default function AdminPartners() {
                   <button
                     onClick={() => openQrFor(p)}
                     title="Print branded gym check-in QR poster"
-                    className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-orange-500/15 text-orange-700 border border-orange-500/30 hover:bg-orange-500/25 mr-1"
+                    className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-lime-500/15 text-lime-700 border border-lime-500/30 hover:bg-lime-500/25 mr-1"
                   >
                     <QrCode className="h-3.5 w-3.5" /> Print QR
                   </button>
@@ -502,7 +465,7 @@ export default function AdminPartners() {
                         ? "Suspended partners cannot be signed in"
                         : "Sign in as this partner in a new tab"
                     }
-                    className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-orange-500/15 text-orange-700 border border-orange-500/30 hover:bg-orange-500/25 mr-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-lime-500/15 text-lime-700 border border-lime-500/30 hover:bg-lime-500/25 mr-1 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <LogIn className="h-3.5 w-3.5" /> Sign in as
                   </button>
@@ -572,7 +535,7 @@ export default function AdminPartners() {
                     >
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-orange-600 shrink-0" />
+                          <FileText className="h-4 w-4 text-lime-600 shrink-0" />
                           <span className="font-medium text-slate-900 truncate">
                             {d.name}
                           </span>
@@ -592,7 +555,7 @@ export default function AdminPartners() {
                         href={d.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded bg-orange-500/15 text-orange-700 border border-orange-500/30 hover:bg-orange-500/25 shrink-0"
+                        className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded bg-lime-500/15 text-lime-700 border border-lime-500/30 hover:bg-lime-500/25 shrink-0"
                       >
                         <ExternalLink className="h-3.5 w-3.5" /> Open
                       </a>

@@ -22,7 +22,7 @@ export function PricingTeaserSection() {
     <section className="py-4">
       <div className="flex items-end justify-between mb-5">
         <div>
-          <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-orange-600 mb-1.5 flex items-center gap-1.5">
+          <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-lime-600 mb-1.5 flex items-center gap-1.5">
             <Sparkles className="h-3.5 w-3.5" /> Pricing
           </div>
           <h2 className="text-2xl md:text-3xl font-black tracking-tight">
@@ -34,7 +34,7 @@ export function PricingTeaserSection() {
         </div>
         <Link
           href="/memberships"
-          className="hidden sm:inline-flex items-center text-sm text-orange-600 font-semibold"
+          className="hidden sm:inline-flex items-center text-sm text-lime-600 font-semibold"
         >
           See all plans <ArrowRight className="h-4 w-4 ml-1" />
         </Link>
@@ -68,12 +68,12 @@ export function PricingTeaserSection() {
                 key={plan.id}
                 className={`relative p-5 flex flex-col rounded-2xl border-border/60 overflow-hidden ${
                   plan.popular
-                    ? "ring-2 ring-orange-500/60 shadow-[0_20px_50px_-20px_rgba(249,115,22,0.45)]"
+                    ? "ring-2 ring-lime-500/60 shadow-[0_20px_50px_-20px_rgba(101, 163, 13,0.45)]"
                     : ""
                 }`}
               >
                 {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-white text-[10px] font-black tracking-[0.18em] shadow">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-full bg-gradient-to-r from-lime-500 to-lime-600 text-white text-[10px] font-black tracking-[0.18em] shadow">
                     <Crown className="h-3 w-3 mr-1 inline -mt-0.5" />
                     POPULAR
                   </div>
@@ -85,7 +85,7 @@ export function PricingTeaserSection() {
                   <span className="text-sm font-bold text-muted-foreground">
                     ₹
                   </span>
-                  <span className="text-4xl font-black tracking-tight bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
+                  <span className="text-4xl font-black tracking-tight bg-gradient-to-r from-lime-500 to-lime-600 bg-clip-text text-transparent">
                     {plan.priceInr.toLocaleString("en-IN")}
                   </span>
                   <span className="text-xs font-semibold text-muted-foreground">
@@ -104,13 +104,13 @@ export function PricingTeaserSection() {
                 )}
                 <ul className="mt-4 space-y-1.5 text-sm flex-1">
                   <li className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-orange-500 mt-0.5 shrink-0" />
+                    <Check className="h-4 w-4 text-lime-500 mt-0.5 shrink-0" />
                     <span>
                       <strong>{plan.gymsIncluded}+</strong> premium gyms
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-orange-500 mt-0.5 shrink-0" />
+                    <Check className="h-4 w-4 text-lime-500 mt-0.5 shrink-0" />
                     <span>
                       <strong>{plan.classesPerMonth}</strong> classes / month
                     </span>
@@ -120,7 +120,7 @@ export function PricingTeaserSection() {
                       key={perk}
                       className="flex items-start gap-2 text-muted-foreground"
                     >
-                      <Check className="h-4 w-4 text-orange-500/70 mt-0.5 shrink-0" />
+                      <Check className="h-4 w-4 text-lime-500/70 mt-0.5 shrink-0" />
                       <span>{perk}</span>
                     </li>
                   ))}
@@ -129,7 +129,7 @@ export function PricingTeaserSection() {
                   <Button
                     className={`w-full font-black tracking-[0.12em] border-none ${
                       plan.popular
-                        ? "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+                        ? "bg-gradient-to-r from-lime-500 to-lime-600 hover:from-lime-600 hover:to-lime-700 text-white"
                         : "bg-slate-900 hover:bg-slate-800 text-white"
                     }`}
                   >
@@ -145,7 +145,7 @@ export function PricingTeaserSection() {
       <div className="mt-5 sm:hidden">
         <Link
           href="/memberships"
-          className="inline-flex items-center text-sm text-orange-600 font-semibold"
+          className="inline-flex items-center text-sm text-lime-600 font-semibold"
         >
           See all plans <ArrowRight className="h-4 w-4 ml-1" />
         </Link>

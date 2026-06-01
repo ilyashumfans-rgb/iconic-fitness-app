@@ -114,7 +114,7 @@ export default function Store() {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search products, vendors, categories…"
             aria-label="Search store"
-            className="w-full pl-9 pr-3 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+            className="w-full pl-9 pr-3 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-lime-500/60"
           />
         </div>
         <div
@@ -132,8 +132,8 @@ export default function Store() {
                 aria-pressed={active}
                 className={`px-3.5 py-2 rounded-full text-xs font-bold uppercase tracking-wider border transition-all ${
                   active
-                    ? "bg-gradient-brand text-white border-transparent shadow-[0_6px_20px_-6px_hsl(18_100%_55%/0.6)]"
-                    : "bg-background text-muted-foreground border-border hover:text-foreground hover:border-orange-500/40"
+                    ? "bg-gradient-brand text-white border-transparent shadow-[0_6px_20px_-6px_hsl(96_56%_55%/0.6)]"
+                    : "bg-background text-muted-foreground border-border hover:text-foreground hover:border-lime-500/40"
                 }`}
               >
                 {c.label}
@@ -151,7 +151,7 @@ export default function Store() {
             setVendorId(e.target.value === "" ? "" : Number(e.target.value))
           }
           aria-label="Filter by vendor"
-          className="px-3 py-2.5 rounded-lg bg-background border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/60"
+          className="px-3 py-2.5 rounded-lg bg-background border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-lime-500/60"
         >
           <option value="">All vendors</option>
           {vendors.map((v) => (
@@ -220,7 +220,7 @@ export default function Store() {
                 <Link
                   key={p.id}
                   href={`/store/${p.slug}`}
-                  className="group relative block bg-card border border-border rounded-2xl overflow-hidden hover:shadow-[0_20px_60px_-20px_hsl(18_100%_55%/0.55)] hover:border-orange-500/40 transition-all hover:-translate-y-1"
+                  className="group relative block bg-card border border-border rounded-2xl overflow-hidden hover:shadow-[0_20px_60px_-20px_hsl(96_56%_55%/0.55)] hover:border-lime-500/40 transition-all hover:-translate-y-1"
                 >
                   <div className="aspect-square bg-muted overflow-hidden relative">
                     <img
@@ -241,7 +241,7 @@ export default function Store() {
                       </span>
                     )}
                     {p.stock > 0 && p.stock <= 5 && (
-                      <span className="absolute top-2.5 right-2.5 text-[10px] font-black uppercase px-2.5 py-1 rounded-full bg-orange-500 text-white shadow-md">
+                      <span className="absolute top-2.5 right-2.5 text-[10px] font-black uppercase px-2.5 py-1 rounded-full bg-lime-500 text-white shadow-md">
                         Only {p.stock} left
                       </span>
                     )}
@@ -250,7 +250,7 @@ export default function Store() {
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold truncate">
                       {v ? `${v.name} · ${v.city}` : p.category}
                     </div>
-                    <div className="mt-1 font-bold text-foreground truncate group-hover:text-orange-500 transition-colors">
+                    <div className="mt-1 font-bold text-foreground truncate group-hover:text-lime-500 transition-colors">
                       {p.name}
                     </div>
                     <div className="mt-2 flex items-baseline justify-between gap-2">

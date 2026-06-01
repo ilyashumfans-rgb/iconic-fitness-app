@@ -154,7 +154,7 @@ export default function Explore() {
               className={cn(
                 "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all",
                 view === "grid"
-                  ? "bg-gradient-brand text-white shadow-[0_8px_20px_-8px_hsl(18_100%_55%/0.6)]"
+                  ? "bg-gradient-brand text-white shadow-[0_8px_20px_-8px_hsl(96_56%_55%/0.6)]"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -168,7 +168,7 @@ export default function Explore() {
               className={cn(
                 "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all",
                 view === "list"
-                  ? "bg-gradient-brand text-white shadow-[0_8px_20px_-8px_hsl(18_100%_55%/0.6)]"
+                  ? "bg-gradient-brand text-white shadow-[0_8px_20px_-8px_hsl(96_56%_55%/0.6)]"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -220,7 +220,7 @@ export default function Explore() {
                       ))}
                     </div>
                     <div className="flex items-center justify-between mt-auto">
-                      <span className="inline-flex items-center text-[10px] uppercase tracking-wider font-bold text-primary bg-orange-50 border border-orange-100 px-2 py-1 rounded">
+                      <span className="inline-flex items-center text-[10px] uppercase tracking-wider font-bold text-primary bg-lime-50 border border-lime-100 px-2 py-1 rounded">
                         Included with plan
                       </span>
                       <div className="flex items-center text-sm font-bold">
@@ -286,7 +286,7 @@ export default function Explore() {
                       </div>
 
                       <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 sm:gap-2 shrink-0 sm:border-l sm:pl-6 sm:border-border">
-                        <span className="inline-flex items-center text-[10px] uppercase tracking-wider font-bold text-primary bg-orange-50 border border-orange-100 px-2 py-1 rounded">
+                        <span className="inline-flex items-center text-[10px] uppercase tracking-wider font-bold text-primary bg-lime-50 border border-lime-100 px-2 py-1 rounded">
                           Included with plan
                         </span>
                         <span className="inline-flex items-center gap-1 text-sm font-bold text-primary group-hover:gap-2 transition-all">

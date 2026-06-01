@@ -81,7 +81,7 @@ function View() {
   };
 
   const inputCls =
-    "w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
+    "w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-lime-500/60";
 
   return (
     <StaffLayout title="Partner Documents">
@@ -187,7 +187,7 @@ function View() {
               )}
               <button
                 disabled={busy || typeof selected !== "number"}
-                className="w-full px-5 py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-semibold transition-colors disabled:opacity-60"
+                className="w-full px-5 py-2.5 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 hover:from-lime-400 hover:to-lime-500 text-white font-semibold transition-colors disabled:opacity-60"
               >
                 {busy ? "Uploading…" : "Upload Document"}
               </button>
@@ -221,9 +221,9 @@ function View() {
                 {docs.map((d) => (
                   <li
                     key={d.id}
-                    className="flex items-start gap-3 p-3 rounded-xl border border-slate-300 bg-orange-100"
+                    className="flex items-start gap-3 p-3 rounded-xl border border-slate-300 bg-lime-100"
                   >
-                    <div className="h-9 w-9 rounded-lg bg-orange-100 text-orange-700 border border-orange-200 flex items-center justify-center shrink-0">
+                    <div className="h-9 w-9 rounded-lg bg-lime-100 text-lime-700 border border-lime-200 flex items-center justify-center shrink-0">
                       <FileText className="h-4 w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -244,7 +244,7 @@ function View() {
                       href={d.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-xs px-2.5 py-1 rounded bg-slate-100/60 text-slate-700 border border-slate-300/60 hover:border-orange-500/40 inline-flex items-center gap-1 shrink-0"
+                      className="text-xs px-2.5 py-1 rounded bg-slate-100/60 text-slate-700 border border-slate-300/60 hover:border-lime-500/40 inline-flex items-center gap-1 shrink-0"
                     >
                       <ExternalLink className="h-3 w-3" /> Open
                     </a>

@@ -90,7 +90,7 @@ function Form() {
   };
 
   const inputCls =
-    "w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
+    "w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-lime-500/60";
   const showAmenities = form.kind === "gym" || form.kind === "both";
 
   return (
@@ -159,7 +159,7 @@ function Form() {
                 ))}
               </select>
               {cities.length === 0 && (
-                <p className="text-xs text-amber-500 mt-1.5">
+                <p className="text-xs text-green-500 mt-1.5">
                   No cities available yet. Ask an admin to add one under
                   Locations first.
                 </p>
@@ -215,7 +215,7 @@ function Form() {
 
           {showAmenities && amenities.length > 0 && (
             <div className="rounded-2xl border border-slate-300 bg-white/40 p-5">
-              <div className="text-sm font-bold uppercase tracking-wider text-orange-600 mb-3">
+              <div className="text-sm font-bold uppercase tracking-wider text-lime-600 mb-3">
                 Gym Amenities
               </div>
               <p className="text-xs text-slate-500 mb-4">
@@ -230,15 +230,15 @@ function Form() {
                       key={a.id}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border cursor-pointer transition-colors ${
                         active
-                          ? "bg-gradient-to-r from-orange-500/15 to-orange-600/10 border-orange-500/60"
-                          : "bg-white border-slate-300 hover:border-orange-500/40"
+                          ? "bg-gradient-to-r from-lime-500/15 to-lime-600/10 border-lime-500/60"
+                          : "bg-white border-slate-300 hover:border-lime-500/40"
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={active}
                         onChange={() => toggle(a.id)}
-                        className="rounded border-slate-300 bg-white text-orange-500 focus:ring-orange-500/60"
+                        className="rounded border-slate-300 bg-white text-lime-500 focus:ring-lime-500/60"
                       />
                       <span className="text-sm font-semibold text-slate-900 truncate">
                         {a.name}
@@ -263,7 +263,7 @@ function Form() {
 
           <button
             disabled={busy}
-            className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-semibold transition-colors disabled:opacity-60"
+            className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 hover:from-lime-400 hover:to-lime-500 text-white font-semibold transition-colors disabled:opacity-60"
           >
             {busy ? "Creating…" : "Create Partner"}
           </button>

@@ -4,7 +4,7 @@ import { vendorApi, type VendorProduct } from "@/lib/vendorApi";
 import { Plus, Trash2, X, Package, Pencil } from "lucide-react";
 
 const INPUT =
-  "w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
+  "w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-lime-500/60";
 
 type FormState = {
   name: string;
@@ -105,7 +105,7 @@ export default function VendorProducts() {
       actions={
         <button
           onClick={openCreate}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-semibold shadow-md shadow-orange-500/20"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white text-sm font-semibold shadow-md shadow-lime-500/20"
         >
           <Plus className="h-4 w-4" />
           New product
@@ -113,8 +113,8 @@ export default function VendorProducts() {
       }
     >
       <VendorCard className="overflow-hidden">
-        <div className="px-5 py-4 border-b border-orange-100 flex items-center gap-2">
-          <Package className="h-4 w-4 text-orange-500" />
+        <div className="px-5 py-4 border-b border-lime-100 flex items-center gap-2">
+          <Package className="h-4 w-4 text-lime-500" />
           <div className="text-sm font-bold">Your catalog</div>
           <div className="text-xs text-slate-500">({rows.length})</div>
         </div>
@@ -125,7 +125,7 @@ export default function VendorProducts() {
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-slate-400 border-b border-orange-100">
+              <tr className="text-left text-xs uppercase tracking-wide text-slate-400 border-b border-lime-100">
                 <th className="px-5 py-3">Product</th>
                 <th className="px-5 py-3">Category</th>
                 <th className="px-5 py-3">Price</th>
@@ -138,7 +138,7 @@ export default function VendorProducts() {
               {rows.map((p) => (
                 <tr
                   key={p.id}
-                  className="border-b border-orange-100/60 hover:bg-orange-50/50"
+                  className="border-b border-lime-100/60 hover:bg-lime-50/50"
                 >
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-3">
@@ -146,10 +146,10 @@ export default function VendorProducts() {
                         <img
                           src={p.imageUrl}
                           alt={p.name}
-                          className="h-10 w-10 rounded-md object-cover border border-orange-100"
+                          className="h-10 w-10 rounded-md object-cover border border-lime-100"
                         />
                       ) : (
-                        <div className="h-10 w-10 rounded-md bg-orange-50 border border-orange-100" />
+                        <div className="h-10 w-10 rounded-md bg-lime-50 border border-lime-100" />
                       )}
                       <div className="min-w-0">
                         <div className="font-semibold truncate">{p.name}</div>
@@ -176,7 +176,7 @@ export default function VendorProducts() {
                         p.stock === 0
                           ? "bg-red-50 text-red-600 border border-red-200"
                           : p.stock < 5
-                            ? "bg-amber-50 text-amber-700 border border-amber-200"
+                            ? "bg-green-50 text-green-700 border border-green-200"
                             : "bg-emerald-50 text-emerald-700 border border-emerald-200"
                       }`}
                     >
@@ -187,7 +187,7 @@ export default function VendorProducts() {
                     <span
                       className={`text-xs px-2 py-1 rounded uppercase tracking-wide font-bold ${
                         p.status === "active"
-                          ? "bg-orange-100 text-orange-700"
+                          ? "bg-lime-100 text-lime-700"
                           : "bg-slate-100 text-slate-600"
                       }`}
                     >
@@ -197,7 +197,7 @@ export default function VendorProducts() {
                   <td className="px-5 py-3 text-right">
                     <button
                       onClick={() => openEdit(p)}
-                      className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 mr-1"
+                      className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-lime-50 text-lime-700 border border-lime-200 hover:bg-lime-100 mr-1"
                     >
                       <Pencil className="h-3.5 w-3.5" /> Edit
                     </button>
@@ -217,14 +217,14 @@ export default function VendorProducts() {
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-          <div className="bg-white border border-orange-100 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="px-5 py-4 border-b border-orange-100 flex items-center justify-between">
+          <div className="bg-white border border-lime-100 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="px-5 py-4 border-b border-lime-100 flex items-center justify-between">
               <div className="text-sm font-bold">
                 {editing ? "Edit product" : "New product"}
               </div>
               <button
                 onClick={close}
-                className="p-1.5 rounded-md hover:bg-orange-50 text-slate-500"
+                className="p-1.5 rounded-md hover:bg-lime-50 text-slate-500"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -351,17 +351,17 @@ export default function VendorProducts() {
                 </div>
               )}
             </div>
-            <div className="px-5 py-4 border-t border-orange-100 flex items-center justify-end gap-2">
+            <div className="px-5 py-4 border-t border-lime-100 flex items-center justify-end gap-2">
               <button
                 onClick={close}
-                className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-orange-50"
+                className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-lime-50"
               >
                 Cancel
               </button>
               <button
                 onClick={save}
                 disabled={busy}
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-semibold shadow-md shadow-orange-500/20 disabled:opacity-60"
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white text-sm font-semibold shadow-md shadow-lime-500/20 disabled:opacity-60"
               >
                 {busy ? "Saving…" : editing ? "Save changes" : "Create product"}
               </button>

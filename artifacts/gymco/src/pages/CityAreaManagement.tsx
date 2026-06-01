@@ -3,10 +3,10 @@ import { locationsApi, type City, type Area } from "@/lib/locationsApi";
 import { MapPin, Plus, Trash2, Check, X, Pencil, Star } from "lucide-react";
 
 const inputCls =
-  "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/60";
+  "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-lime-500/60";
 
 const btnPrimary =
-  "px-4 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold disabled:opacity-60 inline-flex items-center gap-2";
+  "px-4 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white font-semibold disabled:opacity-60 inline-flex items-center gap-2";
 
 const btnGhost =
   "px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 hover:border-slate-600 inline-flex items-center gap-2";
@@ -119,7 +119,7 @@ export default function CityAreaManagement() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <MapPin className="h-6 w-6 text-orange-400" />
+            <MapPin className="h-6 w-6 text-lime-400" />
             Cities & Areas
           </h1>
           <p className="text-sm text-slate-400 mt-1">
@@ -212,12 +212,12 @@ export default function CityAreaManagement() {
                       }
                       className={`p-2 rounded-lg border transition ${
                         c.isDefault
-                          ? "bg-amber-500/15 border-amber-400 text-amber-500"
-                          : "bg-slate-800 border-slate-700 text-slate-500 hover:text-amber-400"
+                          ? "bg-green-500/15 border-green-400 text-green-500"
+                          : "bg-slate-800 border-slate-700 text-slate-500 hover:text-green-400"
                       }`}
                     >
                       <Star
-                        className={`h-4 w-4 ${c.isDefault ? "fill-amber-400" : ""}`}
+                        className={`h-4 w-4 ${c.isDefault ? "fill-green-400" : ""}`}
                       />
                     </button>
                     <label className="flex items-center gap-2 text-xs text-slate-300">
@@ -225,7 +225,7 @@ export default function CityAreaManagement() {
                         type="checkbox"
                         checked={c.isActive}
                         onChange={(e) => onSaveCity(c.id, c.name, e.target.checked)}
-                        className="h-4 w-4 accent-orange-500"
+                        className="h-4 w-4 accent-lime-500"
                       />
                       Active
                     </label>
@@ -253,7 +253,7 @@ export default function CityAreaManagement() {
                         <button
                           type="button"
                           onClick={() => setEditingCity({ id: c.id, name: c.name })}
-                          className="p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-orange-300"
+                          className="p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-lime-300"
                           title="Rename"
                         >
                           <Pencil className="h-4 w-4" />
@@ -323,7 +323,7 @@ export default function CityAreaManagement() {
                             type="checkbox"
                             checked={a.isActive}
                             onChange={(e) => onSaveArea(a.id, undefined, e.target.checked)}
-                            className="h-4 w-4 accent-orange-500"
+                            className="h-4 w-4 accent-lime-500"
                           />
                           Active
                         </label>
@@ -349,7 +349,7 @@ export default function CityAreaManagement() {
                             <button
                               type="button"
                               onClick={() => setEditingArea({ id: a.id, name: a.name })}
-                              className="p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-orange-300"
+                              className="p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-lime-300"
                             >
                               <Pencil className="h-4 w-4" />
                             </button>
