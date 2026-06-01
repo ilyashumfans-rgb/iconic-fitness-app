@@ -120,7 +120,7 @@ export default function AdminBlogManagement() {
           <BookOpen className="h-4 w-4" />
           {rows.length} {rows.length === 1 ? "post" : "posts"}
         </div>
-        <Button onClick={openCreate} className="bg-lime-600 hover:bg-lime-700">
+        <Button onClick={openCreate}>
           <Plus className="h-4 w-4 mr-1.5" /> New post
         </Button>
       </div>
@@ -331,7 +331,6 @@ export default function AdminBlogManagement() {
               <Button
                 onClick={save}
                 disabled={saving || !form.title.trim()}
-                className="bg-lime-600 hover:bg-lime-700"
               >
                 {saving && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
                 {editing ? "Save changes" : "Create post"}

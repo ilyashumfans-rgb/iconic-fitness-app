@@ -1156,7 +1156,7 @@ function CTA() {
   return (
     <section className="py-24 md:py-32 relative">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-brand p-10 md:p-20 text-center">
+        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-brand-deep p-10 md:p-20 text-center">
           <div className="absolute -top-32 -left-32 h-80 w-80 rounded-full bg-white/15 blur-3xl" />
           <div className="absolute -bottom-32 -right-32 h-80 w-80 rounded-full bg-black/30 blur-3xl" />
           <div className="relative max-w-3xl mx-auto">
@@ -1174,7 +1174,7 @@ function CTA() {
               <Link href="/memberships">
                 <Button
                   size="lg"
-                  className="bg-white text-black hover:bg-white/90 h-14 px-8 text-base font-black tracking-wide w-full sm:w-auto"
+                  className="!bg-none bg-white text-black hover:bg-white/90 h-14 px-8 text-base font-black tracking-wide w-full sm:w-auto"
                 >
                   Claim your pass <ArrowRight className="h-5 w-5 ml-2" />
                 </Button>

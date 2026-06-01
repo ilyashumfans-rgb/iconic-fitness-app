@@ -223,7 +223,7 @@ export default function Memberships() {
                       {isCurrent ? (
                         <Button
                           size="sm"
-                          className="w-full h-10 text-xs font-black tracking-[0.12em] border-none bg-slate-900 hover:bg-slate-800 text-white"
+                          className="w-full h-10 text-xs font-black tracking-[0.12em] border-none !bg-none bg-slate-900 hover:bg-slate-800 text-white"
                           disabled
                         >
                           CURRENT PLAN

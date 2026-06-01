@@ -1,0 +1,1 @@
+- [Button gradient vs bg overrides](button-gradient-bg.md) — default Button variant is a bg-gradient-brand image; flat-color overrides need `!bg-none` to win.
