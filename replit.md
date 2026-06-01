@@ -42,7 +42,7 @@ Unified support tickets across all roles. Members raise/view tickets on `/suppor
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- **Pushing data to production:** dev and prod are separate databases. To get dev catalog data (gyms, partners, etc.) onto the live site, use the admin Dashboard "Import workspace data" button — this is the standard workflow. Each time the user wants new/changed dev data live, the agent must: (1) regenerate `artifacts/api-server/src/lib/seed-snapshot.json` from the current dev DB, (2) redeploy, then (3) user clicks "Import workspace data" on the live admin Dashboard. See `.agents/memory/prod-data-import.md`.
 
 ## Gotchas
 
