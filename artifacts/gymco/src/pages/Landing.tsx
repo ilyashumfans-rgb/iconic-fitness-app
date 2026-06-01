@@ -522,7 +522,7 @@ function CountUp({ value }: { value: string }) {
 }
 
 const liveTicks = [
-  { name: "Aarav", action: "checked into Iron Republic", city: "Indiranagar" },
+  { name: "Aarav", action: "checked into Iconic Fitness", city: "Indiranagar" },
   { name: "Priya", action: "booked Sunrise Yoga", city: "Koramangala" },
   { name: "Kabir", action: "earned a 30-day streak", city: "Bandra West" },
   { name: "Meera", action: "started a HIIT class", city: "HSR Layout" },
@@ -881,7 +881,7 @@ function FeatureBlock() {
                         Sunrise Yoga · 6:30am
                       </div>
                       <div className="text-[10px] opacity-80 mt-0.5">
-                        Iron Republic, Indiranagar
+                        Iconic Fitness, Indiranagar
                       </div>
                       <div className="mt-2 inline-flex items-center gap-1 text-[9px] font-black bg-white/20 px-2 py-0.5 rounded-full">
                         Booked
