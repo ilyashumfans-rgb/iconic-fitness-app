@@ -235,6 +235,7 @@ function EditGymModal({
   const [about, setAbout] = useState(gym.about);
   const [hours, setHours] = useState(gym.hours);
   const [heroImage, setHeroImage] = useState(gym.heroImage);
+  const [videoUrl, setVideoUrl] = useState(gym.videoUrl ?? "");
   const [logoUrl, setLogoUrl] = useState(gym.logoUrl ?? "");
   const [galleryText, setGalleryText] = useState(
     (gym.gallery ?? []).join("\n"),
@@ -483,6 +484,7 @@ function EditGymModal({
         about,
         hours,
         heroImage,
+        videoUrl: videoUrl.trim() === "" ? null : videoUrl.trim(),
         logoUrl,
         gallery,
         openNow,
@@ -658,6 +660,21 @@ function EditGymModal({
                     onUploaded={(urls) => urls[0] && setHeroImage(urls[0])}
                   />
                 </div>
+              </div>
+              <div className="sm:col-span-2">
+                <label className="text-xs uppercase tracking-wide text-slate-400 font-medium mb-1.5 block">
+                  Video URL (optional)
+                </label>
+                <input
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  placeholder="YouTube, Vimeo, or .mp4 link — shown in the gallery"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
+                />
+                <p className="mt-1.5 text-[11px] text-slate-500">
+                  When set, the gym page plays this video instead of the photo
+                  slideshow. Leave blank to auto-slide your gallery photos.
+                </p>
               </div>
               <div className="sm:col-span-2">
                 <div className="flex items-center justify-between mb-1.5">

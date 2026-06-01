@@ -817,6 +817,12 @@ router.patch(
     for (const k of ["categories", "amenities", "gallery"]) {
       if (Array.isArray(b[k])) patch[k] = b[k] as string[];
     }
+    if (b.videoUrl !== undefined) {
+      patch.videoUrl =
+        b.videoUrl === null || b.videoUrl === ""
+          ? null
+          : String(b.videoUrl);
+    }
     // Atomic authz: only succeeds if the gym still belongs to this partner.
     const [updated] = await db
       .update(gymsTable)

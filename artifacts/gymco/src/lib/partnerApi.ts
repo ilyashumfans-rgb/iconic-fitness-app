@@ -59,6 +59,7 @@ export type PartnerGym = {
   area: string;
   address: string;
   heroImage: string;
+  videoUrl?: string | null;
   rating: number;
   reviewsCount: number;
   priceFrom: number;
