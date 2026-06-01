@@ -395,4 +395,9 @@ export const adminApi = {
         admins: { id: number; name: string; email: string }[];
       }>("/admin/tickets/assignees"),
   },
+  reseedFromSnapshot: () =>
+    request<{ ok: true; inserted: Record<string, number> }>(
+      "/admin/reseed-from-snapshot",
+      { method: "POST" },
+    ),
 };

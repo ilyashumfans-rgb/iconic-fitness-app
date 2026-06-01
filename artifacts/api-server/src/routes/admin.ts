@@ -28,6 +28,7 @@ import {
   verifyPassword,
 } from "../lib/adminAuth";
 import { STAFF_PERMISSIONS } from "../lib/staffAuth";
+import { forceReseedFromSnapshot } from "../lib/seedFromSnapshot";
 
 const loadAdminRole = async (id: number): Promise<string | undefined> => {
   const [row] = await db
@@ -1765,6 +1766,25 @@ router.delete(
     const id = Number(req.params.id);
     await db.delete(staffTable).where(eq(staffTable.id, id));
     res.json({ ok: true });
+  },
+);
+
+// Destructive: wipes the catalog (gyms, partners, areas, images, bookings,
+// memberships, etc.) and reloads it from the bundled dev snapshot. Used to
+// mirror dev data onto a fresh production database. Super-admin only.
+router.post(
+  "/admin/reseed-from-snapshot",
+  requireAdmin,
+  superAdminGuard,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const inserted = await forceReseedFromSnapshot();
+      req.log.info({ inserted }, "Admin triggered catalog reseed");
+      res.json({ ok: true, inserted });
+    } catch (err) {
+      req.log.error({ err }, "Catalog reseed failed");
+      res.status(500).json({ error: "Reseed failed" });
+    }
   },
 );
 

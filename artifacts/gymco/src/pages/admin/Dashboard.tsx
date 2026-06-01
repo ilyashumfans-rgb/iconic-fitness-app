@@ -88,6 +88,8 @@ const PIE_COLORS = ["#65a30d", "#84cc16", "#f59e0b", "#fbbf24", "#bef264"];
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [reseeding, setReseeding] = useState(false);
+  const [reseedMsg, setReseedMsg] = useState<string | null>(null);
 
   useEffect(() => {
     adminApi
@@ -96,6 +98,34 @@ export default function AdminDashboard() {
       .catch((e) => setErr(e instanceof Error ? e.message : "Failed"));
   }, []);
 
+  const handleReseed = async () => {
+    if (
+      !window.confirm(
+        "This will ERASE all current gyms, partners, bookings and memberships, then reload the catalog from the workspace (dev) data. This cannot be undone. Continue?",
+      )
+    )
+      return;
+    setReseeding(true);
+    setReseedMsg(null);
+    try {
+      const res = await adminApi.reseedFromSnapshot();
+      const total = Object.values(res.inserted ?? {}).reduce(
+        (a, b) => a + b,
+        0,
+      );
+      setReseedMsg(
+        `Imported ${res.inserted?.gyms ?? 0} gyms (${total} rows total). Reloading…`,
+      );
+      adminApi.stats().then(setStats).catch(() => {});
+    } catch (e) {
+      setReseedMsg(
+        `Import failed: ${e instanceof Error ? e.message : "unknown error"}`,
+      );
+    } finally {
+      setReseeding(false);
+    }
+  };
+
   return (
     <AdminLayout title="Dashboard">
       {err && (
@@ -103,6 +133,31 @@ export default function AdminDashboard() {
           {err}
         </div>
       )}
+
+      <AdminCard className="mb-5 p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <div className="text-sm font-semibold text-white">
+              Import workspace data
+            </div>
+            <div className="text-xs text-slate-400 mt-1 max-w-xl">
+              Replaces the live catalog (gyms, partners, areas, images) with the
+              data from your workspace. Use this once to publish your gyms to the
+              live site. Existing live gyms and test bookings will be wiped.
+            </div>
+            {reseedMsg && (
+              <div className="text-xs text-lime-400 mt-2">{reseedMsg}</div>
+            )}
+          </div>
+          <button
+            onClick={handleReseed}
+            disabled={reseeding}
+            className="shrink-0 inline-flex items-center justify-center gap-2 rounded-lg bg-lime-500 hover:bg-lime-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-900 font-semibold text-sm px-4 py-2"
+          >
+            {reseeding ? "Importing…" : "Import workspace data"}
+          </button>
+        </div>
+      </AdminCard>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {STAT_DEFS.map((s) => {
