@@ -10,32 +10,20 @@ type Props = {
 };
 
 async function uploadOne(file: File): Promise<string> {
-  const reqRes = await fetch("/api/storage/uploads/request-url", {
+  const res = await fetch("/api/storage/uploads/inline", {
     method: "POST",
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      name: file.name,
-      size: file.size,
-      contentType: file.type || "application/octet-stream",
-    }),
-  });
-  if (!reqRes.ok) {
-    throw new Error(`Failed to get upload URL (${reqRes.status})`);
-  }
-  const { uploadURL, objectPath } = (await reqRes.json()) as {
-    uploadURL: string;
-    objectPath: string;
-  };
-  const putRes = await fetch(uploadURL, {
-    method: "PUT",
-    headers: { "Content-Type": file.type || "application/octet-stream" },
+    headers: {
+      "Content-Type": file.type || "application/octet-stream",
+      "X-Filename": encodeURIComponent(file.name),
+    },
     body: file,
   });
-  if (!putRes.ok) {
-    throw new Error(`Upload failed (${putRes.status})`);
+  if (!res.ok) {
+    throw new Error(`Upload failed (${res.status})`);
   }
-  return `/api/storage${objectPath}`;
+  const { url } = (await res.json()) as { url: string };
+  return url;
 }
 
 export default function FileUpload({

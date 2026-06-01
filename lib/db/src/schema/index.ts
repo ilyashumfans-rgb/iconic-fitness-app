@@ -565,3 +565,14 @@ export const ticketCommentsTable = pgTable("ticket_comments", {
     .notNull()
     .defaultNow(),
 });
+
+export const uploadedImagesTable = pgTable("uploaded_images", {
+  id: text("id").primaryKey(),
+  fileName: text("file_name").notNull(),
+  mimeType: text("mime_type").notNull(),
+  sizeBytes: integer("size_bytes").notNull(),
+  dataBase64: text("data_base64").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
