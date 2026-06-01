@@ -6,6 +6,7 @@ import {
   PermissionGate,
 } from "@/components/staff/StaffLayout";
 import { staffApi } from "@/lib/staffApi";
+import { locationsApi, type City } from "@/lib/locationsApi";
 
 type Amenity = {
   id: number;
@@ -35,6 +36,7 @@ function Form() {
   const [ok, setOk] = useState(false);
   const [amenities, setAmenities] = useState<Amenity[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [cities, setCities] = useState<City[]>([]);
 
   useEffect(() => {
     staffApi
@@ -42,6 +44,20 @@ function Form() {
       .then((list) => {
         const active = (list as Amenity[]).filter((a) => a.isActive);
         setAmenities(active);
+      })
+      .catch(() => {});
+    locationsApi
+      .listCities()
+      .then((list) => {
+        const active = list.filter((c) => c.isActive);
+        setCities(active);
+        setForm((prev) => {
+          if (prev.city && active.some((c) => c.name === prev.city)) {
+            return prev;
+          }
+          const def = active.find((c) => c.isDefault) ?? active[0];
+          return { ...prev, city: def ? def.name : "" };
+        });
       })
       .catch(() => {});
   }, []);
@@ -127,13 +143,27 @@ function Form() {
               <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5">
                 City
               </label>
-              <input
+              <select
                 required
                 className={inputCls}
                 value={form.city}
                 onChange={(e) => setForm({ ...form, city: e.target.value })}
-                placeholder="Bengaluru"
-              />
+              >
+                <option value="" disabled>
+                  Select a city
+                </option>
+                {cities.map((c) => (
+                  <option key={c.id} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              {cities.length === 0 && (
+                <p className="text-xs text-amber-500 mt-1.5">
+                  No cities available yet. Ask an admin to add one under
+                  Locations first.
+                </p>
+              )}
             </div>
             <div className="sm:col-span-2">
               <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5">

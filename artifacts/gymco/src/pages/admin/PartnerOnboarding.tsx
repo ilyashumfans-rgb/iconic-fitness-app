@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useLocation } from "wouter";
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
 import { adminApi } from "@/lib/adminApi";
+import { locationsApi, type City } from "@/lib/locationsApi";
 import * as LucideIcons from "lucide-react";
 import { Dot, Sparkles, Building2, ArrowRight } from "lucide-react";
 
@@ -77,6 +78,7 @@ export default function AdminPartnerOnboarding() {
   const [amenities, setAmenities] = useState<Amenity[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [partners, setPartners] = useState<ExistingPartner[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
 
   useEffect(() => {
     adminApi.amenities
@@ -92,6 +94,20 @@ export default function AdminPartnerOnboarding() {
     adminApi.partners
       .list()
       .then((list) => setPartners(list as ExistingPartner[]))
+      .catch(() => {});
+    locationsApi
+      .listCities()
+      .then((list) => {
+        const active = list.filter((c) => c.isActive);
+        setCities(active);
+        setForm((prev) => {
+          if (prev.city && active.some((c) => c.name === prev.city)) {
+            return prev;
+          }
+          const def = active.find((c) => c.isDefault) ?? active[0];
+          return { ...prev, city: def ? def.name : "" };
+        });
+      })
       .catch(() => {});
   }, []);
 
@@ -210,13 +226,26 @@ export default function AdminPartnerOnboarding() {
               <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
                 City
               </label>
-              <input
+              <select
                 required
                 className={inputCls}
                 value={form.city}
                 onChange={(e) => setForm({ ...form, city: e.target.value })}
-                placeholder="Bengaluru"
-              />
+              >
+                <option value="" disabled>
+                  Select a city
+                </option>
+                {cities.map((c) => (
+                  <option key={c.id} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              {cities.length === 0 && (
+                <p className="text-xs text-amber-400 mt-1.5">
+                  No cities available yet. Add one under Locations first.
+                </p>
+              )}
             </div>
             <div className="sm:col-span-2">
               <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
