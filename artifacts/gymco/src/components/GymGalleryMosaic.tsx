@@ -54,6 +54,12 @@ function buildVideoEmbed(url: string | null | undefined): VideoEmbed | null {
   return null;
 }
 
+const heroSlideVariants = {
+  enter: (d: number) => ({ x: d >= 0 ? "100%" : "-100%", opacity: 0 }),
+  center: { x: "0%", opacity: 1 },
+  exit: (d: number) => ({ x: d >= 0 ? "-100%" : "100%", opacity: 0 }),
+};
+
 export function GymGalleryMosaic({
   images,
   gymName,
@@ -63,6 +69,7 @@ export function GymGalleryMosaic({
   const [index, setIndex] = useState(0);
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroPaused, setHeroPaused] = useState(false);
+  const [dir, setDir] = useState(1);
   const count = images.length;
 
   const embed = buildVideoEmbed(videoUrl);
@@ -72,17 +79,34 @@ export function GymGalleryMosaic({
   // Map a hero slide index to the underlying gallery image index (or -1 for video)
   const imageIndexForSlide = (slide: number) => (hasVideo ? slide - 1 : slide);
 
-  // Auto-advance the big hero slide. The video slide dwells longer so it can
-  // play; image slides rotate quickly. Pauses on hover and while the lightbox
-  // is open.
+  const advanceSlide = useCallback(
+    (delta: number) => {
+      if (slideCount < 1) return;
+      setDir(delta >= 0 ? 1 : -1);
+      setHeroIndex((i) => (i + delta + slideCount) % slideCount);
+    },
+    [slideCount],
+  );
+
+  // Auto-advance the big hero slide. Image slides rotate quickly. A playable
+  // file video advances precisely when it finishes (see onEnded) so we only
+  // keep a long safety fallback for it; embedded (iframe) videos can't report
+  // completion, so they dwell a fixed window. Pauses on hover / lightbox open.
   useEffect(() => {
     if (slideCount < 2 || open || heroPaused) return undefined;
-    const delay = isVideoSlide ? 9000 : 3500;
-    const id = window.setTimeout(() => {
-      setHeroIndex((i) => (i + 1) % slideCount);
-    }, delay);
+    const isFileVideo = isVideoSlide && embed?.kind === "file";
+    const delay = isFileVideo ? 60000 : isVideoSlide ? 9000 : 3500;
+    const id = window.setTimeout(() => advanceSlide(1), delay);
     return () => window.clearTimeout(id);
-  }, [slideCount, open, heroPaused, isVideoSlide, heroIndex]);
+  }, [
+    slideCount,
+    open,
+    heroPaused,
+    isVideoSlide,
+    embed,
+    heroIndex,
+    advanceSlide,
+  ]);
 
   const triggerRef = useRef<HTMLElement | null>(null);
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -146,9 +170,8 @@ export function GymGalleryMosaic({
   const activeImageIndex = imageIndexForSlide(heroIndex);
   const activeHero = images[activeImageIndex] ?? hero;
 
-  const goPrevSlide = () =>
-    setHeroIndex((i) => (i - 1 + slideCount) % slideCount);
-  const goNextSlide = () => setHeroIndex((i) => (i + 1) % slideCount);
+  const goPrevSlide = () => advanceSlide(-1);
+  const goNextSlide = () => advanceSlide(1);
 
   return (
     <div>
@@ -159,14 +182,16 @@ export function GymGalleryMosaic({
           onMouseLeave={() => setHeroPaused(false)}
           className="relative group overflow-hidden md:col-span-2 rounded-2xl md:rounded-none bg-black"
         >
-          <AnimatePresence initial={false} mode="sync">
+          <AnimatePresence initial={false} mode="sync" custom={dir}>
             {isVideoSlide ? (
               <motion.div
                 key="hero-video"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
+                custom={dir}
+                variants={heroSlideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
                 className="absolute inset-0 w-full h-full bg-black"
               >
                 {embed!.kind === "file" ? (
@@ -174,9 +199,9 @@ export function GymGalleryMosaic({
                     src={embed!.src}
                     autoPlay
                     muted
-                    loop
                     playsInline
                     controls
+                    onEnded={goNextSlide}
                     className="absolute inset-0 w-full h-full object-cover"
                   />
                 ) : (
@@ -195,10 +220,12 @@ export function GymGalleryMosaic({
                 type="button"
                 onClick={(e) => openAt(activeImageIndex, e)}
                 aria-label={`Open gallery — ${gymName} photo ${activeImageIndex + 1}`}
-                initial={{ opacity: 0, scale: 1.04 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1 }}
-                transition={{ duration: 0.9, ease: "easeOut" }}
+                custom={dir}
+                variants={heroSlideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
                 className="absolute inset-0 w-full h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <img
