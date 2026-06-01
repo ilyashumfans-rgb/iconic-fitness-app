@@ -175,18 +175,15 @@ function TopNav() {
           <Link href="/explore" className="hover:text-foreground transition-colors">
             Browse Gyms
           </Link>
+          <Link href="/be-a-member" className="hover:text-foreground transition-colors">
+            Be a Member
+          </Link>
           <Link href="/store" className="hover:text-foreground transition-colors">
             Store
           </Link>
           <Link href="/memberships" className="hover:text-foreground transition-colors">
             Pricing
           </Link>
-          <Link href="/blog" className="hover:text-foreground transition-colors">
-            Blog
-          </Link>
-          <a href="#how" className="hover:text-foreground transition-colors">
-            How it works
-          </a>
         </nav>
         <div className="flex items-center gap-2">
           <ThemeToggle />
@@ -1170,7 +1167,7 @@ function CTA() {
               Your next workout is one tap away.
             </h2>
             <p className="text-white/85 text-lg md:text-xl mb-10">
-              Join 40,000+ members training across India's best gyms. First
+              Join 2,000+ members training across Bangalore's best gyms. First
               month, 50% off.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">

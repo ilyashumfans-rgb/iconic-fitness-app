@@ -13,7 +13,6 @@ function PublicNav() {
     { href: "/be-a-member", label: "Be a Member" },
     { href: "/store", label: "Store" },
     { href: "/memberships", label: "Pricing" },
-    { href: "/blog", label: "Blog" },
   ];
 
   let isSignedIn = false;

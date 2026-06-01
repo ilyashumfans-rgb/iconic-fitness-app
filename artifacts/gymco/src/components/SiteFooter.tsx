@@ -35,6 +35,7 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
       { label: "Careers", href: "/careers" },
       { label: "Become a trainer", href: "/become-a-trainer" },
       { label: "Blog", href: "/blog" },
+      { label: "How it works", href: "/#how" },
     ],
   },
   {
@@ -200,7 +201,7 @@ export function SiteFooter() {
               <ul className="space-y-2.5">
                 {col.links.map((l) => (
                   <li key={l.label}>
-                    {l.href.startsWith("/") ? (
+                    {l.href.startsWith("/") && !l.href.includes("#") ? (
                       <Link
                         href={l.href}
                         className="text-sm text-muted-foreground hover:text-primary transition-colors"
