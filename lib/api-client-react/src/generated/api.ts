@@ -20,6 +20,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AiChatInput,
+  AiChatOutput,
   Booking,
   BookingInput,
   CategoryCount,
@@ -52,6 +54,77 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
+
+export const getAiChatUrl = () => {
+
+
+
+
+  return `/api/ai/chat`
+}
+
+/**
+ * @summary Chat with the Iconic Fitness AI assistant
+ */
+export const aiChat = async (aiChatInput: AiChatInput, options?: RequestInit): Promise<AiChatOutput> => {
+
+  return customFetch<AiChatOutput>(getAiChatUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      aiChatInput,)
+  }
+);}
+
+
+
+
+export const getAiChatMutationOptions = <TError = ErrorType<AiChatOutput>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiChat>>, TError,{data: BodyType<AiChatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof aiChat>>, TError,{data: BodyType<AiChatInput>}, TContext> => {
+
+const mutationKey = ['aiChat'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof aiChat>>, {data: BodyType<AiChatInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  aiChat(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AiChatMutationResult = NonNullable<Awaited<ReturnType<typeof aiChat>>>
+    export type AiChatMutationBody = BodyType<AiChatInput>
+    export type AiChatMutationError = ErrorType<AiChatOutput>
+
+    /**
+ * @summary Chat with the Iconic Fitness AI assistant
+ */
+export const useAiChat = <TError = ErrorType<AiChatOutput>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiChat>>, TError,{data: BodyType<AiChatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof aiChat>>,
+        TError,
+        {data: BodyType<AiChatInput>},
+        TContext
+      > => {
+      return useMutation(getAiChatMutationOptions(options));
+    }
 
 export const getHealthCheckUrl = () => {
 

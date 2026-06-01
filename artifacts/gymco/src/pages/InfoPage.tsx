@@ -236,31 +236,35 @@ const CONTENT: Record<string, InfoContent> = {
     showFaq: [
       {
         q: "What is Iconic Fitness?",
-        a: "One membership that unlocks 120+ premium gyms, studios and trainers across Bangalore.",
+        a: "Iconic Fitness is one of Bengaluru's leading fitness chains offering top-class gym facilities, personal training, group classes, and diet consultations. Our goal is to help you transform your fitness journey safely and effectively.",
       },
       {
-        q: "How is this different from joining a single gym?",
-        a: "You're not locked in. Train at any partner facility, switch styles weekly, no long contracts.",
+        q: "Where are your branches located?",
+        a: "We have multiple branches across Bengaluru: Koramangala (1st, ST Bed, 5th, 7th Block), BTM Layout & Thavarekere, Maruti Nagar, HSR Layout (Sector 2 & 7), Indiranagar 80 Feet Road, JP Nagar (7th Phase & Puttanahalli), Bellandur (Green Glan Layout & next to Centro Mall), Marathahalli, Brookfield, and Whitefield – Seegehalli. All memberships provide access to every Iconic Fitness location.",
       },
       {
-        q: "Which cities are live?",
-        a: "We're currently live in Bangalore with deep coverage in Indiranagar, Koramangala, HSR, Whitefield, JP Nagar and more.",
+        q: "What are your operating hours?",
+        a: "5:00 AM to 11:00 PM (some branches open till 12:00 AM). We're open all 7 days, 365 days a year.",
       },
       {
-        q: "Can I cancel anytime?",
-        a: "Yes. Monthly plans cancel anytime from Profile → Membership. Annual plans are pro-rated.",
+        q: "What membership plans do you offer?",
+        a: "1 Month – ₹3,540 (incl. taxes), 3 Months – ₹7,260 (incl. taxes), 6 Months – ₹8,999 (incl. taxes), 12 Months – ₹17,999 (incl. taxes). Limited-time offer: 15 months for ₹9,999 + taxes (limited slots only).",
       },
       {
-        q: "Do classes cost extra?",
-        a: "All plans include a monthly class quota. Additional classes are pay-per-use at member rates.",
+        q: "What's included in the membership?",
+        a: "Unlimited gym access, group classes (Zumba, HIIT, Yoga, Aerobics and more), locker & shower facilities, access to all branches, and a free diet consultation with our in-house dietician.",
       },
       {
-        q: "What about hygiene?",
-        a: "Every partner is verified for cleanliness and equipment quality before they go live.",
+        q: "Are personal trainers available?",
+        a: "Yes. Certified personal trainers are available at all branches. Personal training sessions are charged separately.",
       },
       {
-        q: "Is there a mobile app?",
-        a: "Yes — Iconic Fitness is available on iOS and Android. Web works too.",
+        q: "What are your group class timings?",
+        a: "Morning: 7:00 AM – 8:00 AM and Evening: 7:00 PM – 8:00 PM, Monday to Saturday. Beginner-friendly classes with trial sessions available.",
+      },
+      {
+        q: "Do you have a dietician?",
+        a: "Yes, we have an in-house dietician who provides customized meal plans for weight loss, muscle gain, and fitness goals.",
       },
     ],
   },

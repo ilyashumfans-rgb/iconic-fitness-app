@@ -17,7 +17,30 @@ tags:
   - name: trainers
   - name: wallet
   - name: dashboard
+  - name: ai
+    description: Iconic Fitness AI assistant
 paths:
+  /ai/chat:
+    post:
+      operationId: aiChat
+      tags: [ai]
+      summary: Chat with the Iconic Fitness AI assistant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AiChatInput" }
+      responses:
+        "200":
+          description: Assistant reply
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AiChatOutput" }
+        "503":
+          description: AI assistant not configured
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AiChatOutput" }
   /healthz:
     get:
       operationId: healthCheck
@@ -338,6 +361,24 @@ paths:
 
 components:
   schemas:
+    AiChatMessage:
+      type: object
+      required: [role, content]
+      properties:
+        role: { type: string, enum: ["user", "assistant"] }
+        content: { type: string }
+    AiChatInput:
+      type: object
+      required: [messages]
+      properties:
+        messages:
+          type: array
+          items: { $ref: "#/components/schemas/AiChatMessage" }
+    AiChatOutput:
+      type: object
+      required: [reply]
+      properties:
+        reply: { type: string }
     HealthStatus:
       type: object
       required: [status]

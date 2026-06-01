@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './aiChatInput';
+export * from './aiChatMessage';
+export * from './aiChatMessageRole';
+export * from './aiChatOutput';
 export * from './booking';
 export * from './bookingInput';
 export * from './bookingStatus';

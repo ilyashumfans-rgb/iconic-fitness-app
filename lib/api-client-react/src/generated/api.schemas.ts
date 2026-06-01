@@ -5,6 +5,27 @@
  * GYMCO customer API — multi-gym memberships, classes, bookings, check-ins, and fitness tracking.
  * OpenAPI spec version: 0.1.0
  */
+export type AiChatMessageRole = typeof AiChatMessageRole[keyof typeof AiChatMessageRole];
+
+
+export const AiChatMessageRole = {
+  user: 'user',
+  assistant: 'assistant',
+} as const;
+
+export interface AiChatMessage {
+  role: AiChatMessageRole;
+  content: string;
+}
+
+export interface AiChatInput {
+  messages: AiChatMessage[];
+}
+
+export interface AiChatOutput {
+  reply: string;
+}
+
 export interface HealthStatus {
   status: string;
 }

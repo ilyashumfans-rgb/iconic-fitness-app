@@ -18,6 +18,7 @@ import leadsRouter from "./leads";
 import blogsRouter from "./blogs";
 import notificationsRouter from "./notifications";
 import ticketsRouter from "./tickets";
+import aiRouter from "./ai";
 
 const router: IRouter = Router();
 
@@ -40,5 +41,6 @@ router.use(leadsRouter);
 router.use(blogsRouter);
 router.use(notificationsRouter);
 router.use(ticketsRouter);
+router.use(aiRouter);
 
 export default router;

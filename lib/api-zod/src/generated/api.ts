@@ -9,6 +9,21 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary Chat with the Iconic Fitness AI assistant
+ */
+export const AiChatBody = zod.object({
+  "messages": zod.array(zod.object({
+  "role": zod.enum(['user', 'assistant']),
+  "content": zod.string()
+}))
+})
+
+export const AiChatResponse = zod.object({
+  "reply": zod.string()
+})
+
+
+/**
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({

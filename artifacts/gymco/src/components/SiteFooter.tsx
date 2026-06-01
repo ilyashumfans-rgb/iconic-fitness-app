@@ -4,10 +4,8 @@ import { Input } from "@/components/ui/input";
 import { BrandLogo } from "@/components/BrandLogo";
 import {
   Instagram,
-  Twitter,
   Facebook,
   Youtube,
-  Linkedin,
   Mail,
   MapPin,
   Phone,
@@ -15,6 +13,8 @@ import {
   Apple,
   Smartphone,
 } from "lucide-react";
+import { WhatsAppButton, WhatsAppIcon } from "@/components/WhatsAppButton";
+import { AiChatWidget } from "@/components/AiChatWidget";
 
 
 const columns: { title: string; links: { label: string; href: string }[] }[] = [
@@ -61,7 +61,6 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
     title: "Sign in",
     links: [
       { label: "Admin Login", href: "/admin/login" },
-      { label: "Partner Login", href: "/partner/login" },
       { label: "Vendor Login", href: "/vendor/login" },
       { label: "Staff Login", href: "/staff/login" },
     ],
@@ -69,15 +68,31 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
 ];
 
 const socials = [
-  { Icon: Instagram, label: "Instagram", href: "#" },
-  { Icon: Twitter, label: "Twitter", href: "#" },
-  { Icon: Facebook, label: "Facebook", href: "#" },
-  { Icon: Youtube, label: "YouTube", href: "#" },
-  { Icon: Linkedin, label: "LinkedIn", href: "#" },
+  {
+    Icon: Instagram,
+    label: "Instagram",
+    href: "https://www.instagram.com/iconicfitness_official/",
+  },
+  {
+    Icon: Facebook,
+    label: "Facebook",
+    href: "https://www.facebook.com/iconicfitnessindiaofficial",
+  },
+  {
+    Icon: Youtube,
+    label: "YouTube",
+    href: "https://www.youtube.com/c/IconicFitnessIndia",
+  },
+  {
+    Icon: WhatsAppIcon,
+    label: "WhatsApp",
+    href: "https://wa.me/919480000248",
+  },
 ];
 
 export function SiteFooter() {
   return (
+    <>
     <footer className="relative mt-24 border-t border-border bg-gradient-to-b from-background to-secondary/40">
       {/* Newsletter CTA strip */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-16 pb-12">
@@ -249,6 +264,8 @@ export function SiteFooter() {
               <a
                 key={label}
                 href={href}
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label={label}
                 className="h-9 w-9 rounded-full border border-border bg-card flex items-center justify-center text-muted-foreground hover:text-white hover:bg-gradient-brand hover:border-transparent transition-all"
               >
@@ -259,5 +276,8 @@ export function SiteFooter() {
         </div>
       </div>
     </footer>
+    <WhatsAppButton />
+    <AiChatWidget />
+    </>
   );
 }
