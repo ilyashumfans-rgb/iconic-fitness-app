@@ -1,7 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { BrandLogo } from "@/components/BrandLogo";
 import {
   Instagram,
   Facebook,
@@ -147,7 +146,17 @@ export function SiteFooter() {
           {/* Brand column */}
           <div className="col-span-2">
             <div className="mb-5">
-              <BrandLogo tagline />
+              <Link
+                href="/"
+                aria-label="Iconic Fitness — home"
+                className="inline-flex items-center justify-center rounded-2xl bg-neutral-900 p-5"
+              >
+                <img
+                  src={`${import.meta.env.BASE_URL}media/iconic-fitness-logo-transparent.png`}
+                  alt="Iconic Fitness — The Fitness Company"
+                  className="h-24 w-auto"
+                />
+              </Link>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
               One membership, unlimited gyms across India. Built for people who
