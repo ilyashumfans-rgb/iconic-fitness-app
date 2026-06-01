@@ -74,10 +74,12 @@ export function GymGalleryMosaic({
 
   const embed = buildVideoEmbed(videoUrl);
   const hasVideo = !!embed;
-  const slideCount = count + (hasVideo ? 1 : 0);
-  const isVideoSlide = hasVideo && heroIndex === 0;
-  // Map a hero slide index to the underlying gallery image index (or -1 for video)
-  const imageIndexForSlide = (slide: number) => (hasVideo ? slide - 1 : slide);
+  // When a video is set, the hero is the video ONLY — no image slideshow.
+  // Without a video, the hero auto-slides through the gallery photos.
+  const slideCount = hasVideo ? 1 : count;
+  const isVideoSlide = hasVideo;
+  // Map a hero slide index to the underlying gallery image index.
+  const imageIndexForSlide = (slide: number) => slide;
 
   const advanceSlide = useCallback(
     (delta: number) => {
@@ -88,25 +90,13 @@ export function GymGalleryMosaic({
     [slideCount],
   );
 
-  // Auto-advance the big hero slide. Image slides rotate quickly. A playable
-  // file video advances precisely when it finishes (see onEnded) so we only
-  // keep a long safety fallback for it; embedded (iframe) videos can't report
-  // completion, so they dwell a fixed window. Pauses on hover / lightbox open.
+  // Auto-advance the photo slideshow (photos only — a video hero never rotates).
+  // Pauses on hover and while the lightbox is open.
   useEffect(() => {
-    if (slideCount < 2 || open || heroPaused) return undefined;
-    const isFileVideo = isVideoSlide && embed?.kind === "file";
-    const delay = isFileVideo ? 60000 : isVideoSlide ? 9000 : 3500;
-    const id = window.setTimeout(() => advanceSlide(1), delay);
+    if (hasVideo || slideCount < 2 || open || heroPaused) return undefined;
+    const id = window.setTimeout(() => advanceSlide(1), 3500);
     return () => window.clearTimeout(id);
-  }, [
-    slideCount,
-    open,
-    heroPaused,
-    isVideoSlide,
-    embed,
-    heroIndex,
-    advanceSlide,
-  ]);
+  }, [hasVideo, slideCount, open, heroPaused, heroIndex, advanceSlide]);
 
   const triggerRef = useRef<HTMLElement | null>(null);
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -199,9 +189,9 @@ export function GymGalleryMosaic({
                     src={embed!.src}
                     autoPlay
                     muted
+                    loop
                     playsInline
                     controls
-                    onEnded={goNextSlide}
                     className="absolute inset-0 w-full h-full object-cover"
                   />
                 ) : (
