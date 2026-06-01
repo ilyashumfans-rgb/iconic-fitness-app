@@ -3,12 +3,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Crown, AlertCircle, Sparkles, Flame, Dumbbell } from "lucide-react";
-import { format } from "date-fns";
+import { Check, Crown, Sparkles, Flame, Dumbbell } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Memberships() {
-  const { data: myMembership, isLoading: loadingMyMembership } = useGetMyMembership({ query: { queryKey: getGetMyMembershipQueryKey() } });
+  const { data: myMembership } = useGetMyMembership({ query: { queryKey: getGetMyMembershipQueryKey() } });
   const { data: plans, isLoading: loadingPlans } = useListMemberships({ query: { queryKey: getListMembershipsQueryKey() } });
 
   // Sort plans by price ascending, but force any plan whose name contains "Great Plan" to the end.
@@ -31,51 +30,6 @@ export default function Memberships() {
         </h1>
         <p className="text-muted-foreground mt-2 text-lg">Premium memberships built for the way you train.</p>
       </div>
-
-      {/* Current Membership Panel */}
-      <section>
-        <h2 className="text-xl font-bold mb-4">Your Active Plan</h2>
-        {loadingMyMembership ? (
-          <Skeleton className="h-48 w-full rounded-2xl" />
-        ) : myMembership ? (
-          <Card className="bg-gradient-brand text-primary-foreground border-none shadow-[0_24px_60px_-20px_hsl(96_56%_55%/0.55)] overflow-hidden relative rounded-3xl">
-            <div className="absolute right-0 top-0 w-72 h-72 bg-white/15 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4" />
-            <div className="absolute left-0 bottom-0 w-72 h-72 bg-black/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
-            <CardContent className="p-6 md:p-8 relative z-10">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Crown className="h-5 w-5 opacity-80" />
-                    <span className="text-sm font-bold uppercase tracking-wider opacity-80">Current Plan</span>
-                  </div>
-                  <h3 className="text-4xl font-black mb-1">{myMembership.planName}</h3>
-                  <div className="text-sm font-medium opacity-90 flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-green-900 mr-2" />
-                    Status: {myMembership.status.toUpperCase()} • Renews on {format(new Date(myMembership.renewsOn), "MMM d, yyyy")}
-                  </div>
-                </div>
-
-                <div className="flex gap-4 w-full md:w-auto">
-                  <div className="bg-black/10 rounded-xl p-4 flex-1 text-center backdrop-blur-sm">
-                    <div className="text-3xl font-black">{myMembership.classesUsed}<span className="text-lg opacity-60">/{myMembership.classesIncluded}</span></div>
-                    <div className="text-xs font-bold uppercase tracking-wider opacity-80 mt-1">Classes</div>
-                  </div>
-                  <div className="bg-black/10 rounded-xl p-4 flex-1 text-center backdrop-blur-sm">
-                    <div className="text-3xl font-black">{myMembership.gymsAccessed}</div>
-                    <div className="text-xs font-bold uppercase tracking-wider opacity-80 mt-1">Gyms visited</div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="bg-card border-dashed border-2 border-muted flex flex-col items-center justify-center p-8 text-center">
-            <AlertCircle className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
-            <h3 className="font-bold text-lg">No active membership</h3>
-            <p className="text-muted-foreground mb-4">Choose a plan below to start accessing gyms and classes.</p>
-          </Card>
-        )}
-      </section>
 
       {/* Plans — single row, premium */}
       <section>
