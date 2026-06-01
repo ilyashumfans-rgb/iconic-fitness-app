@@ -31,6 +31,7 @@ function GymForm({
     heroImage:
       initial?.heroImage ??
       "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200",
+    videoUrl: initial?.videoUrl ?? "",
     categories: (initial?.categories ?? ["gym"]).join(", "),
     amenities: (initial?.amenities ?? []).join(", "),
     about: initial?.about ?? "",
@@ -54,6 +55,7 @@ function GymForm({
         payoutPerVisitInr: Number(f.payoutPerVisitInr),
         payoutTaxPct: Number(f.payoutTaxPct),
         ownerPartnerId: f.ownerPartnerId === "" ? null : Number(f.ownerPartnerId),
+        videoUrl: f.videoUrl.trim() === "" ? null : f.videoUrl.trim(),
         categories: String(f.categories)
           .split(",")
           .map((s) => s.trim())
@@ -122,6 +124,17 @@ function GymForm({
         </div>
         <div className="sm:col-span-2">
           <Input label="Hero image URL" value={f.heroImage} onChange={(v) => setF({ ...f, heroImage: v })} />
+        </div>
+        <div className="sm:col-span-2">
+          <Input
+            label="Hero video URL (optional — YouTube, Vimeo or .mp4)"
+            value={f.videoUrl}
+            onChange={(v) => setF({ ...f, videoUrl: v })}
+          />
+          <div className="text-[11px] text-slate-500 mt-1">
+            If set, this video autoplays as the first slide of the gym's photo
+            slider. Leave blank to show only photos.
+          </div>
         </div>
         <div className="sm:col-span-2">
           <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">About</label>

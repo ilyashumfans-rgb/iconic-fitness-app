@@ -1,1 +1,2 @@
 - [Button gradient vs bg overrides](button-gradient-bg.md) — default Button variant is a bg-gradient-brand image; flat-color overrides need `!bg-none` to win.
+- [DB push drift / data-loss guard](db-push-drift.md) — `db run push` is non-interactive + wants to DROP populated `user_sessions`; use additive `ALTER TABLE` SQL for column adds.

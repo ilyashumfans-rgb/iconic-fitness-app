@@ -14,6 +14,8 @@ export interface Gym {
   area: string;
   address: string;
   heroImage: string;
+  /** Optional hero video URL (YouTube, Vimeo, or direct mp4). Shown as first slide with autoplay. */
+  videoUrl?: string | null;
   /** Gym logo image URL (may be empty) */
   logoUrl: string;
   rating: number;

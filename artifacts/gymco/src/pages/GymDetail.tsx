@@ -187,7 +187,11 @@ export default function GymDetail() {
       </nav>
 
       {/* Gallery mosaic at top */}
-      <GymGalleryMosaic images={galleryImages} gymName={gym.name} />
+      <GymGalleryMosaic
+        images={galleryImages}
+        gymName={gym.name}
+        videoUrl={gym.videoUrl ?? null}
+      />
 
       {/* Gym header row — name, badges, location */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">

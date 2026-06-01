@@ -1,34 +1,96 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Images, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Images, Play, X } from "lucide-react";
 
 interface GymGalleryMosaicProps {
   images: string[];
   gymName: string;
+  videoUrl?: string | null;
 }
 
-export function GymGalleryMosaic({ images, gymName }: GymGalleryMosaicProps) {
+type VideoEmbed = { kind: "iframe" | "file"; src: string };
+
+function buildVideoEmbed(url: string | null | undefined): VideoEmbed | null {
+  if (!url) return null;
+  const u = url.trim();
+  if (!u) return null;
+  // Direct video file
+  if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(u)) return { kind: "file", src: u };
+  // YouTube (watch, youtu.be, shorts, embed, /v/)
+  const yt = u.match(
+    /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/|v\/)|youtu\.be\/)([\w-]{11})/,
+  );
+  if (yt) {
+    const id = yt[1];
+    const params = new URLSearchParams({
+      autoplay: "1",
+      mute: "1",
+      loop: "1",
+      playlist: id,
+      controls: "1",
+      modestbranding: "1",
+      rel: "0",
+      playsinline: "1",
+    });
+    return {
+      kind: "iframe",
+      src: `https://www.youtube.com/embed/${id}?${params.toString()}`,
+    };
+  }
+  // Vimeo
+  const vm = u.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (vm) {
+    return {
+      kind: "iframe",
+      src: `https://player.vimeo.com/video/${vm[1]}?autoplay=1&muted=1&loop=1`,
+    };
+  }
+  // Already a known embed/player URL — embed as-is.
+  if (/(?:youtube\.com\/embed\/|youtube-nocookie\.com\/embed\/|player\.vimeo\.com\/)/i.test(u)) {
+    return { kind: "iframe", src: u };
+  }
+  // Unrecognized URL: do not embed (avoids broken/blank hero slide). The
+  // gallery falls back to photo-only behavior.
+  return null;
+}
+
+export function GymGalleryMosaic({
+  images,
+  gymName,
+  videoUrl,
+}: GymGalleryMosaicProps) {
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroPaused, setHeroPaused] = useState(false);
   const count = images.length;
 
-  // Auto-rotate the big hero image when there are 2+ photos
+  const embed = buildVideoEmbed(videoUrl);
+  const hasVideo = !!embed;
+  const slideCount = count + (hasVideo ? 1 : 0);
+  const isVideoSlide = hasVideo && heroIndex === 0;
+  // Map a hero slide index to the underlying gallery image index (or -1 for video)
+  const imageIndexForSlide = (slide: number) => (hasVideo ? slide - 1 : slide);
+
+  // Auto-advance the big hero slide. The video slide dwells longer so it can
+  // play; image slides rotate quickly. Pauses on hover and while the lightbox
+  // is open.
   useEffect(() => {
-    if (count < 2 || open || heroPaused) return undefined;
-    const id = window.setInterval(() => {
-      setHeroIndex((i) => (i + 1) % count);
-    }, 3500);
-    return () => window.clearInterval(id);
-  }, [count, open, heroPaused]);
+    if (slideCount < 2 || open || heroPaused) return undefined;
+    const delay = isVideoSlide ? 9000 : 3500;
+    const id = window.setTimeout(() => {
+      setHeroIndex((i) => (i + 1) % slideCount);
+    }, delay);
+    return () => window.clearTimeout(id);
+  }, [slideCount, open, heroPaused, isVideoSlide, heroIndex]);
 
   const triggerRef = useRef<HTMLElement | null>(null);
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
 
   const openAt = (i: number, e?: React.MouseEvent<HTMLElement>) => {
+    if (count === 0) return;
     if (e) triggerRef.current = e.currentTarget;
-    setIndex(i);
+    setIndex(((i % count) + count) % count);
     setOpen(true);
   };
 
@@ -75,57 +137,96 @@ export function GymGalleryMosaic({ images, gymName }: GymGalleryMosaicProps) {
     return undefined;
   }, [open]);
 
-  if (count === 0) return null;
+  if (count === 0 && !hasVideo) return null;
 
-  const hero = images[0];
+  const hero = images[0] ?? "";
   const sideRaw = images.slice(1, 4);
-  while (sideRaw.length < 3) sideRaw.push(hero);
+  while (count > 0 && sideRaw.length < 3) sideRaw.push(hero);
   const side = sideRaw;
-  const activeHero = images[heroIndex] ?? hero;
+  const activeImageIndex = imageIndexForSlide(heroIndex);
+  const activeHero = images[activeImageIndex] ?? hero;
+
+  const goPrevSlide = () =>
+    setHeroIndex((i) => (i - 1 + slideCount) % slideCount);
+  const goNextSlide = () => setHeroIndex((i) => (i + 1) % slideCount);
 
   return (
     <div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-3 h-[280px] md:h-[460px] rounded-2xl md:rounded-3xl overflow-hidden">
-        {/* Big left image — auto-slides */}
-        <button
-          type="button"
-          onClick={(e) => openAt(heroIndex, e)}
+        {/* Big left slide — video (if set) then auto-rotating photos */}
+        <div
           onMouseEnter={() => setHeroPaused(true)}
           onMouseLeave={() => setHeroPaused(false)}
-          aria-label={`Open gallery — ${gymName} photo ${heroIndex + 1}`}
-          className="relative group overflow-hidden md:col-span-2 rounded-2xl md:rounded-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="relative group overflow-hidden md:col-span-2 rounded-2xl md:rounded-none bg-black"
         >
           <AnimatePresence initial={false} mode="sync">
-            <motion.img
-              key={heroIndex}
-              src={activeHero}
-              alt={`${gymName} photo ${heroIndex + 1}`}
-              initial={{ opacity: 0, scale: 1.04 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1 }}
-              transition={{ duration: 0.9, ease: "easeOut" }}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
+            {isVideoSlide ? (
+              <motion.div
+                key="hero-video"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="absolute inset-0 w-full h-full bg-black"
+              >
+                {embed!.kind === "file" ? (
+                  <video
+                    src={embed!.src}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    controls
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                ) : (
+                  <iframe
+                    src={embed!.src}
+                    title={`${gymName} video`}
+                    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                    allowFullScreen
+                    className="absolute inset-0 w-full h-full border-0"
+                  />
+                )}
+              </motion.div>
+            ) : (
+              <motion.button
+                key={`hero-img-${heroIndex}`}
+                type="button"
+                onClick={(e) => openAt(activeImageIndex, e)}
+                aria-label={`Open gallery — ${gymName} photo ${activeImageIndex + 1}`}
+                initial={{ opacity: 0, scale: 1.04 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1 }}
+                transition={{ duration: 0.9, ease: "easeOut" }}
+                className="absolute inset-0 w-full h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <img
+                  src={activeHero}
+                  alt={`${gymName} photo ${activeImageIndex + 1}`}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-tr from-black/15 via-transparent to-transparent pointer-events-none" />
+              </motion.button>
+            )}
           </AnimatePresence>
-          <div className="absolute inset-0 bg-gradient-to-tr from-black/15 via-transparent to-transparent pointer-events-none" />
 
-          {count > 1 && (
+          {slideCount > 1 && (
             <>
-              <div className="absolute left-3 right-3 bottom-3 flex items-center justify-between gap-3 z-10">
+              <div className="absolute left-3 right-3 bottom-3 flex items-center justify-between gap-3 z-10 pointer-events-none">
                 <div className="flex items-center gap-1.5">
-                  {images.map((_, i) => (
+                  {Array.from({ length: slideCount }).map((_, i) => (
                     <span
                       key={i}
                       className={`h-1.5 rounded-full transition-all duration-300 ${
-                        i === heroIndex
-                          ? "w-6 bg-white"
-                          : "w-1.5 bg-white/50"
+                        i === heroIndex ? "w-6 bg-white" : "w-1.5 bg-white/50"
                       }`}
                     />
                   ))}
                 </div>
-                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-white/90 bg-black/30 backdrop-blur-sm px-2.5 py-1 rounded-full">
-                  {heroIndex + 1} / {count}
+                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-white/90 bg-black/30 backdrop-blur-sm px-2.5 py-1 rounded-full inline-flex items-center gap-1">
+                  {isVideoSlide && <Play className="h-2.5 w-2.5 fill-current" />}
+                  {heroIndex + 1} / {slideCount}
                 </div>
               </div>
 
@@ -133,9 +234,9 @@ export function GymGalleryMosaic({ images, gymName }: GymGalleryMosaicProps) {
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setHeroIndex((i) => (i - 1 + count) % count);
+                  goPrevSlide();
                 }}
-                aria-label="Previous photo"
+                aria-label="Previous slide"
                 className="absolute left-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/35 hover:bg-black/55 text-white opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center justify-center z-10"
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -144,65 +245,69 @@ export function GymGalleryMosaic({ images, gymName }: GymGalleryMosaicProps) {
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setHeroIndex((i) => (i + 1) % count);
+                  goNextSlide();
                 }}
-                aria-label="Next photo"
+                aria-label="Next slide"
                 className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/35 hover:bg-black/55 text-white opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center justify-center z-10"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
             </>
           )}
-        </button>
+        </div>
 
         {/* Right stack (desktop only) */}
-        <div className="hidden md:grid grid-rows-3 gap-3">
-          {side.map((src, i) => {
-            const isLast = i === 2;
-            return (
-              <button
-                key={`side-${i}`}
-                type="button"
-                onClick={(e) => openAt(i + 1 < count ? i + 1 : 0, e)}
-                aria-label={
-                  isLast
-                    ? `View all ${count} photos`
-                    : `Open gallery — ${gymName} photo ${i + 2}`
-                }
-                className="relative group overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                <img
-                  src={src}
-                  alt={isLast ? "" : `${gymName} photo ${i + 2}`}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
-                />
-                {isLast && (
-                  <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center transition-colors group-hover:bg-black/70">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/95 text-foreground text-[11px] font-black uppercase tracking-[0.18em] shadow-lg">
-                      <Images className="h-3.5 w-3.5" />
-                      View Gallery
+        {count > 0 && (
+          <div className="hidden md:grid grid-rows-3 gap-3">
+            {side.map((src, i) => {
+              const isLast = i === 2;
+              return (
+                <button
+                  key={`side-${i}`}
+                  type="button"
+                  onClick={(e) => openAt(i + 1 < count ? i + 1 : 0, e)}
+                  aria-label={
+                    isLast
+                      ? `View all ${count} photos`
+                      : `Open gallery — ${gymName} photo ${i + 2}`
+                  }
+                  className="relative group overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  <img
+                    src={src}
+                    alt={isLast ? "" : `${gymName} photo ${i + 2}`}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+                  />
+                  {isLast && (
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center transition-colors group-hover:bg-black/70">
+                      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/95 text-foreground text-[11px] font-black uppercase tracking-[0.18em] shadow-lg">
+                        <Images className="h-3.5 w-3.5" />
+                        View Gallery
+                      </div>
                     </div>
-                  </div>
-                )}
-              </button>
-            );
-          })}
-        </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Mobile "View all photos" pill */}
-      <button
-        type="button"
-        onClick={(e) => openAt(0, e)}
-        className="md:hidden mt-3 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-foreground text-background text-xs font-black uppercase tracking-[0.18em]"
-      >
-        <Images className="h-3.5 w-3.5" />
-        View all {count} photos
-      </button>
+      {count > 0 && (
+        <button
+          type="button"
+          onClick={(e) => openAt(0, e)}
+          className="md:hidden mt-3 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-foreground text-background text-xs font-black uppercase tracking-[0.18em]"
+        >
+          <Images className="h-3.5 w-3.5" />
+          View all {count} photos
+        </button>
+      )}
 
       {/* Lightbox */}
       <AnimatePresence>
-        {open && (
+        {open && count > 0 && (
           <motion.div
             role="dialog"
             aria-modal="true"

@@ -800,6 +800,10 @@ router.post(
           b.heroImage ??
             "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200",
         ),
+        videoUrl:
+          b.videoUrl === undefined || b.videoUrl === null || b.videoUrl === ""
+            ? null
+            : String(b.videoUrl),
         rating: Number(b.rating ?? 4.5),
         reviewsCount: Number(b.reviewsCount ?? 0),
         priceFrom: Number(b.priceFrom ?? 999),
@@ -872,6 +876,10 @@ router.patch(
         b.ownerPartnerId === null || b.ownerPartnerId === ""
           ? null
           : Number(b.ownerPartnerId);
+    }
+    if (b.videoUrl !== undefined) {
+      patch.videoUrl =
+        b.videoUrl === null || b.videoUrl === "" ? null : String(b.videoUrl);
     }
     const [updated] = await db
       .update(gymsTable)

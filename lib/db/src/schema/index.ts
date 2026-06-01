@@ -43,6 +43,7 @@ export const gymsTable = pgTable("gyms", {
   area: text("area").notNull(),
   address: text("address").notNull(),
   heroImage: text("hero_image").notNull(),
+  videoUrl: text("video_url"),
   logoUrl: text("logo_url").notNull().default(""),
   rating: real("rating").notNull(),
   reviewsCount: integer("reviews_count").notNull(),

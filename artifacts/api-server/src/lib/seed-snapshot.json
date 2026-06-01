@@ -1,1 +1,2984 @@
-{"cities":[{"id":1,"name":"Bengaluru","is_active":true,"created_at":"2026-05-26T07:31:30.858551+00:00","is_default":false}],"areas":[{"id":1,"city_id":1,"name":"Kormangala","is_active":true,"created_at":"2026-05-26T07:31:42.369634+00:00"},{"id":2,"city_id":1,"name":"Kumaraswamy Layout","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":3,"city_id":1,"name":"Kalyan Nagar","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":4,"city_id":1,"name":"Vidyaranyapura","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":5,"city_id":1,"name":"Nandini Layout","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":6,"city_id":1,"name":"Rajarajeshwari Nagar","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":7,"city_id":1,"name":"CV Raman Nagar","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":8,"city_id":1,"name":"Arekere","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":9,"city_id":1,"name":"Attibele","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":10,"city_id":1,"name":"Mahadevapura","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":11,"city_id":1,"name":"Indiranagar","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":12,"city_id":1,"name":"HAL","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":13,"city_id":1,"name":"Kanakapura Road","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":14,"city_id":1,"name":"Kammanahalli","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":15,"city_id":1,"name":"Brigade Road","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":16,"city_id":1,"name":"Whitefield","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":17,"city_id":1,"name":"Marathahalli","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":18,"city_id":1,"name":"Bannerghatta Road","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":19,"city_id":1,"name":"Sadashivanagar","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":20,"city_id":1,"name":"Chandapura","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":21,"city_id":1,"name":"Kasturi Nagar","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":22,"city_id":1,"name":"Nagarbhavi","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":23,"city_id":1,"name":"Bellandur","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":24,"city_id":1,"name":"Bommasandra","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":25,"city_id":1,"name":"Hosakerehalli","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":26,"city_id":1,"name":"Cunningham Road","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":27,"city_id":1,"name":"Bagalur","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":28,"city_id":1,"name":"Basavanagudi","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":29,"city_id":1,"name":"Kengeri","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":30,"city_id":1,"name":"Doddaballapur","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":31,"city_id":1,"name":"Old Madras Road","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":32,"city_id":1,"name":"Jayanagar","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":33,"city_id":1,"name":"Mysore Road","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":34,"city_id":1,"name":"Malleshwaram","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":35,"city_id":1,"name":"Sanjay Nagar","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":36,"city_id":1,"name":"Varthur","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":37,"city_id":1,"name":"Jeevan Bhima Nagar","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":38,"city_id":1,"name":"Chikkajala","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":39,"city_id":1,"name":"Hennur","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":40,"city_id":1,"name":"Ramamurthy Nagar","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":41,"city_id":1,"name":"Anekal","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":42,"city_id":1,"name":"HSR Layout","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":43,"city_id":1,"name":"Murugeshpalya","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":44,"city_id":1,"name":"Outer Ring Road","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":45,"city_id":1,"name":"BTM Layout","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":46,"city_id":1,"name":"Kadugodi","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":47,"city_id":1,"name":"ITPL","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":48,"city_id":1,"name":"Tin Factory","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":49,"city_id":1,"name":"RT Nagar","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":50,"city_id":1,"name":"Hanumanthnagar","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":51,"city_id":1,"name":"Rajanukunte","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":52,"city_id":1,"name":"Gandhi Bazaar","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":53,"city_id":1,"name":"Hulimavu","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":54,"city_id":1,"name":"Frazer Town","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":55,"city_id":1,"name":"Yeshwanthpur","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":56,"city_id":1,"name":"Thanisandra","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":57,"city_id":1,"name":"Konanakunte","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":58,"city_id":1,"name":"KR Puram","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":59,"city_id":1,"name":"Wilson Garden","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":60,"city_id":1,"name":"Begur","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":61,"city_id":1,"name":"Hosur Road","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":62,"city_id":1,"name":"Domlur","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":63,"city_id":1,"name":"Cox Town","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":64,"city_id":1,"name":"Rajajinagar","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":65,"city_id":1,"name":"Lalbagh","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":66,"city_id":1,"name":"Yelahanka","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":67,"city_id":1,"name":"Nelamangala","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":68,"city_id":1,"name":"MG Road","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":69,"city_id":1,"name":"Kathriguppe","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":70,"city_id":1,"name":"Jakkur","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":71,"city_id":1,"name":"Chamrajpet","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":72,"city_id":1,"name":"JP Nagar","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":73,"city_id":1,"name":"Mathikere","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":74,"city_id":1,"name":"Electronic City","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":75,"city_id":1,"name":"Hoodi","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":76,"city_id":1,"name":"Shivajinagar","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":77,"city_id":1,"name":"Tumkur Road","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":78,"city_id":1,"name":"Banashankari","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":79,"city_id":1,"name":"Uttarahalli","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":80,"city_id":1,"name":"Richmond Town","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":81,"city_id":1,"name":"Peenya","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":82,"city_id":1,"name":"Hebbal","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":83,"city_id":1,"name":"Magadi Road","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":84,"city_id":1,"name":"Padmanabhanagar","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":85,"city_id":1,"name":"Vijayanagar","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":86,"city_id":1,"name":"Koramangala","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":87,"city_id":1,"name":"Brookefield","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":88,"city_id":1,"name":"Bommanahalli","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":89,"city_id":1,"name":"Nagawara","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":90,"city_id":1,"name":"Sahakar Nagar","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":91,"city_id":1,"name":"Banaswadi","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":92,"city_id":1,"name":"Residency Road","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":93,"city_id":1,"name":"Girinagar","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":94,"city_id":1,"name":"Old Airport Road","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":95,"city_id":1,"name":"Sarjapur Road","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":96,"city_id":1,"name":"Lavelle Road","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":97,"city_id":1,"name":"Devanahalli","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"},{"id":98,"city_id":1,"name":"Ulsoor","is_active":true,"created_at":"2026-05-26T07:33:04.041141+00:00"}],"amenities":[{"id":2,"name":"WiFi","slug":"wifi","description":"High-speed wireless internet","icon":"Wifi","category":"facilities","is_active":true,"sort_order":0,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":3,"name":"Air Conditioning","slug":"air-conditioning","description":"Climate-controlled workout floor","icon":"Wind","category":"facilities","is_active":true,"sort_order":10,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":4,"name":"Shower","slug":"shower","description":"Clean shower facilities","icon":"Droplets","category":"facilities","is_active":true,"sort_order":20,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":5,"name":"Sauna","slug":"sauna","description":"Steam and dry sauna","icon":"Flame","category":"wellness","is_active":true,"sort_order":30,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":6,"name":"Steam Room","slug":"steam-room","description":"Relaxing steam room","icon":"CloudFog","category":"wellness","is_active":true,"sort_order":40,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":7,"name":"Swimming Pool","slug":"swimming-pool","description":"Indoor swimming pool","icon":"Waves","category":"facilities","is_active":true,"sort_order":50,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":8,"name":"Jacuzzi","slug":"jacuzzi","description":"Hot tub for post-workout recovery","icon":"Bath","category":"wellness","is_active":true,"sort_order":60,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":9,"name":"Cardio Equipment","slug":"cardio-equipment","description":"Treadmills, ellipticals, bikes","icon":"HeartPulse","category":"equipment","is_active":true,"sort_order":70,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":10,"name":"Weight Training","slug":"weight-training","description":"Free weights and machines","icon":"Dumbbell","category":"equipment","is_active":true,"sort_order":80,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":11,"name":"Functional Training Area","slug":"functional-training","description":"Open space for functional workouts","icon":"Activity","category":"equipment","is_active":true,"sort_order":90,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":12,"name":"CrossFit Box","slug":"crossfit-box","description":"Dedicated CrossFit zone","icon":"Flame","category":"equipment","is_active":true,"sort_order":100,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":13,"name":"Boxing Ring","slug":"boxing-ring","description":"Boxing and MMA ring","icon":"Swords","category":"equipment","is_active":true,"sort_order":110,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":14,"name":"Spinning Studio","slug":"spinning-studio","description":"Indoor cycling studio","icon":"Bike","category":"equipment","is_active":true,"sort_order":120,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":15,"name":"Personal Training","slug":"personal-training","description":"Certified personal trainers","icon":"Users","category":"services","is_active":true,"sort_order":130,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":16,"name":"Group Classes","slug":"group-classes","description":"HIIT, Zumba, dance and more","icon":"Users2","category":"services","is_active":true,"sort_order":140,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":17,"name":"Yoga Classes","slug":"yoga-classes","description":"Yoga and meditation sessions","icon":"Flower2","category":"services","is_active":true,"sort_order":150,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":18,"name":"Pilates Studio","slug":"pilates-studio","description":"Reformer and mat pilates","icon":"Sparkles","category":"services","is_active":true,"sort_order":160,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":19,"name":"Nutrition Counseling","slug":"nutrition-counseling","description":"Personalized diet plans","icon":"Apple","category":"services","is_active":true,"sort_order":170,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":20,"name":"Physiotherapy","slug":"physiotherapy","description":"Recovery and rehab support","icon":"Stethoscope","category":"wellness","is_active":true,"sort_order":180,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":21,"name":"Massage Therapy","slug":"massage-therapy","description":"Sports and recovery massage","icon":"HandHeart","category":"wellness","is_active":true,"sort_order":190,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":22,"name":"Locker Room","slug":"locker-room","description":"Secure personal lockers","icon":"Lock","category":"facilities","is_active":true,"sort_order":200,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":23,"name":"Towel Service","slug":"towel-service","description":"Fresh towels provided","icon":"Shirt","category":"facilities","is_active":true,"sort_order":210,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":24,"name":"Parking","slug":"parking","description":"On-site parking available","icon":"ParkingCircle","category":"facilities","is_active":true,"sort_order":220,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":25,"name":"Valet Parking","slug":"valet-parking","description":"Complimentary valet","icon":"CarFront","category":"facilities","is_active":true,"sort_order":230,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":26,"name":"Cafe / Smoothie Bar","slug":"cafe-smoothie-bar","description":"Healthy snacks and shakes","icon":"Coffee","category":"facilities","is_active":true,"sort_order":240,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":27,"name":"Pro Shop","slug":"pro-shop","description":"Apparel and supplements","icon":"ShoppingBag","category":"facilities","is_active":true,"sort_order":250,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":28,"name":"Kids Zone","slug":"kids-zone","description":"Childcare while you train","icon":"Baby","category":"facilities","is_active":true,"sort_order":260,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":29,"name":"Women Only Hours","slug":"women-only-hours","description":"Dedicated women-only sessions","icon":"VenusAndMars","category":"services","is_active":true,"sort_order":270,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":30,"name":"24/7 Access","slug":"24-7-access","description":"Around-the-clock entry","icon":"Clock","category":"services","is_active":true,"sort_order":280,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":31,"name":"Open Air Rooftop","slug":"open-air-rooftop","description":"Outdoor rooftop training area","icon":"Sun","category":"facilities","is_active":true,"sort_order":290,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":32,"name":"Body Composition Analysis","slug":"body-composition-analysis","description":"InBody / DEXA scans","icon":"Scale","category":"services","is_active":true,"sort_order":300,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":33,"name":"Eucalyptus Steam Room","slug":"eucalyptus-steam-room","description":"Aromatherapy steam","icon":"Leaf","category":"wellness","is_active":true,"sort_order":310,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":34,"name":"Ice Bath","slug":"ice-bath","description":"Cold plunge for recovery","icon":"Snowflake","category":"wellness","is_active":true,"sort_order":320,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":35,"name":"Cycling Track","slug":"cycling-track","description":"Indoor cycling track","icon":"Bike","category":"equipment","is_active":true,"sort_order":330,"created_at":"2026-05-26T06:42:38.800253+00:00"},{"id":36,"name":"Music System","slug":"music-system","description":"Premium audio on the floor","icon":"Music2","category":"facilities","is_active":true,"sort_order":340,"created_at":"2026-05-26T06:42:38.800253+00:00"}],"workouts":[{"id":1,"name":"Gym Workouts","slug":"gym-workouts","description":"Strength + functional training","icon":"Dumbbell","color":"from-orange-500 to-amber-500","image_url":"","is_active":true,"sort_order":1,"created_at":"2026-05-26T06:52:29.23924+00:00"},{"id":2,"name":"Yoga","slug":"yoga","description":"Flexibility and mindfulness","icon":"Flower2","color":"from-violet-500 to-purple-500","image_url":"","is_active":true,"sort_order":2,"created_at":"2026-05-26T06:52:29.23924+00:00"},{"id":3,"name":"Abs","slug":"abs","description":"Core sculpting sessions","icon":"Flame","color":"from-red-500 to-rose-500","image_url":"","is_active":true,"sort_order":3,"created_at":"2026-05-26T06:52:29.23924+00:00"},{"id":4,"name":"Combat Sports","slug":"combat-sports","description":"Boxing, kickboxing, sparring","icon":"Swords","color":"from-slate-700 to-slate-900","image_url":"","is_active":true,"sort_order":4,"created_at":"2026-05-26T06:52:29.23924+00:00"},{"id":5,"name":"Core","slug":"core","description":"Functional core training","icon":"Target","color":"from-yellow-400 to-orange-400","image_url":"","is_active":true,"sort_order":5,"created_at":"2026-05-26T06:52:29.23924+00:00"},{"id":6,"name":"Dance","slug":"dance","description":"Cardio dance fitness","icon":"Music","color":"from-pink-500 to-rose-500","image_url":"","is_active":true,"sort_order":6,"created_at":"2026-05-26T06:52:29.23924+00:00"},{"id":7,"name":"HIIT","slug":"hiit","description":"High-intensity interval training","icon":"Zap","color":"from-orange-500 to-red-500","image_url":"","is_active":true,"sort_order":7,"created_at":"2026-05-26T06:52:29.23924+00:00"},{"id":9,"name":"Pilates","slug":"pilates","description":"Low-impact strength + control","icon":"Activity","color":"from-emerald-500 to-teal-500","image_url":"","is_active":true,"sort_order":9,"created_at":"2026-05-26T06:52:29.23924+00:00"},{"id":10,"name":"Spinning","slug":"spinning","description":"Indoor cycling","icon":"Bike","color":"from-blue-500 to-indigo-500","image_url":"","is_active":true,"sort_order":10,"created_at":"2026-05-26T06:52:29.23924+00:00"}],"partners":[{"id":3,"name":"Iconic Fitness 1st Block","email":"info@iconicfitnessindia.com","phone":"70262 76888","password_hash":"$2b$10$RisVv9d7KZjLKip/WW27gOyzPmmrLlmIUZkV5g0dtctBwORS0qE9m","status":"active","city":"Bengaluru","notes":"Best Place for ever","created_at":"2026-05-26T08:25:38.293488+00:00","kind":"gym","avatar_url":"","pending_amenity_ids":[2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,32,33,34,35,36]},{"id":39,"name":"Iconic Fitness Koramangala 5th Block","email":"info@iconicfitnessindia.com","phone":"70262 76888","password_hash":"$2b$10$Y.TEWCqvnzAnmKyhvft5Z.q/3dyuNOPOlvU49mIZ.zO4trasuBMSW","status":"active","city":"Bengalore","notes":"sddssds","created_at":"2026-05-26T11:48:30.076937+00:00","kind":"gym","avatar_url":"","pending_amenity_ids":[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36]}],"gyms":[{"id":1,"name":"Iconic Fitness Indiranagar","slug":"iron-republic","city":"Bangalore","area":"Indiranagar","address":"100 Feet Rd, Indiranagar","hero_image":"https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&q=80","rating":4.3,"reviews_count":120,"price_from":1899,"categories":["gym","strength","crossfit","functional"],"amenities":["24x7 Access","Shower","Steam","Locker","Parking","Cafe"],"distance_km":0.6,"is_premium":false,"open_now":true,"about":"A flagship strength temple in the heart of Indiranagar. Olympic platforms, eight squat racks, and a dedicated mobility zone — built for athletes who train every day.","gallery":["https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&q=80","https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1200&q=80","https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1200&q=80","https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1200&q=80"],"hours":"6:00 AM – 11:00 PM","lat":12.9716,"lng":77.6411,"featured":false,"owner_partner_id":null,"logo_url":"","payout_per_visit_inr":0,"payout_tax_pct":18,"is_verified":true},{"id":2,"name":"Iconic Fitness Koramangala","slug":"atlas-strength","city":"Bangalore","area":"Koramangala","address":"5th Block, Koramangala","hero_image":"https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1200&q=80","rating":4.4,"reviews_count":163,"price_from":2149,"categories":["gym","strength","powerlifting"],"amenities":["Shower","Steam","Locker","Cafe","PT Available"],"distance_km":1.8,"is_premium":false,"open_now":true,"about":"Powerlifting-first studio designed by competitive lifters. Calibrated plates, deadlift platforms, and chalk on the bar.","gallery":["https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1200&q=80","https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1200&q=80","https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1200&q=80","https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=1200&q=80"],"hours":"5:30 AM – 11:00 PM","lat":12.9352,"lng":77.6245,"featured":false,"owner_partner_id":null,"logo_url":"/api/storage/objects/uploads/393967a4-b2f4-406c-9ef3-eef0477f2377","payout_per_visit_inr":0,"payout_tax_pct":18,"is_verified":true},{"id":3,"name":"Iconic Fitness HSR Layout","slug":"flow-yoga","city":"Bangalore","area":"HSR Layout","address":"HSR Layout, Sector 2","hero_image":"https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1200&q=80","rating":4.5,"reviews_count":206,"price_from":2399,"categories":["yoga","pilates","wellness"],"amenities":["Mat Provided","Shower","Locker","Tea Bar"],"distance_km":2.4,"is_premium":false,"open_now":true,"about":"Heated vinyasa, ashtanga, and prenatal yoga in a serene loft. Class sizes capped at 14.","gallery":["https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1200&q=80","https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1200&q=80","https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=1200&q=80","https://images.unsplash.com/photo-1576678927484-cc907957088c?w=1200&q=80"],"hours":"6:00 AM – 9:00 PM","lat":12.9116,"lng":77.6473,"featured":true,"owner_partner_id":null,"logo_url":"","payout_per_visit_inr":0,"payout_tax_pct":18,"is_verified":true},{"id":4,"name":"Iconic Fitness Bandra West","slug":"combat-lab","city":"Mumbai","area":"Bandra West","address":"Linking Rd, Bandra West","hero_image":"https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1200&q=80","rating":4.6,"reviews_count":249,"price_from":2649,"categories":["mma","boxing","strength"],"amenities":["Heavy Bags","Ring","Shower","PT Available"],"distance_km":3.1,"is_premium":false,"open_now":true,"about":"Mumbai's premier MMA gym. BJJ, muay thai, and boxing programmes with national-level coaches.","gallery":["https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1200&q=80","https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=1200&q=80","https://images.unsplash.com/photo-1576678927484-cc907957088c?w=1200&q=80","https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=1200&q=80"],"hours":"6:00 AM – 11:30 PM","lat":19.0606,"lng":72.8295,"featured":true,"owner_partner_id":null,"logo_url":"","payout_per_visit_inr":0,"payout_tax_pct":18,"is_verified":true},{"id":5,"name":"Iconic Fitness Lower Parel","slug":"pulse-crossfit","city":"Mumbai","area":"Lower Parel","address":"Kamala Mills, Lower Parel","hero_image":"https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=1200&q=80","rating":4.7,"reviews_count":292,"price_from":2899,"categories":["crossfit","functional","strength"],"amenities":["Open Box","Showers","Locker","Cafe"],"distance_km":4,"is_premium":false,"open_now":true,"about":"Affiliate box with two classes running concurrently. Olympic lifting and metcons every hour.","gallery":["https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=1200&q=80","https://images.unsplash.com/photo-1576678927484-cc907957088c?w=1200&q=80","https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=1200&q=80","https://images.unsplash.com/photo-1652025753863-c7a2fcb4c4f0?w=1200&q=80"],"hours":"5:30 AM – 10:30 PM","lat":18.9943,"lng":72.8267,"featured":true,"owner_partner_id":null,"logo_url":"","payout_per_visit_inr":0,"payout_tax_pct":18,"is_verified":true},{"id":6,"name":"Iconic Fitness Powai","slug":"soul-spin","city":"Mumbai","area":"Powai","address":"Hiranandani Gardens, Powai","hero_image":"https://images.unsplash.com/photo-1576678927484-cc907957088c?w=1200&q=80","rating":4.8,"reviews_count":335,"price_from":3149,"categories":["cycling","hiit","wellness"],"amenities":["Cycling Shoes","Towel","Smoothie Bar"],"distance_km":6.2,"is_premium":false,"open_now":true,"about":"Candle-lit spin studio with the best instructors in Mumbai. 45-minute rides set to live DJ sets on weekends.","gallery":["https://images.unsplash.com/photo-1576678927484-cc907957088c?w=1200&q=80","https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=1200&q=80","https://images.unsplash.com/photo-1652025753863-c7a2fcb4c4f0?w=1200&q=80","https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1200&q=80"],"hours":"6:00 AM – 10:00 PM","lat":19.1197,"lng":72.9056,"featured":true,"owner_partner_id":null,"logo_url":"","payout_per_visit_inr":0,"payout_tax_pct":18,"is_verified":true},{"id":7,"name":"Iconic Fitness Greater Kailash","slug":"pilates-house","city":"Delhi","area":"Greater Kailash","address":"M Block Market, GK-1","hero_image":"https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=1200&q=80","rating":4.9,"reviews_count":378,"price_from":3399,"categories":["pilates","yoga","wellness"],"amenities":["Reformer","Mat","Shower","PT Available"],"distance_km":5.5,"is_premium":false,"open_now":true,"about":"Reformer pilates, mat classes, and rehab-focused private sessions. Trainers are Polestar-certified.","gallery":["https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=1200&q=80","https://images.unsplash.com/photo-1652025753863-c7a2fcb4c4f0?w=1200&q=80","https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1200&q=80","https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&q=80"],"hours":"6:30 AM – 9:00 PM","lat":28.5482,"lng":77.2453,"featured":true,"owner_partner_id":null,"logo_url":"","payout_per_visit_inr":0,"payout_tax_pct":18,"is_verified":true},{"id":8,"name":"Iconic Fitness Connaught Place","slug":"apex-fitness","city":"Delhi","area":"Connaught Place","address":"Block N, CP Inner Circle","hero_image":"https://images.unsplash.com/photo-1652025753863-c7a2fcb4c4f0?w=1200&q=80","rating":4.3,"reviews_count":421,"price_from":3649,"categories":["gym","strength","crossfit","cycling"],"amenities":["24x7 Access","Sauna","Steam","Cafe","Pool"],"distance_km":2.7,"is_premium":false,"open_now":true,"about":"A 24,000 sq ft mega-gym in the heart of Delhi with a heated pool, sauna, and CrossFit zone.","gallery":["https://images.unsplash.com/photo-1652025753863-c7a2fcb4c4f0?w=1200&q=80","https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1200&q=80","https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&q=80","https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1200&q=80"],"hours":"Open 24/7","lat":28.6315,"lng":77.2167,"featured":false,"owner_partner_id":null,"logo_url":"","payout_per_visit_inr":0,"payout_tax_pct":18,"is_verified":true},{"id":9,"name":"Iconic Fitness Saket","slug":"move-studio","city":"Delhi","area":"Saket","address":"Saket District Centre","hero_image":"https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1200&q=80","rating":4.4,"reviews_count":464,"price_from":3899,"categories":["zumba","hiit","yoga"],"amenities":["Mat Provided","Shower","Locker"],"distance_km":4.3,"is_premium":false,"open_now":true,"about":"Group fitness boutique known for zumba, dance HIIT, and barre. Energy off the charts.","gallery":["https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1200&q=80","https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&q=80","https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1200&q=80","https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1200&q=80"],"hours":"6:00 AM – 10:00 PM","lat":28.5245,"lng":77.2066,"featured":true,"owner_partner_id":null,"logo_url":"","payout_per_visit_inr":100,"payout_tax_pct":5,"is_verified":true},{"id":10,"name":"Iconic Fitness Koramangala 1st Block","slug":"iconic-fitness-kormangala-1st-block","city":"Bengaluru","area":"Kormangala","address":"43, 5th A Main Rd, near Wipro Park, 1st Block Koramangala, Koramangala, Bengaluru, Karnataka 560034","hero_image":"/api/storage/objects/uploads/9ad73f73-e0ec-47f4-b5b0-e5f0ec7fd408","rating":4.9,"reviews_count":0,"price_from":999,"categories":["gym"],"amenities":["ALL"],"distance_km":2.5,"is_premium":true,"open_now":true,"about":"Best Gym For ever ","gallery":["/api/storage/objects/uploads/0162304b-bb0a-4739-baa8-ff29bc7203c7","/api/storage/objects/uploads/4ed377e5-ab31-4391-bac6-3b3b7ddeb84d","/api/storage/objects/uploads/651d603e-ef99-49ba-acd9-2a3a42b01e6f","/api/storage/objects/uploads/b7ab4b0e-d58f-4630-99a1-37e3632d9c45","/api/storage/objects/uploads/78022e05-9f01-47ee-90d8-00780799d6ab","/api/storage/objects/uploads/ce24072a-af1f-4ea5-a5e2-171dc58db1f6"],"hours":"6am – 11pm","lat":12.933039,"lng":77.6149,"featured":true,"owner_partner_id":3,"logo_url":"/api/storage/objects/uploads/7b3048a6-0cd4-4b01-a1ba-186ddba2f7c3","payout_per_visit_inr":100,"payout_tax_pct":18,"is_verified":true},{"id":11,"name":"Iconic Fitness Koramangala 5th Block","slug":"iconic-fitness-koramangala-5th-block","city":"Bengaluru","area":"Koramangala","address":"MM Mention, 67, 60 Feet Rd, KHB Colony, 5th Block, Koramangala, Bengaluru, Karnataka 560095","hero_image":"https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200","rating":4.9,"reviews_count":0,"price_from":999,"categories":["gym"],"amenities":[],"distance_km":2.5,"is_premium":true,"open_now":true,"about":"Best place inn MM Mention, 67, 60 Feet Rd, KHB Colony, 5th Block, Koramangala, Bengaluru, Karnataka 560095","gallery":[],"hours":"6am – 11pm","lat":12.933846,"lng":77.617676,"featured":true,"owner_partner_id":null,"logo_url":"/api/storage/objects/uploads/4be64046-75ac-4692-ae05-a82ef938ce61","payout_per_visit_inr":100,"payout_tax_pct":18,"is_verified":false}],"trainers":[{"id":1,"name":"Rohan Iyer","specialty":"Strength & Conditioning","bio":"NSCA-CSCS coach with 8 years training pro athletes. Specialises in powerlifting and rehab.","photo_url":"https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=600&q=80","rating":4.6,"sessions_count":80,"price_per_session":1500,"certifications":["NASM-CPT","Strength L2","First Aid Certified"],"city":"Bangalore","gym_id":1},{"id":2,"name":"Priya Sharma","specialty":"Yoga","bio":"E-RYT 500 vinyasa and ashtanga teacher trained in Mysore. Calm, precise, demanding in the best way.","photo_url":"https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80","rating":4.65,"sessions_count":103,"price_per_session":2000,"certifications":["NASM-CPT","Yoga L2","First Aid Certified"],"city":"Bangalore","gym_id":3},{"id":3,"name":"Vikram Singh","specialty":"CrossFit","bio":"CF-L3, regional competitor 2019. Builds programmes that scale from beginner to elite.","photo_url":"https://images.unsplash.com/photo-1594381898411-846e7d193883?w=600&q=80","rating":4.7,"sessions_count":126,"price_per_session":2500,"certifications":["NASM-CPT","CrossFit L2","First Aid Certified"],"city":"Bangalore","gym_id":1},{"id":4,"name":"Ayesha Khan","specialty":"MMA & Boxing","bio":"Former amateur boxer, now head coach at Combat Lab. Sharp pad work and brutal conditioning.","photo_url":"https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=600&q=80","rating":4.75,"sessions_count":149,"price_per_session":3000,"certifications":["NASM-CPT","MMA L2","First Aid Certified"],"city":"Mumbai","gym_id":4},{"id":5,"name":"Karan Joshi","specialty":"Functional Fitness","bio":"Mobility-first coach. Combines kettlebells, gymnastics rings, and Z-Health drills.","photo_url":"https://images.unsplash.com/photo-1548690312-e3b507d8c110?w=600&q=80","rating":4.8,"sessions_count":172,"price_per_session":1500,"certifications":["NASM-CPT","Functional L2","First Aid Certified"],"city":"Mumbai","gym_id":5},{"id":6,"name":"Meera Nair","specialty":"Pilates","bio":"Polestar-certified pilates instructor. Reformer specialist with a background in classical dance.","photo_url":"https://images.unsplash.com/photo-1609899537878-88d5ba429bdf?w=600&q=80","rating":4.6,"sessions_count":195,"price_per_session":2000,"certifications":["NASM-CPT","Pilates L2","First Aid Certified"],"city":"Delhi","gym_id":7},{"id":7,"name":"Aditya Verma","specialty":"HIIT","bio":"Group fitness lead at Move Studio. Designs metcons that leave you laughing on the floor.","photo_url":"https://images.unsplash.com/photo-1571731956672-f2b94d7dd0cb?w=600&q=80","rating":4.65,"sessions_count":218,"price_per_session":2500,"certifications":["NASM-CPT","HIIT L2","First Aid Certified"],"city":"Delhi","gym_id":9},{"id":8,"name":"Sneha Reddy","specialty":"Yoga","bio":"Hot yoga, prenatal, and meditation teacher with 12 years on the mat.","photo_url":"https://images.unsplash.com/photo-1607962837359-5e7e89f86776?w=600&q=80","rating":4.7,"sessions_count":241,"price_per_session":3000,"certifications":["NASM-CPT","Yoga L2","First Aid Certified"],"city":"Bangalore","gym_id":3},{"id":9,"name":"Rahul Kapoor","specialty":"Strength","bio":"Olympic weightlifting coach. Trains national-level juniors twice a week.","photo_url":"https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=600&q=80","rating":4.75,"sessions_count":264,"price_per_session":1500,"certifications":["NASM-CPT","Strength L2","First Aid Certified"],"city":"Delhi","gym_id":8},{"id":10,"name":"Tara Bose","specialty":"Cycling","bio":"Indoor cycling instructor and certified spinning master. The playlist alone is worth the class.","photo_url":"https://images.unsplash.com/photo-1530021232320-687d8e3dba54?w=600&q=80","rating":4.8,"sessions_count":287,"price_per_session":2000,"certifications":["NASM-CPT","Cycling L2","First Aid Certified"],"city":"Mumbai","gym_id":6},{"id":11,"name":"Devansh Gupta","specialty":"Strength","bio":"Bodybuilding-focused coach. Has prepped clients for Mr. India Classic Physique.","photo_url":"https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=600&q=80","rating":4.6,"sessions_count":310,"price_per_session":2500,"certifications":["NASM-CPT","Strength L2","First Aid Certified"],"city":"Delhi","gym_id":8},{"id":12,"name":"Naina Pillai","specialty":"Pilates","bio":"Reformer and barre instructor. Postpartum recovery specialist.","photo_url":"https://images.unsplash.com/photo-1599058917765-a780eda07a3e?w=600&q=80","rating":4.65,"sessions_count":333,"price_per_session":3000,"certifications":["NASM-CPT","Pilates L2","First Aid Certified"],"city":"Bangalore","gym_id":3}],"gym_amenities":[{"id":11,"gym_id":2,"amenity_id":2},{"id":12,"gym_id":2,"amenity_id":3},{"id":13,"gym_id":2,"amenity_id":4},{"id":14,"gym_id":2,"amenity_id":10},{"id":15,"gym_id":2,"amenity_id":14},{"id":16,"gym_id":2,"amenity_id":18},{"id":17,"gym_id":10,"amenity_id":2},{"id":18,"gym_id":10,"amenity_id":3},{"id":19,"gym_id":10,"amenity_id":4},{"id":20,"gym_id":10,"amenity_id":6},{"id":21,"gym_id":10,"amenity_id":9},{"id":22,"gym_id":10,"amenity_id":10},{"id":23,"gym_id":10,"amenity_id":11},{"id":24,"gym_id":10,"amenity_id":12},{"id":25,"gym_id":10,"amenity_id":13},{"id":26,"gym_id":10,"amenity_id":14},{"id":27,"gym_id":10,"amenity_id":15},{"id":28,"gym_id":10,"amenity_id":16},{"id":29,"gym_id":10,"amenity_id":17},{"id":30,"gym_id":10,"amenity_id":18},{"id":31,"gym_id":10,"amenity_id":19},{"id":32,"gym_id":10,"amenity_id":20},{"id":33,"gym_id":10,"amenity_id":21},{"id":34,"gym_id":10,"amenity_id":22},{"id":35,"gym_id":10,"amenity_id":23},{"id":36,"gym_id":10,"amenity_id":24},{"id":37,"gym_id":10,"amenity_id":25},{"id":38,"gym_id":10,"amenity_id":26},{"id":39,"gym_id":10,"amenity_id":27},{"id":40,"gym_id":10,"amenity_id":28},{"id":41,"gym_id":10,"amenity_id":30},{"id":42,"gym_id":10,"amenity_id":31},{"id":43,"gym_id":10,"amenity_id":32},{"id":44,"gym_id":10,"amenity_id":33},{"id":45,"gym_id":10,"amenity_id":34},{"id":46,"gym_id":10,"amenity_id":35},{"id":47,"gym_id":10,"amenity_id":36}],"gym_workouts":[{"id":7,"gym_id":2,"workout_id":1},{"id":8,"gym_id":2,"workout_id":2},{"id":9,"gym_id":2,"workout_id":3},{"id":10,"gym_id":2,"workout_id":4},{"id":11,"gym_id":2,"workout_id":5},{"id":12,"gym_id":2,"workout_id":6},{"id":13,"gym_id":2,"workout_id":7},{"id":14,"gym_id":2,"workout_id":9},{"id":15,"gym_id":2,"workout_id":10}],"gym_workout_sessions":[{"id":8,"gym_id":2,"workout_id":2,"day_of_week":1,"start_minute":360,"end_minute":726,"instructor":""},{"id":9,"gym_id":2,"workout_id":2,"day_of_week":3,"start_minute":360,"end_minute":420,"instructor":""},{"id":10,"gym_id":2,"workout_id":2,"day_of_week":3,"start_minute":360,"end_minute":420,"instructor":""},{"id":11,"gym_id":2,"workout_id":2,"day_of_week":4,"start_minute":360,"end_minute":420,"instructor":""},{"id":12,"gym_id":2,"workout_id":6,"day_of_week":1,"start_minute":360,"end_minute":420,"instructor":""},{"id":13,"gym_id":2,"workout_id":6,"day_of_week":4,"start_minute":360,"end_minute":420,"instructor":""},{"id":14,"gym_id":2,"workout_id":5,"day_of_week":1,"start_minute":360,"end_minute":420,"instructor":""},{"id":15,"gym_id":2,"workout_id":5,"day_of_week":1,"start_minute":360,"end_minute":420,"instructor":""},{"id":16,"gym_id":2,"workout_id":5,"day_of_week":1,"start_minute":360,"end_minute":420,"instructor":""}],"gym_hours":[{"id":15,"gym_id":2,"day_of_week":0,"is_closed":false,"open_minute":360,"close_minute":1380},{"id":16,"gym_id":2,"day_of_week":1,"is_closed":false,"open_minute":360,"close_minute":1380},{"id":17,"gym_id":2,"day_of_week":2,"is_closed":false,"open_minute":360,"close_minute":1380},{"id":18,"gym_id":2,"day_of_week":3,"is_closed":false,"open_minute":360,"close_minute":1380},{"id":19,"gym_id":2,"day_of_week":4,"is_closed":false,"open_minute":360,"close_minute":1380},{"id":20,"gym_id":2,"day_of_week":5,"is_closed":false,"open_minute":360,"close_minute":1380},{"id":21,"gym_id":2,"day_of_week":6,"is_closed":false,"open_minute":360,"close_minute":1380},{"id":36,"gym_id":10,"day_of_week":0,"is_closed":false,"open_minute":360,"close_minute":1380},{"id":37,"gym_id":10,"day_of_week":1,"is_closed":false,"open_minute":360,"close_minute":1380},{"id":38,"gym_id":10,"day_of_week":2,"is_closed":false,"open_minute":360,"close_minute":1380},{"id":39,"gym_id":10,"day_of_week":3,"is_closed":false,"open_minute":360,"close_minute":1380},{"id":40,"gym_id":10,"day_of_week":4,"is_closed":false,"open_minute":360,"close_minute":1380},{"id":41,"gym_id":10,"day_of_week":5,"is_closed":false,"open_minute":360,"close_minute":1380},{"id":42,"gym_id":10,"day_of_week":6,"is_closed":false,"open_minute":360,"close_minute":1380},{"id":50,"gym_id":11,"day_of_week":0,"is_closed":false,"open_minute":360,"close_minute":1380},{"id":51,"gym_id":11,"day_of_week":1,"is_closed":false,"open_minute":360,"close_minute":1380},{"id":52,"gym_id":11,"day_of_week":2,"is_closed":false,"open_minute":360,"close_minute":1380},{"id":53,"gym_id":11,"day_of_week":3,"is_closed":false,"open_minute":360,"close_minute":1380},{"id":54,"gym_id":11,"day_of_week":4,"is_closed":false,"open_minute":360,"close_minute":1380},{"id":55,"gym_id":11,"day_of_week":5,"is_closed":false,"open_minute":360,"close_minute":1380},{"id":56,"gym_id":11,"day_of_week":6,"is_closed":false,"open_minute":360,"close_minute":1380}],"memberships":[{"id":1,"name":"Starter 1 Month","tagline":"Try the network","billing_period":"monthly","price_inr":3540,"original_price_inr":3540,"gyms_included":30,"classes_per_month":1,"perks":["Unlimited Global Access","Unlimited Classes","Guest Passes","Access to Gyms","100+ Workout Formats","Flexible EMI Options","Physiotherapy Consultation","In-house Dieticians","Steam & Shower Facilities","BMI Analysis"],"badge":"Starter","popular":false},{"id":2,"name":"Popular 3 Month","tagline":"Most popular","billing_period":"quarterly","price_inr":7620,"original_price_inr":3999,"gyms_included":150,"classes_per_month":20,"perks":["Unlimited Global Access","Unlimited Classes","Guest Passes","Access to Gyms","100+ Workout Formats","Flexible EMI Options","Physiotherapy Consultation","In-house Dieticians","Steam & Shower Facilities","BMI Analysis"],"badge":"Popular","popular":false},{"id":3,"name":"Standard 6 Month","tagline":"Unlimited everything","billing_period":"quarterly","price_inr":8999,"original_price_inr":6499,"gyms_included":500,"classes_per_month":999,"perks":["Unlimited Global Access","Unlimited Classes","Guest Passes","Access to Gyms","100+ Workout Formats","Flexible EMI Options","Physiotherapy Consultation","In-house Dieticians","Steam & Shower Facilities","BMI Analysis"],"badge":"Elite","popular":false},{"id":4,"name":"Value 12 Months","tagline":"Best value","billing_period":"annual","price_inr":17999,"original_price_inr":47988,"gyms_included":500,"classes_per_month":999,"perks":["Unlimited Global Access","Unlimited Classes","Guest Passes","Access to Gyms","100+ Workout Formats","Flexible EMI Options","Physiotherapy Consultation","In-house Dieticians","Steam & Shower Facilities","BMI Analysis"],"badge":"Save 38%","popular":false},{"id":5,"name":"Great Plan 15 Months ","tagline":"","billing_period":"annual","price_inr":10498,"original_price_inr":1999,"gyms_included":100,"classes_per_month":120,"perks":["Unlimited Global Access","Unlimited Classes","Guest Passes","Access to Gyms","100+ Workout Formats","Flexible EMI Options","Physiotherapy Consultation","In-house Dieticians","Steam & Shower Facilities","BMI Analysis"],"badge":"","popular":true}],"class_sessions":[{"id":1,"title":"Sunrise Power Yoga","category":"yoga","gym_id":3,"trainer_id":2,"starts_at":"2026-05-25T14:40:29.33+00:00","duration_min":60,"capacity":18,"intensity":"medium","cover_image":"https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=1200&q=80","description":"Heated vinyasa flow to wake up every muscle.","equipment_needed":["Mat"],"calorie_estimate":260,"trending_score":95},{"id":2,"title":"Heavy Squat Day","category":"strength","gym_id":1,"trainer_id":1,"starts_at":"2026-05-25T16:40:29.33+00:00","duration_min":75,"capacity":12,"intensity":"high","cover_image":"https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=1200&q=80","description":"Coached squat session — work up to your 5RM with Rohan.","equipment_needed":["Belt","Knee sleeves"],"calorie_estimate":380,"trending_score":88},{"id":3,"title":"Combat Conditioning","category":"mma","gym_id":4,"trainer_id":4,"starts_at":"2026-05-25T18:40:29.33+00:00","duration_min":60,"capacity":16,"intensity":"high","cover_image":"https://images.unsplash.com/photo-1599058945522-28d584b6f0ff?w=1200&q=80","description":"Pad work, bag rounds, and brutal finishers. All levels.","equipment_needed":["Wraps","Gloves"],"calorie_estimate":520,"trending_score":92},{"id":4,"title":"Metcon Mayhem","category":"crossfit","gym_id":5,"trainer_id":3,"starts_at":"2026-05-25T19:40:29.33+00:00","duration_min":60,"capacity":20,"intensity":"high","cover_image":"https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=1200&q=80","description":"Three rounds of running, rowing, and barbell complexes.","equipment_needed":["Jump rope"],"calorie_estimate":540,"trending_score":98},{"id":5,"title":"Reformer Pilates Flow","category":"pilates","gym_id":7,"trainer_id":6,"starts_at":"2026-05-25T21:40:29.33+00:00","duration_min":55,"capacity":8,"intensity":"low","cover_image":"https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=1200&q=80","description":"Slow, precise reformer work for posture and core control.","equipment_needed":["None — provided"],"calorie_estimate":230,"trending_score":72},{"id":6,"title":"Sunset Spin Ride","category":"cycling","gym_id":6,"trainer_id":10,"starts_at":"2026-05-25T22:40:29.33+00:00","duration_min":45,"capacity":30,"intensity":"high","cover_image":"https://images.unsplash.com/photo-1591741535018-d042766c62eb?w=1200&q=80","description":"45 minutes of climbs and sprints to a live-DJ set.","equipment_needed":["Cycling shoes — provided"],"calorie_estimate":490,"trending_score":85},{"id":7,"title":"Zumba Burn","category":"zumba","gym_id":9,"trainer_id":7,"starts_at":"2026-05-25T23:40:29.33+00:00","duration_min":60,"capacity":25,"intensity":"medium","cover_image":"https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=1200&q=80","description":"Latin-fusion dance class. No experience needed.","equipment_needed":["Towel"],"calorie_estimate":440,"trending_score":68},{"id":8,"title":"Functional Athlete","category":"functional","gym_id":5,"trainer_id":5,"starts_at":"2026-05-26T13:40:29.33+00:00","duration_min":60,"capacity":14,"intensity":"high","cover_image":"https://images.unsplash.com/photo-1571388208497-71bedc66e932?w=1200&q=80","description":"Kettlebells, sled, sandbag, and gymnastic rings.","equipment_needed":["Cross-trainers"],"calorie_estimate":460,"trending_score":76},{"id":9,"title":"Power Hour Strength","category":"strength","gym_id":2,"trainer_id":1,"starts_at":"2026-05-26T15:40:29.33+00:00","duration_min":60,"capacity":10,"intensity":"high","cover_image":"https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=1200&q=80","description":"Compound lifts with coached cues and tempo work.","equipment_needed":["Belt"],"calorie_estimate":360,"trending_score":82},{"id":10,"title":"Restorative Yoga","category":"yoga","gym_id":3,"trainer_id":8,"starts_at":"2026-05-26T17:40:29.33+00:00","duration_min":75,"capacity":16,"intensity":"low","cover_image":"https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=1200&q=80","description":"Long-held postures with breathwork. Recover and reset.","equipment_needed":["Mat","Bolster"],"calorie_estimate":180,"trending_score":55},{"id":11,"title":"Box Fit Bootcamp","category":"boxing","gym_id":4,"trainer_id":4,"starts_at":"2026-05-26T19:40:29.33+00:00","duration_min":60,"capacity":18,"intensity":"medium","cover_image":"https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=1200&q=80","description":"Boxing-style HIIT. Mitts, bag rounds, and core finisher.","equipment_needed":["Wraps"],"calorie_estimate":520,"trending_score":86},{"id":12,"title":"Reformer Burn","category":"pilates","gym_id":7,"trainer_id":6,"starts_at":"2026-05-27T13:40:29.33+00:00","duration_min":55,"capacity":8,"intensity":"medium","cover_image":"https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=1200&q=80","description":"Higher-intensity reformer class targeting glutes and core.","equipment_needed":["None"],"calorie_estimate":260,"trending_score":64},{"id":13,"title":"Olympic Lifting Lab","category":"strength","gym_id":8,"trainer_id":9,"starts_at":"2026-05-27T15:40:29.33+00:00","duration_min":90,"capacity":8,"intensity":"high","cover_image":"https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=1200&q=80","description":"Snatch and clean & jerk technique with Rahul.","equipment_needed":["Belt","Wrist wraps"],"calorie_estimate":420,"trending_score":71},{"id":14,"title":"Spin & Sculpt","category":"cycling","gym_id":6,"trainer_id":10,"starts_at":"2026-05-27T17:40:29.33+00:00","duration_min":60,"capacity":28,"intensity":"high","cover_image":"https://images.unsplash.com/photo-1591741535018-d042766c62eb?w=1200&q=80","description":"30 min on the bike, 30 min mat work.","equipment_needed":["Cycling shoes"],"calorie_estimate":520,"trending_score":88},{"id":15,"title":"Sunrise Strength","category":"strength","gym_id":1,"trainer_id":1,"starts_at":"2026-05-27T13:40:29.33+00:00","duration_min":60,"capacity":14,"intensity":"medium","cover_image":"https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=1200&q=80","description":"Full body session — push, pull, hinge, squat.","equipment_needed":["None"],"calorie_estimate":340,"trending_score":79},{"id":16,"title":"Yin Yoga","category":"yoga","gym_id":3,"trainer_id":2,"starts_at":"2026-05-27T20:40:29.33+00:00","duration_min":60,"capacity":16,"intensity":"low","cover_image":"https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=1200&q=80","description":"Deep stretches held 3–5 minutes for connective tissue.","equipment_needed":["Mat","Block"],"calorie_estimate":150,"trending_score":48},{"id":17,"title":"MMA Open Mat","category":"mma","gym_id":4,"trainer_id":4,"starts_at":"2026-05-28T17:40:29.33+00:00","duration_min":90,"capacity":20,"intensity":"high","cover_image":"https://images.unsplash.com/photo-1599058945522-28d584b6f0ff?w=1200&q=80","description":"Coach-led open mat — grappling and striking drills.","equipment_needed":["Mouthguard","Gloves"],"calorie_estimate":580,"trending_score":90},{"id":18,"title":"HIIT Express","category":"hiit","gym_id":9,"trainer_id":7,"starts_at":"2026-05-28T13:40:29.33+00:00","duration_min":30,"capacity":20,"intensity":"high","cover_image":"https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=1200&q=80","description":"30-minute full-body HIIT. In and out, drenched.","equipment_needed":["Towel"],"calorie_estimate":380,"trending_score":77},{"id":19,"title":"Pilates Foundations","category":"pilates","gym_id":7,"trainer_id":12,"starts_at":"2026-05-28T15:40:29.33+00:00","duration_min":55,"capacity":8,"intensity":"low","cover_image":"https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=1200&q=80","description":"Beginner reformer class. Learn the fundamentals.","equipment_needed":["None"],"calorie_estimate":210,"trending_score":52},{"id":20,"title":"Strength Club","category":"strength","gym_id":8,"trainer_id":9,"starts_at":"2026-05-29T14:40:29.33+00:00","duration_min":60,"capacity":12,"intensity":"high","cover_image":"https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=1200&q=80","description":"Programmed strength session. Five-week block.","equipment_needed":["Belt"],"calorie_estimate":360,"trending_score":69}],"products":[{"id":1,"vendor_partner_id":3,"name":"GYMCO Performance Tee","slug":"gymco-performance-tee","description":"Moisture-wicking athletic tee built for high-intensity training. Lightweight, breathable mesh panels keep you cool through every set.","category":"apparel","price_inr":899,"original_price_inr":1499,"image_url":"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80","gallery":[],"stock":42,"status":"active","created_at":"2026-05-25T15:03:28.448576+00:00"},{"id":2,"vendor_partner_id":3,"name":"Iron Whey Protein 1kg","slug":"iron-whey-1kg","description":"24g of premium whey isolate per serving. Chocolate flavor. Fast absorbing, low carb, perfect post-workout fuel.","category":"supplements","price_inr":2299,"original_price_inr":2999,"image_url":"https://images.unsplash.com/photo-1593095948071-474c5cc2989d?w=800&q=80","gallery":[],"stock":18,"status":"active","created_at":"2026-05-25T15:03:28.448576+00:00"},{"id":3,"vendor_partner_id":3,"name":"Pro Resistance Bands Set","slug":"pro-resistance-bands","description":"Set of 5 progressive bands with door anchor and grip handles. Up to 150lbs total resistance. Travel-friendly.","category":"equipment","price_inr":1199,"original_price_inr":1799,"image_url":"https://images.unsplash.com/photo-1598289431512-b97b0917affc?w=800&q=80","gallery":[],"stock":30,"status":"active","created_at":"2026-05-25T15:03:28.448576+00:00"},{"id":4,"vendor_partner_id":3,"name":"Shaker Bottle 700ml","slug":"shaker-bottle-700ml","description":"BPA-free, leakproof shaker with wire whisk ball. Easy-grip texture. Dishwasher safe.","category":"accessories","price_inr":349,"original_price_inr":599,"image_url":"https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80","gallery":[],"stock":100,"status":"active","created_at":"2026-05-25T15:03:28.448576+00:00"}]}
+{
+  "cities": [
+    {
+      "id": 1,
+      "name": "Bengaluru",
+      "is_active": true,
+      "created_at": "2026-05-26T07:31:30.858551+00:00",
+      "is_default": false
+    }
+  ],
+  "areas": [
+    {
+      "id": 1,
+      "city_id": 1,
+      "name": "Kormangala",
+      "is_active": true,
+      "created_at": "2026-05-26T07:31:42.369634+00:00"
+    },
+    {
+      "id": 2,
+      "city_id": 1,
+      "name": "Kumaraswamy Layout",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 3,
+      "city_id": 1,
+      "name": "Kalyan Nagar",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 4,
+      "city_id": 1,
+      "name": "Vidyaranyapura",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 5,
+      "city_id": 1,
+      "name": "Nandini Layout",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 6,
+      "city_id": 1,
+      "name": "Rajarajeshwari Nagar",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 7,
+      "city_id": 1,
+      "name": "CV Raman Nagar",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 8,
+      "city_id": 1,
+      "name": "Arekere",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 9,
+      "city_id": 1,
+      "name": "Attibele",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 10,
+      "city_id": 1,
+      "name": "Mahadevapura",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 11,
+      "city_id": 1,
+      "name": "Indiranagar",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 12,
+      "city_id": 1,
+      "name": "HAL",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 13,
+      "city_id": 1,
+      "name": "Kanakapura Road",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 14,
+      "city_id": 1,
+      "name": "Kammanahalli",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 15,
+      "city_id": 1,
+      "name": "Brigade Road",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 16,
+      "city_id": 1,
+      "name": "Whitefield",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 17,
+      "city_id": 1,
+      "name": "Marathahalli",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 18,
+      "city_id": 1,
+      "name": "Bannerghatta Road",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 19,
+      "city_id": 1,
+      "name": "Sadashivanagar",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 20,
+      "city_id": 1,
+      "name": "Chandapura",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 21,
+      "city_id": 1,
+      "name": "Kasturi Nagar",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 22,
+      "city_id": 1,
+      "name": "Nagarbhavi",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 23,
+      "city_id": 1,
+      "name": "Bellandur",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 24,
+      "city_id": 1,
+      "name": "Bommasandra",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 25,
+      "city_id": 1,
+      "name": "Hosakerehalli",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 26,
+      "city_id": 1,
+      "name": "Cunningham Road",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 27,
+      "city_id": 1,
+      "name": "Bagalur",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 28,
+      "city_id": 1,
+      "name": "Basavanagudi",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 29,
+      "city_id": 1,
+      "name": "Kengeri",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 30,
+      "city_id": 1,
+      "name": "Doddaballapur",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 31,
+      "city_id": 1,
+      "name": "Old Madras Road",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 32,
+      "city_id": 1,
+      "name": "Jayanagar",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 33,
+      "city_id": 1,
+      "name": "Mysore Road",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 34,
+      "city_id": 1,
+      "name": "Malleshwaram",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 35,
+      "city_id": 1,
+      "name": "Sanjay Nagar",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 36,
+      "city_id": 1,
+      "name": "Varthur",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 37,
+      "city_id": 1,
+      "name": "Jeevan Bhima Nagar",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 38,
+      "city_id": 1,
+      "name": "Chikkajala",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 39,
+      "city_id": 1,
+      "name": "Hennur",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 40,
+      "city_id": 1,
+      "name": "Ramamurthy Nagar",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 41,
+      "city_id": 1,
+      "name": "Anekal",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 42,
+      "city_id": 1,
+      "name": "HSR Layout",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 43,
+      "city_id": 1,
+      "name": "Murugeshpalya",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 44,
+      "city_id": 1,
+      "name": "Outer Ring Road",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 45,
+      "city_id": 1,
+      "name": "BTM Layout",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 46,
+      "city_id": 1,
+      "name": "Kadugodi",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 47,
+      "city_id": 1,
+      "name": "ITPL",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 48,
+      "city_id": 1,
+      "name": "Tin Factory",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 49,
+      "city_id": 1,
+      "name": "RT Nagar",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 50,
+      "city_id": 1,
+      "name": "Hanumanthnagar",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 51,
+      "city_id": 1,
+      "name": "Rajanukunte",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 52,
+      "city_id": 1,
+      "name": "Gandhi Bazaar",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 53,
+      "city_id": 1,
+      "name": "Hulimavu",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 54,
+      "city_id": 1,
+      "name": "Frazer Town",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 55,
+      "city_id": 1,
+      "name": "Yeshwanthpur",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 56,
+      "city_id": 1,
+      "name": "Thanisandra",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 57,
+      "city_id": 1,
+      "name": "Konanakunte",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 58,
+      "city_id": 1,
+      "name": "KR Puram",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 59,
+      "city_id": 1,
+      "name": "Wilson Garden",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 60,
+      "city_id": 1,
+      "name": "Begur",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 61,
+      "city_id": 1,
+      "name": "Hosur Road",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 62,
+      "city_id": 1,
+      "name": "Domlur",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 63,
+      "city_id": 1,
+      "name": "Cox Town",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 64,
+      "city_id": 1,
+      "name": "Rajajinagar",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 65,
+      "city_id": 1,
+      "name": "Lalbagh",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 66,
+      "city_id": 1,
+      "name": "Yelahanka",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 67,
+      "city_id": 1,
+      "name": "Nelamangala",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 68,
+      "city_id": 1,
+      "name": "MG Road",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 69,
+      "city_id": 1,
+      "name": "Kathriguppe",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 70,
+      "city_id": 1,
+      "name": "Jakkur",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 71,
+      "city_id": 1,
+      "name": "Chamrajpet",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 72,
+      "city_id": 1,
+      "name": "JP Nagar",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 73,
+      "city_id": 1,
+      "name": "Mathikere",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 74,
+      "city_id": 1,
+      "name": "Electronic City",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 75,
+      "city_id": 1,
+      "name": "Hoodi",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 76,
+      "city_id": 1,
+      "name": "Shivajinagar",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 77,
+      "city_id": 1,
+      "name": "Tumkur Road",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 78,
+      "city_id": 1,
+      "name": "Banashankari",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 79,
+      "city_id": 1,
+      "name": "Uttarahalli",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 80,
+      "city_id": 1,
+      "name": "Richmond Town",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 81,
+      "city_id": 1,
+      "name": "Peenya",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 82,
+      "city_id": 1,
+      "name": "Hebbal",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 83,
+      "city_id": 1,
+      "name": "Magadi Road",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 84,
+      "city_id": 1,
+      "name": "Padmanabhanagar",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 85,
+      "city_id": 1,
+      "name": "Vijayanagar",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 86,
+      "city_id": 1,
+      "name": "Koramangala",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 87,
+      "city_id": 1,
+      "name": "Brookefield",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 88,
+      "city_id": 1,
+      "name": "Bommanahalli",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 89,
+      "city_id": 1,
+      "name": "Nagawara",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 90,
+      "city_id": 1,
+      "name": "Sahakar Nagar",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 91,
+      "city_id": 1,
+      "name": "Banaswadi",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 92,
+      "city_id": 1,
+      "name": "Residency Road",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 93,
+      "city_id": 1,
+      "name": "Girinagar",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 94,
+      "city_id": 1,
+      "name": "Old Airport Road",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 95,
+      "city_id": 1,
+      "name": "Sarjapur Road",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 96,
+      "city_id": 1,
+      "name": "Lavelle Road",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 97,
+      "city_id": 1,
+      "name": "Devanahalli",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    },
+    {
+      "id": 98,
+      "city_id": 1,
+      "name": "Ulsoor",
+      "is_active": true,
+      "created_at": "2026-05-26T07:33:04.041141+00:00"
+    }
+  ],
+  "amenities": [
+    {
+      "id": 2,
+      "name": "WiFi",
+      "slug": "wifi",
+      "description": "High-speed wireless internet",
+      "icon": "Wifi",
+      "category": "facilities",
+      "is_active": true,
+      "sort_order": 0,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 3,
+      "name": "Air Conditioning",
+      "slug": "air-conditioning",
+      "description": "Climate-controlled workout floor",
+      "icon": "Wind",
+      "category": "facilities",
+      "is_active": true,
+      "sort_order": 10,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 4,
+      "name": "Shower",
+      "slug": "shower",
+      "description": "Clean shower facilities",
+      "icon": "Droplets",
+      "category": "facilities",
+      "is_active": true,
+      "sort_order": 20,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 5,
+      "name": "Sauna",
+      "slug": "sauna",
+      "description": "Steam and dry sauna",
+      "icon": "Flame",
+      "category": "wellness",
+      "is_active": true,
+      "sort_order": 30,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 6,
+      "name": "Steam Room",
+      "slug": "steam-room",
+      "description": "Relaxing steam room",
+      "icon": "CloudFog",
+      "category": "wellness",
+      "is_active": true,
+      "sort_order": 40,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 7,
+      "name": "Swimming Pool",
+      "slug": "swimming-pool",
+      "description": "Indoor swimming pool",
+      "icon": "Waves",
+      "category": "facilities",
+      "is_active": true,
+      "sort_order": 50,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 8,
+      "name": "Jacuzzi",
+      "slug": "jacuzzi",
+      "description": "Hot tub for post-workout recovery",
+      "icon": "Bath",
+      "category": "wellness",
+      "is_active": true,
+      "sort_order": 60,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 9,
+      "name": "Cardio Equipment",
+      "slug": "cardio-equipment",
+      "description": "Treadmills, ellipticals, bikes",
+      "icon": "HeartPulse",
+      "category": "equipment",
+      "is_active": true,
+      "sort_order": 70,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 10,
+      "name": "Weight Training",
+      "slug": "weight-training",
+      "description": "Free weights and machines",
+      "icon": "Dumbbell",
+      "category": "equipment",
+      "is_active": true,
+      "sort_order": 80,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 11,
+      "name": "Functional Training Area",
+      "slug": "functional-training",
+      "description": "Open space for functional workouts",
+      "icon": "Activity",
+      "category": "equipment",
+      "is_active": true,
+      "sort_order": 90,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 12,
+      "name": "CrossFit Box",
+      "slug": "crossfit-box",
+      "description": "Dedicated CrossFit zone",
+      "icon": "Flame",
+      "category": "equipment",
+      "is_active": true,
+      "sort_order": 100,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 13,
+      "name": "Boxing Ring",
+      "slug": "boxing-ring",
+      "description": "Boxing and MMA ring",
+      "icon": "Swords",
+      "category": "equipment",
+      "is_active": true,
+      "sort_order": 110,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 14,
+      "name": "Spinning Studio",
+      "slug": "spinning-studio",
+      "description": "Indoor cycling studio",
+      "icon": "Bike",
+      "category": "equipment",
+      "is_active": true,
+      "sort_order": 120,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 15,
+      "name": "Personal Training",
+      "slug": "personal-training",
+      "description": "Certified personal trainers",
+      "icon": "Users",
+      "category": "services",
+      "is_active": true,
+      "sort_order": 130,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 16,
+      "name": "Group Classes",
+      "slug": "group-classes",
+      "description": "HIIT, Zumba, dance and more",
+      "icon": "Users2",
+      "category": "services",
+      "is_active": true,
+      "sort_order": 140,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 17,
+      "name": "Yoga Classes",
+      "slug": "yoga-classes",
+      "description": "Yoga and meditation sessions",
+      "icon": "Flower2",
+      "category": "services",
+      "is_active": true,
+      "sort_order": 150,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 18,
+      "name": "Pilates Studio",
+      "slug": "pilates-studio",
+      "description": "Reformer and mat pilates",
+      "icon": "Sparkles",
+      "category": "services",
+      "is_active": true,
+      "sort_order": 160,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 19,
+      "name": "Nutrition Counseling",
+      "slug": "nutrition-counseling",
+      "description": "Personalized diet plans",
+      "icon": "Apple",
+      "category": "services",
+      "is_active": true,
+      "sort_order": 170,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 20,
+      "name": "Physiotherapy",
+      "slug": "physiotherapy",
+      "description": "Recovery and rehab support",
+      "icon": "Stethoscope",
+      "category": "wellness",
+      "is_active": true,
+      "sort_order": 180,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 21,
+      "name": "Massage Therapy",
+      "slug": "massage-therapy",
+      "description": "Sports and recovery massage",
+      "icon": "HandHeart",
+      "category": "wellness",
+      "is_active": true,
+      "sort_order": 190,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 22,
+      "name": "Locker Room",
+      "slug": "locker-room",
+      "description": "Secure personal lockers",
+      "icon": "Lock",
+      "category": "facilities",
+      "is_active": true,
+      "sort_order": 200,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 23,
+      "name": "Towel Service",
+      "slug": "towel-service",
+      "description": "Fresh towels provided",
+      "icon": "Shirt",
+      "category": "facilities",
+      "is_active": true,
+      "sort_order": 210,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 24,
+      "name": "Parking",
+      "slug": "parking",
+      "description": "On-site parking available",
+      "icon": "ParkingCircle",
+      "category": "facilities",
+      "is_active": true,
+      "sort_order": 220,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 25,
+      "name": "Valet Parking",
+      "slug": "valet-parking",
+      "description": "Complimentary valet",
+      "icon": "CarFront",
+      "category": "facilities",
+      "is_active": true,
+      "sort_order": 230,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 26,
+      "name": "Cafe / Smoothie Bar",
+      "slug": "cafe-smoothie-bar",
+      "description": "Healthy snacks and shakes",
+      "icon": "Coffee",
+      "category": "facilities",
+      "is_active": true,
+      "sort_order": 240,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 27,
+      "name": "Pro Shop",
+      "slug": "pro-shop",
+      "description": "Apparel and supplements",
+      "icon": "ShoppingBag",
+      "category": "facilities",
+      "is_active": true,
+      "sort_order": 250,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 28,
+      "name": "Kids Zone",
+      "slug": "kids-zone",
+      "description": "Childcare while you train",
+      "icon": "Baby",
+      "category": "facilities",
+      "is_active": true,
+      "sort_order": 260,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 29,
+      "name": "Women Only Hours",
+      "slug": "women-only-hours",
+      "description": "Dedicated women-only sessions",
+      "icon": "VenusAndMars",
+      "category": "services",
+      "is_active": true,
+      "sort_order": 270,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 30,
+      "name": "24/7 Access",
+      "slug": "24-7-access",
+      "description": "Around-the-clock entry",
+      "icon": "Clock",
+      "category": "services",
+      "is_active": true,
+      "sort_order": 280,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 31,
+      "name": "Open Air Rooftop",
+      "slug": "open-air-rooftop",
+      "description": "Outdoor rooftop training area",
+      "icon": "Sun",
+      "category": "facilities",
+      "is_active": true,
+      "sort_order": 290,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 32,
+      "name": "Body Composition Analysis",
+      "slug": "body-composition-analysis",
+      "description": "InBody / DEXA scans",
+      "icon": "Scale",
+      "category": "services",
+      "is_active": true,
+      "sort_order": 300,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 33,
+      "name": "Eucalyptus Steam Room",
+      "slug": "eucalyptus-steam-room",
+      "description": "Aromatherapy steam",
+      "icon": "Leaf",
+      "category": "wellness",
+      "is_active": true,
+      "sort_order": 310,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 34,
+      "name": "Ice Bath",
+      "slug": "ice-bath",
+      "description": "Cold plunge for recovery",
+      "icon": "Snowflake",
+      "category": "wellness",
+      "is_active": true,
+      "sort_order": 320,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 35,
+      "name": "Cycling Track",
+      "slug": "cycling-track",
+      "description": "Indoor cycling track",
+      "icon": "Bike",
+      "category": "equipment",
+      "is_active": true,
+      "sort_order": 330,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    },
+    {
+      "id": 36,
+      "name": "Music System",
+      "slug": "music-system",
+      "description": "Premium audio on the floor",
+      "icon": "Music2",
+      "category": "facilities",
+      "is_active": true,
+      "sort_order": 340,
+      "created_at": "2026-05-26T06:42:38.800253+00:00"
+    }
+  ],
+  "workouts": [
+    {
+      "id": 1,
+      "name": "Gym Workouts",
+      "slug": "gym-workouts",
+      "description": "Strength + functional training",
+      "icon": "Dumbbell",
+      "color": "from-orange-500 to-amber-500",
+      "image_url": "",
+      "is_active": true,
+      "sort_order": 1,
+      "created_at": "2026-05-26T06:52:29.23924+00:00"
+    },
+    {
+      "id": 2,
+      "name": "Yoga",
+      "slug": "yoga",
+      "description": "Flexibility and mindfulness",
+      "icon": "Flower2",
+      "color": "from-violet-500 to-purple-500",
+      "image_url": "",
+      "is_active": true,
+      "sort_order": 2,
+      "created_at": "2026-05-26T06:52:29.23924+00:00"
+    },
+    {
+      "id": 3,
+      "name": "Abs",
+      "slug": "abs",
+      "description": "Core sculpting sessions",
+      "icon": "Flame",
+      "color": "from-red-500 to-rose-500",
+      "image_url": "",
+      "is_active": true,
+      "sort_order": 3,
+      "created_at": "2026-05-26T06:52:29.23924+00:00"
+    },
+    {
+      "id": 4,
+      "name": "Combat Sports",
+      "slug": "combat-sports",
+      "description": "Boxing, kickboxing, sparring",
+      "icon": "Swords",
+      "color": "from-slate-700 to-slate-900",
+      "image_url": "",
+      "is_active": true,
+      "sort_order": 4,
+      "created_at": "2026-05-26T06:52:29.23924+00:00"
+    },
+    {
+      "id": 5,
+      "name": "Core",
+      "slug": "core",
+      "description": "Functional core training",
+      "icon": "Target",
+      "color": "from-yellow-400 to-orange-400",
+      "image_url": "",
+      "is_active": true,
+      "sort_order": 5,
+      "created_at": "2026-05-26T06:52:29.23924+00:00"
+    },
+    {
+      "id": 6,
+      "name": "Dance",
+      "slug": "dance",
+      "description": "Cardio dance fitness",
+      "icon": "Music",
+      "color": "from-pink-500 to-rose-500",
+      "image_url": "",
+      "is_active": true,
+      "sort_order": 6,
+      "created_at": "2026-05-26T06:52:29.23924+00:00"
+    },
+    {
+      "id": 7,
+      "name": "HIIT",
+      "slug": "hiit",
+      "description": "High-intensity interval training",
+      "icon": "Zap",
+      "color": "from-orange-500 to-red-500",
+      "image_url": "",
+      "is_active": true,
+      "sort_order": 7,
+      "created_at": "2026-05-26T06:52:29.23924+00:00"
+    },
+    {
+      "id": 9,
+      "name": "Pilates",
+      "slug": "pilates",
+      "description": "Low-impact strength + control",
+      "icon": "Activity",
+      "color": "from-emerald-500 to-teal-500",
+      "image_url": "",
+      "is_active": true,
+      "sort_order": 9,
+      "created_at": "2026-05-26T06:52:29.23924+00:00"
+    },
+    {
+      "id": 10,
+      "name": "Spinning",
+      "slug": "spinning",
+      "description": "Indoor cycling",
+      "icon": "Bike",
+      "color": "from-blue-500 to-indigo-500",
+      "image_url": "",
+      "is_active": true,
+      "sort_order": 10,
+      "created_at": "2026-05-26T06:52:29.23924+00:00"
+    }
+  ],
+  "partners": [
+    {
+      "id": 3,
+      "name": "Iconic Fitness 1st Block",
+      "email": "info@iconicfitnessindia.com",
+      "phone": "70262 76888",
+      "password_hash": "$2b$10$RisVv9d7KZjLKip/WW27gOyzPmmrLlmIUZkV5g0dtctBwORS0qE9m",
+      "status": "active",
+      "city": "Bengaluru",
+      "notes": "Best Place for ever",
+      "created_at": "2026-05-26T08:25:38.293488+00:00",
+      "kind": "gym",
+      "avatar_url": "",
+      "pending_amenity_ids": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        32,
+        33,
+        34,
+        35,
+        36
+      ]
+    },
+    {
+      "id": 39,
+      "name": "Iconic Fitness Koramangala 5th Block",
+      "email": "info@iconicfitnessindia.com",
+      "phone": "70262 76888",
+      "password_hash": "$2b$10$Y.TEWCqvnzAnmKyhvft5Z.q/3dyuNOPOlvU49mIZ.zO4trasuBMSW",
+      "status": "active",
+      "city": "Bengalore",
+      "notes": "sddssds",
+      "created_at": "2026-05-26T11:48:30.076937+00:00",
+      "kind": "gym",
+      "avatar_url": "",
+      "pending_amenity_ids": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ]
+    }
+  ],
+  "gyms": [
+    {
+      "id": 1,
+      "name": "Iconic Fitness Indiranagar",
+      "slug": "iron-republic",
+      "city": "Bangalore",
+      "area": "Indiranagar",
+      "address": "100 Feet Rd, Indiranagar",
+      "hero_image": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&q=80",
+      "rating": 4.3,
+      "reviews_count": 120,
+      "price_from": 1899,
+      "categories": [
+        "gym",
+        "strength",
+        "crossfit",
+        "functional"
+      ],
+      "amenities": [
+        "24x7 Access",
+        "Shower",
+        "Steam",
+        "Locker",
+        "Parking",
+        "Cafe"
+      ],
+      "distance_km": 0.6,
+      "is_premium": false,
+      "open_now": true,
+      "about": "A flagship strength temple in the heart of Indiranagar. Olympic platforms, eight squat racks, and a dedicated mobility zone — built for athletes who train every day.",
+      "gallery": [
+        "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&q=80",
+        "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1200&q=80",
+        "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1200&q=80",
+        "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1200&q=80"
+      ],
+      "hours": "6:00 AM – 11:00 PM",
+      "lat": 12.9716,
+      "lng": 77.6411,
+      "featured": false,
+      "owner_partner_id": null,
+      "logo_url": "",
+      "payout_per_visit_inr": 0,
+      "payout_tax_pct": 18,
+      "is_verified": true
+    },
+    {
+      "id": 2,
+      "name": "Iconic Fitness Koramangala",
+      "slug": "atlas-strength",
+      "city": "Bangalore",
+      "area": "Koramangala",
+      "address": "5th Block, Koramangala",
+      "hero_image": "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1200&q=80",
+      "rating": 4.4,
+      "reviews_count": 163,
+      "price_from": 2149,
+      "categories": [
+        "gym",
+        "strength",
+        "powerlifting"
+      ],
+      "amenities": [
+        "Shower",
+        "Steam",
+        "Locker",
+        "Cafe",
+        "PT Available"
+      ],
+      "distance_km": 1.8,
+      "is_premium": false,
+      "open_now": true,
+      "about": "Powerlifting-first studio designed by competitive lifters. Calibrated plates, deadlift platforms, and chalk on the bar.",
+      "gallery": [
+        "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1200&q=80",
+        "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1200&q=80",
+        "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1200&q=80",
+        "https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=1200&q=80"
+      ],
+      "hours": "5:30 AM – 11:00 PM",
+      "lat": 12.9352,
+      "lng": 77.6245,
+      "featured": false,
+      "owner_partner_id": null,
+      "logo_url": "/api/storage/objects/uploads/393967a4-b2f4-406c-9ef3-eef0477f2377",
+      "payout_per_visit_inr": 0,
+      "payout_tax_pct": 18,
+      "is_verified": true
+    },
+    {
+      "id": 3,
+      "name": "Iconic Fitness HSR Layout",
+      "slug": "flow-yoga",
+      "city": "Bangalore",
+      "area": "HSR Layout",
+      "address": "HSR Layout, Sector 2",
+      "hero_image": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1200&q=80",
+      "rating": 4.5,
+      "reviews_count": 206,
+      "price_from": 2399,
+      "categories": [
+        "yoga",
+        "pilates",
+        "wellness"
+      ],
+      "amenities": [
+        "Mat Provided",
+        "Shower",
+        "Locker",
+        "Tea Bar"
+      ],
+      "distance_km": 2.4,
+      "is_premium": false,
+      "open_now": true,
+      "about": "Heated vinyasa, ashtanga, and prenatal yoga in a serene loft. Class sizes capped at 14.",
+      "gallery": [
+        "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1200&q=80",
+        "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1200&q=80",
+        "https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=1200&q=80",
+        "https://images.unsplash.com/photo-1576678927484-cc907957088c?w=1200&q=80"
+      ],
+      "hours": "6:00 AM – 9:00 PM",
+      "lat": 12.9116,
+      "lng": 77.6473,
+      "featured": true,
+      "owner_partner_id": null,
+      "logo_url": "",
+      "payout_per_visit_inr": 0,
+      "payout_tax_pct": 18,
+      "is_verified": true
+    },
+    {
+      "id": 4,
+      "name": "Iconic Fitness Bandra West",
+      "slug": "combat-lab",
+      "city": "Mumbai",
+      "area": "Bandra West",
+      "address": "Linking Rd, Bandra West",
+      "hero_image": "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1200&q=80",
+      "rating": 4.6,
+      "reviews_count": 249,
+      "price_from": 2649,
+      "categories": [
+        "mma",
+        "boxing",
+        "strength"
+      ],
+      "amenities": [
+        "Heavy Bags",
+        "Ring",
+        "Shower",
+        "PT Available"
+      ],
+      "distance_km": 3.1,
+      "is_premium": false,
+      "open_now": true,
+      "about": "Mumbai's premier MMA gym. BJJ, muay thai, and boxing programmes with national-level coaches.",
+      "gallery": [
+        "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=1200&q=80",
+        "https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=1200&q=80",
+        "https://images.unsplash.com/photo-1576678927484-cc907957088c?w=1200&q=80",
+        "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=1200&q=80"
+      ],
+      "hours": "6:00 AM – 11:30 PM",
+      "lat": 19.0606,
+      "lng": 72.8295,
+      "featured": true,
+      "owner_partner_id": null,
+      "logo_url": "",
+      "payout_per_visit_inr": 0,
+      "payout_tax_pct": 18,
+      "is_verified": true
+    },
+    {
+      "id": 5,
+      "name": "Iconic Fitness Lower Parel",
+      "slug": "pulse-crossfit",
+      "city": "Mumbai",
+      "area": "Lower Parel",
+      "address": "Kamala Mills, Lower Parel",
+      "hero_image": "https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=1200&q=80",
+      "rating": 4.7,
+      "reviews_count": 292,
+      "price_from": 2899,
+      "categories": [
+        "crossfit",
+        "functional",
+        "strength"
+      ],
+      "amenities": [
+        "Open Box",
+        "Showers",
+        "Locker",
+        "Cafe"
+      ],
+      "distance_km": 4,
+      "is_premium": false,
+      "open_now": true,
+      "about": "Affiliate box with two classes running concurrently. Olympic lifting and metcons every hour.",
+      "gallery": [
+        "https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=1200&q=80",
+        "https://images.unsplash.com/photo-1576678927484-cc907957088c?w=1200&q=80",
+        "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=1200&q=80",
+        "https://images.unsplash.com/photo-1652025753863-c7a2fcb4c4f0?w=1200&q=80"
+      ],
+      "hours": "5:30 AM – 10:30 PM",
+      "lat": 18.9943,
+      "lng": 72.8267,
+      "featured": true,
+      "owner_partner_id": null,
+      "logo_url": "",
+      "payout_per_visit_inr": 0,
+      "payout_tax_pct": 18,
+      "is_verified": true
+    },
+    {
+      "id": 6,
+      "name": "Iconic Fitness Powai",
+      "slug": "soul-spin",
+      "city": "Mumbai",
+      "area": "Powai",
+      "address": "Hiranandani Gardens, Powai",
+      "hero_image": "https://images.unsplash.com/photo-1576678927484-cc907957088c?w=1200&q=80",
+      "rating": 4.8,
+      "reviews_count": 335,
+      "price_from": 3149,
+      "categories": [
+        "cycling",
+        "hiit",
+        "wellness"
+      ],
+      "amenities": [
+        "Cycling Shoes",
+        "Towel",
+        "Smoothie Bar"
+      ],
+      "distance_km": 6.2,
+      "is_premium": false,
+      "open_now": true,
+      "about": "Candle-lit spin studio with the best instructors in Mumbai. 45-minute rides set to live DJ sets on weekends.",
+      "gallery": [
+        "https://images.unsplash.com/photo-1576678927484-cc907957088c?w=1200&q=80",
+        "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=1200&q=80",
+        "https://images.unsplash.com/photo-1652025753863-c7a2fcb4c4f0?w=1200&q=80",
+        "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1200&q=80"
+      ],
+      "hours": "6:00 AM – 10:00 PM",
+      "lat": 19.1197,
+      "lng": 72.9056,
+      "featured": true,
+      "owner_partner_id": null,
+      "logo_url": "",
+      "payout_per_visit_inr": 0,
+      "payout_tax_pct": 18,
+      "is_verified": true
+    },
+    {
+      "id": 7,
+      "name": "Iconic Fitness Greater Kailash",
+      "slug": "pilates-house",
+      "city": "Delhi",
+      "area": "Greater Kailash",
+      "address": "M Block Market, GK-1",
+      "hero_image": "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=1200&q=80",
+      "rating": 4.9,
+      "reviews_count": 378,
+      "price_from": 3399,
+      "categories": [
+        "pilates",
+        "yoga",
+        "wellness"
+      ],
+      "amenities": [
+        "Reformer",
+        "Mat",
+        "Shower",
+        "PT Available"
+      ],
+      "distance_km": 5.5,
+      "is_premium": false,
+      "open_now": true,
+      "about": "Reformer pilates, mat classes, and rehab-focused private sessions. Trainers are Polestar-certified.",
+      "gallery": [
+        "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=1200&q=80",
+        "https://images.unsplash.com/photo-1652025753863-c7a2fcb4c4f0?w=1200&q=80",
+        "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1200&q=80",
+        "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&q=80"
+      ],
+      "hours": "6:30 AM – 9:00 PM",
+      "lat": 28.5482,
+      "lng": 77.2453,
+      "featured": true,
+      "owner_partner_id": null,
+      "logo_url": "",
+      "payout_per_visit_inr": 0,
+      "payout_tax_pct": 18,
+      "is_verified": true
+    },
+    {
+      "id": 8,
+      "name": "Iconic Fitness Connaught Place",
+      "slug": "apex-fitness",
+      "city": "Delhi",
+      "area": "Connaught Place",
+      "address": "Block N, CP Inner Circle",
+      "hero_image": "https://images.unsplash.com/photo-1652025753863-c7a2fcb4c4f0?w=1200&q=80",
+      "rating": 4.3,
+      "reviews_count": 421,
+      "price_from": 3649,
+      "categories": [
+        "gym",
+        "strength",
+        "crossfit",
+        "cycling"
+      ],
+      "amenities": [
+        "24x7 Access",
+        "Sauna",
+        "Steam",
+        "Cafe",
+        "Pool"
+      ],
+      "distance_km": 2.7,
+      "is_premium": false,
+      "open_now": true,
+      "about": "A 24,000 sq ft mega-gym in the heart of Delhi with a heated pool, sauna, and CrossFit zone.",
+      "gallery": [
+        "https://images.unsplash.com/photo-1652025753863-c7a2fcb4c4f0?w=1200&q=80",
+        "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1200&q=80",
+        "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&q=80",
+        "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1200&q=80"
+      ],
+      "hours": "Open 24/7",
+      "lat": 28.6315,
+      "lng": 77.2167,
+      "featured": false,
+      "owner_partner_id": null,
+      "logo_url": "",
+      "payout_per_visit_inr": 0,
+      "payout_tax_pct": 18,
+      "is_verified": true
+    },
+    {
+      "id": 9,
+      "name": "Iconic Fitness Saket",
+      "slug": "move-studio",
+      "city": "Delhi",
+      "area": "Saket",
+      "address": "Saket District Centre",
+      "hero_image": "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1200&q=80",
+      "rating": 4.4,
+      "reviews_count": 464,
+      "price_from": 3899,
+      "categories": [
+        "zumba",
+        "hiit",
+        "yoga"
+      ],
+      "amenities": [
+        "Mat Provided",
+        "Shower",
+        "Locker"
+      ],
+      "distance_km": 4.3,
+      "is_premium": false,
+      "open_now": true,
+      "about": "Group fitness boutique known for zumba, dance HIIT, and barre. Energy off the charts.",
+      "gallery": [
+        "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1200&q=80",
+        "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&q=80",
+        "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1200&q=80",
+        "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1200&q=80"
+      ],
+      "hours": "6:00 AM – 10:00 PM",
+      "lat": 28.5245,
+      "lng": 77.2066,
+      "featured": true,
+      "owner_partner_id": null,
+      "logo_url": "",
+      "payout_per_visit_inr": 100,
+      "payout_tax_pct": 5,
+      "is_verified": true
+    },
+    {
+      "id": 10,
+      "name": "Iconic Fitness Koramangala 1st Block",
+      "slug": "iconic-fitness-kormangala-1st-block",
+      "city": "Bengaluru",
+      "area": "Kormangala",
+      "address": "43, 5th A Main Rd, near Wipro Park, 1st Block Koramangala, Koramangala, Bengaluru, Karnataka 560034",
+      "hero_image": "/api/storage/objects/uploads/9ad73f73-e0ec-47f4-b5b0-e5f0ec7fd408",
+      "rating": 4.9,
+      "reviews_count": 0,
+      "price_from": 999,
+      "categories": [
+        "gym"
+      ],
+      "amenities": [
+        "ALL"
+      ],
+      "distance_km": 2.5,
+      "is_premium": true,
+      "open_now": true,
+      "about": "Best Gym For ever ",
+      "gallery": [
+        "/api/storage/objects/uploads/0162304b-bb0a-4739-baa8-ff29bc7203c7",
+        "/api/storage/objects/uploads/4ed377e5-ab31-4391-bac6-3b3b7ddeb84d",
+        "/api/storage/objects/uploads/651d603e-ef99-49ba-acd9-2a3a42b01e6f",
+        "/api/storage/objects/uploads/b7ab4b0e-d58f-4630-99a1-37e3632d9c45",
+        "/api/storage/objects/uploads/78022e05-9f01-47ee-90d8-00780799d6ab",
+        "/api/storage/objects/uploads/ce24072a-af1f-4ea5-a5e2-171dc58db1f6"
+      ],
+      "hours": "6am – 11pm",
+      "lat": 12.933039,
+      "lng": 77.6149,
+      "featured": true,
+      "owner_partner_id": 3,
+      "logo_url": "/api/storage/objects/uploads/7b3048a6-0cd4-4b01-a1ba-186ddba2f7c3",
+      "payout_per_visit_inr": 100,
+      "payout_tax_pct": 18,
+      "is_verified": true
+    },
+    {
+      "id": 11,
+      "name": "Iconic Fitness Koramangala 5th Block",
+      "slug": "iconic-fitness-koramangala-5th-block",
+      "city": "Bengaluru",
+      "area": "Koramangala",
+      "address": "MM Mention, 67, 60 Feet Rd, KHB Colony, 5th Block, Koramangala, Bengaluru, Karnataka 560095",
+      "hero_image": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200",
+      "rating": 4.9,
+      "reviews_count": 0,
+      "price_from": 999,
+      "categories": [
+        "gym"
+      ],
+      "amenities": [],
+      "distance_km": 2.5,
+      "is_premium": true,
+      "open_now": true,
+      "about": "Best place inn MM Mention, 67, 60 Feet Rd, KHB Colony, 5th Block, Koramangala, Bengaluru, Karnataka 560095",
+      "gallery": [],
+      "hours": "6am – 11pm",
+      "lat": 12.933846,
+      "lng": 77.617676,
+      "featured": true,
+      "owner_partner_id": null,
+      "logo_url": "/api/storage/objects/uploads/4be64046-75ac-4692-ae05-a82ef938ce61",
+      "payout_per_visit_inr": 100,
+      "payout_tax_pct": 18,
+      "is_verified": false
+    }
+  ],
+  "trainers": [
+    {
+      "id": 1,
+      "name": "Rohan Iyer",
+      "specialty": "Strength & Conditioning",
+      "bio": "NSCA-CSCS coach with 8 years training pro athletes. Specialises in powerlifting and rehab.",
+      "photo_url": "https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=600&q=80",
+      "rating": 4.6,
+      "sessions_count": 80,
+      "price_per_session": 1500,
+      "certifications": [
+        "NASM-CPT",
+        "Strength L2",
+        "First Aid Certified"
+      ],
+      "city": "Bangalore",
+      "gym_id": 1
+    },
+    {
+      "id": 2,
+      "name": "Priya Sharma",
+      "specialty": "Yoga",
+      "bio": "E-RYT 500 vinyasa and ashtanga teacher trained in Mysore. Calm, precise, demanding in the best way.",
+      "photo_url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80",
+      "rating": 4.65,
+      "sessions_count": 103,
+      "price_per_session": 2000,
+      "certifications": [
+        "NASM-CPT",
+        "Yoga L2",
+        "First Aid Certified"
+      ],
+      "city": "Bangalore",
+      "gym_id": 3
+    },
+    {
+      "id": 3,
+      "name": "Vikram Singh",
+      "specialty": "CrossFit",
+      "bio": "CF-L3, regional competitor 2019. Builds programmes that scale from beginner to elite.",
+      "photo_url": "https://images.unsplash.com/photo-1594381898411-846e7d193883?w=600&q=80",
+      "rating": 4.7,
+      "sessions_count": 126,
+      "price_per_session": 2500,
+      "certifications": [
+        "NASM-CPT",
+        "CrossFit L2",
+        "First Aid Certified"
+      ],
+      "city": "Bangalore",
+      "gym_id": 1
+    },
+    {
+      "id": 4,
+      "name": "Ayesha Khan",
+      "specialty": "MMA & Boxing",
+      "bio": "Former amateur boxer, now head coach at Combat Lab. Sharp pad work and brutal conditioning.",
+      "photo_url": "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=600&q=80",
+      "rating": 4.75,
+      "sessions_count": 149,
+      "price_per_session": 3000,
+      "certifications": [
+        "NASM-CPT",
+        "MMA L2",
+        "First Aid Certified"
+      ],
+      "city": "Mumbai",
+      "gym_id": 4
+    },
+    {
+      "id": 5,
+      "name": "Karan Joshi",
+      "specialty": "Functional Fitness",
+      "bio": "Mobility-first coach. Combines kettlebells, gymnastics rings, and Z-Health drills.",
+      "photo_url": "https://images.unsplash.com/photo-1548690312-e3b507d8c110?w=600&q=80",
+      "rating": 4.8,
+      "sessions_count": 172,
+      "price_per_session": 1500,
+      "certifications": [
+        "NASM-CPT",
+        "Functional L2",
+        "First Aid Certified"
+      ],
+      "city": "Mumbai",
+      "gym_id": 5
+    },
+    {
+      "id": 6,
+      "name": "Meera Nair",
+      "specialty": "Pilates",
+      "bio": "Polestar-certified pilates instructor. Reformer specialist with a background in classical dance.",
+      "photo_url": "https://images.unsplash.com/photo-1609899537878-88d5ba429bdf?w=600&q=80",
+      "rating": 4.6,
+      "sessions_count": 195,
+      "price_per_session": 2000,
+      "certifications": [
+        "NASM-CPT",
+        "Pilates L2",
+        "First Aid Certified"
+      ],
+      "city": "Delhi",
+      "gym_id": 7
+    },
+    {
+      "id": 7,
+      "name": "Aditya Verma",
+      "specialty": "HIIT",
+      "bio": "Group fitness lead at Move Studio. Designs metcons that leave you laughing on the floor.",
+      "photo_url": "https://images.unsplash.com/photo-1571731956672-f2b94d7dd0cb?w=600&q=80",
+      "rating": 4.65,
+      "sessions_count": 218,
+      "price_per_session": 2500,
+      "certifications": [
+        "NASM-CPT",
+        "HIIT L2",
+        "First Aid Certified"
+      ],
+      "city": "Delhi",
+      "gym_id": 9
+    },
+    {
+      "id": 8,
+      "name": "Sneha Reddy",
+      "specialty": "Yoga",
+      "bio": "Hot yoga, prenatal, and meditation teacher with 12 years on the mat.",
+      "photo_url": "https://images.unsplash.com/photo-1607962837359-5e7e89f86776?w=600&q=80",
+      "rating": 4.7,
+      "sessions_count": 241,
+      "price_per_session": 3000,
+      "certifications": [
+        "NASM-CPT",
+        "Yoga L2",
+        "First Aid Certified"
+      ],
+      "city": "Bangalore",
+      "gym_id": 3
+    },
+    {
+      "id": 9,
+      "name": "Rahul Kapoor",
+      "specialty": "Strength",
+      "bio": "Olympic weightlifting coach. Trains national-level juniors twice a week.",
+      "photo_url": "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=600&q=80",
+      "rating": 4.75,
+      "sessions_count": 264,
+      "price_per_session": 1500,
+      "certifications": [
+        "NASM-CPT",
+        "Strength L2",
+        "First Aid Certified"
+      ],
+      "city": "Delhi",
+      "gym_id": 8
+    },
+    {
+      "id": 10,
+      "name": "Tara Bose",
+      "specialty": "Cycling",
+      "bio": "Indoor cycling instructor and certified spinning master. The playlist alone is worth the class.",
+      "photo_url": "https://images.unsplash.com/photo-1530021232320-687d8e3dba54?w=600&q=80",
+      "rating": 4.8,
+      "sessions_count": 287,
+      "price_per_session": 2000,
+      "certifications": [
+        "NASM-CPT",
+        "Cycling L2",
+        "First Aid Certified"
+      ],
+      "city": "Mumbai",
+      "gym_id": 6
+    },
+    {
+      "id": 11,
+      "name": "Devansh Gupta",
+      "specialty": "Strength",
+      "bio": "Bodybuilding-focused coach. Has prepped clients for Mr. India Classic Physique.",
+      "photo_url": "https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=600&q=80",
+      "rating": 4.6,
+      "sessions_count": 310,
+      "price_per_session": 2500,
+      "certifications": [
+        "NASM-CPT",
+        "Strength L2",
+        "First Aid Certified"
+      ],
+      "city": "Delhi",
+      "gym_id": 8
+    },
+    {
+      "id": 12,
+      "name": "Naina Pillai",
+      "specialty": "Pilates",
+      "bio": "Reformer and barre instructor. Postpartum recovery specialist.",
+      "photo_url": "https://images.unsplash.com/photo-1599058917765-a780eda07a3e?w=600&q=80",
+      "rating": 4.65,
+      "sessions_count": 333,
+      "price_per_session": 3000,
+      "certifications": [
+        "NASM-CPT",
+        "Pilates L2",
+        "First Aid Certified"
+      ],
+      "city": "Bangalore",
+      "gym_id": 3
+    }
+  ],
+  "gym_amenities": [
+    {
+      "id": 11,
+      "gym_id": 2,
+      "amenity_id": 2
+    },
+    {
+      "id": 12,
+      "gym_id": 2,
+      "amenity_id": 3
+    },
+    {
+      "id": 13,
+      "gym_id": 2,
+      "amenity_id": 4
+    },
+    {
+      "id": 14,
+      "gym_id": 2,
+      "amenity_id": 10
+    },
+    {
+      "id": 15,
+      "gym_id": 2,
+      "amenity_id": 14
+    },
+    {
+      "id": 16,
+      "gym_id": 2,
+      "amenity_id": 18
+    },
+    {
+      "id": 17,
+      "gym_id": 10,
+      "amenity_id": 2
+    },
+    {
+      "id": 18,
+      "gym_id": 10,
+      "amenity_id": 3
+    },
+    {
+      "id": 19,
+      "gym_id": 10,
+      "amenity_id": 4
+    },
+    {
+      "id": 20,
+      "gym_id": 10,
+      "amenity_id": 6
+    },
+    {
+      "id": 21,
+      "gym_id": 10,
+      "amenity_id": 9
+    },
+    {
+      "id": 22,
+      "gym_id": 10,
+      "amenity_id": 10
+    },
+    {
+      "id": 23,
+      "gym_id": 10,
+      "amenity_id": 11
+    },
+    {
+      "id": 24,
+      "gym_id": 10,
+      "amenity_id": 12
+    },
+    {
+      "id": 25,
+      "gym_id": 10,
+      "amenity_id": 13
+    },
+    {
+      "id": 26,
+      "gym_id": 10,
+      "amenity_id": 14
+    },
+    {
+      "id": 27,
+      "gym_id": 10,
+      "amenity_id": 15
+    },
+    {
+      "id": 28,
+      "gym_id": 10,
+      "amenity_id": 16
+    },
+    {
+      "id": 29,
+      "gym_id": 10,
+      "amenity_id": 17
+    },
+    {
+      "id": 30,
+      "gym_id": 10,
+      "amenity_id": 18
+    },
+    {
+      "id": 31,
+      "gym_id": 10,
+      "amenity_id": 19
+    },
+    {
+      "id": 32,
+      "gym_id": 10,
+      "amenity_id": 20
+    },
+    {
+      "id": 33,
+      "gym_id": 10,
+      "amenity_id": 21
+    },
+    {
+      "id": 34,
+      "gym_id": 10,
+      "amenity_id": 22
+    },
+    {
+      "id": 35,
+      "gym_id": 10,
+      "amenity_id": 23
+    },
+    {
+      "id": 36,
+      "gym_id": 10,
+      "amenity_id": 24
+    },
+    {
+      "id": 37,
+      "gym_id": 10,
+      "amenity_id": 25
+    },
+    {
+      "id": 38,
+      "gym_id": 10,
+      "amenity_id": 26
+    },
+    {
+      "id": 39,
+      "gym_id": 10,
+      "amenity_id": 27
+    },
+    {
+      "id": 40,
+      "gym_id": 10,
+      "amenity_id": 28
+    },
+    {
+      "id": 41,
+      "gym_id": 10,
+      "amenity_id": 30
+    },
+    {
+      "id": 42,
+      "gym_id": 10,
+      "amenity_id": 31
+    },
+    {
+      "id": 43,
+      "gym_id": 10,
+      "amenity_id": 32
+    },
+    {
+      "id": 44,
+      "gym_id": 10,
+      "amenity_id": 33
+    },
+    {
+      "id": 45,
+      "gym_id": 10,
+      "amenity_id": 34
+    },
+    {
+      "id": 46,
+      "gym_id": 10,
+      "amenity_id": 35
+    },
+    {
+      "id": 47,
+      "gym_id": 10,
+      "amenity_id": 36
+    }
+  ],
+  "gym_workouts": [
+    {
+      "id": 7,
+      "gym_id": 2,
+      "workout_id": 1
+    },
+    {
+      "id": 8,
+      "gym_id": 2,
+      "workout_id": 2
+    },
+    {
+      "id": 9,
+      "gym_id": 2,
+      "workout_id": 3
+    },
+    {
+      "id": 10,
+      "gym_id": 2,
+      "workout_id": 4
+    },
+    {
+      "id": 11,
+      "gym_id": 2,
+      "workout_id": 5
+    },
+    {
+      "id": 12,
+      "gym_id": 2,
+      "workout_id": 6
+    },
+    {
+      "id": 13,
+      "gym_id": 2,
+      "workout_id": 7
+    },
+    {
+      "id": 14,
+      "gym_id": 2,
+      "workout_id": 9
+    },
+    {
+      "id": 15,
+      "gym_id": 2,
+      "workout_id": 10
+    }
+  ],
+  "gym_workout_sessions": [
+    {
+      "id": 8,
+      "gym_id": 2,
+      "workout_id": 2,
+      "day_of_week": 1,
+      "start_minute": 360,
+      "end_minute": 726,
+      "instructor": ""
+    },
+    {
+      "id": 9,
+      "gym_id": 2,
+      "workout_id": 2,
+      "day_of_week": 3,
+      "start_minute": 360,
+      "end_minute": 420,
+      "instructor": ""
+    },
+    {
+      "id": 10,
+      "gym_id": 2,
+      "workout_id": 2,
+      "day_of_week": 3,
+      "start_minute": 360,
+      "end_minute": 420,
+      "instructor": ""
+    },
+    {
+      "id": 11,
+      "gym_id": 2,
+      "workout_id": 2,
+      "day_of_week": 4,
+      "start_minute": 360,
+      "end_minute": 420,
+      "instructor": ""
+    },
+    {
+      "id": 12,
+      "gym_id": 2,
+      "workout_id": 6,
+      "day_of_week": 1,
+      "start_minute": 360,
+      "end_minute": 420,
+      "instructor": ""
+    },
+    {
+      "id": 13,
+      "gym_id": 2,
+      "workout_id": 6,
+      "day_of_week": 4,
+      "start_minute": 360,
+      "end_minute": 420,
+      "instructor": ""
+    },
+    {
+      "id": 14,
+      "gym_id": 2,
+      "workout_id": 5,
+      "day_of_week": 1,
+      "start_minute": 360,
+      "end_minute": 420,
+      "instructor": ""
+    },
+    {
+      "id": 15,
+      "gym_id": 2,
+      "workout_id": 5,
+      "day_of_week": 1,
+      "start_minute": 360,
+      "end_minute": 420,
+      "instructor": ""
+    },
+    {
+      "id": 16,
+      "gym_id": 2,
+      "workout_id": 5,
+      "day_of_week": 1,
+      "start_minute": 360,
+      "end_minute": 420,
+      "instructor": ""
+    }
+  ],
+  "gym_hours": [
+    {
+      "id": 15,
+      "gym_id": 2,
+      "day_of_week": 0,
+      "is_closed": false,
+      "open_minute": 360,
+      "close_minute": 1380
+    },
+    {
+      "id": 16,
+      "gym_id": 2,
+      "day_of_week": 1,
+      "is_closed": false,
+      "open_minute": 360,
+      "close_minute": 1380
+    },
+    {
+      "id": 17,
+      "gym_id": 2,
+      "day_of_week": 2,
+      "is_closed": false,
+      "open_minute": 360,
+      "close_minute": 1380
+    },
+    {
+      "id": 18,
+      "gym_id": 2,
+      "day_of_week": 3,
+      "is_closed": false,
+      "open_minute": 360,
+      "close_minute": 1380
+    },
+    {
+      "id": 19,
+      "gym_id": 2,
+      "day_of_week": 4,
+      "is_closed": false,
+      "open_minute": 360,
+      "close_minute": 1380
+    },
+    {
+      "id": 20,
+      "gym_id": 2,
+      "day_of_week": 5,
+      "is_closed": false,
+      "open_minute": 360,
+      "close_minute": 1380
+    },
+    {
+      "id": 21,
+      "gym_id": 2,
+      "day_of_week": 6,
+      "is_closed": false,
+      "open_minute": 360,
+      "close_minute": 1380
+    },
+    {
+      "id": 36,
+      "gym_id": 10,
+      "day_of_week": 0,
+      "is_closed": false,
+      "open_minute": 360,
+      "close_minute": 1380
+    },
+    {
+      "id": 37,
+      "gym_id": 10,
+      "day_of_week": 1,
+      "is_closed": false,
+      "open_minute": 360,
+      "close_minute": 1380
+    },
+    {
+      "id": 38,
+      "gym_id": 10,
+      "day_of_week": 2,
+      "is_closed": false,
+      "open_minute": 360,
+      "close_minute": 1380
+    },
+    {
+      "id": 39,
+      "gym_id": 10,
+      "day_of_week": 3,
+      "is_closed": false,
+      "open_minute": 360,
+      "close_minute": 1380
+    },
+    {
+      "id": 40,
+      "gym_id": 10,
+      "day_of_week": 4,
+      "is_closed": false,
+      "open_minute": 360,
+      "close_minute": 1380
+    },
+    {
+      "id": 41,
+      "gym_id": 10,
+      "day_of_week": 5,
+      "is_closed": false,
+      "open_minute": 360,
+      "close_minute": 1380
+    },
+    {
+      "id": 42,
+      "gym_id": 10,
+      "day_of_week": 6,
+      "is_closed": false,
+      "open_minute": 360,
+      "close_minute": 1380
+    },
+    {
+      "id": 50,
+      "gym_id": 11,
+      "day_of_week": 0,
+      "is_closed": false,
+      "open_minute": 360,
+      "close_minute": 1380
+    },
+    {
+      "id": 51,
+      "gym_id": 11,
+      "day_of_week": 1,
+      "is_closed": false,
+      "open_minute": 360,
+      "close_minute": 1380
+    },
+    {
+      "id": 52,
+      "gym_id": 11,
+      "day_of_week": 2,
+      "is_closed": false,
+      "open_minute": 360,
+      "close_minute": 1380
+    },
+    {
+      "id": 53,
+      "gym_id": 11,
+      "day_of_week": 3,
+      "is_closed": false,
+      "open_minute": 360,
+      "close_minute": 1380
+    },
+    {
+      "id": 54,
+      "gym_id": 11,
+      "day_of_week": 4,
+      "is_closed": false,
+      "open_minute": 360,
+      "close_minute": 1380
+    },
+    {
+      "id": 55,
+      "gym_id": 11,
+      "day_of_week": 5,
+      "is_closed": false,
+      "open_minute": 360,
+      "close_minute": 1380
+    },
+    {
+      "id": 56,
+      "gym_id": 11,
+      "day_of_week": 6,
+      "is_closed": false,
+      "open_minute": 360,
+      "close_minute": 1380
+    }
+  ],
+  "memberships": [
+    {
+      "id": 1,
+      "name": "1 Month",
+      "tagline": "₹118 / day",
+      "billing_period": "monthly",
+      "price_inr": 3540,
+      "original_price_inr": 4000,
+      "gyms_included": 16,
+      "classes_per_month": 1,
+      "perks": [
+        "Access to 16+ Iconic Gyms",
+        "Free GX Classes",
+        "100+ Workout Formats",
+        "Flexible EMI Options",
+        "Physiotherapy Consultation",
+        "In-house Dieticians",
+        "Steam & Shower Facilities",
+        "BMI Analysis"
+      ],
+      "badge": "",
+      "popular": false
+    },
+    {
+      "id": 2,
+      "name": "3 Months",
+      "tagline": "₹81 / day",
+      "billing_period": "quarterly",
+      "price_inr": 7260,
+      "original_price_inr": 10000,
+      "gyms_included": 16,
+      "classes_per_month": 20,
+      "perks": [
+        "Access to 16+ Iconic Gyms",
+        "Free GX Classes",
+        "100+ Workout Formats",
+        "Flexible EMI Options",
+        "Physiotherapy Consultation",
+        "In-house Dieticians",
+        "Steam & Shower Facilities",
+        "BMI Analysis"
+      ],
+      "badge": "Popular",
+      "popular": false
+    },
+    {
+      "id": 3,
+      "name": "6 Months",
+      "tagline": "₹50 / day",
+      "billing_period": "quarterly",
+      "price_inr": 8999,
+      "original_price_inr": 12000,
+      "gyms_included": 16,
+      "classes_per_month": 999,
+      "perks": [
+        "Access to 16+ Iconic Gyms",
+        "Free GX Classes",
+        "100+ Workout Formats",
+        "Flexible EMI Options",
+        "Physiotherapy Consultation",
+        "In-house Dieticians",
+        "Steam & Shower Facilities",
+        "BMI Analysis"
+      ],
+      "badge": "",
+      "popular": false
+    },
+    {
+      "id": 4,
+      "name": "12 Months",
+      "tagline": "₹50 / day",
+      "billing_period": "annual",
+      "price_inr": 17999,
+      "original_price_inr": 20999,
+      "gyms_included": 16,
+      "classes_per_month": 999,
+      "perks": [
+        "Access to 16+ Iconic Gyms",
+        "Free GX Classes",
+        "100+ Workout Formats",
+        "Flexible EMI Options",
+        "Physiotherapy Consultation",
+        "In-house Dieticians",
+        "Steam & Shower Facilities",
+        "BMI Analysis"
+      ],
+      "badge": "Best Value",
+      "popular": false
+    },
+    {
+      "id": 5,
+      "name": "15 Months",
+      "tagline": "₹24 / day",
+      "billing_period": "annual",
+      "price_inr": 9999,
+      "original_price_inr": 20999,
+      "gyms_included": 16,
+      "classes_per_month": 120,
+      "perks": [
+        "Access to 16+ Iconic Gyms",
+        "Free GX Classes",
+        "100+ Workout Formats",
+        "Flexible EMI Options",
+        "Physiotherapy Consultation",
+        "In-house Dieticians",
+        "Steam & Shower Facilities",
+        "BMI Analysis"
+      ],
+      "badge": "Save 52%",
+      "popular": true
+    }
+  ],
+  "class_sessions": [
+    {
+      "id": 1,
+      "title": "Sunrise Power Yoga",
+      "category": "yoga",
+      "gym_id": 3,
+      "trainer_id": 2,
+      "starts_at": "2026-05-25T14:40:29.33+00:00",
+      "duration_min": 60,
+      "capacity": 18,
+      "intensity": "medium",
+      "cover_image": "https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=1200&q=80",
+      "description": "Heated vinyasa flow to wake up every muscle.",
+      "equipment_needed": [
+        "Mat"
+      ],
+      "calorie_estimate": 260,
+      "trending_score": 95
+    },
+    {
+      "id": 2,
+      "title": "Heavy Squat Day",
+      "category": "strength",
+      "gym_id": 1,
+      "trainer_id": 1,
+      "starts_at": "2026-05-25T16:40:29.33+00:00",
+      "duration_min": 75,
+      "capacity": 12,
+      "intensity": "high",
+      "cover_image": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=1200&q=80",
+      "description": "Coached squat session — work up to your 5RM with Rohan.",
+      "equipment_needed": [
+        "Belt",
+        "Knee sleeves"
+      ],
+      "calorie_estimate": 380,
+      "trending_score": 88
+    },
+    {
+      "id": 3,
+      "title": "Combat Conditioning",
+      "category": "mma",
+      "gym_id": 4,
+      "trainer_id": 4,
+      "starts_at": "2026-05-25T18:40:29.33+00:00",
+      "duration_min": 60,
+      "capacity": 16,
+      "intensity": "high",
+      "cover_image": "https://images.unsplash.com/photo-1599058945522-28d584b6f0ff?w=1200&q=80",
+      "description": "Pad work, bag rounds, and brutal finishers. All levels.",
+      "equipment_needed": [
+        "Wraps",
+        "Gloves"
+      ],
+      "calorie_estimate": 520,
+      "trending_score": 92
+    },
+    {
+      "id": 4,
+      "title": "Metcon Mayhem",
+      "category": "crossfit",
+      "gym_id": 5,
+      "trainer_id": 3,
+      "starts_at": "2026-05-25T19:40:29.33+00:00",
+      "duration_min": 60,
+      "capacity": 20,
+      "intensity": "high",
+      "cover_image": "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=1200&q=80",
+      "description": "Three rounds of running, rowing, and barbell complexes.",
+      "equipment_needed": [
+        "Jump rope"
+      ],
+      "calorie_estimate": 540,
+      "trending_score": 98
+    },
+    {
+      "id": 5,
+      "title": "Reformer Pilates Flow",
+      "category": "pilates",
+      "gym_id": 7,
+      "trainer_id": 6,
+      "starts_at": "2026-05-25T21:40:29.33+00:00",
+      "duration_min": 55,
+      "capacity": 8,
+      "intensity": "low",
+      "cover_image": "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=1200&q=80",
+      "description": "Slow, precise reformer work for posture and core control.",
+      "equipment_needed": [
+        "None — provided"
+      ],
+      "calorie_estimate": 230,
+      "trending_score": 72
+    },
+    {
+      "id": 6,
+      "title": "Sunset Spin Ride",
+      "category": "cycling",
+      "gym_id": 6,
+      "trainer_id": 10,
+      "starts_at": "2026-05-25T22:40:29.33+00:00",
+      "duration_min": 45,
+      "capacity": 30,
+      "intensity": "high",
+      "cover_image": "https://images.unsplash.com/photo-1591741535018-d042766c62eb?w=1200&q=80",
+      "description": "45 minutes of climbs and sprints to a live-DJ set.",
+      "equipment_needed": [
+        "Cycling shoes — provided"
+      ],
+      "calorie_estimate": 490,
+      "trending_score": 85
+    },
+    {
+      "id": 7,
+      "title": "Zumba Burn",
+      "category": "zumba",
+      "gym_id": 9,
+      "trainer_id": 7,
+      "starts_at": "2026-05-25T23:40:29.33+00:00",
+      "duration_min": 60,
+      "capacity": 25,
+      "intensity": "medium",
+      "cover_image": "https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=1200&q=80",
+      "description": "Latin-fusion dance class. No experience needed.",
+      "equipment_needed": [
+        "Towel"
+      ],
+      "calorie_estimate": 440,
+      "trending_score": 68
+    },
+    {
+      "id": 8,
+      "title": "Functional Athlete",
+      "category": "functional",
+      "gym_id": 5,
+      "trainer_id": 5,
+      "starts_at": "2026-05-26T13:40:29.33+00:00",
+      "duration_min": 60,
+      "capacity": 14,
+      "intensity": "high",
+      "cover_image": "https://images.unsplash.com/photo-1571388208497-71bedc66e932?w=1200&q=80",
+      "description": "Kettlebells, sled, sandbag, and gymnastic rings.",
+      "equipment_needed": [
+        "Cross-trainers"
+      ],
+      "calorie_estimate": 460,
+      "trending_score": 76
+    },
+    {
+      "id": 9,
+      "title": "Power Hour Strength",
+      "category": "strength",
+      "gym_id": 2,
+      "trainer_id": 1,
+      "starts_at": "2026-05-26T15:40:29.33+00:00",
+      "duration_min": 60,
+      "capacity": 10,
+      "intensity": "high",
+      "cover_image": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=1200&q=80",
+      "description": "Compound lifts with coached cues and tempo work.",
+      "equipment_needed": [
+        "Belt"
+      ],
+      "calorie_estimate": 360,
+      "trending_score": 82
+    },
+    {
+      "id": 10,
+      "title": "Restorative Yoga",
+      "category": "yoga",
+      "gym_id": 3,
+      "trainer_id": 8,
+      "starts_at": "2026-05-26T17:40:29.33+00:00",
+      "duration_min": 75,
+      "capacity": 16,
+      "intensity": "low",
+      "cover_image": "https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=1200&q=80",
+      "description": "Long-held postures with breathwork. Recover and reset.",
+      "equipment_needed": [
+        "Mat",
+        "Bolster"
+      ],
+      "calorie_estimate": 180,
+      "trending_score": 55
+    },
+    {
+      "id": 11,
+      "title": "Box Fit Bootcamp",
+      "category": "boxing",
+      "gym_id": 4,
+      "trainer_id": 4,
+      "starts_at": "2026-05-26T19:40:29.33+00:00",
+      "duration_min": 60,
+      "capacity": 18,
+      "intensity": "medium",
+      "cover_image": "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=1200&q=80",
+      "description": "Boxing-style HIIT. Mitts, bag rounds, and core finisher.",
+      "equipment_needed": [
+        "Wraps"
+      ],
+      "calorie_estimate": 520,
+      "trending_score": 86
+    },
+    {
+      "id": 12,
+      "title": "Reformer Burn",
+      "category": "pilates",
+      "gym_id": 7,
+      "trainer_id": 6,
+      "starts_at": "2026-05-27T13:40:29.33+00:00",
+      "duration_min": 55,
+      "capacity": 8,
+      "intensity": "medium",
+      "cover_image": "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=1200&q=80",
+      "description": "Higher-intensity reformer class targeting glutes and core.",
+      "equipment_needed": [
+        "None"
+      ],
+      "calorie_estimate": 260,
+      "trending_score": 64
+    },
+    {
+      "id": 13,
+      "title": "Olympic Lifting Lab",
+      "category": "strength",
+      "gym_id": 8,
+      "trainer_id": 9,
+      "starts_at": "2026-05-27T15:40:29.33+00:00",
+      "duration_min": 90,
+      "capacity": 8,
+      "intensity": "high",
+      "cover_image": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=1200&q=80",
+      "description": "Snatch and clean & jerk technique with Rahul.",
+      "equipment_needed": [
+        "Belt",
+        "Wrist wraps"
+      ],
+      "calorie_estimate": 420,
+      "trending_score": 71
+    },
+    {
+      "id": 14,
+      "title": "Spin & Sculpt",
+      "category": "cycling",
+      "gym_id": 6,
+      "trainer_id": 10,
+      "starts_at": "2026-05-27T17:40:29.33+00:00",
+      "duration_min": 60,
+      "capacity": 28,
+      "intensity": "high",
+      "cover_image": "https://images.unsplash.com/photo-1591741535018-d042766c62eb?w=1200&q=80",
+      "description": "30 min on the bike, 30 min mat work.",
+      "equipment_needed": [
+        "Cycling shoes"
+      ],
+      "calorie_estimate": 520,
+      "trending_score": 88
+    },
+    {
+      "id": 15,
+      "title": "Sunrise Strength",
+      "category": "strength",
+      "gym_id": 1,
+      "trainer_id": 1,
+      "starts_at": "2026-05-27T13:40:29.33+00:00",
+      "duration_min": 60,
+      "capacity": 14,
+      "intensity": "medium",
+      "cover_image": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=1200&q=80",
+      "description": "Full body session — push, pull, hinge, squat.",
+      "equipment_needed": [
+        "None"
+      ],
+      "calorie_estimate": 340,
+      "trending_score": 79
+    },
+    {
+      "id": 16,
+      "title": "Yin Yoga",
+      "category": "yoga",
+      "gym_id": 3,
+      "trainer_id": 2,
+      "starts_at": "2026-05-27T20:40:29.33+00:00",
+      "duration_min": 60,
+      "capacity": 16,
+      "intensity": "low",
+      "cover_image": "https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=1200&q=80",
+      "description": "Deep stretches held 3–5 minutes for connective tissue.",
+      "equipment_needed": [
+        "Mat",
+        "Block"
+      ],
+      "calorie_estimate": 150,
+      "trending_score": 48
+    },
+    {
+      "id": 17,
+      "title": "MMA Open Mat",
+      "category": "mma",
+      "gym_id": 4,
+      "trainer_id": 4,
+      "starts_at": "2026-05-28T17:40:29.33+00:00",
+      "duration_min": 90,
+      "capacity": 20,
+      "intensity": "high",
+      "cover_image": "https://images.unsplash.com/photo-1599058945522-28d584b6f0ff?w=1200&q=80",
+      "description": "Coach-led open mat — grappling and striking drills.",
+      "equipment_needed": [
+        "Mouthguard",
+        "Gloves"
+      ],
+      "calorie_estimate": 580,
+      "trending_score": 90
+    },
+    {
+      "id": 18,
+      "title": "HIIT Express",
+      "category": "hiit",
+      "gym_id": 9,
+      "trainer_id": 7,
+      "starts_at": "2026-05-28T13:40:29.33+00:00",
+      "duration_min": 30,
+      "capacity": 20,
+      "intensity": "high",
+      "cover_image": "https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=1200&q=80",
+      "description": "30-minute full-body HIIT. In and out, drenched.",
+      "equipment_needed": [
+        "Towel"
+      ],
+      "calorie_estimate": 380,
+      "trending_score": 77
+    },
+    {
+      "id": 19,
+      "title": "Pilates Foundations",
+      "category": "pilates",
+      "gym_id": 7,
+      "trainer_id": 12,
+      "starts_at": "2026-05-28T15:40:29.33+00:00",
+      "duration_min": 55,
+      "capacity": 8,
+      "intensity": "low",
+      "cover_image": "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=1200&q=80",
+      "description": "Beginner reformer class. Learn the fundamentals.",
+      "equipment_needed": [
+        "None"
+      ],
+      "calorie_estimate": 210,
+      "trending_score": 52
+    },
+    {
+      "id": 20,
+      "title": "Strength Club",
+      "category": "strength",
+      "gym_id": 8,
+      "trainer_id": 9,
+      "starts_at": "2026-05-29T14:40:29.33+00:00",
+      "duration_min": 60,
+      "capacity": 12,
+      "intensity": "high",
+      "cover_image": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=1200&q=80",
+      "description": "Programmed strength session. Five-week block.",
+      "equipment_needed": [
+        "Belt"
+      ],
+      "calorie_estimate": 360,
+      "trending_score": 69
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "vendor_partner_id": 3,
+      "name": "GYMCO Performance Tee",
+      "slug": "gymco-performance-tee",
+      "description": "Moisture-wicking athletic tee built for high-intensity training. Lightweight, breathable mesh panels keep you cool through every set.",
+      "category": "apparel",
+      "price_inr": 899,
+      "original_price_inr": 1499,
+      "image_url": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80",
+      "gallery": [],
+      "stock": 42,
+      "status": "active",
+      "created_at": "2026-05-25T15:03:28.448576+00:00"
+    },
+    {
+      "id": 2,
+      "vendor_partner_id": 3,
+      "name": "Iron Whey Protein 1kg",
+      "slug": "iron-whey-1kg",
+      "description": "24g of premium whey isolate per serving. Chocolate flavor. Fast absorbing, low carb, perfect post-workout fuel.",
+      "category": "supplements",
+      "price_inr": 2299,
+      "original_price_inr": 2999,
+      "image_url": "https://images.unsplash.com/photo-1593095948071-474c5cc2989d?w=800&q=80",
+      "gallery": [],
+      "stock": 18,
+      "status": "active",
+      "created_at": "2026-05-25T15:03:28.448576+00:00"
+    },
+    {
+      "id": 3,
+      "vendor_partner_id": 3,
+      "name": "Pro Resistance Bands Set",
+      "slug": "pro-resistance-bands",
+      "description": "Set of 5 progressive bands with door anchor and grip handles. Up to 150lbs total resistance. Travel-friendly.",
+      "category": "equipment",
+      "price_inr": 1199,
+      "original_price_inr": 1799,
+      "image_url": "https://images.unsplash.com/photo-1598289431512-b97b0917affc?w=800&q=80",
+      "gallery": [],
+      "stock": 30,
+      "status": "active",
+      "created_at": "2026-05-25T15:03:28.448576+00:00"
+    },
+    {
+      "id": 4,
+      "vendor_partner_id": 3,
+      "name": "Shaker Bottle 700ml",
+      "slug": "shaker-bottle-700ml",
+      "description": "BPA-free, leakproof shaker with wire whisk ball. Easy-grip texture. Dishwasher safe.",
+      "category": "accessories",
+      "price_inr": 349,
+      "original_price_inr": 599,
+      "image_url": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80",
+      "gallery": [],
+      "stock": 100,
+      "status": "active",
+      "created_at": "2026-05-25T15:03:28.448576+00:00"
+    }
+  ]
+}
