@@ -40,28 +40,38 @@ type InfoContent = {
 const CONTENT: Record<string, InfoContent> = {
   about: {
     slug: "about",
-    eyebrow: "About Iconic Fitness",
-    title: "One membership. Unlimited gyms in Bangalore.",
+    eyebrow: "Who we are and what we do",
+    title: "Welcome to Iconic Fitness",
     icon: Building2,
     subtitle:
-      "We're building India's most loved fitness pass — starting with Bangalore.",
+      "At Iconic Fitness, we believe that fitness in terms of body and mind is the best path to a contented life. We advocate fitness for everyone and completely understand any time is right to begin the fitness journey.",
     sections: [
       {
         heading: "Our story",
-        body: "Iconic Fitness started in 2024 in Indiranagar with a simple idea: people don't want to be locked into one gym. They want to train near home on weekdays, by the office at lunch, and try yoga or MMA on weekends. We partnered with the city's best studios so one pass unlocks them all.",
+        body: "Being in the industry for more than a decade, Iconic Fitness is committed to providing professional health and fitness services and a luxury experience to everyone at a pocket-friendly price. Each and everyone associated with us is a valuable asset and we always go an extra mile to safeguard their wellbeing. We strive to roll out more innovative and customized fitness programs to serve the community better and rightly cater to its dynamic needs.",
       },
       {
-        heading: "What we believe",
+        heading: "What we offer",
         body: [
-          "Movement should be a habit, not a contract.",
-          "Premium facilities should be accessible to everyone.",
-          "Partners win when members win.",
-          "Software should disappear — open the app, scan, train.",
+          "Classes — Age is just a number. We always have a fitness class suitable for your fitness needs. Explore our classes to find the right one.",
+          "Instructors — Our professional trainers spend hours together to provide high-quality workout training and set new standards in the industry.",
+          "Studio — Our gym floor features a wide range of world-class equipment including barbell set, pull-up frame & bar, fitness ball and much more.",
         ],
       },
       {
         heading: "By the numbers",
-        body: "120+ partner gyms across Bangalore · 8,000+ classes booked every month · 95% member retention after 90 days.",
+        body: "More than a decade in the industry · A team of seasoned, professional staff · A growing fit family across Bangalore.",
+      },
+      {
+        heading: "The man behind the brand",
+        body: [
+          "“I wanted to give a concrete shape to my dream of sensitizing people on the need for adopting a fit lifestyle, and then Iconic Fitness was born.” — Mohammed Suhail, CEO",
+          "As a fitness and bodybuilding enthusiast right from the outset, Mohammed Suhail, the CEO of Iconic Fitness, strongly believes that a healthy lifestyle can do wonders. He has curated workout regimens and customized diet plans for clients as a fitness coach. To him, it is more of a social responsibility to ensure the wellbeing of the community than just doing business. So, here he is with Iconic Fitness, already running a handful of centers and motivating thousands of people every day to transform for the greater good. Everything comes second to the contentment on the faces of the clients once they experience the change. That’s his biggest reward.",
+        ],
+      },
+      {
+        heading: "Visit us",
+        body: "No. 43, 1st Block, Koramangala, Bangalore, Karnataka 560034 · Phone: 9480000248 / 9742900400 / 080 49546638 · Email: iconicfitnessindia@gmail.com",
       },
     ],
   },
