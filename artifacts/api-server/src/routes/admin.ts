@@ -27,6 +27,7 @@ import {
   requireSuperAdmin,
   verifyPassword,
 } from "../lib/adminAuth";
+import { STAFF_PERMISSIONS } from "../lib/staffAuth";
 
 const loadAdminRole = async (id: number): Promise<string | undefined> => {
   const [row] = await db
@@ -1593,13 +1594,7 @@ router.patch(
 
 // ───────────────────────────── Staff Management ─────────────────────────────
 
-const STAFF_PERMS = new Set([
-  "partner.onboard",
-  "partner.view",
-  "partner.document_upload",
-  "partner.assign_login",
-  "gym.manage",
-]);
+const STAFF_PERMS = new Set<string>(STAFF_PERMISSIONS);
 
 function sanitizePermissions(input: unknown): string[] {
   if (!Array.isArray(input)) return [];

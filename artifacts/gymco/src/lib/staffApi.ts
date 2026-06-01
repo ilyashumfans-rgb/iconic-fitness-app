@@ -150,6 +150,34 @@ export const staffApi = {
         method: "DELETE",
       }),
   },
+  leads: {
+    list: (status?: string) =>
+      request<any[]>(
+        `/staff/leads${status ? `?status=${encodeURIComponent(status)}` : ""}`,
+      ),
+    update: (id: number, body: Record<string, unknown>) =>
+      request<any>(`/staff/leads/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: number) =>
+      request<{ ok: true }>(`/staff/leads/${id}`, { method: "DELETE" }),
+  },
+  blogs: {
+    list: () => request<any[]>("/staff/blogs"),
+    create: (body: Record<string, unknown>) =>
+      request<any>("/staff/blogs", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: number, body: Record<string, unknown>) =>
+      request<any>(`/staff/blogs/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: number) =>
+      request<{ ok: true }>(`/staff/blogs/${id}`, { method: "DELETE" }),
+  },
   tickets: {
     mine: () => request<Ticket[]>("/staff/tickets/mine"),
     assigned: () => request<Ticket[]>("/staff/tickets/assigned"),
@@ -178,4 +206,6 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "partner.document_upload": "Partner Documents",
   "partner.assign_login": "Reset Partner Password",
   "gym.manage": "Gym Management",
+  "blog.manage": "Blog Management",
+  "lead.manage": "Leads (CRM)",
 };

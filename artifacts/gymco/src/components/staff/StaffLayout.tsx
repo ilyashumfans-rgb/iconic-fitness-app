@@ -11,6 +11,8 @@ import {
   Menu,
   X,
   LifeBuoy,
+  Inbox,
+  BookOpen,
 } from "lucide-react";
 import { staffApi, type StaffUser } from "@/lib/staffApi";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -53,6 +55,18 @@ const NAV: NavItem[] = [
     href: "/staff/gym-management",
     icon: <Building2 className="h-4 w-4" />,
     perm: "gym.manage",
+  },
+  {
+    label: "Leads (CRM)",
+    href: "/staff/leads",
+    icon: <Inbox className="h-4 w-4" />,
+    perm: "lead.manage",
+  },
+  {
+    label: "Blog Management",
+    href: "/staff/blogs",
+    icon: <BookOpen className="h-4 w-4" />,
+    perm: "blog.manage",
   },
   {
     label: "Tickets",

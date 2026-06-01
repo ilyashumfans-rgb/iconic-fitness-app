@@ -7,6 +7,8 @@ import {
   partnerDocumentsTable,
   amenitiesTable,
   gymsTable,
+  blogPostsTable,
+  leadsTable,
 } from "@workspace/db";
 import { hashPassword, verifyPassword } from "../lib/adminAuth";
 import {
@@ -651,6 +653,187 @@ router.patch(
       return;
     }
     res.json(updated);
+  },
+);
+
+// ───────────────────────────── Leads (CRM) ─────────────────────────────
+
+const VALID_LEAD_STATUS = new Set([
+  "new",
+  "contacted",
+  "qualified",
+  "converted",
+  "lost",
+]);
+
+router.get(
+  "/staff/leads",
+  requireStaffPermission("lead.manage"),
+  async (req: Request, res: Response): Promise<void> => {
+    const status =
+      typeof req.query.status === "string" ? req.query.status : null;
+    const rows = await db
+      .select()
+      .from(leadsTable)
+      .where(
+        status && VALID_LEAD_STATUS.has(status)
+          ? eq(leadsTable.status, status)
+          : undefined,
+      )
+      .orderBy(desc(leadsTable.createdAt));
+    res.json(rows);
+  },
+);
+
+router.patch(
+  "/staff/leads/:id",
+  requireStaffPermission("lead.manage"),
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!id) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const patch: Record<string, unknown> = { updatedAt: new Date() };
+    if (typeof b.status === "string" && VALID_LEAD_STATUS.has(b.status)) {
+      patch.status = b.status;
+    }
+    if (typeof b.assignedTo === "string") patch.assignedTo = b.assignedTo;
+    if (typeof b.notes === "string") patch.notes = b.notes;
+    const [row] = await db
+      .update(leadsTable)
+      .set(patch)
+      .where(eq(leadsTable.id, id))
+      .returning();
+    if (!row) {
+      res.status(404).json({ error: "Lead not found" });
+      return;
+    }
+    res.json(row);
+  },
+);
+
+router.delete(
+  "/staff/leads/:id",
+  requireStaffPermission("lead.manage"),
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!id) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+    await db.delete(leadsTable).where(eq(leadsTable.id, id));
+    res.json({ ok: true });
+  },
+);
+
+// ───────────────────────────── Blog posts ─────────────────────────────
+
+function slugifyBlog(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
+router.get(
+  "/staff/blogs",
+  requireStaffPermission("blog.manage"),
+  async (_req: Request, res: Response): Promise<void> => {
+    const rows = await db
+      .select()
+      .from(blogPostsTable)
+      .orderBy(desc(blogPostsTable.createdAt));
+    res.json(rows);
+  },
+);
+
+router.post(
+  "/staff/blogs",
+  requireStaffPermission("blog.manage"),
+  async (req: Request, res: Response): Promise<void> => {
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const title = typeof b.title === "string" ? b.title.trim() : "";
+    if (!title) {
+      res.status(400).json({ error: "Title is required" });
+      return;
+    }
+    const slugRaw =
+      typeof b.slug === "string" && b.slug.trim()
+        ? slugifyBlog(b.slug)
+        : slugifyBlog(title);
+    const slug = `${slugRaw}-${Math.random().toString(36).slice(2, 6)}`;
+    const [row] = await db
+      .insert(blogPostsTable)
+      .values({
+        slug,
+        title,
+        excerpt: typeof b.excerpt === "string" ? b.excerpt : "",
+        content: typeof b.content === "string" ? b.content : "",
+        coverImage: typeof b.coverImage === "string" ? b.coverImage : "",
+        author:
+          typeof b.author === "string" && b.author.trim()
+            ? b.author
+            : "GYMCO Team",
+        category:
+          typeof b.category === "string" && b.category.trim()
+            ? b.category
+            : "Fitness",
+        isPublished: b.isPublished !== false,
+      })
+      .returning();
+    res.status(201).json(row);
+  },
+);
+
+router.patch(
+  "/staff/blogs/:id",
+  requireStaffPermission("blog.manage"),
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!id) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const patch: Record<string, unknown> = { updatedAt: new Date() };
+    for (const k of [
+      "title",
+      "excerpt",
+      "content",
+      "coverImage",
+      "author",
+      "category",
+    ] as const) {
+      if (typeof b[k] === "string") patch[k] = b[k];
+    }
+    if (typeof b.isPublished === "boolean") patch.isPublished = b.isPublished;
+    const [row] = await db
+      .update(blogPostsTable)
+      .set(patch)
+      .where(eq(blogPostsTable.id, id))
+      .returning();
+    if (!row) {
+      res.status(404).json({ error: "Post not found" });
+      return;
+    }
+    res.json(row);
+  },
+);
+
+router.delete(
+  "/staff/blogs/:id",
+  requireStaffPermission("blog.manage"),
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!id) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+    await db.delete(blogPostsTable).where(eq(blogPostsTable.id, id));
+    res.json({ ok: true });
   },
 );
 

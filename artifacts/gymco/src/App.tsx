@@ -80,6 +80,8 @@ import StaffPartners from "@/pages/staff/Partners";
 import StaffPartnerDocuments from "@/pages/staff/PartnerDocuments";
 import StaffResetPartnerPassword from "@/pages/staff/ResetPartnerPassword";
 import StaffGymManagement from "@/pages/staff/GymManagement";
+import StaffLeads from "@/pages/staff/Leads";
+import StaffBlogManagement from "@/pages/staff/BlogManagement";
 import Support from "@/pages/Support";
 import AdminTickets from "@/pages/admin/Tickets";
 import StaffTickets from "@/pages/staff/Tickets";
@@ -348,6 +350,8 @@ function AppShell() {
         <Route path="/staff/partner-documents" component={StaffPartnerDocuments} />
         <Route path="/staff/reset-partner-password" component={StaffResetPartnerPassword} />
         <Route path="/staff/gym-management" component={StaffGymManagement} />
+        <Route path="/staff/leads" component={StaffLeads} />
+        <Route path="/staff/blogs" component={StaffBlogManagement} />
         <Route path="/staff/tickets" component={StaffTickets} />
         <Route component={NotFound} />
       </Switch>
