@@ -9,7 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
-import { User, Target, Activity, Edit2, Check, LogOut } from "lucide-react";
+import { User, Target, Edit2, Check, LogOut } from "lucide-react";
 import { useSignOut } from "@/components/Layout";
 
 export default function Profile() {
@@ -167,35 +167,6 @@ export default function Profile() {
                     />
                   </div>
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card border-none shadow-sm">
-          <CardContent className="p-6">
-            <h3 className="font-bold flex items-center mb-6 text-lg"><Activity className="h-5 w-5 mr-2 text-primary" /> Body Metrics</h3>
-            <div className="grid grid-cols-2 gap-y-6 gap-x-4">
-              <div>
-                <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Height</div>
-                <div className="font-black text-xl">{user.heightCm} <span className="text-sm font-bold text-muted-foreground">cm</span></div>
-              </div>
-              <div>
-                <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Weight</div>
-                <div className="font-black text-xl">{user.weightKg} <span className="text-sm font-bold text-muted-foreground">kg</span></div>
-              </div>
-              <div>
-                <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Age</div>
-                <div className="font-black text-xl">{user.age}</div>
-              </div>
-              <div>
-                <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">BMI</div>
-                <div className="font-black text-xl text-blue-400">{user.bmi}</div>
-              </div>
-            </div>
-            {!isEditing && (
-              <div className="mt-6 text-xs text-muted-foreground font-medium text-center">
-                Body metrics sync automatically from connected health devices.
               </div>
             )}
           </CardContent>
