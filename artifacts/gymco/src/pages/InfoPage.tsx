@@ -277,11 +277,11 @@ const CONTENT: Record<string, InfoContent> = {
     sections: [
       {
         heading: "Membership cancellation",
-        body: "Monthly memberships can be cancelled anytime from Profile → Membership. Cancellation takes effect at the end of the current billing cycle. No partial refunds for unused days within a billing period.",
+        body: "Memberships can be cancelled anytime from Profile → Membership. Cancellation stops future billing and takes effect at the end of the current billing cycle. Memberships are non-refundable, so no refund is issued for the current or remaining period.",
       },
       {
-        heading: "Annual memberships",
-        body: "Annual plans are non-refundable after 7 days of purchase. Within the first 7 days, you may cancel and receive a full refund minus any gym visits already used at retail rates.",
+        heading: "Emergencies",
+        body: "For genuine emergencies or exceptional circumstances, please contact our support team — WhatsApp +91 94800 00248 or email iconicfitnessindia@gmail.com — and we'll review your case.",
       },
       {
         heading: "Class booking cancellation",
@@ -293,7 +293,7 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         heading: "Need help cancelling?",
-        body: "Email iconicfitnessindia@gmail.com and we'll process it the same day.",
+        body: "Contact our support team on WhatsApp at +91 94800 00248 or email iconicfitnessindia@gmail.com and we'll help you the same day.",
       },
     ],
   },
@@ -339,24 +339,20 @@ const CONTENT: Record<string, InfoContent> = {
     subtitle: "Last updated · May 2026",
     sections: [
       {
-        heading: "Memberships",
-        body: "Full refunds available within 7 days of first purchase, minus any retail-rate charges for visits already taken. After 7 days, memberships are non-refundable but can be cancelled to stop future billing.",
+        heading: "No refunds",
+        body: "All membership payments are non-refundable. Once a membership is purchased, the amount paid cannot be refunded under normal circumstances. You can cancel your membership to stop future billing, but no refund will be issued for the current or remaining period.",
       },
       {
-        heading: "Store purchases",
-        body: "Unused merchandise can be returned within 14 days of delivery for a full refund. Items must be in original packaging with tags attached.",
+        heading: "Emergencies",
+        body: "If you have a genuine emergency or exceptional circumstance, please contact our support team and we'll do our best to help. Reach us on WhatsApp at +91 94800 00248 or email iconicfitnessindia@gmail.com, and our team will review your case.",
       },
       {
         heading: "Class & trainer credits",
-        body: "Unused credits expire at the end of your billing cycle and are not refundable in cash.",
+        body: "Unused class and trainer credits expire at the end of your billing cycle and are not refundable in cash.",
       },
       {
-        heading: "How refunds are processed",
-        body: "Refunds are issued to the original payment method within 5–7 business days. UPI refunds are usually faster.",
-      },
-      {
-        heading: "Disputes",
-        body: "If you believe you've been charged incorrectly, email iconicfitnessindia@gmail.com within 30 days of the charge.",
+        heading: "Billing disputes",
+        body: "If you believe you've been charged incorrectly, contact our support team within 30 days of the charge — WhatsApp +91 94800 00248 or email iconicfitnessindia@gmail.com — and we'll investigate.",
       },
     ],
   },
