@@ -153,6 +153,12 @@ export default function PartnerLogin() {
           {/* Hero */}
           <div className="text-center mb-7">
             <img
+              src={`${import.meta.env.BASE_URL}media/iconic-fitness-icon-transparent.png`}
+              alt=""
+              aria-hidden="true"
+              className="mx-auto h-16 w-auto mb-4"
+            />
+            <img
               src={`${import.meta.env.BASE_URL}media/iconic-fitness-logo-transparent.png`}
               alt="Iconic Fitness"
               className="mx-auto h-24 w-auto"
