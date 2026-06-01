@@ -1,3 +1,4 @@
 - [Button gradient vs bg overrides](button-gradient-bg.md) — default Button variant is a bg-gradient-brand image; flat-color overrides need `!bg-none` to win.
 - [DB push drift / data-loss guard](db-push-drift.md) — `db run push` is non-interactive + wants to DROP populated `user_sessions`; use additive `ALTER TABLE` SQL for column adds.
+- [Gym visibility gating](gym-visibility-gating.md) — public gym pages gate on `isVerified=true` (defaults false); admin-create=auto-verify, staff-create=unverified. "Gym not showing" → check this flag first.
 - [Image uploads use DB, not object storage](image-uploads-db-fallback.md) — object storage broken (stale forked secrets, can't reprovision); uploads go to `uploaded_images` via `/storage/uploads/inline` + `/storage/db-images/:id`.

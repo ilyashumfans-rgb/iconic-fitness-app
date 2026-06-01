@@ -822,6 +822,7 @@ router.post(
         lat: Number(b.lat ?? 12.97),
         lng: Number(b.lng ?? 77.59),
         featured: Boolean(b.featured ?? false),
+        isVerified: Boolean(b.isVerified ?? true),
         ownerPartnerId:
           b.ownerPartnerId === undefined || b.ownerPartnerId === null || b.ownerPartnerId === ""
             ? null
@@ -865,7 +866,7 @@ router.patch(
     ]) {
       if (b[k] !== undefined) patch[k] = Number(b[k]);
     }
-    for (const k of ["isPremium", "openNow", "featured"]) {
+    for (const k of ["isPremium", "openNow", "featured", "isVerified"]) {
       if (b[k] !== undefined) patch[k] = Boolean(b[k]);
     }
     for (const k of ["categories", "amenities", "gallery"]) {
