@@ -194,7 +194,9 @@ export function SiteFooter() {
             {/* App store badges */}
             <div className="mt-6 flex flex-wrap gap-2">
               <a
-                href="#"
+                href="https://apps.apple.com/in/app/iconic-fitness/id6740168035"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-foreground text-background hover:opacity-90 transition-opacity"
               >
                 <Apple className="h-5 w-5" />
@@ -204,7 +206,9 @@ export function SiteFooter() {
                 </div>
               </a>
               <a
-                href="#"
+                href="https://play.google.com/store/apps/details?id=com.iconicfitness.member"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-foreground text-background hover:opacity-90 transition-opacity"
               >
                 <Smartphone className="h-5 w-5" />
