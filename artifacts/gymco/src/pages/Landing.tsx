@@ -43,7 +43,7 @@ const popularCities = ["Bangalore"];
 const stats = [
   { value: "16+", label: "Premium gyms" },
   { value: "1", label: "City live" },
-  { value: "2K+", label: "Members" },
+  { value: "100%", label: "Satisfaction Members" },
   { value: "4.9", label: "App rating" },
 ];
 
@@ -1079,7 +1079,7 @@ function FeatureBlock() {
               </div>
               <div className="grid grid-cols-3 gap-3 shrink-0">
                 {[
-                  { icon: Users, k: "2K+", l: "Members" },
+                  { icon: Users, k: "100%", l: "Satisfaction Members" },
                   { icon: Activity, k: "8K+", l: "Classes/mo" },
                   { icon: Zap, k: "98%", l: "Show-up rate" },
                 ].map((it) => (
