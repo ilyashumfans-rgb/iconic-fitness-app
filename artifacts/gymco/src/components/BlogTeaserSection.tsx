@@ -44,15 +44,15 @@ export function BlogTeaserSection({
 
   return (
     <section className="py-4">
-      <div className="flex items-end justify-between mb-6">
+      <div className="flex items-end justify-between mb-4 md:mb-6">
         <div>
-          <div className="text-[11px] font-black uppercase tracking-[0.28em] text-orange-600 mb-2 flex items-center gap-1.5">
-            <BookOpen className="h-3.5 w-3.5" /> Journal
+          <div className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.28em] text-orange-600 mb-1.5 md:mb-2 flex items-center gap-1.5">
+            <BookOpen className="h-3 w-3 md:h-3.5 md:w-3.5" /> Journal
           </div>
-          <h2 className="text-2xl md:text-4xl font-black tracking-[-0.02em] leading-tight">
+          <h2 className="text-xl md:text-4xl font-black tracking-[-0.02em] leading-tight">
             {title}
           </h2>
-          <p className="text-sm md:text-base text-muted-foreground mt-1.5 max-w-xl">
+          <p className="text-[13px] md:text-base text-muted-foreground mt-1 md:mt-1.5 max-w-xl">
             {subtitle}
           </p>
         </div>
@@ -65,10 +65,10 @@ export function BlogTeaserSection({
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <Skeleton className="h-[420px] rounded-2xl md:row-span-2" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+          <Skeleton className="aspect-[16/10] md:aspect-auto md:h-[420px] rounded-2xl md:row-span-2" />
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-32 rounded-2xl" />
+            <Skeleton key={i} className="h-28 md:h-32 rounded-2xl" />
           ))}
         </div>
       ) : (
@@ -83,24 +83,24 @@ export function BlogTeaserSection({
               className="md:row-span-3"
             >
               <Link href={`/blog/${feature.slug}`}>
-                <div className="group relative aspect-[4/5] md:aspect-auto md:h-full min-h-[360px] rounded-3xl overflow-hidden cursor-pointer ring-1 ring-border/60 shadow-[0_30px_70px_-30px_rgba(0,0,0,0.5)]">
+                <div className="group relative aspect-[16/10] md:aspect-auto md:h-full min-h-[200px] md:min-h-[360px] rounded-2xl md:rounded-3xl overflow-hidden cursor-pointer ring-1 ring-border/60 shadow-[0_30px_70px_-30px_rgba(0,0,0,0.5)]">
                   <img
                     src={feature.coverImage || FALLBACK}
                     alt={feature.title}
                     className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-500 text-white text-[10px] font-black tracking-[0.22em] uppercase mb-3 shadow-lg">
+                  <div className="absolute inset-x-0 bottom-0 p-4 md:p-8">
+                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 md:px-2.5 md:py-1 rounded-full bg-orange-500 text-white text-[9px] md:text-[10px] font-black tracking-[0.2em] uppercase mb-2 md:mb-3 shadow-lg">
                       Featured · {feature.category}
                     </div>
-                    <h3 className="text-2xl md:text-4xl font-black text-white tracking-tight leading-[1.1] drop-shadow-[0_3px_14px_rgba(0,0,0,0.5)]">
+                    <h3 className="text-lg md:text-4xl font-black text-white tracking-tight leading-[1.12] drop-shadow-[0_3px_14px_rgba(0,0,0,0.5)] line-clamp-2">
                       {feature.title}
                     </h3>
-                    <p className="mt-2 md:mt-3 text-white/85 text-sm md:text-base line-clamp-2 max-w-md">
+                    <p className="mt-1.5 md:mt-3 text-white/85 text-[13px] md:text-base line-clamp-1 md:line-clamp-2 max-w-md">
                       {feature.excerpt}
                     </p>
-                    <div className="mt-3 md:mt-4 flex items-center gap-3 text-white/80 text-xs font-semibold">
+                    <div className="mt-2 md:mt-4 flex items-center gap-2.5 md:gap-3 text-white/80 text-[11px] md:text-xs font-semibold">
                       <span className="flex items-center gap-1.5">
                         <Calendar className="h-3.5 w-3.5" />
                         {new Date(feature.publishedAt).toLocaleDateString(
