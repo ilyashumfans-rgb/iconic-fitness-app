@@ -41,9 +41,9 @@ import { useTheme } from "@/lib/theme";
 const popularCities = ["Bangalore"];
 
 const stats = [
-  { value: "500+", label: "Premium gyms" },
-  { value: "12", label: "Cities live" },
-  { value: "8K+", label: "Classes / month" },
+  { value: "16+", label: "Premium gyms" },
+  { value: "1", label: "City live" },
+  { value: "2K+", label: "Members" },
   { value: "4.9", label: "App rating" },
 ];
 
@@ -423,7 +423,7 @@ function Hero() {
               </span>
             </div>
             <div className="text-xs text-muted-foreground mt-0.5">
-              Loved by 40,000+ members
+              Loved by 2,000+ members
             </div>
           </div>
         </div>
@@ -1082,7 +1082,7 @@ function FeatureBlock() {
               </div>
               <div className="grid grid-cols-3 gap-3 shrink-0">
                 {[
-                  { icon: Users, k: "40K+", l: "Members" },
+                  { icon: Users, k: "2K+", l: "Members" },
                   { icon: Activity, k: "8K+", l: "Classes/mo" },
                   { icon: Zap, k: "98%", l: "Show-up rate" },
                 ].map((it) => (
