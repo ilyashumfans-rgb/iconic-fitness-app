@@ -1,9 +1,8 @@
 import { useGetDashboard, getGetDashboardQueryKey, useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
-import { Zap, Flame, MapPin, ChevronRight, Clock, Droplets, Moon, Star } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { MapPin, ChevronRight, Clock, Star } from "lucide-react";
 import { Link } from "wouter";
-import { motion } from "framer-motion";
 import { BlogTeaserSection } from "@/components/BlogTeaserSection";
 import { WowHeroSlider } from "@/components/WowHeroSlider";
 
@@ -36,57 +35,6 @@ export default function Dashboard() {
         userName={me?.name}
         nextBooking={dashboard.nextBooking ?? undefined}
       />
-
-      {/* Main Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.1 }}>
-          <Card className="bg-card border-border/60 hover:border-primary/40 transition-colors">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4 text-primary">
-                <Zap className="h-6 w-6" />
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Score</span>
-              </div>
-              <div className="text-4xl font-black text-gradient-brand">{dashboard.fitnessScore}</div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.2 }}>
-          <Card className="bg-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4 text-lime-500">
-                <Flame className="h-6 w-6" />
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Streak</span>
-              </div>
-              <div className="text-4xl font-black">{dashboard.streakDays}<span className="text-xl text-muted-foreground ml-1">days</span></div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.3 }}>
-          <Card className="bg-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4 text-blue-500">
-                <Droplets className="h-6 w-6" />
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Water</span>
-              </div>
-              <div className="text-4xl font-black">{dashboard.waterMl}<span className="text-xl text-muted-foreground ml-1">ml</span></div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.4 }}>
-          <Card className="bg-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4 text-indigo-500">
-                <Moon className="h-6 w-6" />
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Sleep</span>
-              </div>
-              <div className="text-4xl font-black">{dashboard.sleepHours}<span className="text-xl text-muted-foreground ml-1">h</span></div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
 
       {/* Next Booking */}
       {dashboard.nextBooking && (
