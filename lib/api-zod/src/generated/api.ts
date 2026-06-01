@@ -466,39 +466,6 @@ export const CancelBookingResponse = zod.object({
 
 
 /**
- * @summary Recent QR check-in history
- */
-export const ListCheckinsResponseItem = zod.object({
-  "id": zod.number(),
-  "gymId": zod.number(),
-  "gymName": zod.string(),
-  "checkedInAt": zod.coerce.date(),
-  "method": zod.enum(['qr', 'nfc', 'face'])
-})
-export const ListCheckinsResponse = zod.array(ListCheckinsResponseItem)
-
-
-/**
- * @summary Perform a QR check-in at a gym
- */
-export const CreateCheckinBody = zod.object({
-  "gymId": zod.number(),
-  "method": zod.enum(['qr', 'nfc', 'face']).optional()
-})
-
-
-/**
- * @summary Get the user's rotating QR check-in token
- */
-export const GetCheckinQrResponse = zod.object({
-  "token": zod.string(),
-  "expiresAt": zod.coerce.date(),
-  "userName": zod.string(),
-  "memberCode": zod.string()
-})
-
-
-/**
  * @summary Browse trainers in the marketplace
  */
 export const ListTrainersQueryParams = zod.object({

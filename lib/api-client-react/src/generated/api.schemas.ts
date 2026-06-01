@@ -198,44 +198,6 @@ export interface BookingInput {
   classId: number;
 }
 
-export type CheckinMethod = typeof CheckinMethod[keyof typeof CheckinMethod];
-
-
-export const CheckinMethod = {
-  qr: 'qr',
-  nfc: 'nfc',
-  face: 'face',
-} as const;
-
-export interface Checkin {
-  id: number;
-  gymId: number;
-  gymName: string;
-  checkedInAt: string;
-  method: CheckinMethod;
-}
-
-export type CheckinInputMethod = typeof CheckinInputMethod[keyof typeof CheckinInputMethod];
-
-
-export const CheckinInputMethod = {
-  qr: 'qr',
-  nfc: 'nfc',
-  face: 'face',
-} as const;
-
-export interface CheckinInput {
-  gymId: number;
-  method?: CheckinInputMethod;
-}
-
-export interface QrToken {
-  token: string;
-  expiresAt: string;
-  userName: string;
-  memberCode: string;
-}
-
 export type WalletTransactionKind = typeof WalletTransactionKind[keyof typeof WalletTransactionKind];
 
 

@@ -125,7 +125,7 @@ export function PricingTeaserSection() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/memberships" className="mt-4">
+                <Link href="/be-a-member" className="mt-4">
                   <Button
                     className={`w-full font-black tracking-[0.12em] border-none ${
                       plan.popular

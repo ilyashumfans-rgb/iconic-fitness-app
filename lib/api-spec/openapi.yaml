@@ -14,7 +14,6 @@ tags:
   - name: classes
   - name: bookings
   - name: memberships
-  - name: checkins
   - name: trainers
   - name: wallet
   - name: dashboard
@@ -290,45 +289,6 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Booking" }
 
-  /checkins:
-    get:
-      operationId: listCheckins
-      tags: [checkins]
-      summary: Recent QR check-in history
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items: { $ref: "#/components/schemas/Checkin" }
-    post:
-      operationId: createCheckin
-      tags: [checkins]
-      summary: Perform a QR check-in at a gym
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/CheckinInput" }
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Checkin" }
-  /checkins/qr:
-    get:
-      operationId: getCheckinQr
-      tags: [checkins]
-      summary: Get the user's rotating QR check-in token
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/QrToken" }
 
   /trainers:
     get:
@@ -576,31 +536,6 @@ components:
       properties:
         classId: { type: integer }
 
-    Checkin:
-      type: object
-      required: [id, gymId, gymName, checkedInAt, method]
-      properties:
-        id: { type: integer }
-        gymId: { type: integer }
-        gymName: { type: string }
-        checkedInAt: { type: string, format: date-time }
-        method: { type: string, enum: [qr, nfc, face] }
-    CheckinInput:
-      type: object
-      required: [gymId]
-      properties:
-        gymId: { type: integer }
-        method:
-          type: string
-          enum: [qr, nfc, face]
-    QrToken:
-      type: object
-      required: [token, expiresAt, userName, memberCode]
-      properties:
-        token: { type: string }
-        expiresAt: { type: string, format: date-time }
-        userName: { type: string }
-        memberCode: { type: string }
 
     Trainer:
       type: object

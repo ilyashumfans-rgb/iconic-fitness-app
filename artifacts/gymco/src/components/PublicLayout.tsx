@@ -10,6 +10,7 @@ const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 function PublicNav() {
   const links = [
     { href: "/explore", label: "Browse Gyms" },
+    { href: "/be-a-member", label: "Be a Member" },
     { href: "/store", label: "Store" },
     { href: "/memberships", label: "Pricing" },
     { href: "/blog", label: "Blog" },

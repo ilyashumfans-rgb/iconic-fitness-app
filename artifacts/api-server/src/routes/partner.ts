@@ -688,7 +688,6 @@ const STAFF_PERMISSION_PREFIXES: ReadonlyArray<[string, string]> = [
   ["/partner/amenities", "gyms"],
   ["/partner/workouts", "gyms"],
   ["/partner/bookings", "bookings"],
-  ["/partner/checkins", "checkins"],
   ["/partner/classes", "classes"],
   ["/partner/trainers", "classes"],
   ["/partner/products", "products"],
@@ -1004,41 +1003,6 @@ router.get(
       .innerJoin(usersTable, eq(bookingsTable.userId, usersTable.id))
       .where(inArray(classSessionsTable.gymId, gymIds))
       .orderBy(desc(bookingsTable.createdAt))
-      .limit(200);
-    res.json(rows);
-  },
-);
-
-// ─── Check-ins ───
-
-router.get(
-  "/partner/checkins",
-  requirePartner,
-  async (req: Request, res: Response): Promise<void> => {
-    const gymIds = await ownedGymIds(req.session.partnerId!);
-    if (gymIds.length === 0) {
-      res.json([]);
-      return;
-    }
-    const rows = await db
-      .select({
-        id: checkinsTable.id,
-        checkedInAt: checkinsTable.checkedInAt,
-        method: checkinsTable.method,
-        gymId: checkinsTable.gymId,
-        gymName: gymsTable.name,
-        userName: usersTable.name,
-        userEmail: usersTable.email,
-        baseInr: checkinsTable.baseInr,
-        taxPct: checkinsTable.taxPct,
-        taxInr: checkinsTable.taxInr,
-        payoutInr: checkinsTable.payoutInr,
-      })
-      .from(checkinsTable)
-      .innerJoin(gymsTable, eq(checkinsTable.gymId, gymsTable.id))
-      .innerJoin(usersTable, eq(checkinsTable.userId, usersTable.id))
-      .where(inArray(checkinsTable.gymId, gymIds))
-      .orderBy(desc(checkinsTable.checkedInAt))
       .limit(200);
     res.json(rows);
   },
@@ -2005,128 +1969,6 @@ router.delete(
         ),
       );
     res.json({ ok: true });
-  },
-);
-
-const seenQrTokens = new Map<string, number>();
-
-router.post(
-  "/partner/checkins/scan",
-  requirePartner,
-  async (req: Request, res: Response): Promise<void> => {
-    const { token, gymId } = req.body ?? {};
-    if (typeof token !== "string" || !token || typeof gymId !== "number") {
-      res.status(400).json({ error: "token and gymId are required" });
-      return;
-    }
-    // Token format: GYMCO|memberCode|slot|rand
-    const parts = token.split("|");
-    if (parts.length < 4 || parts[0] !== "GYMCO") {
-      res.status(400).json({ error: "Invalid QR code" });
-      return;
-    }
-    const memberCode = parts[1];
-    const slot = Number(parts[2]);
-    const nowSlot = Math.floor(Date.now() / 60000);
-    if (!Number.isFinite(slot) || Math.abs(nowSlot - slot) > 1) {
-      res.status(400).json({ error: "QR code expired — ask the member to refresh" });
-      return;
-    }
-    // Replay protection: each token can only be used once across the system
-    const seenAt = seenQrTokens.get(token);
-    if (seenAt && Date.now() - seenAt < 5 * 60 * 1000) {
-      res.status(409).json({ error: "QR code already used — ask the member to refresh" });
-      return;
-    }
-    seenQrTokens.set(token, Date.now());
-    if (seenQrTokens.size > 5000) {
-      const cutoff = Date.now() - 5 * 60 * 1000;
-      for (const [k, t] of seenQrTokens) {
-        if (t < cutoff) seenQrTokens.delete(k);
-      }
-    }
-    const gymIds = await ownedGymIds(req.session.partnerId!);
-    if (!gymIds.includes(gymId)) {
-      res.status(403).json({ error: "This gym is not in your account" });
-      return;
-    }
-    const [gym] = await db.select().from(gymsTable).where(eq(gymsTable.id, gymId));
-    if (!gym) {
-      res.status(404).json({ error: "Gym not found" });
-      return;
-    }
-    const [user] = await db
-      .select()
-      .from(usersTable)
-      .where(eq(usersTable.memberCode, memberCode));
-    if (!user) {
-      res.status(404).json({ error: "Member not found" });
-      return;
-    }
-    // One paid check-in per user per gym per IST day
-    const istParts = new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Asia/Kolkata",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-    }).formatToParts(new Date());
-    const part = (t: string) =>
-      istParts.find((p) => p.type === t)?.value ?? "00";
-    const istMs =
-      (Number(part("hour")) * 3600 +
-        Number(part("minute")) * 60 +
-        Number(part("second"))) *
-      1000;
-    const startOfIstDay = new Date(Date.now() - istMs);
-    const [recent] = await db
-      .select({ id: checkinsTable.id })
-      .from(checkinsTable)
-      .where(
-        and(
-          eq(checkinsTable.userId, user.id),
-          eq(checkinsTable.gymId, gymId),
-          gte(checkinsTable.checkedInAt, startOfIstDay),
-        ),
-      )
-      .limit(1);
-    if (recent) {
-      res.status(409).json({ error: "Member already checked in to this gym today" });
-      return;
-    }
-    const base = Number(gym.payoutPerVisitInr ?? 0);
-    const taxPct = Number(gym.payoutTaxPct ?? 0);
-    const taxInr = Math.round((base * taxPct) / 100);
-    const payoutInr = base + taxInr;
-    let row;
-    try {
-      [row] = await db
-        .insert(checkinsTable)
-        .values({
-          userId: user.id,
-          gymId,
-          method: "qr",
-          baseInr: base,
-          taxPct,
-          taxInr,
-          payoutInr,
-        })
-        .returning();
-    } catch (e: unknown) {
-      if ((e as { code?: string })?.code === "23505") {
-        res.status(409).json({ error: "Member already checked in to this gym today" });
-        return;
-      }
-      throw e;
-    }
-    res.status(201).json({
-      id: row.id,
-      gymId,
-      gymName: gym.name,
-      memberCode: user.memberCode,
-      userName: user.name,
-      checkedInAt: row.checkedInAt,
-    });
   },
 );
 

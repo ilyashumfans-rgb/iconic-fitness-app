@@ -141,21 +141,28 @@ export function SiteFooter() {
             <div className="mt-6 space-y-2.5 text-sm">
               <div className="flex items-start gap-2.5 text-muted-foreground">
                 <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                <span>Indiranagar, Bangalore 560038</span>
+                <span>Flat No. 43, Koramangala 1st Block, Bengaluru, Karnataka</span>
               </div>
               <a
-                href="mailto:hello@iconicfitnessindia.com"
+                href="mailto:iconicfitnessindia@gmail.com"
                 className="flex items-center gap-2.5 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Mail className="h-4 w-4 text-primary shrink-0" />
-                hello@iconicfitnessindia.com
+                iconicfitnessindia@gmail.com
               </a>
               <a
-                href="tel:+919916232827"
+                href="tel:07026276888"
                 className="flex items-center gap-2.5 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Phone className="h-4 w-4 text-primary shrink-0" />
-                +91 99162 32827
+                070262 76888
+              </a>
+              <a
+                href="tel:07026322322"
+                className="flex items-center gap-2.5 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Phone className="h-4 w-4 text-primary shrink-0" />
+                070263 22322
               </a>
             </div>
 

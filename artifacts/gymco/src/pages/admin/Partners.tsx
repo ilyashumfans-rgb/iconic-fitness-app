@@ -274,96 +274,6 @@ export default function AdminPartners() {
         </AdminCard>
       )}
 
-      {qrFor && (
-        <div
-          className="admin-qr-modal fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 print:bg-white print:p-0 print:static"
-          onClick={() => setQrFor(null)}
-        >
-          <div
-            className="admin-qr-sheet w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-3xl bg-white shadow-2xl print:max-w-none print:max-h-none print:overflow-visible print:shadow-none print:rounded-none"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="px-6 py-4 bg-gradient-to-r from-lime-500 to-lime-600 text-white flex items-center justify-between print:hidden">
-              <div className="flex items-center gap-2">
-                <Printer className="h-5 w-5" />
-                <div>
-                  <div className="font-semibold">Print check-in QR</div>
-                  <div className="text-xs text-white/85">
-                    For {qrFor.name}
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => setQrFor(null)}
-                className="h-8 w-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center"
-                aria-label="Close"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            {qrLoading ? (
-              <div className="p-16 text-center text-slate-400 text-sm">
-                Loading partner's gyms…
-              </div>
-            ) : partnerGyms.length === 0 ? (
-              <div className="p-12 text-center text-slate-500 text-sm">
-                This partner has no gyms assigned yet. Assign a gym to them
-                in Gym Management to print a check-in QR.
-              </div>
-            ) : (
-              <>
-                <div className="px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-end gap-3 print:hidden">
-                  <div className="flex-1">
-                    <label className="text-[10px] uppercase tracking-wide text-slate-500 font-bold mb-1.5 block">
-                      Choose gym
-                    </label>
-                    <select
-                      value={qrGymId}
-                      onChange={(e) => setQrGymId(Number(e.target.value))}
-                      className="w-full px-3 py-2 rounded-lg bg-white border border-lime-200 text-slate-900 text-sm focus:border-lime-500 focus:outline-none"
-                    >
-                      {partnerGyms.map((g) => (
-                        <option key={g.id} value={g.id}>
-                          {g.name} — {g.area}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => window.print()}
-                    disabled={!qrGymId}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-lime-500 hover:bg-lime-600 text-white text-sm font-bold disabled:opacity-50"
-                  >
-                    <Printer className="h-4 w-4" /> Print poster
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const g = partnerGyms.find((x) => x.id === qrGymId);
-                      if (g) downloadGymQrSvg(g, "admin-gym-qr-svg");
-                    }}
-                    disabled={!qrGymId}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-lime-200 hover:border-lime-500 text-lime-700 text-sm font-bold disabled:opacity-50"
-                  >
-                    <Download className="h-4 w-4" /> Download SVG
-                  </button>
-                </div>
-
-                {(() => {
-                  const g = partnerGyms.find((x) => x.id === qrGymId);
-                  if (!g) return null;
-                  return (
-                    <GymQrPoster gym={g} svgId="admin-gym-qr-svg" />
-                  );
-                })()}
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
       <AdminCard className="overflow-hidden">
         <div className="overflow-x-auto">
         <table className="w-full min-w-[760px] text-sm">
@@ -449,13 +359,6 @@ export default function AdminPartners() {
                     className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 mr-1"
                   >
                     <Copy className="h-3.5 w-3.5" /> Duplicate
-                  </button>
-                  <button
-                    onClick={() => openQrFor(p)}
-                    title="Print branded gym check-in QR poster"
-                    className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-lime-500/15 text-lime-700 border border-lime-500/30 hover:bg-lime-500/25 mr-1"
-                  >
-                    <QrCode className="h-3.5 w-3.5" /> Print QR
                   </button>
                   <button
                     onClick={() => impersonate(p)}
@@ -567,32 +470,6 @@ export default function AdminPartners() {
           </div>
         </div>
       )}
-
-      <style>{`
-        @media print {
-          @page { size: 1754px 2480px; margin: 0; }
-          html, body { background: white !important; width: 1754px; }
-          body * { visibility: hidden !important; }
-          .admin-qr-modal, .admin-qr-modal * { visibility: visible !important; }
-          .admin-qr-modal {
-            position: absolute !important;
-            inset: 0 !important;
-            background: white !important;
-            padding: 0 !important;
-            display: block !important;
-          }
-          .admin-qr-sheet {
-            box-shadow: none !important;
-            border-radius: 0 !important;
-            width: 1754px !important;
-            max-width: 1754px !important;
-            min-height: 2480px !important;
-            max-height: none !important;
-            overflow: visible !important;
-            margin: 0 !important;
-          }
-        }
-      `}</style>
     </AdminLayout>
   );
 }

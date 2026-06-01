@@ -83,7 +83,7 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         heading: "Press inquiries",
-        body: "For interviews, quotes or media assets, write to press@iconicfitnessindia.com. We respond within one business day.",
+        body: "For interviews, quotes or media assets, write to iconicfitnessindia@gmail.com. We respond within one business day.",
       },
       {
         heading: "Brand assets",
@@ -115,7 +115,7 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         heading: "Apply",
-        body: "Send your resume and a short note to careers@iconicfitnessindia.com with the role in the subject line.",
+        body: "Send your resume and a short note to iconicfitnessindia@gmail.com with the role in the subject line.",
       },
     ],
   },
@@ -142,7 +142,7 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         heading: "Apply",
-        body: "Use the form below or email trainers@iconicfitnessindia.com with your certifications and a short bio.",
+        body: "Use the form below or email iconicfitnessindia@gmail.com with your certifications and a short bio.",
       },
     ],
     showContactForm: true,
@@ -171,7 +171,7 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         heading: "Request a proposal",
-        body: "Fill the form below or email corporate@iconicfitnessindia.com.",
+        body: "Fill the form below or email iconicfitnessindia@gmail.com.",
       },
     ],
     showContactForm: true,
@@ -213,21 +213,15 @@ const CONTENT: Record<string, InfoContent> = {
     sections: [
       {
         heading: "Reach us directly",
-        body: [
-          "Members — hello@iconicfitnessindia.com",
-          "Partner gyms — partner@iconicfitnessindia.com",
-          "Corporate — corporate@iconicfitnessindia.com",
-          "Press — press@iconicfitnessindia.com",
-          "Careers — careers@iconicfitnessindia.com",
-        ],
+        body: ["iconicfitnessindia@gmail.com"],
       },
       {
         heading: "Phone",
-        body: "+91 99162 32827 · Mon–Sat, 9 AM – 9 PM IST",
+        body: "070262 76888 · 070263 22322 · Mon–Sat, 9 AM – 9 PM IST",
       },
       {
         heading: "Office",
-        body: "Iconic Fitness India Pvt. Ltd., 100 Feet Road, Indiranagar, Bangalore 560038",
+        body: "Iconic Fitness India Pvt. Ltd., Flat No. 43, Koramangala 1st Block, Bengaluru, Karnataka",
       },
     ],
     showContactForm: true,
@@ -295,7 +289,7 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         heading: "Need help cancelling?",
-        body: "Email hello@iconicfitnessindia.com and we'll process it the same day.",
+        body: "Email iconicfitnessindia@gmail.com and we'll process it the same day.",
       },
     ],
   },
@@ -329,7 +323,7 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         heading: "Reporting incidents",
-        body: "If you witness or are involved in any incident, notify the gym immediately and email safety@iconicfitnessindia.com. We take every report seriously.",
+        body: "If you witness or are involved in any incident, notify the gym immediately and email iconicfitnessindia@gmail.com. We take every report seriously.",
       },
     ],
   },
@@ -358,7 +352,7 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         heading: "Disputes",
-        body: "If you believe you've been charged incorrectly, email billing@iconicfitnessindia.com within 30 days of the charge.",
+        body: "If you believe you've been charged incorrectly, email iconicfitnessindia@gmail.com within 30 days of the charge.",
       },
     ],
   },
@@ -383,11 +377,11 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         heading: "Your rights",
-        body: "Access, export or delete your data anytime from Profile → Privacy. Or email privacy@iconicfitnessindia.com.",
+        body: "Access, export or delete your data anytime from Profile → Privacy. Or email iconicfitnessindia@gmail.com.",
       },
       {
         heading: "Contact",
-        body: "Questions about privacy? Reach our Data Protection Officer at privacy@iconicfitnessindia.com.",
+        body: "Questions about privacy? Reach our Data Protection Officer at iconicfitnessindia@gmail.com.",
       },
     ],
   },
@@ -496,7 +490,7 @@ function ContactForm({ topic }: { topic: string }) {
     } catch {
       toast({
         title: "Couldn't send",
-        description: "Please email us directly at hello@iconicfitnessindia.com.",
+        description: "Please email us directly at iconicfitnessindia@gmail.com.",
         variant: "destructive",
       });
     } finally {
@@ -658,7 +652,7 @@ export default function InfoPage({ slug }: { slug: string }) {
         <Card className="mt-12 p-6 md:p-8 bg-gradient-to-br from-lime-500/8 via-card to-card border-lime-500/30">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             <a
-              href="mailto:hello@iconicfitnessindia.com"
+              href="mailto:iconicfitnessindia@gmail.com"
               className="flex items-start gap-3 group"
             >
               <div className="h-10 w-10 rounded-xl bg-lime-500/10 text-lime-600 flex items-center justify-center shrink-0">
@@ -668,13 +662,13 @@ export default function InfoPage({ slug }: { slug: string }) {
                 <div className="text-xs font-black uppercase tracking-wider text-muted-foreground">
                   Email
                 </div>
-                <div className="font-bold group-hover:text-lime-600 transition-colors">
-                  hello@iconicfitnessindia.com
+                <div className="font-bold group-hover:text-lime-600 transition-colors break-all">
+                  iconicfitnessindia@gmail.com
                 </div>
               </div>
             </a>
             <a
-              href="tel:+919916232827"
+              href="tel:07026276888"
               className="flex items-start gap-3 group"
             >
               <div className="h-10 w-10 rounded-xl bg-lime-500/10 text-lime-600 flex items-center justify-center shrink-0">
@@ -685,7 +679,7 @@ export default function InfoPage({ slug }: { slug: string }) {
                   Phone
                 </div>
                 <div className="font-bold group-hover:text-lime-600 transition-colors">
-                  +91 99162 32827
+                  070262 76888 · 070263 22322
                 </div>
               </div>
             </a>
@@ -697,7 +691,7 @@ export default function InfoPage({ slug }: { slug: string }) {
                 <div className="text-xs font-black uppercase tracking-wider text-muted-foreground">
                   Office
                 </div>
-                <div className="font-bold">Indiranagar, Bangalore</div>
+                <div className="font-bold">Koramangala 1st Block, Bengaluru</div>
               </div>
             </div>
           </div>
