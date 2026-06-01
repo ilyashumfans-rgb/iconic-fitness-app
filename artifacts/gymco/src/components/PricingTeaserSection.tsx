@@ -13,10 +13,14 @@ export function PricingTeaserSection() {
     query: { queryKey: getListMembershipsQueryKey() },
   });
 
-  const top = (plans ?? [])
+  // Show every plan, sorted by price ascending, with the popular plan forced last.
+  const ordered = (plans ?? [])
     .slice()
-    .sort((a, b) => a.priceInr - b.priceInr)
-    .slice(0, 3);
+    .sort((a, b) => {
+      if (a.popular && !b.popular) return 1;
+      if (!a.popular && b.popular) return -1;
+      return a.priceInr - b.priceInr;
+    });
 
   return (
     <section className="py-4">
@@ -41,14 +45,14 @@ export function PricingTeaserSection() {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-64 rounded-2xl" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-80 rounded-2xl" />
           ))}
         </div>
-      ) : top.length === 0 ? null : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {top.map((plan) => {
+      ) : ordered.length === 0 ? null : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-stretch pt-3">
+          {ordered.map((plan) => {
             const period =
               plan.billingPeriod === "monthly"
                 ? "mo"
@@ -66,26 +70,31 @@ export function PricingTeaserSection() {
             return (
               <Card
                 key={plan.id}
-                className={`relative p-5 flex flex-col rounded-2xl border-border/60 overflow-hidden ${
+                className={`relative p-5 flex flex-col rounded-2xl overflow-hidden ${
                   plan.popular
-                    ? "ring-2 ring-lime-500/60 shadow-[0_20px_50px_-20px_rgba(101, 163, 13,0.45)]"
-                    : ""
+                    ? "bg-lime-50 dark:bg-lime-950/20 ring-1 ring-lime-300 dark:ring-lime-800"
+                    : "border-border/60"
                 }`}
               >
                 {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-full bg-gradient-to-r from-lime-500 to-lime-600 text-white text-[10px] font-black tracking-[0.18em] shadow">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-full bg-lime-100 text-lime-700 ring-1 ring-lime-300 text-[10px] font-black tracking-[0.18em] shadow-sm">
                     <Crown className="h-3 w-3 mr-1 inline -mt-0.5" />
                     POPULAR
                   </div>
                 )}
-                <div className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                <div className="text-sm font-bold uppercase tracking-wider text-muted-foreground mt-1">
                   {plan.name}
                 </div>
+                {plan.tagline && (
+                  <div className="text-[11px] font-semibold text-lime-600 mt-0.5">
+                    {plan.tagline}
+                  </div>
+                )}
                 <div className="mt-3 flex items-baseline gap-1">
                   <span className="text-sm font-bold text-muted-foreground">
                     ₹
                   </span>
-                  <span className="text-4xl font-black tracking-tight bg-gradient-to-r from-lime-500 to-lime-600 bg-clip-text text-transparent">
+                  <span className="text-4xl font-black tracking-tight text-lime-600">
                     {plan.priceInr.toLocaleString("en-IN")}
                   </span>
                   <span className="text-xs font-semibold text-muted-foreground">
@@ -115,7 +124,7 @@ export function PricingTeaserSection() {
                       <strong>{plan.classesPerMonth}</strong> classes / month
                     </span>
                   </li>
-                  {plan.perks.slice(0, 2).map((perk) => (
+                  {plan.perks.map((perk) => (
                     <li
                       key={perk}
                       className="flex items-start gap-2 text-muted-foreground"
@@ -127,9 +136,9 @@ export function PricingTeaserSection() {
                 </ul>
                 <Link href="/be-a-member" className="mt-4">
                   <Button
-                    className={`w-full font-black tracking-[0.12em] border-none ${
+                    className={`w-full font-black tracking-[0.12em] border-none !bg-none ${
                       plan.popular
-                        ? "bg-gradient-to-r from-lime-500 to-lime-600 hover:from-lime-600 hover:to-lime-700 text-white"
+                        ? "bg-lime-500 hover:bg-lime-600 text-white"
                         : "bg-slate-900 hover:bg-slate-800 text-white"
                     }`}
                   >
