@@ -46,6 +46,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/profile", label: "Profile", icon: User },
   ];
 
+  const bottomNavItems = [
+    { href: "/", label: "Home", icon: Home },
+    { href: "/explore", label: "Explore", icon: MapPin },
+    { href: "/store", label: "Store", icon: ShoppingBag },
+    { href: "/profile", label: "Profile", icon: User },
+  ];
+
   const desktopNavItems = [
     ...navItems,
     { href: "/wallet", label: "Wallet", icon: Wallet },
@@ -149,7 +156,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             className="relative mx-auto max-w-md rounded-[28px] bg-card/85 backdrop-blur-2xl border border-border/70 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.35)] flex items-end justify-between px-3 pt-2 pb-2.5"
             style={{ paddingBottom: "max(0.625rem, env(safe-area-inset-bottom))" }}
           >
-            {navItems.map((item) => {
+            {bottomNavItems.map((item) => {
               const isActive = location === item.href;
 
               return (
