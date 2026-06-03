@@ -232,7 +232,7 @@ router.get("/gyms/:gymId/hours", async (req, res): Promise<void> => {
       gymId,
       dayOfWeek: d,
       isClosed: false,
-      openMinute: 360,
+      openMinute: 300,
       closeMinute: 1380,
     },
   );

@@ -1184,7 +1184,7 @@ router.get(
         gymId: id,
         dayOfWeek: d,
         isClosed: false,
-        openMinute: 360,
+        openMinute: 300,
         closeMinute: 1380,
       },
     );
@@ -1229,7 +1229,7 @@ router.put(
         gymId: id,
         dayOfWeek: day,
         isClosed: Boolean(h.isClosed),
-        openMinute: clamp(h.openMinute ?? 360),
+        openMinute: clamp(h.openMinute ?? 300),
         closeMinute: clamp(h.closeMinute ?? 1380),
       });
     }
