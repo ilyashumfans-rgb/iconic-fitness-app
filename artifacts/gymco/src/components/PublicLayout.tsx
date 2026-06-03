@@ -2,7 +2,6 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, LayoutDashboard, LogOut } from "lucide-react";
 import { SiteFooter } from "@/components/SiteFooter";
-import { BrandLogo } from "@/components/BrandLogo";
 import { useUser, useClerk } from "@clerk/react";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -48,7 +47,13 @@ function PublicNav() {
   return (
     <header className="sticky top-0 inset-x-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
-        <BrandLogo />
+        <Link href="/" className="inline-flex items-center" aria-label="Iconic Fitness home">
+          <img
+            src={`${basePath}/media/iconic-fitness-header-logo.png`}
+            alt="Iconic Fitness"
+            className="h-8 md:h-9 w-auto object-contain"
+          />
+        </Link>
         <nav className="hidden md:flex items-center gap-7">
           {links.map((l) => (
             <Link
