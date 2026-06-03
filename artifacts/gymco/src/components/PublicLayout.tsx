@@ -1,6 +1,14 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, LayoutDashboard, LogOut } from "lucide-react";
+import { ArrowRight, LayoutDashboard, LogOut, Menu } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetClose,
+} from "@/components/ui/sheet";
 import { SiteFooter } from "@/components/SiteFooter";
 import { useUser, useClerk } from "@clerk/react";
 
@@ -116,13 +124,82 @@ function PublicNav() {
                   Sign in
                 </Button>
               </Link>
-              <Link href="/be-a-member">
+              <Link href="/be-a-member" className="hidden sm:inline-flex">
                 <Button className="bg-gradient-brand text-white border-none font-bold shadow-[0_8px_24px_-8px_hsl(96_56%_55%/0.7)] hover:opacity-95">
                   Get started <ArrowRight className="h-4 w-4 ml-1.5" />
                 </Button>
               </Link>
             </>
           )}
+          <Sheet>
+            <SheetTrigger asChild>
+              <button
+                type="button"
+                aria-label="Open menu"
+                className="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-lg text-foreground hover:bg-secondary/60 transition-colors"
+              >
+                <Menu className="h-6 w-6" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[280px] sm:w-[320px] flex flex-col">
+              <SheetHeader>
+                <SheetTitle className="text-left">Menu</SheetTitle>
+              </SheetHeader>
+              <nav className="mt-6 flex flex-col gap-1">
+                {links.map((l) => (
+                  <SheetClose asChild key={l.href}>
+                    <Link
+                      href={l.href}
+                      className="rounded-lg px-3 py-3 text-base font-semibold text-foreground hover:bg-secondary/60 transition-colors"
+                    >
+                      {l.label}
+                    </Link>
+                  </SheetClose>
+                ))}
+              </nav>
+              <div className="mt-auto flex flex-col gap-2 pt-6">
+                {isSignedIn ? (
+                  <>
+                    <SheetClose asChild>
+                      <Link href="/dashboard">
+                        <Button variant="outline" className="w-full font-semibold gap-1.5">
+                          <LayoutDashboard className="h-4 w-4" />
+                          My dashboard
+                        </Button>
+                      </Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Button
+                        variant="ghost"
+                        onClick={handleSignOut}
+                        className="w-full font-semibold gap-1.5 text-muted-foreground"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Sign out
+                      </Button>
+                    </SheetClose>
+                  </>
+                ) : (
+                  <>
+                    <SheetClose asChild>
+                      <Link href="/sign-in">
+                        <Button variant="outline" className="w-full font-semibold">
+                          Sign in
+                        </Button>
+                      </Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Link href="/be-a-member">
+                        <Button className="w-full bg-gradient-brand text-white border-none font-bold">
+                          Get started <ArrowRight className="h-4 w-4 ml-1.5" />
+                        </Button>
+                      </Link>
+                    </SheetClose>
+                  </>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>
