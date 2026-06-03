@@ -29,8 +29,26 @@ Morning: 7:00 AM - 8:00 AM and Evening: 7:00 PM - 8:00 PM, Monday to Saturday. B
 DIETICIAN
 An in-house dietician provides customized meal plans for weight loss, muscle gain, and fitness goals.
 
+CANCELLATION, TRANSFER & PAUSE
+Memberships are non-refundable. However, they can be transferred or paused for valid reasons such as medical issues or travel.
+
+HYGIENE & SAFETY
+Regular sanitization of equipment, clean locker rooms and showers, first aid available, and daily fragrance and hygiene checks.
+
+PAYMENT OPTIONS
+We accept cash, cards, UPI, and online payments. Online payment link: razorpay.me/@iconicfitnessinternationalpri
+
+MOBILE APP
+Yes, we have a mobile app. Download it on Google Play: https://play.google.com/store/apps/details?id=com.iconicfitness.member
+
+ABOUT / EXPERIENCE
+Iconic Fitness recently celebrated 7 successful years in the fitness industry.
+
+FRANCHISE OPPORTUNITIES
+Iconic Fitness is open for franchise partnerships across India. For franchise queries, contact support@iconicfitnessindia.com or call +91 97429 00400 / +91 94800 00248.
+
 CONTACT
-WhatsApp: +91 94800 00248.`;
+For membership inquiries: call +91 70263 22322 (IVR), email support@iconicfitnessindia.com or iconicfitnessindia@gmail.com, or visit www.iconicfitnessindia.com. WhatsApp: +91 94800 00248.`;
 
 router.post("/ai/chat", async (req, res): Promise<void> => {
   const parsed = AiChatBody.safeParse(req.body);
