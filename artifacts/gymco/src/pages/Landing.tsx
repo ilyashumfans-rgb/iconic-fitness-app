@@ -315,13 +315,13 @@ function Hero() {
             transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
             className="block text-gradient-brand"
           >
-            Unlimited Gyms.
+            16+ Gyms.
           </motion.span>
         </h1>
 
         <p className="mt-6 md:mt-7 text-base md:text-xl text-muted-foreground max-w-2xl leading-relaxed px-1">
-          Access India's best gyms and studios on a single pass. Book any class
-          — from sunrise yoga to midnight MMA.
+          Bengaluru-wide access, flexible scheduling (including early-morning and
+          late-night), and simple seamless booking with one pass.
         </p>
 
         {/* Search bar */}
