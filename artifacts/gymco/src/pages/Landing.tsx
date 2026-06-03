@@ -276,6 +276,14 @@ function Hero() {
       </div>
 
       <div className="max-w-5xl mx-auto px-5 md:px-8 relative z-10 w-full text-center flex flex-col items-center">
+        <motion.img
+          src={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/media/iconic-fitness-header-logo.png`}
+          alt="Iconic Fitness"
+          initial={{ opacity: 0, y: 10, filter: "blur(8px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className="h-11 md:h-16 w-auto object-contain mb-7 md:mb-9 drop-shadow-sm"
+        />
         {/* Premium stacked pills on mobile, single pill on desktop */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
