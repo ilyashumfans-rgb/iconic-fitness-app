@@ -167,9 +167,14 @@ function TopNav() {
       <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
         <Link
           href="/"
-          className="text-2xl font-black tracking-tight text-gradient-brand"
+          className="inline-flex items-center"
+          aria-label="Iconic Fitness home"
         >
-          Iconic Fitness
+          <img
+            src={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/media/iconic-fitness-header-logo.png`}
+            alt="Iconic Fitness"
+            className="h-8 md:h-9 w-auto object-contain"
+          />
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
           <Link href="/explore" className="hover:text-foreground transition-colors">
