@@ -207,7 +207,7 @@ export const gymHoursTable = pgTable(
       .references(() => gymsTable.id, { onDelete: "cascade" }),
     dayOfWeek: integer("day_of_week").notNull(),
     isClosed: boolean("is_closed").notNull().default(false),
-    openMinute: integer("open_minute").notNull().default(360), // 06:00
+    openMinute: integer("open_minute").notNull().default(300), // 05:00
     closeMinute: integer("close_minute").notNull().default(1380), // 23:00
   },
   (t) => ({

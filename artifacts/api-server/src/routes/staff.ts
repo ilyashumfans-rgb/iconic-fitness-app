@@ -577,7 +577,7 @@ router.post(
         openNow: b.openNow === undefined ? true : Boolean(b.openNow),
         about: String(b.about ?? ""),
         gallery: [],
-        hours: String(b.hours ?? "6am – 11pm"),
+        hours: String(b.hours ?? "5am – 11pm"),
         lat: latNum !== undefined && Number.isFinite(latNum) ? latNum : 12.97,
         lng: lngNum !== undefined && Number.isFinite(lngNum) ? lngNum : 77.59,
         isVerified: Boolean(b.isVerified ?? false),

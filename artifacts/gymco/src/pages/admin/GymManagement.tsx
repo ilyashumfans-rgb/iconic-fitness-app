@@ -35,7 +35,7 @@ function GymForm({
     categories: (initial?.categories ?? ["gym"]).join(", "),
     amenities: (initial?.amenities ?? []).join(", "),
     about: initial?.about ?? "",
-    hours: initial?.hours ?? "6am – 11pm",
+    hours: initial?.hours ?? "5am – 11pm",
     payoutPerVisitInr: initial?.payoutPerVisitInr ?? 100,
     payoutTaxPct: initial?.payoutTaxPct ?? 18,
     ownerPartnerId:

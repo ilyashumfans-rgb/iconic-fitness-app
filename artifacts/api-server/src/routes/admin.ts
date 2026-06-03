@@ -819,7 +819,7 @@ router.post(
         openNow: Boolean(b.openNow ?? true),
         about: String(b.about ?? ""),
         gallery: Array.isArray(b.gallery) ? (b.gallery as string[]) : [],
-        hours: String(b.hours ?? "6am – 11pm"),
+        hours: String(b.hours ?? "5am – 11pm"),
         lat: Number(b.lat ?? 12.97),
         lng: Number(b.lng ?? 77.59),
         featured: Boolean(b.featured ?? false),
