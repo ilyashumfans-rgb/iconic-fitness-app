@@ -116,7 +116,7 @@ function PublicNav() {
                   Sign in
                 </Button>
               </Link>
-              <Link href="/sign-up">
+              <Link href="/be-a-member">
                 <Button className="bg-gradient-brand text-white border-none font-bold shadow-[0_8px_24px_-8px_hsl(96_56%_55%/0.7)] hover:opacity-95">
                   Get started <ArrowRight className="h-4 w-4 ml-1.5" />
                 </Button>
