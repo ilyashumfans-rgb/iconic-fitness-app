@@ -51,7 +51,7 @@ function PublicNav() {
           <img
             src={`${basePath}/media/iconic-fitness-header-logo.png`}
             alt="Iconic Fitness"
-            className="h-11 md:h-12 w-auto object-contain"
+            className="h-12 md:h-14 w-auto object-contain"
           />
         </Link>
         <nav className="hidden md:flex items-center gap-7">
