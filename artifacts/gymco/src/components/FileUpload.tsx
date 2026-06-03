@@ -9,22 +9,22 @@ type Props = {
   className?: string;
 };
 
-// Formats the server stores and that browsers can reliably display.
-const SERVER_OK_TYPES = [
-  "image/png",
-  "image/jpeg",
-  "image/gif",
-  "image/webp",
-];
 const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
 const MAX_IMAGE_DIMENSION = 2400;
+// Production's edge proxy can intermittently reject large request bodies with a
+// 403 before they ever reach our server, and multi-MB uploads are slow (a big
+// PNG can appear to "hang"). So we never pass raster images through untouched —
+// every image is re-encoded down to a small, fast, reliably-accepted payload.
+const TARGET_MAX_BYTES = 3 * 1024 * 1024;
 
-// Normalise an image the user picked so the server will accept it:
+// Normalise an image the user picked so the upload is small and the server will
+// accept it:
 // - phone/desktop formats the server rejects (HEIC, BMP, TIFF, AVIF, …) are
 //   re-encoded to JPEG
-// - oversized images (too many megapixels or > 15MB) are downscaled
+// - every image is downscaled to MAX_IMAGE_DIMENSION and compressed under
+//   TARGET_MAX_BYTES (quality first, then dimensions)
 // - EXIF orientation is baked in so photos aren't rotated
-// PDFs and already-supported, reasonably-sized images pass through untouched.
+// Only PDFs pass through untouched (size-checked).
 async function prepareForUpload(file: File): Promise<File> {
   if (file.type === "application/pdf") {
     if (file.size > MAX_UPLOAD_BYTES) {
@@ -32,9 +32,6 @@ async function prepareForUpload(file: File): Promise<File> {
     }
     return file;
   }
-
-  const alreadyOk = SERVER_OK_TYPES.includes(file.type);
-  if (alreadyOk && file.size <= MAX_UPLOAD_BYTES) return file;
 
   let bitmap: ImageBitmap;
   try {
@@ -49,42 +46,68 @@ async function prepareForUpload(file: File): Promise<File> {
     }
   }
 
-  const scale = Math.min(
-    1,
-    MAX_IMAGE_DIMENSION / Math.max(bitmap.width, bitmap.height),
-  );
-  const width = Math.max(1, Math.round(bitmap.width * scale));
-  const height = Math.max(1, Math.round(bitmap.height * scale));
-
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    bitmap.close?.();
-    throw new Error("Could not process this image. Try a different file.");
-  }
-  ctx.drawImage(bitmap, 0, 0, width, height);
-  bitmap.close?.();
-
   // Preserve transparency for PNG/WebP sources (e.g. logos with alpha);
-  // everything else (photos, HEIC, BMP, TIFF…) becomes JPEG to keep size down.
+  // photos become JPEG to keep the upload small.
   const keepAlpha = file.type === "image/png" || file.type === "image/webp";
-  const outType = keepAlpha ? "image/png" : "image/jpeg";
-  const ext = keepAlpha ? "png" : "jpg";
-
-  const blob = await new Promise<Blob | null>((resolve) =>
-    canvas.toBlob(resolve, outType, 0.9),
-  );
-  if (!blob) {
-    throw new Error("Could not process this image. Try a different file.");
-  }
-  if (blob.size > MAX_UPLOAD_BYTES) {
-    throw new Error("This image is too large. Please pick one under 15MB.");
-  }
-
   const baseName = file.name.replace(/\.[^.]+$/, "") || "image";
-  return new File([blob], `${baseName}.${ext}`, { type: outType });
+
+  const renderToBlob = (
+    maxDim: number,
+    type: string,
+    quality: number,
+  ): Promise<Blob | null> => {
+    const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("Could not process this image. Try a different file.");
+    }
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    return new Promise((resolve) => canvas.toBlob(resolve, type, quality));
+  };
+
+  try {
+    let outType = keepAlpha ? "image/png" : "image/jpeg";
+    let ext = keepAlpha ? "png" : "jpg";
+    let dim = MAX_IMAGE_DIMENSION;
+    let quality = 0.85;
+
+    let blob = await renderToBlob(dim, outType, quality);
+    if (!blob) {
+      throw new Error("Could not process this image. Try a different file.");
+    }
+
+    // A transparent PNG photo can still be huge; drop to JPEG (loses alpha)
+    // when it won't fit, since a reliable upload is the priority.
+    if (blob.size > TARGET_MAX_BYTES && outType === "image/png") {
+      outType = "image/jpeg";
+      ext = "jpg";
+      blob = (await renderToBlob(dim, outType, quality)) ?? blob;
+    }
+
+    // Progressively reduce quality, then dimensions, until it fits the target.
+    while (blob.size > TARGET_MAX_BYTES && (quality > 0.5 || dim > 800)) {
+      if (quality > 0.5) {
+        quality = Math.max(0.5, quality - 0.15);
+      } else {
+        dim = Math.max(800, Math.round(dim * 0.8));
+      }
+      const next = await renderToBlob(dim, outType, quality);
+      if (!next) break;
+      blob = next;
+    }
+
+    if (blob.size > MAX_UPLOAD_BYTES) {
+      throw new Error("This image is too large. Please pick one under 15MB.");
+    }
+    return new File([blob], `${baseName}.${ext}`, { type: outType });
+  } finally {
+    bitmap.close?.();
+  }
 }
 
 async function uploadOne(file: File): Promise<string> {
