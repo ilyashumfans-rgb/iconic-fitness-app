@@ -494,8 +494,8 @@ export default function GymDetail() {
                     Get unlimited access to this gym
                   </div>
                   <div className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-                    One Iconic Fitness membership unlocks this gym plus hundreds more
-                    across India. Pick a plan that fits — no per-gym fees.
+                    One Iconic Fitness membership unlocks this gym across
+                    Bangaluru. Pick a plan that fits.
                   </div>
 
                   <Link href="/memberships">
