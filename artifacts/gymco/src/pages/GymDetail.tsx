@@ -20,7 +20,6 @@ import {
   Check,
   Sparkles,
   ArrowRight,
-  ShieldCheck,
   ChevronRight,
   Navigation,
   Dot,
@@ -460,26 +459,19 @@ export default function GymDetail() {
             <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-[hsl(84_60%_55%/0.22)] blur-3xl" />
             <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4">
-                  <Sparkles className="h-3.5 w-3.5 text-primary" />
-                  <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
-                    Limited launch offer
-                  </span>
-                </div>
                 <h3 className="text-2xl md:text-3xl font-black tracking-tight leading-tight">
                   Train at{" "}
                   <span className="text-gradient-brand">{gym.name}</span>{" "}
                   starting today
                 </h3>
                 <p className="text-muted-foreground mt-3 leading-relaxed">
-                  Activate your Iconic Fitness Pass and start training. Cancel anytime
-                  — no long contracts, no joining fees.
+                  Activate your Iconic Fitness Pass and start training — no long
+                  contracts, no joining fees.
                 </p>
                 <ul className="mt-5 space-y-2.5">
                   {[
                     "Unlimited access, 7 days a week",
-                    "Access 500+ partner gyms across India",
-                    "Freeze or cancel anytime",
+                    "Access 16+ Gyms Across Bengaluru",
                   ].map((line) => (
                     <li
                       key={line}
@@ -514,11 +506,6 @@ export default function GymDetail() {
                       View plans <ArrowRight className="h-5 w-5 ml-1.5" />
                     </Button>
                   </Link>
-
-                  <div className="flex items-center justify-center gap-1.5 mt-3 text-[11px] text-muted-foreground">
-                    <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                    7-day money-back guarantee
-                  </div>
                 </div>
               </div>
             </div>
