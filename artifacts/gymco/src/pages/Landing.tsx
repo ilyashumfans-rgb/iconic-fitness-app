@@ -378,8 +378,8 @@ function Hero() {
         </h1>
 
         <p className="mt-6 md:mt-7 text-base md:text-xl text-muted-foreground max-w-2xl leading-relaxed px-1">
-          Bengaluru-wide access, flexible scheduling (including early-morning and
-          late-night), and simple seamless booking with one pass.
+          Enjoy unlimited access to all Iconic Fitness locations across Bangalore,
+          365 days a year. we're always ready when you are.
         </p>
 
         {/* Search bar */}
