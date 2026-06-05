@@ -183,7 +183,6 @@ const PUBLIC_ROUTES = [
   "/help",
   "/contact",
   "/faqs",
-  "/cancellation",
   "/safety",
   "/refund",
   "/privacy",
@@ -245,7 +244,6 @@ function MemberShellRoutes() {
         <Route path="/help" component={() => <InfoPage slug="help" />} />
         <Route path="/contact" component={() => <InfoPage slug="contact" />} />
         <Route path="/faqs" component={() => <InfoPage slug="faqs" />} />
-        <Route path="/cancellation" component={() => <InfoPage slug="cancellation" />} />
         <Route path="/safety" component={() => <InfoPage slug="safety" />} />
         <Route path="/refund" component={() => <InfoPage slug="refund" />} />
         <Route path="/privacy" component={() => <InfoPage slug="privacy" />} />

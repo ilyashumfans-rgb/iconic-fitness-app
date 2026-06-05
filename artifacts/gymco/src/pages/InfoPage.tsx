@@ -278,35 +278,6 @@ const CONTENT: Record<string, InfoContent> = {
       },
     ],
   },
-  cancellation: {
-    slug: "cancellation",
-    eyebrow: "Policy",
-    title: "Cancellation policy",
-    icon: ScrollText,
-    subtitle: "Last updated · May 2026",
-    sections: [
-      {
-        heading: "Membership cancellation",
-        body: "Memberships can be cancelled anytime from Profile → Membership. Cancellation stops future billing and takes effect at the end of the current billing cycle. Memberships are non-refundable, so no refund is issued for the current or remaining period.",
-      },
-      {
-        heading: "Emergencies",
-        body: "For genuine emergencies or exceptional circumstances, please contact our support team — WhatsApp +91 94800 00248 or email iconicfitnessindia@gmail.com — and we'll review your case.",
-      },
-      {
-        heading: "Class booking cancellation",
-        body: "Free cancellation up to 4 hours before class start. Cancellations within 4 hours forfeit the class credit. No-shows count as a used class.",
-      },
-      {
-        heading: "Trainer sessions",
-        body: "Free cancellation up to 12 hours before session. Within 12 hours, 50% credit applies. No-shows are charged in full.",
-      },
-      {
-        heading: "Need help cancelling?",
-        body: "Contact our support team on WhatsApp at +91 94800 00248 or email iconicfitnessindia@gmail.com and we'll help you the same day.",
-      },
-    ],
-  },
   safety: {
     slug: "safety",
     eyebrow: "Safety",

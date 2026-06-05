@@ -42,7 +42,6 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
     links: [
       { label: "Help center", href: "/help" },
       { label: "Contact us", href: "/contact" },
-      { label: "Cancellation policy", href: "/cancellation" },
       { label: "Safety guidelines", href: "/safety" },
       { label: "Refund policy", href: "/refund" },
       { label: "FAQs", href: "/faqs" },
