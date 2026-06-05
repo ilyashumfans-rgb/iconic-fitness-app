@@ -465,8 +465,8 @@ export default function GymDetail() {
                   starting today
                 </h3>
                 <p className="text-muted-foreground mt-3 leading-relaxed">
-                  Activate your Iconic Fitness Pass and start training — no long
-                  contracts, no joining fees.
+                  Unlock your Iconic Fitness Pass today and begin your fitness
+                  journey—no contracts, no hidden fees, just results!
                 </p>
                 <ul className="mt-5 space-y-2.5">
                   {[
