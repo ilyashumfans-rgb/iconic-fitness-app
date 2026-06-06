@@ -109,12 +109,13 @@ function stripBase(path: string): string {
 const clerkAppearance = {
   theme: shadcn,
   cssLayerName: "clerk",
-  options: {
+  layout: {
     logoPlacement: "inside" as const,
     logoLinkUrl: basePath || "/",
     logoImageUrl: `${window.location.origin}${basePath}/media/iconic-fitness-icon-transparent.png`,
     socialButtonsPlacement: "top" as const,
     socialButtonsVariant: "blockButton" as const,
+    unsafe_disableDevelopmentModeWarnings: true,
   },
   variables: {
     colorPrimary: "#5a9e2e",
