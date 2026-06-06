@@ -4,3 +4,4 @@
 - [Image uploads use DB, not object storage](image-uploads-db-fallback.md) — object storage broken (stale forked secrets, can't reprovision); uploads go to `uploaded_images` via `/storage/uploads/inline` + `/storage/db-images/:id`.
 - [Prod edge 403 on large uploads](prod-edge-upload-limit.md) — Google Frontend edge intermittently 403s big POST bodies before Express; recompress images client-side small. Dev works, prod 403s.
 - [Dev → prod catalog import](prod-data-import.md) — dev/prod are separate DBs; startup seeder skips populated tables. Mirror dev→prod via admin "Import workspace data" button (atomic truncate+reseed from regenerated snapshot).
+- [Gym distance display & coords](gym-distance-display.md) — distance only shows with real user coords; "all gyms same km" is a placeholder-coord DATA bug, not haversine code.

@@ -5,6 +5,7 @@ import {
   getListGymsQueryKey,
 } from "@workspace/api-client-react";
 import { locationsApi, type City } from "@/lib/locationsApi";
+import { useUserLocation } from "@/hooks/use-user-location";
 import {
   MapPin,
   Star,
@@ -23,8 +24,6 @@ type Props = {
   className?: string;
 };
 
-type Coords = { lat: number; lng: number };
-
 const POPULAR_CITIES = ["Bangalore"];
 
 export default function NearbyGyms({
@@ -39,10 +38,7 @@ export default function NearbyGyms({
   const [cityCatalog, setCityCatalog] = useState<City[]>([]);
   const [defaultCity, setDefaultCity] = useState<string | null>(null);
   const [cityTouched, setCityTouched] = useState(false);
-  const [coords, setCoords] = useState<Coords | null>(null);
-  const [geoStatus, setGeoStatus] = useState<
-    "idle" | "loading" | "granted" | "denied" | "unsupported"
-  >("idle");
+  const { coords, status: geoStatus, request: useLocation } = useUserLocation();
   const [geoLabel, setGeoLabel] = useState<string>("");
 
   const gymsParams = {
@@ -105,22 +101,6 @@ export default function NearbyGyms({
       cancelled = true;
     };
   }, [coords]);
-
-  const useLocation = () => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setGeoStatus("unsupported");
-      return;
-    }
-    setGeoStatus("loading");
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setGeoStatus("granted");
-      },
-      () => setGeoStatus("denied"),
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 },
-    );
-  };
 
   const nearby = useMemo(() => {
     if (!gyms) return [];
@@ -327,10 +307,12 @@ export default function NearbyGyms({
                     <Star className="h-3 w-3 fill-green-500 text-green-500" />
                     {g.rating.toFixed(1)}
                   </div>
-                  <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-lime-500 text-white text-[11px] font-bold shadow">
-                    <Navigation className="h-3 w-3" />
-                    {g.distanceKm.toFixed(1)} km
-                  </div>
+                  {coords && (
+                    <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-lime-500 text-white text-[11px] font-bold shadow">
+                      <Navigation className="h-3 w-3" />
+                      {g.distanceKm.toFixed(1)} km
+                    </div>
+                  )}
                   {g.openNow && (
                     <div className="absolute bottom-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/95 text-white text-[10px] font-bold">
                       <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />

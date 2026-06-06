@@ -97,9 +97,6 @@ export default function Dashboard() {
                           <Star className="h-3.5 w-3.5 fill-green-400 text-green-400" />
                           {g.rating?.toFixed?.(1) ?? g.rating}
                         </span>
-                        {typeof g.distanceKm === "number" && (
-                          <span>{g.distanceKm.toFixed(1)} km away</span>
-                        )}
                       </div>
                     </div>
                   </div>

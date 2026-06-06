@@ -9,6 +9,7 @@ import { Search, MapPin, Star, ChevronRight, LayoutGrid, List, Clock } from "luc
 import { Link, useSearch } from "wouter";
 import { cn } from "@/lib/utils";
 import NearbyGyms from "@/components/NearbyGyms";
+import { useUserLocation } from "@/hooks/use-user-location";
 
 export default function Explore() {
   const queryString = useSearch();
@@ -28,10 +29,16 @@ export default function Explore() {
   
   const { data: categories, isLoading: loadingCategories } = useListGymCategories({ query: { queryKey: getListGymCategoriesQueryKey() } });
   const { data: featuredGyms, isLoading: loadingFeatured } = useListFeaturedGyms({ query: { queryKey: getListFeaturedGymsQueryKey() } });
-  const { data: gyms, isLoading: loadingGyms } = useListGyms(
-    { q: search || undefined, category: selectedCategory }, 
-    { query: { queryKey: getListGymsQueryKey({ q: search || undefined, category: selectedCategory }) } }
-  );
+  const { coords } = useUserLocation();
+  const gymsParams = {
+    q: search || undefined,
+    category: selectedCategory,
+    lat: coords?.lat,
+    lng: coords?.lng,
+  };
+  const { data: gyms, isLoading: loadingGyms } = useListGyms(gymsParams, {
+    query: { queryKey: getListGymsQueryKey(gymsParams) },
+  });
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -207,7 +214,7 @@ export default function Explore() {
                       <h3 className="font-bold text-lg">{gym.name}</h3>
                       <div className="flex items-center text-xs opacity-90">
                         <MapPin className="h-3 w-3 mr-1" />
-                        {gym.area} • {gym.distanceKm}km away
+                        {gym.area}{coords ? ` • ${gym.distanceKm}km away` : ""}
                       </div>
                     </div>
                   </div>
@@ -267,7 +274,7 @@ export default function Explore() {
                         <div className="flex items-center text-sm text-muted-foreground mb-2.5">
                           <MapPin className="h-3.5 w-3.5 mr-1 text-primary shrink-0" />
                           <span className="truncate">
-                            {gym.area} • {gym.distanceKm}km away
+                            {gym.area}{coords ? ` • ${gym.distanceKm}km away` : ""}
                           </span>
                           <span className="mx-2 text-muted-foreground/50">·</span>
                           <Clock className="h-3.5 w-3.5 mr-1 shrink-0" />
