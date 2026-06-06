@@ -61,14 +61,14 @@ export default function Memberships() {
                   key={plan.id}
                   className={`group relative rounded-2xl transition-all duration-300 ${
                     isPopular
-                      ? "lg:-my-2 lg:scale-[1.03] hover:lg:scale-[1.05] p-[2px] bg-gradient-to-b from-lime-200 to-lime-300 shadow-[0_20px_50px_-20px_rgba(132,204,22,0.4)] z-10"
+                      ? "lg:-my-2 lg:scale-[1.03] hover:lg:scale-[1.05] p-[1.5px] bg-gradient-to-b from-amber-300/80 via-amber-500/40 to-amber-300/60 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.7)] z-10"
                       : "p-[1px] bg-gradient-to-b from-border to-border/40 hover:from-lime-300/60 hover:to-lime-500/30 hover:-translate-y-1"
                   }`}
                 >
                   {/* Top badge */}
                   {isPopular && (
                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-20">
-                      <Badge className="bg-lime-100 text-lime-700 ring-1 ring-lime-300 font-black px-3 py-1 text-[10px] tracking-[0.18em] shadow-sm border-none whitespace-nowrap">
+                      <Badge className="bg-gradient-to-r from-amber-300 to-amber-500 text-slate-900 ring-1 ring-amber-300/50 font-black px-3 py-1 text-[10px] tracking-[0.18em] shadow-md border-none whitespace-nowrap">
                         <Crown className="h-3 w-3 mr-1 inline -mt-0.5" />
                         MOST POPULAR
                       </Badge>
@@ -78,13 +78,13 @@ export default function Memberships() {
                   <Card
                     className={`relative h-full flex flex-col border-none rounded-[14px] overflow-hidden ${
                       isPopular
-                        ? "bg-lime-50 dark:bg-lime-950/20"
+                        ? "bg-gradient-to-b from-slate-900 to-slate-950"
                         : "bg-card"
                     }`}
                   >
                     {/* Soft decorative glow for the popular plan */}
                     {isPopular && (
-                      <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-lime-300/30 blur-3xl pointer-events-none" />
+                      <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-amber-400/20 blur-3xl pointer-events-none" />
                     )}
 
                     <CardContent className="flex flex-col h-full p-5 relative z-10">
@@ -93,36 +93,36 @@ export default function Memberships() {
                         <div
                           className={`inline-flex items-center justify-center rounded-xl mb-3 h-10 w-10 ${
                             isPopular
-                              ? "bg-lime-500 text-white shadow-md shadow-lime-500/20"
+                              ? "bg-gradient-to-br from-amber-300 to-amber-500 text-slate-900 shadow-md shadow-amber-500/30"
                               : "bg-lime-500/10 text-lime-600"
                           }`}
                         >
                           <Dumbbell className="h-5 w-5" />
                         </div>
-                        <h3 className="font-black tracking-tight leading-tight text-base min-h-[2.5rem] flex items-center justify-center">
+                        <h3 className={`font-black tracking-tight leading-tight text-base min-h-[2.5rem] flex items-center justify-center ${isPopular ? "text-white" : ""}`}>
                           {plan.name}
                         </h3>
                         {plan.tagline && (
-                          <p className={`text-[11px] font-medium mt-1 ${isPopular ? "text-lime-700 dark:text-lime-300" : "text-muted-foreground"}`}>
+                          <p className={`text-[11px] font-medium mt-1 ${isPopular ? "text-amber-300/90" : "text-muted-foreground"}`}>
                             {plan.tagline}
                           </p>
                         )}
                       </div>
 
                       {/* Price */}
-                      <div className="text-center py-4 mb-4 border-y border-dashed border-lime-200/60 dark:border-lime-800/30">
+                      <div className={`text-center py-4 mb-4 border-y border-dashed ${isPopular ? "border-white/15" : "border-lime-200/60 dark:border-lime-800/30"}`}>
                         <div className="flex items-baseline justify-center gap-0.5">
-                          <span className="font-bold text-base text-muted-foreground">₹</span>
-                          <span className={`font-black tracking-tight text-4xl ${isPopular ? "text-lime-600" : ""}`}>
+                          <span className={`font-bold text-base ${isPopular ? "text-amber-300/80" : "text-muted-foreground"}`}>₹</span>
+                          <span className={`font-black tracking-tight text-4xl ${isPopular ? "text-white" : ""}`}>
                             {plan.priceInr.toLocaleString("en-IN")}
                           </span>
-                          <span className="text-xs font-bold text-muted-foreground ml-1">/{periodLabel}</span>
+                          <span className={`text-xs font-bold ml-1 ${isPopular ? "text-slate-400" : "text-muted-foreground"}`}>/{periodLabel}</span>
                         </div>
                         {plan.originalPriceInr > plan.priceInr && (
                           <div className="flex items-center justify-center gap-2 mt-1.5">
-                            <span className="text-xs text-muted-foreground line-through">₹{plan.originalPriceInr.toLocaleString("en-IN")}</span>
+                            <span className={`text-xs line-through ${isPopular ? "text-slate-500" : "text-muted-foreground"}`}>₹{plan.originalPriceInr.toLocaleString("en-IN")}</span>
                             {savings > 0 && (
-                              <span className="text-[10px] font-black px-1.5 py-0.5 rounded text-emerald-600 bg-emerald-500/10">
+                              <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${isPopular ? "text-amber-300 bg-amber-400/15" : "text-emerald-600 bg-emerald-500/10"}`}>
                                 SAVE {savings}%
                               </span>
                             )}
@@ -132,17 +132,17 @@ export default function Memberships() {
 
                       {/* Features — full list */}
                       <ul className="space-y-2 mb-5 flex-1 text-left">
-                        <li className="flex items-start text-xs">
-                          <Check className={`h-4 w-4 mr-2 shrink-0 mt-0.5 ${isPopular ? "text-lime-500" : "text-emerald-500"}`} />
+                        <li className={`flex items-start text-xs ${isPopular ? "text-white" : ""}`}>
+                          <Check className={`h-4 w-4 mr-2 shrink-0 mt-0.5 ${isPopular ? "text-amber-400" : "text-emerald-500"}`} />
                           <span className="font-medium leading-snug"><strong>{plan.gymsIncluded}+</strong> premium gyms</span>
                         </li>
-                        <li className="flex items-start text-xs">
-                          <Check className={`h-4 w-4 mr-2 shrink-0 mt-0.5 ${isPopular ? "text-lime-500" : "text-emerald-500"}`} />
+                        <li className={`flex items-start text-xs ${isPopular ? "text-white" : ""}`}>
+                          <Check className={`h-4 w-4 mr-2 shrink-0 mt-0.5 ${isPopular ? "text-amber-400" : "text-emerald-500"}`} />
                           <span className="font-medium leading-snug"><strong>{plan.classesPerMonth}</strong> classes / month</span>
                         </li>
                         {plan.perks.map(perk => (
-                          <li key={perk} className={`flex items-start text-xs ${isPopular ? "text-slate-700 dark:text-lime-100" : "text-muted-foreground"}`}>
-                            <Check className={`h-4 w-4 mr-2 shrink-0 mt-0.5 ${isPopular ? "text-lime-600 dark:text-lime-400" : "text-lime-500/70"}`} />
+                          <li key={perk} className={`flex items-start text-xs ${isPopular ? "text-slate-300" : "text-muted-foreground"}`}>
+                            <Check className={`h-4 w-4 mr-2 shrink-0 mt-0.5 ${isPopular ? "text-amber-400/80" : "text-lime-500/70"}`} />
                             <span className="leading-snug">{perk}</span>
                           </li>
                         ))}
@@ -163,7 +163,7 @@ export default function Memberships() {
                             size="sm"
                             className={`w-full h-10 text-xs font-black tracking-[0.12em] border-none !bg-none ${
                               isPopular
-                                ? "bg-lime-500 hover:bg-lime-600 text-white shadow-[0_8px_24px_-8px_rgba(132,204,22,0.6)]"
+                                ? "bg-amber-400 hover:bg-amber-500 text-slate-900 shadow-[0_8px_24px_-8px_rgba(245,158,11,0.6)]"
                                 : "bg-slate-900 hover:bg-slate-800 text-white"
                             }`}
                           >
