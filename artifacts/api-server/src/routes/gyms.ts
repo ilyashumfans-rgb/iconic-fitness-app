@@ -32,11 +32,35 @@ router.get("/gyms", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { q, city, category, amenity, sort } = parsed.data;
+  const { q, city, category, amenity, sort, lat, lng } = parsed.data;
   let rows = await db
     .select()
     .from(gymsTable)
     .where(eq(gymsTable.isVerified, true));
+
+  // When the user shares their coordinates, replace the static distanceKm with
+  // the real great-circle distance from the user to each gym (haversine).
+  if (typeof lat === "number" && typeof lng === "number") {
+    const toRad = (deg: number) => (deg * Math.PI) / 180;
+    const R = 6371; // Earth radius in km
+    rows = rows.map((g) => {
+      const dLat = toRad(g.lat - lat);
+      const dLng = toRad(g.lng - lng);
+      const a = Math.min(
+        1,
+        Math.max(
+          0,
+          Math.sin(dLat / 2) ** 2 +
+            Math.cos(toRad(lat)) *
+              Math.cos(toRad(g.lat)) *
+              Math.sin(dLng / 2) ** 2,
+        ),
+      );
+      const distanceKm =
+        R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return { ...g, distanceKm: Math.round(distanceKm * 10) / 10 };
+    });
+  }
   if (q) {
     const ql = q.toLowerCase();
     rows = rows.filter(

@@ -45,10 +45,15 @@ export default function NearbyGyms({
   >("idle");
   const [geoLabel, setGeoLabel] = useState<string>("");
 
-  const { data: gyms, isLoading } = useListGyms(
-    { q: query || undefined, city },
-    { query: { queryKey: getListGymsQueryKey({ q: query || undefined, city }) } },
-  );
+  const gymsParams = {
+    q: query || undefined,
+    city,
+    lat: coords?.lat,
+    lng: coords?.lng,
+  };
+  const { data: gyms, isLoading } = useListGyms(gymsParams, {
+    query: { queryKey: getListGymsQueryKey(gymsParams) },
+  });
 
   // Load the admin's chosen default city + the full active city catalog on mount.
   useEffect(() => {

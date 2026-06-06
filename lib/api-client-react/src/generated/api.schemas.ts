@@ -278,6 +278,14 @@ city?: string;
  */
 category?: string;
 amenity?: string;
+/**
+ * User latitude; when provided with lng, distanceKm is computed from the user's location.
+ */
+lat?: number;
+/**
+ * User longitude; when provided with lat, distanceKm is computed from the user's location.
+ */
+lng?: number;
 sort?: ListGymsSort;
 };
 

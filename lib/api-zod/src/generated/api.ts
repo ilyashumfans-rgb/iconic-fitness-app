@@ -175,6 +175,8 @@ export const ListGymsQueryParams = zod.object({
   "city": zod.coerce.string().optional(),
   "category": zod.coerce.string().optional(),
   "amenity": zod.coerce.string().optional(),
+  "lat": zod.coerce.number().optional(),
+  "lng": zod.coerce.number().optional(),
   "sort": zod.enum(['distance', 'rating', 'price']).optional()
 })
 

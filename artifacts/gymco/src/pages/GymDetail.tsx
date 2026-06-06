@@ -519,7 +519,7 @@ export default function GymDetail() {
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div>
                   <h3 className="font-black text-lg leading-tight">
-                    Book a class for free
+                    Book a class Today
                   </h3>
                   <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                     Try out a free class at this center to experience formats

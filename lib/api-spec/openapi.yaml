@@ -111,6 +111,12 @@ paths:
           name: amenity
           schema: { type: string }
         - in: query
+          name: lat
+          schema: { type: number, description: "User latitude; when provided with lng, distanceKm is computed from the user's location." }
+        - in: query
+          name: lng
+          schema: { type: number, description: "User longitude; when provided with lat, distanceKm is computed from the user's location." }
+        - in: query
           name: sort
           schema: { type: string, enum: [distance, rating, price] }
       responses:
