@@ -184,7 +184,7 @@ function StaffLeadsInner() {
               <Inbox className="h-10 w-10 mx-auto mb-2 text-lime-400" />
               <div className="font-bold">No leads yet</div>
               <div className="text-sm">
-                When visitors book a free class, their enquiry will appear here.
+                When visitors book a class, their enquiry will appear here.
               </div>
             </div>
           ) : (

@@ -512,7 +512,7 @@ export default function GymDetail() {
           </section>
         </div>
 
-        {/* Right sidebar: Book a class for free + Cultpass-style card */}
+        {/* Right sidebar: Book a class + Cultpass-style card */}
         <aside className="space-y-6 lg:sticky lg:top-24 self-start">
           <Card className="border-border bg-card overflow-hidden">
             <CardContent className="p-6">
@@ -522,7 +522,7 @@ export default function GymDetail() {
                     Book a class Today
                   </h3>
                   <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                    Try out a free class at this center to experience formats
+                    Try out a class at this center to experience formats
                     first-hand.
                   </p>
                 </div>
@@ -531,7 +531,7 @@ export default function GymDetail() {
                     2
                   </div>
                   <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mt-0.5">
-                    Free trial
+                    trial
                     <br />
                     classes
                   </div>
@@ -542,14 +542,14 @@ export default function GymDetail() {
                 gymId={gym.id}
                 gymName={gym.name}
                 source="gym-detail-try-for-free"
-                title="Book your free class"
-                description={`Try a free class at ${gym.name}. Share your details and our team will call you back to confirm a time.`}
+                title="Book your class"
+                description={`Try a class at ${gym.name}. Share your details and our team will call you back to confirm a time.`}
                 trigger={
                   <Button
                     variant="outline"
                     className="w-full font-black uppercase tracking-wider border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                   >
-                    Try for free
+                    Book a class
                   </Button>
                 }
               />

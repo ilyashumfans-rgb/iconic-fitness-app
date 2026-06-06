@@ -116,7 +116,7 @@ export function LeadEnquiryDialog(props: Props) {
               </DialogTitle>
               <DialogDescription className="text-center">
                 {props.successDescription ??
-                  "Our team will call you shortly to confirm your free class."}
+                  "Our team will call you shortly to confirm your class."}
               </DialogDescription>
             </DialogHeader>
             <Button
@@ -131,14 +131,14 @@ export function LeadEnquiryDialog(props: Props) {
             <DialogHeader>
               <div className="inline-flex items-center gap-1.5 self-start px-2.5 py-1 rounded-full bg-lime-100 text-lime-700 text-[10px] font-black uppercase tracking-wider">
                 <Sparkles className="h-3 w-3" />
-                {props.badgeLabel ?? "Free Trial"}
+                {props.badgeLabel ?? "Book a Class"}
               </div>
               <DialogTitle className="text-2xl font-black">
-                {props.title ?? "Book your free class"}
+                {props.title ?? "Book your class"}
               </DialogTitle>
               <DialogDescription>
                 {props.description ??
-                  "Share a few details and our team will call to confirm your free trial."}
+                  "Share a few details and our team will call to confirm your booking."}
                 {props.planName ? (
                   <span className="mt-2 flex items-center justify-between gap-3 rounded-lg border border-lime-200 bg-lime-50 dark:bg-lime-950/30 dark:border-lime-900/50 px-3 py-2">
                     <span className="text-foreground font-bold text-sm">
@@ -249,7 +249,7 @@ export function LeadEnquiryDialog(props: Props) {
               </Button>
             </DialogFooter>
             <p className="text-[11px] text-muted-foreground text-center">
-              No charges. Our team will call to schedule your free session.
+              Our team will call to schedule your session.
             </p>
           </form>
         )}

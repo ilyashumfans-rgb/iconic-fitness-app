@@ -121,7 +121,7 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         heading: "Why Iconic Fitness",
-        body: "Free Elite membership for every employee · Annual learning budget · Health insurance for you and your family · Real ownership through ESOPs.",
+        body: "Elite membership for every employee · Annual learning budget · Health insurance for you and your family · Real ownership through ESOPs.",
       },
       {
         heading: "Apply",
@@ -147,7 +147,7 @@ const CONTENT: Record<string, InfoContent> = {
           "A public profile with reviews and specialties.",
           "Bookings handled in-app — no chasing payments.",
           "70% trainer payout, paid weekly.",
-          "Free access to all partner gyms while coaching.",
+          "Access to all partner gyms while coaching.",
         ],
       },
       {
@@ -262,7 +262,7 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         q: "What's included in the membership?",
-        a: "Unlimited gym access, group classes (Zumba, HIIT, Yoga, Aerobics and more), locker & shower facilities, access to all branches, and a free diet consultation with our in-house dietician.",
+        a: "Unlimited gym access, group classes (Zumba, HIIT, Yoga, Aerobics and more), locker & shower facilities, access to all branches, and a diet consultation with our in-house dietician.",
       },
       {
         q: "Are personal trainers available?",
