@@ -39,11 +39,9 @@ import {
   Zap,
   Sun,
   Moon,
-  Pause,
   Play,
-  VolumeX,
-  Volume2,
   Menu,
+  X,
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 
@@ -266,26 +264,27 @@ function TopNav() {
   );
 }
 
-const HERO_VIDEO_SRC = `${import.meta.env.BASE_URL}media/hero.mp4`;
+const HERO_VIDEO_ID = "Nn5e8jcG-BY";
 
 
 function Hero() {
   const [, navigate] = useLocation();
   const [query, setQuery] = useState("");
   const [city, setCity] = useState("");
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [videoOn, setVideoOn] = useState(false);
-  const [muted, setMuted] = useState(true);
+  const [videoOpen, setVideoOpen] = useState(false);
 
   useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    if (videoOn) {
-      v.play().catch(() => {});
-    } else {
-      v.pause();
-    }
-  }, [videoOn]);
+    if (!videoOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setVideoOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [videoOpen]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -298,30 +297,6 @@ function Hero() {
 
   return (
     <section className="relative pt-24 md:pt-36 pb-16 md:pb-28 overflow-hidden">
-      {/* Video background */}
-      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-        <video
-          ref={videoRef}
-          src={HERO_VIDEO_SRC}
-          autoPlay
-          loop
-          muted={muted}
-          playsInline
-          preload="auto"
-          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
-            videoOn ? "opacity-90 dark:opacity-60" : "opacity-0"
-          }`}
-        />
-        {/* Tint + readability overlays on top of video */}
-        <div
-          className={`absolute inset-0 transition-opacity duration-700 ${
-            videoOn
-              ? "bg-gradient-to-b from-background/30 via-background/55 to-background"
-              : "opacity-0"
-          }`}
-        />
-      </div>
-
       {/* Premium mobile backdrop — subtle peach/orange wash behind headline (desktop unchanged) */}
       <div className="pointer-events-none absolute inset-0 z-0 md:hidden">
         <div className="absolute -top-24 left-1/2 -translate-x-1/2 h-[480px] w-[480px] rounded-full bg-[radial-gradient(closest-side,hsl(96_56%_60%/0.18),transparent_70%)] dark:bg-[radial-gradient(closest-side,hsl(96_56%_60%/0.25),transparent_70%)]" />
@@ -508,38 +483,67 @@ function Hero() {
         </motion.div>
       </div>
 
-      {/* Video controls — bottom-right on mobile (out of the way of the badge), top-right on desktop */}
+      {/* Watch video control — bottom-right on mobile, top-right on desktop */}
       <div className="absolute bottom-6 right-4 md:bottom-auto md:top-28 md:right-8 z-20 flex items-center gap-2">
         <button
           type="button"
-          onClick={() => setVideoOn((v) => !v)}
-          aria-pressed={videoOn}
-          aria-label={videoOn ? "Pause background video" : "Play background video"}
-          className="h-11 w-11 rounded-full bg-card/85 backdrop-blur-xl border border-border shadow-lg flex items-center justify-center text-foreground hover:bg-card transition-colors"
+          onClick={() => setVideoOpen(true)}
+          aria-label="Play video"
+          className="group flex items-center gap-2 h-11 pl-2.5 pr-4 rounded-full bg-card/85 backdrop-blur-xl border border-border shadow-lg text-foreground hover:bg-card transition-colors"
           data-testid="hero-video-toggle"
         >
-          {videoOn ? (
-            <Pause className="h-4 w-4" />
-          ) : (
-            <Play className="h-4 w-4 ml-0.5" />
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={() => setMuted((m) => !m)}
-          disabled={!videoOn}
-          aria-pressed={!muted}
-          aria-label={muted ? "Unmute video" : "Mute video"}
-          className="h-11 w-11 rounded-full bg-card/85 backdrop-blur-xl border border-border shadow-lg flex items-center justify-center text-foreground hover:bg-card transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          data-testid="hero-video-mute"
-        >
-          {muted ? (
-            <VolumeX className="h-4 w-4" />
-          ) : (
-            <Volume2 className="h-4 w-4" />
-          )}
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-brand text-white">
+            <Play className="h-3.5 w-3.5 ml-0.5" />
+          </span>
+          <span className="text-xs font-bold uppercase tracking-[0.14em]">
+            Watch video
+          </span>
         </button>
       </div>
+
+      <AnimatePresence>
+        {videoOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            onClick={() => setVideoOpen(false)}
+            data-testid="hero-video-modal"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 8 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="relative w-full max-w-4xl aspect-video rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black"
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Iconic Fitness video"
+            >
+              <button
+                type="button"
+                autoFocus
+                onClick={() => setVideoOpen(false)}
+                aria-label="Close video"
+                className="absolute -top-3 -right-3 md:top-3 md:right-3 z-10 h-9 w-9 rounded-full bg-white text-black shadow-lg flex items-center justify-center hover:bg-white/90 transition-colors"
+                data-testid="hero-video-close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <iframe
+                className="absolute inset-0 h-full w-full"
+                src={`https://www.youtube.com/embed/${HERO_VIDEO_ID}?autoplay=1&rel=0&modestbranding=1`}
+                title="Iconic Fitness"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
