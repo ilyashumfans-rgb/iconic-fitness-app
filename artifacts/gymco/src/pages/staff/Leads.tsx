@@ -26,6 +26,7 @@ type Lead = {
   className: string;
   gymName: string;
   preferredDate: string;
+  preferredTime: string;
   message: string;
   source: string;
   status: string;
@@ -351,10 +352,11 @@ function StaffLeadsInner() {
                 {editing.city ? (
                   <div className="text-slate-600">City: {editing.city}</div>
                 ) : null}
-                {editing.preferredDate ? (
+                {editing.preferredDate || editing.preferredTime ? (
                   <div className="text-slate-600 flex items-center gap-1">
                     <Calendar className="h-3 w-3 text-lime-500" />
-                    Preferred: {editing.preferredDate}
+                    Visiting: {editing.preferredDate}
+                    {editing.preferredTime ? ` at ${editing.preferredTime}` : ""}
                   </div>
                 ) : null}
                 {editing.message ? (

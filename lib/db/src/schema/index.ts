@@ -417,6 +417,7 @@ export const leadsTable = pgTable("leads", {
   planName: text("plan_name").notNull().default(""),
   planPriceInr: integer("plan_price_inr").notNull().default(0),
   preferredDate: text("preferred_date").notNull().default(""),
+  preferredTime: text("preferred_time").notNull().default(""),
   message: text("message").notNull().default(""),
   source: text("source").notNull().default("web"),
   status: text("status").notNull().default("new"),

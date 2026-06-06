@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import confetti from "canvas-confetti";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, Loader2, Sparkles } from "lucide-react";
+import { useListGyms } from "@workspace/api-client-react";
+import {
+  CalendarDays,
+  Clock,
+  Dumbbell,
+  Loader2,
+  PartyPopper,
+  Sparkles,
+} from "lucide-react";
 
 type Props = {
   trigger: ReactNode;
@@ -33,27 +42,106 @@ type Props = {
   successDescription?: string;
 };
 
+function fireCelebration(): () => void {
+  const end = Date.now() + 1200;
+  const colors = ["#84cc16", "#22c55e", "#16a34a", "#bef264", "#ffffff"];
+  let rafId = 0;
+  // Initial big burst
+  confetti({
+    particleCount: 120,
+    spread: 90,
+    startVelocity: 45,
+    origin: { y: 0.6 },
+    colors,
+  });
+  // Side cannons that keep firing for a moment
+  const frame = () => {
+    confetti({
+      particleCount: 4,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0 },
+      colors,
+    });
+    confetti({
+      particleCount: 4,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1 },
+      colors,
+    });
+    if (Date.now() < end) rafId = requestAnimationFrame(frame);
+  };
+  rafId = requestAnimationFrame(frame);
+  return () => cancelAnimationFrame(rafId);
+}
+
+function formatNiceDate(iso: string): string {
+  if (!iso) return "";
+  const d = new Date(`${iso}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("en-IN", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function formatNiceTime(t: string): string {
+  if (!t) return "";
+  const [hStr, mStr] = t.split(":");
+  const h = Number(hStr);
+  const m = Number(mStr);
+  if (Number.isNaN(h) || Number.isNaN(m)) return t;
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
+}
+
 export function LeadEnquiryDialog(props: Props) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [city, setCity] = useState("");
+  const [gymName, setGymName] = useState(props.gymName ?? "");
+  const [gymId, setGymId] = useState<number | undefined>(props.gymId);
+  const [workout, setWorkout] = useState(props.className ?? "");
   const [preferredDate, setPreferredDate] = useState("");
+  const [preferredTime, setPreferredTime] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+
+  const { data: gyms } = useListGyms();
+
+  useEffect(() => {
+    if (!done) return;
+    const cancel = fireCelebration();
+    return cancel;
+  }, [done]);
 
   const reset = () => {
     setName("");
     setPhone("");
     setEmail("");
     setCity("");
+    setGymName(props.gymName ?? "");
+    setGymId(props.gymId);
+    setWorkout(props.className ?? "");
     setPreferredDate("");
+    setPreferredTime("");
     setMessage("");
     setErr(null);
     setDone(false);
+  };
+
+  const onSelectGym = (value: string) => {
+    setGymName(value);
+    const match = (gyms ?? []).find((g) => g.name === value);
+    setGymId(match?.id ?? props.gymId);
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -68,10 +156,10 @@ export function LeadEnquiryDialog(props: Props) {
         body: JSON.stringify({
           kind: props.kind,
           classId: props.classId,
-          gymId: props.gymId,
+          gymId,
           planId: props.planId,
-          className: props.className,
-          gymName: props.gymName,
+          className: workout,
+          gymName,
           planName: props.planName,
           planPriceInr: props.planPriceInr,
           source: props.source ?? "web",
@@ -80,6 +168,7 @@ export function LeadEnquiryDialog(props: Props) {
           email,
           city,
           preferredDate,
+          preferredTime,
           message,
         }),
       });
@@ -104,26 +193,55 @@ export function LeadEnquiryDialog(props: Props) {
       }}
     >
       <DialogTrigger asChild>{props.trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         {done ? (
-          <div className="py-6 text-center space-y-4">
-            <div className="mx-auto h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
-              <CheckCircle2 className="h-8 w-8 text-green-600" />
+          <div className="py-6 text-center space-y-5">
+            <div className="relative mx-auto h-20 w-20">
+              <span className="absolute inset-0 rounded-full bg-lime-400/30 animate-ping" />
+              <div className="relative mx-auto h-20 w-20 rounded-full bg-gradient-to-br from-lime-400 to-green-600 flex items-center justify-center shadow-lg shadow-lime-500/40">
+                <PartyPopper className="h-10 w-10 text-white" />
+              </div>
             </div>
             <DialogHeader>
               <DialogTitle className="text-center text-2xl font-black">
-                {props.successTitle ?? "Enquiry Received!"}
+                {props.successTitle ?? "Congratulations!"}
               </DialogTitle>
-              <DialogDescription className="text-center">
+              <DialogDescription className="text-center text-base">
                 {props.successDescription ??
-                  "Our team will call you shortly to confirm your class."}
+                  "You've been selected for a 2-Day FREE Trial. Visit the gym and start your fitness journey with us!"}
               </DialogDescription>
             </DialogHeader>
+
+            <div className="rounded-2xl border border-lime-200 bg-lime-50 dark:bg-lime-950/30 dark:border-lime-900/50 p-4 text-left space-y-2">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-lime-500 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white">
+                <Sparkles className="h-3 w-3" />
+                2-Day Free Trial
+              </div>
+              {gymName ? (
+                <div className="flex items-center gap-2 text-sm font-bold text-foreground">
+                  <Dumbbell className="h-4 w-4 text-lime-600" />
+                  {gymName}
+                </div>
+              ) : null}
+              {preferredDate ? (
+                <div className="flex items-center gap-2 text-sm text-foreground">
+                  <CalendarDays className="h-4 w-4 text-lime-600" />
+                  {formatNiceDate(preferredDate)}
+                </div>
+              ) : null}
+              {preferredTime ? (
+                <div className="flex items-center gap-2 text-sm text-foreground">
+                  <Clock className="h-4 w-4 text-lime-600" />
+                  {formatNiceTime(preferredTime)}
+                </div>
+              ) : null}
+            </div>
+
             <Button
               className="w-full font-bold"
               onClick={() => setOpen(false)}
             >
-              Done
+              Awesome, see you there!
             </Button>
           </div>
         ) : (
@@ -150,11 +268,6 @@ export function LeadEnquiryDialog(props: Props) {
                           ₹{props.planPriceInr.toLocaleString("en-IN")}
                         </span>
                       )}
-                  </span>
-                ) : props.className ? (
-                  <span className="block mt-1 text-foreground font-semibold">
-                    {props.className}
-                    {props.gymName ? ` at ${props.gymName}` : ""}
                   </span>
                 ) : null}
               </DialogDescription>
@@ -193,27 +306,105 @@ export function LeadEnquiryDialog(props: Props) {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="lead-email">Email</Label>
-                  <Input
-                    id="lead-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                  />
+              <div className="space-y-1.5">
+                <Label htmlFor="lead-email">Email</Label>
+                <Input
+                  id="lead-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                />
+              </div>
+
+              {/* Gym / Class section */}
+              <div className="rounded-2xl border border-border bg-secondary/30 p-3 space-y-3">
+                <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-muted-foreground">
+                  <Dumbbell className="h-3.5 w-3.5 text-lime-600" />
+                  Gym & Class
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="lead-date">Preferred date</Label>
+                  <Label htmlFor="lead-gym">Choose gym *</Label>
+                  <select
+                    id="lead-gym"
+                    value={gymName}
+                    onChange={(e) => onSelectGym(e.target.value)}
+                    required
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="" disabled>
+                      Select a gym
+                    </option>
+                    {gymName &&
+                    !(gyms ?? []).some((g) => g.name === gymName) ? (
+                      <option value={gymName}>{gymName}</option>
+                    ) : null}
+                    {(gyms ?? []).map((g) => (
+                      <option key={g.id} value={g.name}>
+                        {g.name}
+                        {g.area ? ` — ${g.area}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="lead-workout">Class / workout</Label>
                   <Input
-                    id="lead-date"
-                    type="date"
-                    value={preferredDate}
-                    onChange={(e) => setPreferredDate(e.target.value)}
+                    id="lead-workout"
+                    value={workout}
+                    onChange={(e) => setWorkout(e.target.value)}
+                    placeholder="e.g. Strength, Yoga, Zumba, CrossFit"
                   />
                 </div>
               </div>
+
+              {/* Date & Time section */}
+              <div className="rounded-2xl border border-lime-200 bg-gradient-to-br from-lime-50 to-green-50 dark:from-lime-950/30 dark:to-green-950/20 dark:border-lime-900/50 p-3 space-y-3">
+                <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-lime-700 dark:text-lime-300">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  When are you coming?
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="lead-date"
+                      className="flex items-center gap-1"
+                    >
+                      <CalendarDays className="h-3 w-3 text-lime-600" /> Date *
+                    </Label>
+                    <Input
+                      id="lead-date"
+                      type="date"
+                      value={preferredDate}
+                      onChange={(e) => setPreferredDate(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="lead-time"
+                      className="flex items-center gap-1"
+                    >
+                      <Clock className="h-3 w-3 text-lime-600" /> Time *
+                    </Label>
+                    <Input
+                      id="lead-time"
+                      type="time"
+                      value={preferredTime}
+                      onChange={(e) => setPreferredTime(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+                {preferredDate || preferredTime ? (
+                  <p className="text-xs font-semibold text-lime-700 dark:text-lime-300">
+                    Visiting{" "}
+                    {preferredDate ? formatNiceDate(preferredDate) : "—"}
+                    {preferredTime ? ` at ${formatNiceTime(preferredTime)}` : ""}
+                  </p>
+                ) : null}
+              </div>
+
               <div className="space-y-1.5">
                 <Label htmlFor="lead-msg">Anything we should know?</Label>
                 <Textarea
@@ -221,7 +412,7 @@ export function LeadEnquiryDialog(props: Props) {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Goals, fitness level, questions..."
-                  rows={3}
+                  rows={2}
                 />
               </div>
             </div>
@@ -241,15 +432,15 @@ export function LeadEnquiryDialog(props: Props) {
                 {busy ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Sending...
+                    Submitting...
                   </>
                 ) : (
-                  props.ctaLabel ?? "Send Enquiry"
+                  props.ctaLabel ?? "Submit"
                 )}
               </Button>
             </DialogFooter>
             <p className="text-[11px] text-muted-foreground text-center">
-              Our team will call to schedule your session.
+              Our team will call to confirm your free trial visit.
             </p>
           </form>
         )}
