@@ -42,6 +42,7 @@ import {
   Play,
   Menu,
   X,
+  Navigation,
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 
@@ -272,6 +273,26 @@ function Hero() {
   const [query, setQuery] = useState("");
   const [city, setCity] = useState("");
   const [videoOpen, setVideoOpen] = useState(false);
+  const [locating, setLocating] = useState(false);
+
+  const handleUseLocation = () => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      navigate("/explore");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      () => {
+        setLocating(false);
+        navigate("/explore");
+      },
+      () => {
+        setLocating(false);
+        navigate("/explore");
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 },
+    );
+  };
 
   useEffect(() => {
     if (!videoOpen) return;
@@ -385,11 +406,14 @@ function Hero() {
               />
             </div>
             <Button
-              type="submit"
+              type="button"
               size="lg"
-              className="bg-gradient-brand text-white border-none h-14 md:h-14 px-8 text-base font-black tracking-wide shadow-[0_10px_30px_-10px_hsl(96_56%_55%/0.8)] hover:opacity-95 rounded-xl"
+              onClick={handleUseLocation}
+              disabled={locating}
+              className="bg-gradient-brand text-white border-none h-14 md:h-14 px-8 text-base font-black tracking-wide shadow-[0_10px_30px_-10px_hsl(96_56%_55%/0.8)] hover:opacity-95 rounded-xl whitespace-nowrap disabled:opacity-80"
             >
-              <Search className="h-5 w-5 mr-2" /> Search
+              <Navigation className="h-5 w-5 mr-2" />
+              {locating ? "Locating…" : "Use my location"}
             </Button>
           </div>
 
