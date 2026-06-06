@@ -10,3 +10,5 @@ description: Why `pnpm --filter @workspace/db run push` can be unsafe here, and 
 **Why:** push is all-or-nothing against the whole schema diff; one unrelated drift turns an additive change into a destructive prompt that also can't be answered in the non-interactive shell.
 
 **How to apply:** kicks in any time you add/alter columns. Do the additive ALTER manually; keep the Drizzle schema file in sync; never push to "fix" drift unless you've confirmed the dropped tables are truly disposable.
+
+**Production (separate DB):** do NOT manually ALTER prod and do NOT add startup DDL or migration scripts. Replit's Publish flow auto-diffs the dev schema against prod and applies new columns when the user republishes. So the workflow for a new column is: (1) additive ALTER on dev + update Drizzle schema, (2) tell the user to republish — prod gets the column automatically via the publish diff. The app's startup seeder does data-only seeding (`seedFromSnapshot`), never schema DDL.

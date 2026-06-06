@@ -773,6 +773,7 @@ router.post(
         excerpt: typeof b.excerpt === "string" ? b.excerpt : "",
         content: typeof b.content === "string" ? b.content : "",
         coverImage: typeof b.coverImage === "string" ? b.coverImage : "",
+        videoUrl: typeof b.videoUrl === "string" ? b.videoUrl : "",
         author:
           typeof b.author === "string" && b.author.trim()
             ? b.author
@@ -804,6 +805,7 @@ router.patch(
       "excerpt",
       "content",
       "coverImage",
+      "videoUrl",
       "author",
       "category",
     ] as const) {

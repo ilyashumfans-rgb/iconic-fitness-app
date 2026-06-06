@@ -472,6 +472,7 @@ export const blogPostsTable = pgTable("blog_posts", {
   excerpt: text("excerpt").notNull().default(""),
   content: text("content").notNull().default(""),
   coverImage: text("cover_image").notNull().default(""),
+  videoUrl: text("video_url").notNull().default(""),
   author: text("author").notNull().default("GYMCO Team"),
   category: text("category").notNull().default("Fitness"),
   isPublished: boolean("is_published").notNull().default(true),

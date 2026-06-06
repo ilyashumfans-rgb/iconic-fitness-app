@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useRoute } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Calendar, User } from "lucide-react";
+import { ArrowLeft, Calendar, Play, User } from "lucide-react";
 
 type Post = {
   id: number;
@@ -10,10 +10,86 @@ type Post = {
   excerpt: string;
   content: string;
   coverImage: string;
+  videoUrl: string;
   author: string;
   category: string;
   publishedAt: string;
 };
+
+const YT_HOSTS = new Set([
+  "youtube.com",
+  "www.youtube.com",
+  "m.youtube.com",
+  "youtube-nocookie.com",
+  "www.youtube-nocookie.com",
+  "youtu.be",
+]);
+
+const YT_ID = /^[\w-]{11}$/;
+
+function youtubeId(url: string): string | null {
+  if (!url) return null;
+  const raw = url.trim();
+  if (YT_ID.test(raw)) return raw;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(raw.includes("://") ? raw : `https://${raw}`);
+  } catch {
+    return null;
+  }
+  const host = parsed.hostname.toLowerCase();
+  if (!YT_HOSTS.has(host)) return null;
+
+  if (host === "youtu.be") {
+    const id = parsed.pathname.slice(1).split("/")[0];
+    return YT_ID.test(id) ? id : null;
+  }
+
+  const v = parsed.searchParams.get("v");
+  if (v && YT_ID.test(v)) return v;
+
+  const m = parsed.pathname.match(/\/(?:embed|shorts|v|live)\/([\w-]{11})/);
+  return m ? m[1] : null;
+}
+
+function BlogVideo({ url }: { url: string }) {
+  const [playing, setPlaying] = useState(false);
+  const id = youtubeId(url);
+  if (!id) return null;
+  const thumb = `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+
+  return (
+    <div className="mt-8 relative aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-lg">
+      {playing ? (
+        <iframe
+          className="absolute inset-0 h-full w-full"
+          src={`https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1`}
+          title="Video"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={() => setPlaying(true)}
+          aria-label="Play video"
+          className="group absolute inset-0 h-full w-full"
+        >
+          <img
+            src={thumb}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <span className="absolute inset-0 bg-black/25 group-hover:bg-black/35 transition-colors" />
+          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex h-16 w-16 items-center justify-center rounded-full bg-white/95 text-black shadow-xl group-hover:scale-105 transition-transform">
+            <Play className="h-7 w-7 ml-1 fill-current" />
+          </span>
+        </button>
+      )}
+    </div>
+  );
+}
 
 export default function BlogDetail() {
   const [, params] = useRoute("/blog/:slug");
@@ -87,14 +163,18 @@ export default function BlogDetail() {
           })}
         </span>
       </div>
-      {post.coverImage && (
-        <div className="mt-8 rounded-2xl overflow-hidden">
-          <img
-            src={post.coverImage}
-            alt=""
-            className="w-full h-auto object-cover"
-          />
-        </div>
+      {post.videoUrl && youtubeId(post.videoUrl) ? (
+        <BlogVideo url={post.videoUrl} />
+      ) : (
+        post.coverImage && (
+          <div className="mt-8 rounded-2xl overflow-hidden">
+            <img
+              src={post.coverImage}
+              alt=""
+              className="w-full h-auto object-cover"
+            />
+          </div>
+        )
       )}
       {post.excerpt && (
         <p className="text-lg text-muted-foreground mt-8 leading-relaxed">

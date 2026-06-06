@@ -15,6 +15,7 @@ type Post = {
   excerpt: string;
   content: string;
   coverImage: string;
+  videoUrl: string;
   author: string;
   category: string;
   isPublished: boolean;
@@ -27,6 +28,7 @@ type FormState = {
   excerpt: string;
   content: string;
   coverImage: string;
+  videoUrl: string;
   author: string;
   category: string;
   isPublished: boolean;
@@ -37,6 +39,7 @@ const EMPTY: FormState = {
   excerpt: "",
   content: "",
   coverImage: "",
+  videoUrl: "",
   author: "Iconic Fitness Team",
   category: "Fitness",
   isPublished: true,
@@ -73,6 +76,7 @@ export default function AdminBlogManagement() {
       excerpt: p.excerpt,
       content: p.content,
       coverImage: p.coverImage,
+      videoUrl: p.videoUrl ?? "",
       author: p.author,
       category: p.category,
       isPublished: p.isPublished,
@@ -290,6 +294,19 @@ export default function AdminBlogManagement() {
                     </button>
                   </div>
                 )}
+              </div>
+              <div>
+                <Label>YouTube video link (optional)</Label>
+                <Input
+                  value={form.videoUrl}
+                  onChange={(e) =>
+                    setForm({ ...form, videoUrl: e.target.value })
+                  }
+                  placeholder="https://www.youtube.com/watch?v=..."
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Readers can play this video right on the article page.
+                </p>
               </div>
               <div>
                 <Label>Excerpt</Label>
