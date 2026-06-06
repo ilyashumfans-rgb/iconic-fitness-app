@@ -531,7 +531,7 @@ export default function GymDetail() {
                     2
                   </div>
                   <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mt-0.5">
-                    trial
+                    Free trial
                     <br />
                     classes
                   </div>
@@ -566,7 +566,7 @@ export default function GymDetail() {
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed mb-4">
                 Unlimited access to group classes & all Elite + Pro gyms across
-                India.
+                Bengaluru.
               </p>
               <div className="mb-4 text-sm font-bold text-foreground">
                 One plan. Every gym.

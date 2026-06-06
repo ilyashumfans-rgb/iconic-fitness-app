@@ -11,7 +11,7 @@ import {
   SheetTrigger,
   SheetClose,
 } from "@/components/ui/sheet";
-import { useListFeaturedGyms, useListClasses, getListClassesQueryKey } from "@workspace/api-client-react";
+import { useListGyms, useListClasses, getListClassesQueryKey } from "@workspace/api-client-react";
 import NearbyGyms from "@/components/NearbyGyms";
 import { BlogTeaserSection } from "@/components/BlogTeaserSection";
 import { PricingTeaserSection } from "@/components/PricingTeaserSection";
@@ -631,8 +631,8 @@ function LiveTicker() {
 }
 
 function FeaturedGyms() {
-  const { data: gyms, isLoading } = useListFeaturedGyms();
-  const items = (gyms ?? []).slice(0, 6);
+  const { data: gyms, isLoading } = useListGyms();
+  const items = gyms ?? [];
 
   return (
     <section id="gyms-list" className="py-24 md:py-32 relative">
