@@ -103,7 +103,7 @@ export default function Memberships() {
                           {plan.name}
                         </h3>
                         {plan.tagline && (
-                          <p className="text-[11px] font-medium mt-1 text-muted-foreground">
+                          <p className={`text-[11px] font-medium mt-1 ${isPopular ? "text-lime-700 dark:text-lime-300" : "text-muted-foreground"}`}>
                             {plan.tagline}
                           </p>
                         )}
@@ -141,8 +141,8 @@ export default function Memberships() {
                           <span className="font-medium leading-snug"><strong>{plan.classesPerMonth}</strong> classes / month</span>
                         </li>
                         {plan.perks.map(perk => (
-                          <li key={perk} className="flex items-start text-xs text-muted-foreground">
-                            <Check className="h-4 w-4 mr-2 shrink-0 mt-0.5 text-lime-500/70" />
+                          <li key={perk} className={`flex items-start text-xs ${isPopular ? "text-slate-700 dark:text-lime-100" : "text-muted-foreground"}`}>
+                            <Check className={`h-4 w-4 mr-2 shrink-0 mt-0.5 ${isPopular ? "text-lime-600 dark:text-lime-400" : "text-lime-500/70"}`} />
                             <span className="leading-snug">{perk}</span>
                           </li>
                         ))}
