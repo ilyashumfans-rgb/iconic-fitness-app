@@ -11,10 +11,16 @@ import {
 } from "@/components/ui/sheet";
 import { SiteFooter } from "@/components/SiteFooter";
 import { useUser, useClerk } from "@clerk/react";
+import { useTheme } from "@/lib/theme";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 function PublicNav() {
+  const { theme } = useTheme();
+  const headerLogo =
+    theme === "dark"
+      ? `${basePath}/media/iconic-fitness-header-logo.png`
+      : `${basePath}/media/iconic-fitness-header-logo-light.png`;
   const links = [
     { href: "/explore", label: "Browse Gyms" },
     { href: "/be-a-member", label: "Be a Member" },
@@ -57,7 +63,7 @@ function PublicNav() {
       <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
         <Link href="/" className="inline-flex items-center" aria-label="Iconic Fitness home">
           <img
-            src={`${basePath}/media/iconic-fitness-header-logo.png`}
+            src={headerLogo}
             alt="Iconic Fitness"
             className="h-12 md:h-14 w-auto object-contain"
           />

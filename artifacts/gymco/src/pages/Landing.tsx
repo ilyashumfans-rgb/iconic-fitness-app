@@ -170,6 +170,12 @@ function ThemeToggle() {
 }
 
 function TopNav() {
+  const { theme } = useTheme();
+  const headerBase = import.meta.env.BASE_URL.replace(/\/$/, "");
+  const headerLogo =
+    theme === "dark"
+      ? `${headerBase}/media/iconic-fitness-header-logo.png`
+      : `${headerBase}/media/iconic-fitness-header-logo-light.png`;
   return (
     <header className="fixed top-0 inset-x-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
@@ -179,7 +185,7 @@ function TopNav() {
           aria-label="Iconic Fitness home"
         >
           <img
-            src={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/media/iconic-fitness-header-logo.png`}
+            src={headerLogo}
             alt="Iconic Fitness"
             className="h-12 md:h-14 w-auto object-contain"
           />
