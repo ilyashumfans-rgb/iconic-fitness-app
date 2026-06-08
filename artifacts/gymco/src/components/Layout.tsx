@@ -108,11 +108,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <button
                 type="button"
                 onClick={signOut}
-                aria-label="Sign out"
-                title="Sign out"
-                className="h-9 w-9 shrink-0 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors"
+                aria-label="Log out"
+                title="Log out"
+                className="shrink-0 inline-flex items-center gap-1.5 h-9 pl-2.5 pr-3 rounded-lg text-sm font-semibold text-muted-foreground border border-border hover:text-red-600 hover:border-red-300 hover:bg-red-50 dark:hover:text-red-400 dark:hover:border-red-900 dark:hover:bg-red-950/30 transition-colors"
               >
                 <LogOut className="h-4 w-4" />
+                Log out
               </button>
             </div>
           </div>
@@ -133,10 +134,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <button
                 type="button"
                 onClick={signOut}
-                aria-label="Sign out"
-                className="h-9 w-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
+                aria-label="Log out"
+                title="Log out"
+                className="inline-flex items-center gap-1.5 h-9 pl-2.5 pr-3 rounded-lg text-sm font-semibold text-muted-foreground border border-border hover:text-red-600 hover:border-red-300 hover:bg-red-50 dark:hover:text-red-400 dark:hover:border-red-900 dark:hover:bg-red-950/30 transition-colors"
               >
                 <LogOut className="h-4 w-4" />
+                Log out
               </button>
             </div>
           )}
