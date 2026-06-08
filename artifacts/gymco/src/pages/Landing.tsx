@@ -174,11 +174,11 @@ function TopNav() {
   const headerBase = import.meta.env.BASE_URL.replace(/\/$/, "");
   const headerLogo =
     theme === "dark"
-      ? `${headerBase}/media/iconic-fitness-header-logo.png`
+      ? `${headerBase}/media/iconic-fitness-header-logo-dark.png`
       : `${headerBase}/media/iconic-fitness-header-logo-light.png`;
   return (
     <header className="fixed top-0 inset-x-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
-      <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 h-20 md:h-24 flex items-center justify-between">
         <Link
           href="/"
           className="inline-flex items-center"
@@ -187,7 +187,7 @@ function TopNav() {
           <img
             src={headerLogo}
             alt="Iconic Fitness"
-            className="h-12 md:h-14 w-auto object-contain"
+            className="h-16 md:h-20 w-auto object-contain"
           />
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">

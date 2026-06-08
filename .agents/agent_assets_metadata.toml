@@ -11,3 +11,15 @@ id = "ybRqAnKqCdDGnRf9yM6Hp"
 uri = "file://iconic-fitness-code.zip"
 type = "unspecified"
 title = "Iconic Fitness — Full Project Code"
+
+[[outputs]]
+id = "pNPhdDTsjjH32xW5k3u2F"
+uri = "file://exports/iconic-fitness-prod-export.zip"
+type = "unspecified"
+title = "Iconic Fitness — Production database export (SQL inside zip)"
+
+[[outputs]]
+id = "ITjHYkyUu8ZAQT5dj1ZCk"
+uri = "file://exports/iconic-fitness-source-code.zip"
+type = "unspecified"
+title = "Iconic Fitness — Source code (zip)"
