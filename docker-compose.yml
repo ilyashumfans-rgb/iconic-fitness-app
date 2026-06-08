@@ -1,0 +1,64 @@
+# Iconic Fitness — self-hosted Docker stack
+#
+#   1. Copy .env.docker.example to .env and fill in the Clerk keys + secrets.
+#   2. docker compose up --build
+#   3. Open http://localhost:8080
+#
+# Services: Postgres (db) + Express API (api) + nginx-served SPA (web).
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-iconic}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-iconic}
+      POSTGRES_DB: ${POSTGRES_DB:-iconic}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      # OPTIONAL: auto-load the production export on first boot.
+      # Uncomment after placing the SQL file at ./exports/iconic-fitness-prod-export.sql
+      # (the database is only seeded the first time the volume is created).
+      # - ./exports/iconic-fitness-prod-export.sql:/docker-entrypoint-initdb.d/01-data.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-iconic}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      DATABASE_URL: postgres://${POSTGRES_USER:-iconic}:${POSTGRES_PASSWORD:-iconic}@db:5432/${POSTGRES_DB:-iconic}
+      SESSION_SECRET: ${SESSION_SECRET}
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY}
+      CLERK_PUBLISHABLE_KEY: ${CLERK_PUBLISHABLE_KEY}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "5000"
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
+      args:
+        VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY}
+        BASE_PATH: "/"
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+
+volumes:
+  db-data:

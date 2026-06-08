@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+**/.tsbuildinfo
+.git
+.gitignore
+exports
+*.log
+.env
+.env.*
+!.env.docker.example
+.DS_Store
+artifacts/*/dist
