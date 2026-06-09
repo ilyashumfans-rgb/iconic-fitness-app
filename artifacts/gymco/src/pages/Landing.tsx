@@ -1357,7 +1357,7 @@ function Testimonials() {
 const videoTestimonials = [
   {
     name: "Rikitha",
-    role: "Iconic Fitness Member",
+    role: "Fashion Designer · Entrepreneur",
     quote:
       "One pass, every gym near me — I finally stopped making excuses and started showing up.",
     src: `${import.meta.env.BASE_URL}media/testimonial-rikitha.mp4`,
@@ -1365,7 +1365,7 @@ const videoTestimonials = [
   },
   {
     name: "Suraj",
-    role: "Iconic Fitness Member",
+    role: "Product Manager · IT Services",
     quote:
       "The flexibility is unreal. I train wherever my day takes me and never miss a session.",
     src: `${import.meta.env.BASE_URL}media/testimonial-suraj.mp4`,
@@ -1373,7 +1373,7 @@ const videoTestimonials = [
   },
   {
     name: "Albha",
-    role: "Iconic Fitness Member",
+    role: "IT Professional",
     quote:
       "Best decision I made this year. The gyms are world-class and the community keeps me going.",
     src: `${import.meta.env.BASE_URL}media/testimonial-albha.mp4`,
