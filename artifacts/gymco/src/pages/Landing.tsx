@@ -1275,7 +1275,7 @@ export default function Landing() {
     <div className="min-h-screen bg-background text-foreground">
       <TopNav />
       <Hero />
-      <NearbyGyms />
+      {/* <NearbyGyms /> */}
       <FeaturedGyms />
       <HowItWorks />
       <FeatureBlock />
