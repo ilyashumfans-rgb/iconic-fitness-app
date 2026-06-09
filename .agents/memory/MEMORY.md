@@ -6,3 +6,4 @@
 - [Dev → prod catalog import](prod-data-import.md) — dev/prod are separate DBs; startup seeder skips populated tables. Mirror dev→prod via admin "Import workspace data" button (atomic truncate+reseed from regenerated snapshot).
 - [Gym distance display & coords](gym-distance-display.md) — distance only shows with real user coords; "all gyms same km" is a placeholder-coord DATA bug, not haversine code.
 - [ffmpeg parallel encode sync flakiness](ffmpeg-parallel-encode-sync.md) — background `&`+`wait` file writes intermittently don't persist here; encode serially, `sync`, verify each with `stat`.
+- [Deploy typechecks ALL artifacts](deploy-builds-all-artifacts.md) — publish fails if ANY artifact has a TS error (dev/vite doesn't typecheck); Vite artifacts need `dom` lib; bare `vite build` PORT error is not a real blocker.
