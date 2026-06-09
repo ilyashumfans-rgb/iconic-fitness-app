@@ -1387,6 +1387,7 @@ function VideoTestimonialCard({
   item: (typeof videoTestimonials)[number];
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const seekedRef = useRef(false);
   const [started, setStarted] = useState(false);
 
   const handlePlay = () => {
@@ -1396,6 +1397,15 @@ function VideoTestimonialCard({
     if (result && typeof result.then === "function") {
       result.catch(() => setStarted(false));
     }
+  };
+
+  const handleLoadedMetadata = () => {
+    const v = videoRef.current;
+    if (!v || seekedRef.current) return;
+    if (v.duration > 2) {
+      v.currentTime = 2;
+    }
+    seekedRef.current = true;
   };
 
   return (
@@ -1414,6 +1424,7 @@ function VideoTestimonialCard({
           preload="none"
           playsInline
           controls={started}
+          onLoadedMetadata={handleLoadedMetadata}
           onPlay={() => setStarted(true)}
           className="absolute inset-0 h-full w-full object-cover"
         />
