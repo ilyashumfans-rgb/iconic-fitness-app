@@ -1353,6 +1353,122 @@ function Testimonials() {
   );
 }
 
+const videoTestimonials = [
+  {
+    name: "Rikitha",
+    role: "Iconic Fitness Member",
+    quote:
+      "One pass, every gym near me — I finally stopped making excuses and started showing up.",
+    src: `${import.meta.env.BASE_URL}media/testimonial-rikitha.mp4`,
+    poster: `${import.meta.env.BASE_URL}media/testimonial-rikitha-poster.jpg`,
+  },
+  {
+    name: "Suraj",
+    role: "Iconic Fitness Member",
+    quote:
+      "The flexibility is unreal. I train wherever my day takes me and never miss a session.",
+    src: `${import.meta.env.BASE_URL}media/testimonial-suraj.mp4`,
+    poster: `${import.meta.env.BASE_URL}media/testimonial-suraj-poster.jpg`,
+  },
+  {
+    name: "Albha",
+    role: "Iconic Fitness Member",
+    quote:
+      "Best decision I made this year. The gyms are world-class and the community keeps me going.",
+    src: `${import.meta.env.BASE_URL}media/testimonial-albha.mp4`,
+    poster: `${import.meta.env.BASE_URL}media/testimonial-albha-poster.jpg`,
+  },
+];
+
+function VideoTestimonialCard({
+  item,
+}: {
+  item: (typeof videoTestimonials)[number];
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [started, setStarted] = useState(false);
+
+  const handlePlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    const result = v.play();
+    if (result && typeof result.then === "function") {
+      result.catch(() => setStarted(false));
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.5 }}
+      className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden flex flex-col"
+    >
+      <div className="relative aspect-[9/16] bg-black">
+        <video
+          ref={videoRef}
+          src={item.src}
+          poster={item.poster}
+          preload="none"
+          playsInline
+          controls={started}
+          onPlay={() => setStarted(true)}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        {!started && (
+          <button
+            type="button"
+            onClick={handlePlay}
+            aria-label={`Play ${item.name}'s testimonial`}
+            className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors hover:bg-black/30 group"
+          >
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/95 shadow-xl transition-transform group-hover:scale-110">
+              <Play className="h-7 w-7 translate-x-0.5 text-primary fill-primary" />
+            </span>
+          </button>
+        )}
+      </div>
+      <div className="p-6">
+        <Quote className="h-6 w-6 text-primary/30 mb-3" />
+        <p className="text-base leading-relaxed text-foreground/90 mb-4">
+          "{item.quote}"
+        </p>
+        <div className="font-bold">{item.name}</div>
+        <div className="text-xs text-muted-foreground">{item.role}</div>
+      </div>
+    </motion.div>
+  );
+}
+
+function VideoTestimonials() {
+  return (
+    <section className="py-20 md:py-28 relative">
+      <div className="max-w-7xl mx-auto px-4 md:px-8">
+        <div className="max-w-2xl mb-12 md:mb-16">
+          <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary mb-3">
+            Real stories
+          </div>
+          <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-[1.05]">
+            Hear it from{" "}
+            <span className="text-gradient-brand">our members.</span>
+          </h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            Real Iconic Fitness members on how one membership changed the way
+            they train.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {videoTestimonials.map((item) => (
+            <VideoTestimonialCard key={item.name} item={item} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function CTA() {
   return (
     <section className="py-24 md:py-32 relative">
@@ -1411,6 +1527,7 @@ export default function Landing() {
         <PricingTeaserSection />
         <BlogTeaserSection />
       </section>
+      <VideoTestimonials />
       <CTA />
       <Footer />
     </div>
