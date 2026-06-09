@@ -44,6 +44,7 @@ import {
   X,
 } from "lucide-react";
 import { useTheme } from "@/lib/theme";
+import { cn } from "@/lib/utils";
 
 const popularCities = ["Bangalore"];
 
@@ -1442,6 +1443,38 @@ function VideoTestimonialCard({
 }
 
 function VideoTestimonials() {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(0);
+
+  const handleScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const center = el.scrollLeft + el.clientWidth / 2;
+    let best = 0;
+    let bestDist = Infinity;
+    Array.from(el.children).forEach((c, i) => {
+      const child = c as HTMLElement;
+      const childCenter = child.offsetLeft + child.clientWidth / 2;
+      const dist = Math.abs(childCenter - center);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = i;
+      }
+    });
+    setActive(best);
+  };
+
+  const scrollTo = (i: number) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const child = el.children[i] as HTMLElement | undefined;
+    if (!child) return;
+    el.scrollTo({
+      left: child.offsetLeft - (el.clientWidth - child.clientWidth) / 2,
+      behavior: "smooth",
+    });
+  };
+
   return (
     <section className="py-20 md:py-28 relative">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
@@ -1459,9 +1492,52 @@ function VideoTestimonials() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Desktop / tablet grid */}
+        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {videoTestimonials.map((item) => (
             <VideoTestimonialCard key={item.name} item={item} />
+          ))}
+        </div>
+      </div>
+
+      {/* Mobile sliding carousel */}
+      <div className="sm:hidden">
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="relative flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth px-8 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {videoTestimonials.map((item, i) => (
+            <div
+              key={item.name}
+              className={cn(
+                "snap-center shrink-0 w-[82%] transition-all duration-500 ease-out",
+                i === active
+                  ? "scale-100 opacity-100"
+                  : "scale-[0.9] opacity-50",
+              )}
+            >
+              <VideoTestimonialCard item={item} />
+            </div>
+          ))}
+        </div>
+
+        {/* Dots */}
+        <div className="mt-7 flex items-center justify-center gap-2">
+          {videoTestimonials.map((item, i) => (
+            <button
+              key={item.name}
+              type="button"
+              onClick={() => scrollTo(i)}
+              aria-label={`Go to ${item.name}'s testimonial`}
+              aria-current={i === active}
+              className={cn(
+                "h-2 rounded-full transition-all duration-300",
+                i === active
+                  ? "w-7 bg-gradient-brand"
+                  : "w-2 bg-border hover:bg-muted-foreground/40",
+              )}
+            />
           ))}
         </div>
       </div>
