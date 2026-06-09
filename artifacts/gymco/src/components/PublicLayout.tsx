@@ -25,6 +25,7 @@ function PublicNav() {
     { href: "/explore", label: "Browse Gyms" },
     { href: "/be-a-member", label: "Be a Member" },
     { href: "/store", label: "Store" },
+    { href: "/blog", label: "Blog" },
     { href: "/memberships", label: "Pricing" },
   ];
 

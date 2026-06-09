@@ -199,6 +199,9 @@ function TopNav() {
           <Link href="/store" className="hover:text-foreground transition-colors">
             Store
           </Link>
+          <Link href="/blog" className="hover:text-foreground transition-colors">
+            Blog
+          </Link>
           <Link href="/memberships" className="hover:text-foreground transition-colors">
             Pricing
           </Link>
@@ -234,6 +237,7 @@ function TopNav() {
                   { href: "/explore", label: "Browse Gyms" },
                   { href: "/be-a-member", label: "Be a Member" },
                   { href: "/store", label: "Store" },
+                  { href: "/blog", label: "Blog" },
                   { href: "/memberships", label: "Pricing" },
                 ].map((l) => (
                   <SheetClose asChild key={l.href}>
