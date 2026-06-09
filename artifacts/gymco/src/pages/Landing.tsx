@@ -1610,11 +1610,11 @@ export default function Landing() {
       <HowItWorks />
       <FeatureBlock />
       <Testimonials />
-      <VideoTestimonials />
       <section className="max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-16 space-y-12 md:space-y-16">
         <PricingTeaserSection />
         <BlogTeaserSection />
       </section>
+      <VideoTestimonials />
       <CTA />
       <Footer />
     </div>
