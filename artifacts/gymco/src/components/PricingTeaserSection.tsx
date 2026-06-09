@@ -70,7 +70,7 @@ export function PricingTeaserSection() {
             return (
               <Card
                 key={plan.id}
-                className={`relative p-5 flex flex-col rounded-2xl overflow-hidden ${
+                className={`relative p-5 flex flex-col rounded-2xl ${
                   plan.popular
                     ? "bg-lime-50 dark:bg-lime-950/20 ring-1 ring-lime-300 dark:ring-lime-800"
                     : "border-border/60"
