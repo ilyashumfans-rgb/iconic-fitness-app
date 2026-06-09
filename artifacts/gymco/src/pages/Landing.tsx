@@ -11,7 +11,7 @@ import {
   SheetTrigger,
   SheetClose,
 } from "@/components/ui/sheet";
-import { useListGyms, useListClasses, getListClassesQueryKey } from "@workspace/api-client-react";
+import { useListGyms, useListClasses, getListClassesQueryKey, getListGymsQueryKey } from "@workspace/api-client-react";
 import NearbyGyms from "@/components/NearbyGyms";
 import { BlogTeaserSection } from "@/components/BlogTeaserSection";
 import { PricingTeaserSection } from "@/components/PricingTeaserSection";
@@ -282,6 +282,63 @@ function Hero() {
   const [query, setQuery] = useState("");
   const [city, setCity] = useState("");
   const [videoOpen, setVideoOpen] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const searchBoxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query.trim()), 200);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  const suggestParams = { q: debouncedQuery || undefined };
+  const { data: allSuggestions = [], isLoading: loadingSuggestions } = useListGyms(
+    suggestParams,
+    {
+      query: {
+        queryKey: getListGymsQueryKey(suggestParams),
+        enabled: debouncedQuery.length >= 2,
+      },
+    },
+  );
+  const suggestions = allSuggestions.slice(0, 6);
+
+  useEffect(() => {
+    setActiveIndex(-1);
+  }, [debouncedQuery]);
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || suggestions.length === 0) {
+      if (e.key === "Escape") setShowSuggestions(false);
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((i) => (i + 1) % suggestions.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) => (i - 1 + suggestions.length) % suggestions.length);
+    } else if (e.key === "Enter") {
+      if (activeIndex >= 0 && activeIndex < suggestions.length) {
+        e.preventDefault();
+        setShowSuggestions(false);
+        navigate(`/gyms/${suggestions[activeIndex].id}`);
+      }
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+    }
+  };
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
 
   useEffect(() => {
     if (!videoOpen) return;
@@ -376,14 +433,80 @@ function Hero() {
           className="mt-8 md:mt-10 w-full max-w-3xl"
         >
           <div className="rounded-2xl md:rounded-2xl bg-card/95 backdrop-blur-xl border border-border/80 p-2 shadow-[0_20px_60px_-20px_hsl(96_56%_55%/0.25)] md:shadow-[0_30px_80px_-30px_rgba(0,0,0,0.25)] flex flex-col md:flex-row gap-2">
-            <div className="flex-1 flex items-center gap-3 px-4 py-1.5 bg-secondary rounded-xl text-left">
-              <Search className="h-5 w-5 text-primary shrink-0" />
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search gym or activity..."
-                className="border-0 bg-transparent h-11 text-base focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
-              />
+            <div ref={searchBoxRef} className="flex-1 relative">
+              <div className="flex items-center gap-3 px-4 py-1.5 bg-secondary rounded-xl text-left">
+                <Search className="h-5 w-5 text-primary shrink-0" />
+                <Input
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onKeyDown={handleSearchKeyDown}
+                  placeholder="Search gym or activity..."
+                  role="combobox"
+                  aria-expanded={showSuggestions && debouncedQuery.length >= 2}
+                  aria-controls="hero-search-suggestions"
+                  aria-activedescendant={
+                    activeIndex >= 0 ? `hero-suggestion-${activeIndex}` : undefined
+                  }
+                  aria-autocomplete="list"
+                  className="border-0 bg-transparent h-11 text-base focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+                />
+              </div>
+              {showSuggestions && debouncedQuery.length >= 2 && (
+                <div
+                  id="hero-search-suggestions"
+                  role="listbox"
+                  className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-border bg-card text-left shadow-[0_20px_50px_-20px_rgba(0,0,0,0.4)]"
+                >
+                  {loadingSuggestions ? (
+                    <div className="px-4 py-3 text-sm text-muted-foreground">Searching…</div>
+                  ) : suggestions.length === 0 ? (
+                    <div className="px-4 py-3 text-sm text-muted-foreground">
+                      No gyms match “{debouncedQuery}”
+                    </div>
+                  ) : (
+                    suggestions.map((gym, idx) => (
+                      <button
+                        key={gym.id}
+                        id={`hero-suggestion-${idx}`}
+                        role="option"
+                        aria-selected={idx === activeIndex}
+                        type="button"
+                        onMouseEnter={() => setActiveIndex(idx)}
+                        onClick={() => {
+                          setShowSuggestions(false);
+                          navigate(`/gyms/${gym.id}`);
+                        }}
+                        className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                          idx === activeIndex ? "bg-secondary" : "hover:bg-secondary"
+                        }`}
+                      >
+                        <div className="h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-secondary">
+                          {gym.logoUrl || gym.heroImage ? (
+                            <img
+                              src={gym.logoUrl || gym.heroImage}
+                              alt={gym.name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : null}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-foreground">
+                            {gym.name}
+                          </p>
+                          <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
+                            <MapPin className="h-3 w-3 shrink-0" />
+                            {gym.area}, {gym.city}
+                          </p>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
             <div className="flex-1 flex items-center gap-3 px-4 py-1.5 bg-secondary rounded-xl md:max-w-[240px] text-left">
               <MapPin className="h-5 w-5 text-primary shrink-0" />
