@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { and, eq, sql, asc, desc } from "drizzle-orm";
 import { isClassVisibleToMembers } from "../lib/classVisibility";
-import { DEFAULT_GROUP_CLASS_SCHEDULE } from "../lib/groupClassSchedule";
+import { resolveGymSchedule } from "../lib/resolveGymSchedule";
 import {
   db,
   gymsTable,
@@ -14,7 +14,6 @@ import {
   workoutsTable,
   gymWorkoutsTable,
   gymWorkoutSessionsTable,
-  groupClassScheduleTable,
 } from "@workspace/db";
 import {
   ListGymsQueryParams,
@@ -409,35 +408,8 @@ router.get("/gyms/:id/schedule", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Invalid gym id" });
     return;
   }
-  const rows = await db
-    .select()
-    .from(groupClassScheduleTable)
-    .where(eq(groupClassScheduleTable.gymId, gymId))
-    .orderBy(
-      asc(groupClassScheduleTable.dayOfWeek),
-      asc(groupClassScheduleTable.sortOrder),
-    );
-  if (rows.length > 0) {
-    res.json(
-      rows.map((r) => ({
-        dayOfWeek: r.dayOfWeek,
-        startTime: r.startTime,
-        endTime: r.endTime,
-        className: r.className,
-        sortOrder: r.sortOrder,
-      })),
-    );
-    return;
-  }
-  res.json(
-    DEFAULT_GROUP_CLASS_SCHEDULE.map((e) => ({
-      dayOfWeek: e.dayOfWeek,
-      startTime: e.startTime,
-      endTime: e.endTime,
-      className: e.className,
-      sortOrder: e.sortOrder,
-    })),
-  );
+  const schedule = await resolveGymSchedule(gymId);
+  res.json(schedule);
 });
 
 export default router;

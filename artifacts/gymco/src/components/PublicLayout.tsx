@@ -23,6 +23,7 @@ function PublicNav() {
       : `${basePath}/media/iconic-fitness-header-logo-light.png`;
   const links = [
     { href: "/explore", label: "Browse Gyms" },
+    { href: "/book-gx", label: "Book a GX Class" },
     { href: "/be-a-member", label: "Be a Member" },
     { href: "/store", label: "Store" },
     { href: "/blog", label: "Blog" },

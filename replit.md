@@ -59,7 +59,8 @@ Every gym/branch shows a fixed weekly group-class timetable (Mon–Sat, two slot
 - **Lazy materialization:** members see the code default until a partner first opens their timetable; the partner `GET /partner/schedule` inserts the default rows for that gym (advisory-lock guarded against concurrent double-insert), after which all edits are real row CRUD.
 - **API:** member `GET /gyms/:id/schedule` (public, `gyms.ts`) returns gym rows or the default. Partner CRUD `GET/POST/PATCH/DELETE /partner/schedule` + `POST /partner/schedule/reset` (`partner.ts`), scoped via `ensureOwnsGym`; `/partner/schedule` → `classes` permission for staff.
 - **Frontend:** member display in `GymDetail.tsx`; partner editor `pages/partner/Schedule.tsx`; client methods in `partnerApi.ts`.
-- **Scope note:** the member booking dialog (`LeadEnquiryDialog kind="class"`) still hard-codes its own 07:00/19:00 Mon–Fri slots and is NOT wired to the per-gym schedule (potential follow-up).
+- **Book a GX Class page** (`/book-gx`, nav link "Book a GX Class", `pages/BookGxClass.tsx`): members pick a branch → the page fetches that branch's timetable and shows the **available** day+slot options inside the 1-day prebook window (today + tomorrow, today's passed slots hidden) → fill contact details → submits a `kind="class"` lead (`source: "book-gx-page"`). Window/slot logic is computed in `Asia/Kolkata` so the UI matches server validation regardless of the visitor's timezone.
+- **Schedule-aware lead validation:** `POST /api/leads` (`leads.ts` `validateGxBooking`) accepts a class slot if it exists in the branch's timetable (via shared `lib/resolveGymSchedule.ts`, also used by `GET /gyms/:id/schedule`) **OR** matches the legacy fixed 07:00/19:00 weekday slots. The legacy fallback keeps the older `LeadEnquiryDialog kind="class"` flow (still hard-coded 07:00/19:00 Mon–Fri, not wired to per-gym schedules) working even after a partner customizes a branch.
 
 ## User preferences
 

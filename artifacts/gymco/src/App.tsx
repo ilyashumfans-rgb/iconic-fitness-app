@@ -48,6 +48,7 @@ import InfoPage from "@/pages/InfoPage";
 import Store from "@/pages/Store";
 import StoreDetail from "@/pages/StoreDetail";
 import BeAMember from "@/pages/BeAMember";
+import BookGxClass from "@/pages/BookGxClass";
 import Cart from "@/pages/Cart";
 import Checkout from "@/pages/Checkout";
 import AdminDashboard from "@/pages/admin/Dashboard";
@@ -228,6 +229,7 @@ function MemberShellRoutes() {
         <Route path="/bookings" component={Bookings} />
         <Route path="/memberships" component={Memberships} />
         <Route path="/be-a-member" component={BeAMember} />
+        <Route path="/book-gx" component={BookGxClass} />
         <Route path="/trainers" component={Trainers} />
         <Route path="/trainers/:trainerId" component={TrainerDetail} />
         <Route path="/wallet" component={Wallet} />

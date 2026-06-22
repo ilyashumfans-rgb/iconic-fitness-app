@@ -2,6 +2,7 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { desc, eq, sql } from "drizzle-orm";
 import { db, leadsTable } from "@workspace/db";
 import { requireAdmin } from "../lib/adminAuth";
+import { resolveGymSchedule } from "../lib/resolveGymSchedule";
 
 const router: IRouter = Router();
 
@@ -14,11 +15,13 @@ const VALID_STATUS = new Set([
 ]);
 const VALID_KIND = new Set(["class", "gym", "general", "membership"]);
 
-// GX class booking rules: Mon–Fri, two fixed one-hour slots, prebookable only
-// 1 day ahead (today or tomorrow). This is a server-side guard against tampered
-// or stale clients; the dialog already constrains the choices. The "today" /
-// "tomorrow" window is computed in India time so it does not drift with the
-// server's UTC clock.
+// GX class booking rules: slots come from the branch's weekly timetable
+// (Mon–Sat by default, but partners may customise days/times per branch),
+// prebookable only 1 day ahead (today or tomorrow). This is a server-side guard
+// against tampered or stale clients; the booking UI already constrains the
+// choices. The "today" / "tomorrow" window is computed in India time so it does
+// not drift with the server's UTC clock. When no branch is known we fall back to
+// the legacy two fixed slots on weekdays.
 const GX_SLOT_VALUES = new Set(["07:00", "19:00"]);
 const GX_TIMEZONE = "Asia/Kolkata";
 
@@ -29,20 +32,20 @@ function istDateString(base: Date): string {
   );
 }
 
-function validateGxBooking(
+// 1 = Mon … 7 = Sun for a calendar date, matching the schedule's dayOfWeek.
+function isoDayOfWeek(preferredDate: string): number {
+  const dow = new Date(`${preferredDate}T00:00:00Z`).getUTCDay(); // 0 = Sun
+  return dow === 0 ? 7 : dow;
+}
+
+async function validateGxBooking(
+  gymId: number | null,
   preferredDate: string,
   preferredTime: string,
-): string | null {
-  if (!GX_SLOT_VALUES.has(preferredTime)) {
-    return "Please pick a valid GX class slot (7–8 AM or 7–8 PM).";
-  }
+): Promise<string | null> {
   const d = new Date(`${preferredDate}T00:00:00Z`);
   if (Number.isNaN(d.getTime())) {
     return "Please choose a valid day for your class.";
-  }
-  const dow = d.getUTCDay();
-  if (dow === 0 || dow === 6) {
-    return "GX classes run Monday to Friday only.";
   }
   const now = new Date();
   const todayIso = istDateString(now);
@@ -50,7 +53,28 @@ function validateGxBooking(
   if (preferredDate !== todayIso && preferredDate !== tomorrowIso) {
     return "GX classes can be prebooked only 1 day in advance.";
   }
-  return null;
+
+  // Accept if the slot exists in this branch's weekly timetable.
+  if (gymId) {
+    const schedule = await resolveGymSchedule(gymId);
+    const day = isoDayOfWeek(preferredDate);
+    if (
+      schedule.some((s) => s.dayOfWeek === day && s.startTime === preferredTime)
+    ) {
+      return null;
+    }
+  }
+
+  // Legacy fallback: the two fixed one-hour slots on weekdays. Covers the case
+  // where no branch is known, and keeps the existing enquiry dialog (which still
+  // offers these fixed slots) working even if a branch later customises its
+  // timetable away from them.
+  if (GX_SLOT_VALUES.has(preferredTime)) {
+    const dow = d.getUTCDay();
+    if (dow !== 0 && dow !== 6) return null;
+  }
+
+  return "That slot isn't available at this branch. Please pick an available slot.";
 }
 
 // ─────────────────────────── Public capture ───────────────────────────
@@ -97,9 +121,10 @@ router.post("/leads", async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  // GX class bookings: Mon–Fri, two fixed slots, prebookable only 1 day ahead.
+  // GX class bookings: slot must exist in the branch's weekly timetable and be
+  // prebooked only 1 day ahead (falls back to legacy fixed slots if no branch).
   if (kind === "class") {
-    const gxError = validateGxBooking(preferredDate, preferredTime);
+    const gxError = await validateGxBooking(gymId, preferredDate, preferredTime);
     if (gxError) {
       res.status(400).json({ error: gxError });
       return;
