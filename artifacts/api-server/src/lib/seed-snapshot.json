@@ -3069,7 +3069,7 @@
     {
       "id": 1,
       "name": "1 Month",
-      "tagline": "₹118 / day",
+      "tagline": "₹3,540 / month",
       "billing_period": "monthly",
       "price_inr": 3540,
       "original_price_inr": 4000,
@@ -3091,7 +3091,7 @@
     {
       "id": 2,
       "name": "3 Months",
-      "tagline": "₹81 / day",
+      "tagline": "₹2,420 / month",
       "billing_period": "quarterly",
       "price_inr": 7260,
       "original_price_inr": 8500,
@@ -3135,7 +3135,7 @@
     {
       "id": 4,
       "name": "12 Months",
-      "tagline": "₹50 / day",
+      "tagline": "₹1,500 / month",
       "billing_period": "annual",
       "price_inr": 17999,
       "original_price_inr": 20999,
@@ -3157,7 +3157,7 @@
     {
       "id": 5,
       "name": "15 Months",
-      "tagline": "₹24 / day",
+      "tagline": "₹667 / month",
       "billing_period": "monthly",
       "price_inr": 9999,
       "original_price_inr": 25000,
