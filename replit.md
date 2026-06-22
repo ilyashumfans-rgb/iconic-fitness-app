@@ -40,6 +40,8 @@ Partners manage their own trainers from `/partner/trainers` (CRUD scoped to gyms
 
 Classes are hidden from members and not bookable until 1 day (24h) before start. Single source of truth: `artifacts/api-server/src/lib/classVisibility.ts` (`CLASS_VISIBLE_BEFORE_MS`, `isClassVisibleToMembers`). Applied to all member-facing class listings (`classes.ts` `buildSessionDtos`; `gyms.ts` gym-detail + `/gyms/:id/classes`) and the `POST /bookings` gate (started → 400, >24h away → 403). Partner/admin views are unaffected.
 
+GX class enquiries via `LeadEnquiryDialog` (`kind="class"`) are further restricted: Mon–Fri only, two fixed one-hour slots (`07:00` = 7–8 AM, `19:00` = 7–8 PM), prebookable only 1 day ahead (today + tomorrow, today's passed slots hidden). The dialog renders dependent day→slot `<select>`s; `POST /api/leads` enforces the same via `validateGxBooking` (window computed in `Asia/Kolkata`). Other dialog kinds (`gym`, `membership`, `general`) keep free date/time pickers.
+
 ### Ticket & task system
 
 Unified support tickets across all roles. Members raise/view tickets on `/support`; partners on `/partner/tickets`; staff on `/staff/tickets` (raised + assigned-to-me); admins triage on `/admin/tickets` (filters: status/priority/assignee, change status/priority, assign/reassign to staff/partner/admin). In-app notifications fire on create (→ all admins), assign (→ assignee), status-change and comment (→ participants).

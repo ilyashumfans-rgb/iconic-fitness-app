@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import confetti from "canvas-confetti";
 import {
   Dialog,
@@ -99,6 +99,57 @@ function formatNiceTime(t: string): string {
   return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
 }
 
+// ── GX class schedule rules ────────────────────────────────────────────────
+// GX classes run Monday–Friday in two fixed one-hour slots, and members may
+// prebook only 1 day in advance (today + tomorrow), never on weekends.
+const GX_SLOTS = [
+  { value: "07:00", label: "7:00 AM – 8:00 AM" },
+  { value: "19:00", label: "7:00 PM – 8:00 PM" },
+] as const;
+
+function toISODate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+type GxDateOption = {
+  iso: string;
+  label: string;
+  slots: { value: string; label: string }[];
+};
+
+// Build the selectable date+slot options inside the 1-day prebook window.
+function gxDateOptions(now: Date = new Date()): GxDateOption[] {
+  const out: GxDateOption[] = [];
+  for (let i = 0; i <= 1; i++) {
+    const d = new Date(now);
+    d.setDate(now.getDate() + i);
+    const dow = d.getDay();
+    if (dow === 0 || dow === 6) continue; // Mon–Fri only
+    const slots = GX_SLOTS.filter((s) => {
+      if (i > 0) return true; // any future day: both slots open
+      const [h, m] = s.value.split(":").map(Number);
+      const slotStart = new Date(d);
+      slotStart.setHours(h, m, 0, 0);
+      return slotStart.getTime() > now.getTime(); // today: only upcoming slots
+    });
+    if (slots.length === 0) continue;
+    const label = d.toLocaleDateString("en-IN", {
+      weekday: "long",
+      day: "numeric",
+      month: "short",
+    });
+    out.push({
+      iso: toISODate(d),
+      label: i === 0 ? `Today · ${label}` : `Tomorrow · ${label}`,
+      slots: slots.map((s) => ({ value: s.value, label: s.label })),
+    });
+  }
+  return out;
+}
+
 export function LeadEnquiryDialog(props: Props) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -142,6 +193,23 @@ export function LeadEnquiryDialog(props: Props) {
     setGymName(value);
     const match = (gyms ?? []).find((g) => g.name === value);
     setGymId(match?.id ?? props.gymId);
+  };
+
+  // GX class bookings are restricted to Mon–Fri fixed slots, prebookable only
+  // 1 day ahead. Other enquiry kinds (gym trial, membership) keep free pickers.
+  const isClassBooking = props.kind === "class";
+  const classDateOptions = useMemo(
+    () => (isClassBooking && open ? gxDateOptions() : []),
+    [isClassBooking, open],
+  );
+  const slotsForSelectedDate =
+    classDateOptions.find((o) => o.iso === preferredDate)?.slots ?? [];
+
+  const onSelectClassDate = (iso: string) => {
+    setPreferredDate(iso);
+    const slots = classDateOptions.find((o) => o.iso === iso)?.slots ?? [];
+    // Drop the chosen time if it is no longer valid for the new date.
+    if (!slots.some((s) => s.value === preferredTime)) setPreferredTime("");
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -364,38 +432,106 @@ export function LeadEnquiryDialog(props: Props) {
                   <CalendarDays className="h-3.5 w-3.5" />
                   When are you coming?
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label
-                      htmlFor="lead-date"
-                      className="flex items-center gap-1"
-                    >
-                      <CalendarDays className="h-3 w-3 text-lime-600" /> Date *
-                    </Label>
-                    <Input
-                      id="lead-date"
-                      type="date"
-                      value={preferredDate}
-                      onChange={(e) => setPreferredDate(e.target.value)}
-                      required
-                    />
+                {isClassBooking ? (
+                  classDateOptions.length === 0 ? (
+                    <p className="text-xs font-semibold text-lime-700 dark:text-lime-300">
+                      GX classes run Mon–Fri at 7:00–8:00 AM and 7:00–8:00 PM,
+                      and can be prebooked only 1 day ahead. No slots are open
+                      right now — please check back later.
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-[11px] text-lime-700 dark:text-lime-300">
+                        GX classes run Mon–Fri · prebook only 1 day ahead.
+                      </p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label
+                            htmlFor="lead-date"
+                            className="flex items-center gap-1"
+                          >
+                            <CalendarDays className="h-3 w-3 text-lime-600" />{" "}
+                            Day *
+                          </Label>
+                          <select
+                            id="lead-date"
+                            value={preferredDate}
+                            onChange={(e) => onSelectClassDate(e.target.value)}
+                            required
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="" disabled>
+                              Select a day
+                            </option>
+                            {classDateOptions.map((o) => (
+                              <option key={o.iso} value={o.iso}>
+                                {o.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label
+                            htmlFor="lead-time"
+                            className="flex items-center gap-1"
+                          >
+                            <Clock className="h-3 w-3 text-lime-600" /> Slot *
+                          </Label>
+                          <select
+                            id="lead-time"
+                            value={preferredTime}
+                            onChange={(e) => setPreferredTime(e.target.value)}
+                            required
+                            disabled={!preferredDate}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="" disabled>
+                              {preferredDate ? "Select a slot" : "Pick a day first"}
+                            </option>
+                            {slotsForSelectedDate.map((s) => (
+                              <option key={s.value} value={s.value}>
+                                {s.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </>
+                  )
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="lead-date"
+                        className="flex items-center gap-1"
+                      >
+                        <CalendarDays className="h-3 w-3 text-lime-600" /> Date *
+                      </Label>
+                      <Input
+                        id="lead-date"
+                        type="date"
+                        value={preferredDate}
+                        onChange={(e) => setPreferredDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="lead-time"
+                        className="flex items-center gap-1"
+                      >
+                        <Clock className="h-3 w-3 text-lime-600" /> Time *
+                      </Label>
+                      <Input
+                        id="lead-time"
+                        type="time"
+                        value={preferredTime}
+                        onChange={(e) => setPreferredTime(e.target.value)}
+                        required
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-1.5">
-                    <Label
-                      htmlFor="lead-time"
-                      className="flex items-center gap-1"
-                    >
-                      <Clock className="h-3 w-3 text-lime-600" /> Time *
-                    </Label>
-                    <Input
-                      id="lead-time"
-                      type="time"
-                      value={preferredTime}
-                      onChange={(e) => setPreferredTime(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
+                )}
                 {preferredDate || preferredTime ? (
                   <p className="text-xs font-semibold text-lime-700 dark:text-lime-300">
                     Visiting{" "}

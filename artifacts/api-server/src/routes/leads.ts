@@ -14,6 +14,45 @@ const VALID_STATUS = new Set([
 ]);
 const VALID_KIND = new Set(["class", "gym", "general", "membership"]);
 
+// GX class booking rules: Mon–Fri, two fixed one-hour slots, prebookable only
+// 1 day ahead (today or tomorrow). This is a server-side guard against tampered
+// or stale clients; the dialog already constrains the choices. The "today" /
+// "tomorrow" window is computed in India time so it does not drift with the
+// server's UTC clock.
+const GX_SLOT_VALUES = new Set(["07:00", "19:00"]);
+const GX_TIMEZONE = "Asia/Kolkata";
+
+// Calendar date (YYYY-MM-DD) for `base` rendered in the gym's timezone.
+function istDateString(base: Date): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: GX_TIMEZONE }).format(
+    base,
+  );
+}
+
+function validateGxBooking(
+  preferredDate: string,
+  preferredTime: string,
+): string | null {
+  if (!GX_SLOT_VALUES.has(preferredTime)) {
+    return "Please pick a valid GX class slot (7–8 AM or 7–8 PM).";
+  }
+  const d = new Date(`${preferredDate}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) {
+    return "Please choose a valid day for your class.";
+  }
+  const dow = d.getUTCDay();
+  if (dow === 0 || dow === 6) {
+    return "GX classes run Monday to Friday only.";
+  }
+  const now = new Date();
+  const todayIso = istDateString(now);
+  const tomorrowIso = istDateString(new Date(now.getTime() + 24 * 3600 * 1000));
+  if (preferredDate !== todayIso && preferredDate !== tomorrowIso) {
+    return "GX classes can be prebooked only 1 day in advance.";
+  }
+  return null;
+}
+
 // ─────────────────────────── Public capture ───────────────────────────
 
 router.post("/leads", async (req: Request, res: Response): Promise<void> => {
@@ -56,6 +95,15 @@ router.post("/leads", async (req: Request, res: Response): Promise<void> => {
   if (!preferredTime) {
     res.status(400).json({ error: "Please choose a time for your visit" });
     return;
+  }
+
+  // GX class bookings: Mon–Fri, two fixed slots, prebookable only 1 day ahead.
+  if (kind === "class") {
+    const gxError = validateGxBooking(preferredDate, preferredTime);
+    if (gxError) {
+      res.status(400).json({ error: gxError });
+      return;
+    }
   }
 
   const [row] = await db
