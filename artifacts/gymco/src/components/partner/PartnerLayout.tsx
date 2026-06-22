@@ -15,6 +15,7 @@ import {
   X,
   Users,
   LifeBuoy,
+  CalendarClock,
 } from "lucide-react";
 import { partnerApi, type Partner } from "@/lib/partnerApi";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -35,6 +36,7 @@ const NAV: Item[] = [
   { label: "Bookings", href: "/partner/bookings", icon: <Calendar className="h-4 w-4" />, perm: "bookings" },
   { label: "Classes", href: "/partner/classes", icon: <Dumbbell className="h-4 w-4" />, perm: "classes" },
   { label: "Trainers", href: "/partner/trainers", icon: <UserCog className="h-4 w-4" />, perm: "classes" },
+  { label: "Timetable", href: "/partner/schedule", icon: <CalendarClock className="h-4 w-4" />, perm: "classes" },
   { label: "Products", href: "/partner/products", icon: <Package className="h-4 w-4" />, perm: "products" },
   { label: "Tickets", href: "/partner/tickets", icon: <LifeBuoy className="h-4 w-4" /> },
   { label: "Team", href: "/partner/staff", icon: <Users className="h-4 w-4" />, ownerOnly: true },

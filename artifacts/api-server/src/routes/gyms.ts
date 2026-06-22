@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { and, eq, sql, asc, desc } from "drizzle-orm";
 import { isClassVisibleToMembers } from "../lib/classVisibility";
+import { DEFAULT_GROUP_CLASS_SCHEDULE } from "../lib/groupClassSchedule";
 import {
   db,
   gymsTable,
@@ -13,6 +14,7 @@ import {
   workoutsTable,
   gymWorkoutsTable,
   gymWorkoutSessionsTable,
+  groupClassScheduleTable,
 } from "@workspace/db";
 import {
   ListGymsQueryParams,
@@ -396,6 +398,46 @@ router.get("/gyms/:gymId/classes", async (req, res): Promise<void> => {
     };
   });
   res.json(ListGymClassesResponse.parse(out));
+});
+
+// Public weekly group-class (GX) timetable for a gym. Returns the gym's own
+// customised rows if a partner has saved any, otherwise the shared default
+// template so every branch shows a schedule out of the box.
+router.get("/gyms/:id/schedule", async (req, res): Promise<void> => {
+  const gymId = Number(req.params.id);
+  if (!gymId) {
+    res.status(400).json({ error: "Invalid gym id" });
+    return;
+  }
+  const rows = await db
+    .select()
+    .from(groupClassScheduleTable)
+    .where(eq(groupClassScheduleTable.gymId, gymId))
+    .orderBy(
+      asc(groupClassScheduleTable.dayOfWeek),
+      asc(groupClassScheduleTable.sortOrder),
+    );
+  if (rows.length > 0) {
+    res.json(
+      rows.map((r) => ({
+        dayOfWeek: r.dayOfWeek,
+        startTime: r.startTime,
+        endTime: r.endTime,
+        className: r.className,
+        sortOrder: r.sortOrder,
+      })),
+    );
+    return;
+  }
+  res.json(
+    DEFAULT_GROUP_CLASS_SCHEDULE.map((e) => ({
+      dayOfWeek: e.dayOfWeek,
+      startTime: e.startTime,
+      endTime: e.endTime,
+      className: e.className,
+      sortOrder: e.sortOrder,
+    })),
+  );
 });
 
 export default router;

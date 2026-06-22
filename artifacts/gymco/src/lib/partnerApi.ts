@@ -93,6 +93,25 @@ export type PartnerTrainerInput = {
   photoUrl?: string;
 };
 
+export type PartnerScheduleSlot = {
+  id: number;
+  gymId: number;
+  dayOfWeek: number; // 1 = Mon … 7 = Sun
+  startTime: string; // "07:00"
+  endTime: string; // "08:00"
+  className: string;
+  sortOrder: number;
+};
+
+export type PartnerScheduleInput = {
+  gymId: number;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  className: string;
+  sortOrder?: number;
+};
+
 export type PartnerClassInput = {
   title: string;
   category: string;
@@ -260,6 +279,28 @@ export const partnerApi = {
       }),
     remove: (id: number) =>
       request<{ ok: true }>(`/partner/trainers/${id}`, { method: "DELETE" }),
+  },
+  schedule: {
+    list: (gymId?: number) =>
+      request<PartnerScheduleSlot[]>(
+        gymId ? `/partner/schedule?gymId=${gymId}` : "/partner/schedule",
+      ),
+    create: (body: PartnerScheduleInput) =>
+      request<PartnerScheduleSlot>("/partner/schedule", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: number, body: Partial<PartnerScheduleInput>) =>
+      request<PartnerScheduleSlot>(`/partner/schedule/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: number) =>
+      request<{ ok: true }>(`/partner/schedule/${id}`, { method: "DELETE" }),
+    reset: (gymId: number) =>
+      request<PartnerScheduleSlot[]>(`/partner/schedule/reset?gymId=${gymId}`, {
+        method: "POST",
+      }),
   },
   classes: {
     list: () => request<PartnerClass[]>("/partner/classes"),

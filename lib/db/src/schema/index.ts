@@ -79,6 +79,16 @@ export const trainersTable = pgTable("trainers", {
   gymId: integer("gym_id"),
 });
 
+export const groupClassScheduleTable = pgTable("group_class_schedule", {
+  id: serial("id").primaryKey(),
+  gymId: integer("gym_id").notNull(),
+  dayOfWeek: integer("day_of_week").notNull(), // 1 = Mon … 7 = Sun
+  startTime: text("start_time").notNull(), // "07:00"
+  endTime: text("end_time").notNull(), // "08:00"
+  className: text("class_name").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+});
+
 export const classSessionsTable = pgTable("class_sessions", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),

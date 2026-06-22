@@ -43,6 +43,26 @@ type HourRow = {
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+// Group-class timetable uses 1 = Mon … 7 = Sun.
+const GX_DAY_FULL: Record<number, string> = {
+  1: "Monday",
+  2: "Tuesday",
+  3: "Wednesday",
+  4: "Thursday",
+  5: "Friday",
+  6: "Saturday",
+  7: "Sunday",
+};
+
+function fmtClockTime(t: string): string {
+  const [hStr, m] = t.split(":");
+  const h = Number(hStr);
+  if (Number.isNaN(h)) return t;
+  const period = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${m ?? "00"} ${period}`;
+}
+
 function fmtMinutes(m: number): string {
   const safe = Math.max(0, Math.min(1440, Math.round(m)));
   const h = Math.floor(safe / 60);
@@ -102,17 +122,27 @@ export default function GymDetail() {
       instructor: string;
     }[]
   >([]);
+  const [groupSchedule, setGroupSchedule] = useState<
+    {
+      dayOfWeek: number;
+      startTime: string;
+      endTime: string;
+      className: string;
+      sortOrder: number;
+    }[]
+  >([]);
 
   useEffect(() => {
     if (!id) return;
     let abort = false;
     (async () => {
       try {
-        const [amRes, hrRes, wkRes, wsRes] = await Promise.all([
+        const [amRes, hrRes, wkRes, wsRes, schRes] = await Promise.all([
           fetch(`/api/gyms/${id}/amenities`),
           fetch(`/api/gyms/${id}/hours`),
           fetch(`/api/gyms/${id}/workouts`),
           fetch(`/api/gyms/${id}/workouts/sessions`),
+          fetch(`/api/gyms/${id}/schedule`),
         ]);
         if (amRes.ok) {
           const a = await amRes.json();
@@ -129,6 +159,10 @@ export default function GymDetail() {
         if (wsRes.ok) {
           const s = await wsRes.json();
           if (!abort) setWorkoutSessions(s);
+        }
+        if (schRes.ok) {
+          const sch = await schRes.json();
+          if (!abort) setGroupSchedule(sch);
         }
       } catch {
         // silent — fall back to gym.amenities/hours fields
@@ -448,6 +482,59 @@ export default function GymDetail() {
                       </span>
                     </div>
                   ))}
+                </CardContent>
+              </Card>
+            </section>
+          )}
+
+          {/* Weekly group-class timetable */}
+          {groupSchedule.length > 0 && (
+            <section>
+              <h2 className="text-xl font-bold mb-3 flex items-center">
+                <Clock className="h-5 w-5 mr-2 text-primary" /> Group Class
+                Timetable
+              </h2>
+              <Card className="border-border bg-card overflow-hidden">
+                <CardContent className="p-0 divide-y divide-border">
+                  {Array.from(
+                    groupSchedule.reduce((map, s) => {
+                      const arr = map.get(s.dayOfWeek) ?? [];
+                      arr.push(s);
+                      map.set(s.dayOfWeek, arr);
+                      return map;
+                    }, new Map<number, typeof groupSchedule>()),
+                  )
+                    .sort((a, b) => a[0] - b[0])
+                    .map(([day, daySlots]) => (
+                      <div key={day} className="px-5 py-4">
+                        <div className="text-xs font-bold uppercase tracking-wider text-primary mb-2">
+                          {GX_DAY_FULL[day] ?? `Day ${day}`}
+                        </div>
+                        <div className="space-y-2">
+                          {daySlots
+                            .slice()
+                            .sort(
+                              (a, b) =>
+                                a.sortOrder - b.sortOrder ||
+                                a.startTime.localeCompare(b.startTime),
+                            )
+                            .map((s, i) => (
+                              <div
+                                key={i}
+                                className="flex items-center justify-between gap-3"
+                              >
+                                <span className="font-semibold text-sm">
+                                  {s.className}
+                                </span>
+                                <span className="text-xs text-muted-foreground whitespace-nowrap font-medium tabular-nums">
+                                  {fmtClockTime(s.startTime)} –{" "}
+                                  {fmtClockTime(s.endTime)}
+                                </span>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    ))}
                 </CardContent>
               </Card>
             </section>

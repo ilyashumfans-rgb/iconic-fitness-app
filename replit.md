@@ -50,6 +50,17 @@ Unified support tickets across all roles. Members raise/view tickets on `/suppor
 - API: `artifacts/api-server/src/routes/tickets.ts` (role-scoped); staff notification feed in `notifications.ts`.
 - Frontend: shared types/badges in `src/lib/tickets.ts`; components in `src/components/tickets/`; ticket methods on adminApi/staffApi/partnerApi and member `ticketsApi.ts`.
 
+### Group class (GX) timetable
+
+Every gym/branch shows a fixed weekly group-class timetable (Mon–Sat, two slots: 7–8 AM & 7–8 PM; class names prefixed "iconic "). Partners can edit their own gyms' timings from `/partner/schedule` ("Timetable" nav).
+
+- **Default lives in code:** `artifacts/api-server/src/lib/groupClassSchedule.ts` (`DEFAULT_GROUP_CLASS_SCHEDULE`, `GROUP_CLASS_DAY_NAMES`). No seeding / "Import workspace data" needed — every branch displays the default until a partner customizes it.
+- **DB:** `groupClassScheduleTable` (`lib/db/src/schema/index.ts`): per-gym rows (`gymId, dayOfWeek 1-7, startTime, endTime, className, sortOrder`). Reaches prod automatically via Replit Publish schema diff.
+- **Lazy materialization:** members see the code default until a partner first opens their timetable; the partner `GET /partner/schedule` inserts the default rows for that gym (advisory-lock guarded against concurrent double-insert), after which all edits are real row CRUD.
+- **API:** member `GET /gyms/:id/schedule` (public, `gyms.ts`) returns gym rows or the default. Partner CRUD `GET/POST/PATCH/DELETE /partner/schedule` + `POST /partner/schedule/reset` (`partner.ts`), scoped via `ensureOwnsGym`; `/partner/schedule` → `classes` permission for staff.
+- **Frontend:** member display in `GymDetail.tsx`; partner editor `pages/partner/Schedule.tsx`; client methods in `partnerApi.ts`.
+- **Scope note:** the member booking dialog (`LeadEnquiryDialog kind="class"`) still hard-codes its own 07:00/19:00 Mon–Fri slots and is NOT wired to the per-gym schedule (potential follow-up).
+
 ## User preferences
 
 - **Pushing data to production:** dev and prod are separate databases. To get dev catalog data (gyms, partners, etc.) onto the live site, use the admin Dashboard "Import workspace data" button — this is the standard workflow. Each time the user wants new/changed dev data live, the agent must: (1) regenerate `artifacts/api-server/src/lib/seed-snapshot.json` from the current dev DB, (2) redeploy, then (3) user clicks "Import workspace data" on the live admin Dashboard. See `.agents/memory/prod-data-import.md`.

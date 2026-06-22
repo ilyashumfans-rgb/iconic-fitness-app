@@ -21,6 +21,7 @@ import {
   workoutsTable,
   gymWorkoutsTable,
   gymWorkoutSessionsTable,
+  groupClassScheduleTable,
   partnerStaffTable,
 } from "@workspace/db";
 import {
@@ -34,6 +35,7 @@ import {
   clearPartnerSession,
   PARTNER_STAFF_PERMISSIONS,
 } from "../lib/partnerAuth";
+import { DEFAULT_GROUP_CLASS_SCHEDULE } from "../lib/groupClassSchedule";
 
 const router: IRouter = Router();
 
@@ -690,6 +692,7 @@ const STAFF_PERMISSION_PREFIXES: ReadonlyArray<[string, string]> = [
   ["/partner/bookings", "bookings"],
   ["/partner/classes", "classes"],
   ["/partner/trainers", "classes"],
+  ["/partner/schedule", "classes"],
   ["/partner/products", "products"],
   ["/partner/orders", "products"],
 ];
@@ -1725,6 +1728,209 @@ router.delete(
     }
     await db.delete(trainersTable).where(eq(trainersTable.id, id));
     res.json({ ok: true });
+  },
+);
+
+// ─── Weekly group-class (GX) timetable (partner-scoped) ───────────────────
+//
+// Every branch shows the shared default template until a partner customises
+// it. The first time a partner opens their schedule editor we materialise the
+// default rows for that gym so they have concrete, editable entries.
+
+function scheduleDto(r: typeof groupClassScheduleTable.$inferSelect) {
+  return {
+    id: r.id,
+    gymId: r.gymId,
+    dayOfWeek: r.dayOfWeek,
+    startTime: r.startTime,
+    endTime: r.endTime,
+    className: r.className,
+    sortOrder: r.sortOrder,
+  };
+}
+
+async function ensureScheduleRows(gymId: number): Promise<void> {
+  // Serialise first-time materialisation per gym so two concurrent first-loads
+  // can't both pass the existence check and double-insert the default rows.
+  await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(${gymId})`);
+    const existing = await tx
+      .select({ id: groupClassScheduleTable.id })
+      .from(groupClassScheduleTable)
+      .where(eq(groupClassScheduleTable.gymId, gymId))
+      .limit(1);
+    if (existing.length > 0) return;
+    await tx.insert(groupClassScheduleTable).values(
+      DEFAULT_GROUP_CLASS_SCHEDULE.map((e) => ({
+        gymId,
+        dayOfWeek: e.dayOfWeek,
+        startTime: e.startTime,
+        endTime: e.endTime,
+        className: e.className,
+        sortOrder: e.sortOrder,
+      })),
+    );
+  });
+}
+
+async function listScheduleRows(gymId: number) {
+  const rows = await db
+    .select()
+    .from(groupClassScheduleTable)
+    .where(eq(groupClassScheduleTable.gymId, gymId))
+    .orderBy(
+      asc(groupClassScheduleTable.dayOfWeek),
+      asc(groupClassScheduleTable.sortOrder),
+    );
+  return rows.map(scheduleDto);
+}
+
+// List the schedule for one of the partner's gyms (defaults to the first owned
+// gym when no gymId is given). Materialises default rows on first read.
+router.get(
+  "/partner/schedule",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const gymIds = await ownedGymIds(req.session.partnerId!);
+    if (gymIds.length === 0) {
+      res.json([]);
+      return;
+    }
+    let gymId = Number(req.query.gymId);
+    if (!gymId) gymId = gymIds[0];
+    if (!gymIds.includes(gymId)) {
+      res.status(403).json({ error: "You do not manage this gym" });
+      return;
+    }
+    await ensureScheduleRows(gymId);
+    res.json(await listScheduleRows(gymId));
+  },
+);
+
+// Add a new class slot to one of the partner's gyms.
+router.post(
+  "/partner/schedule",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const gymId = Number(b.gymId);
+    const dayOfWeek = Number(b.dayOfWeek);
+    if (
+      !gymId ||
+      !dayOfWeek ||
+      dayOfWeek < 1 ||
+      dayOfWeek > 7 ||
+      !b.startTime ||
+      !b.endTime ||
+      !b.className
+    ) {
+      res.status(400).json({
+        error:
+          "gymId, dayOfWeek (1-7), startTime, endTime and className are required",
+      });
+      return;
+    }
+    if (!(await ensureOwnsGym(req.session.partnerId!, gymId))) {
+      res.status(403).json({ error: "You do not manage this gym" });
+      return;
+    }
+    const [created] = await db
+      .insert(groupClassScheduleTable)
+      .values({
+        gymId,
+        dayOfWeek,
+        startTime: String(b.startTime),
+        endTime: String(b.endTime),
+        className: String(b.className),
+        sortOrder: Number(b.sortOrder ?? 0),
+      })
+      .returning();
+    res.status(201).json(scheduleDto(created));
+  },
+);
+
+// Update a class slot the partner owns.
+router.patch(
+  "/partner/schedule/:id",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const [existing] = await db
+      .select()
+      .from(groupClassScheduleTable)
+      .where(eq(groupClassScheduleTable.id, id));
+    if (!existing) {
+      res.status(404).json({ error: "Class slot not found" });
+      return;
+    }
+    if (!(await ensureOwnsGym(req.session.partnerId!, existing.gymId))) {
+      res.status(403).json({ error: "You do not manage this gym" });
+      return;
+    }
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const patch: Record<string, unknown> = {};
+    if (b.dayOfWeek !== undefined) {
+      const d = Number(b.dayOfWeek);
+      if (d >= 1 && d <= 7) patch.dayOfWeek = d;
+    }
+    for (const k of ["startTime", "endTime", "className"]) {
+      if (b[k] !== undefined) patch[k] = String(b[k]);
+    }
+    if (b.sortOrder !== undefined) patch.sortOrder = Number(b.sortOrder);
+    if (Object.keys(patch).length === 0) {
+      res.json(scheduleDto(existing));
+      return;
+    }
+    const [updated] = await db
+      .update(groupClassScheduleTable)
+      .set(patch)
+      .where(eq(groupClassScheduleTable.id, id))
+      .returning();
+    res.json(scheduleDto(updated));
+  },
+);
+
+// Delete a class slot the partner owns.
+router.delete(
+  "/partner/schedule/:id",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const [existing] = await db
+      .select()
+      .from(groupClassScheduleTable)
+      .where(eq(groupClassScheduleTable.id, id));
+    if (!existing) {
+      res.status(404).json({ error: "Class slot not found" });
+      return;
+    }
+    if (!(await ensureOwnsGym(req.session.partnerId!, existing.gymId))) {
+      res.status(403).json({ error: "You do not manage this gym" });
+      return;
+    }
+    await db
+      .delete(groupClassScheduleTable)
+      .where(eq(groupClassScheduleTable.id, id));
+    res.json({ ok: true });
+  },
+);
+
+// Reset a gym's timetable back to the shared default template.
+router.post(
+  "/partner/schedule/reset",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const gymId = Number(req.query.gymId ?? b.gymId);
+    if (!gymId || !(await ensureOwnsGym(req.session.partnerId!, gymId))) {
+      res.status(403).json({ error: "You do not manage this gym" });
+      return;
+    }
+    await db
+      .delete(groupClassScheduleTable)
+      .where(eq(groupClassScheduleTable.gymId, gymId));
+    await ensureScheduleRows(gymId);
+    res.json(await listScheduleRows(gymId));
   },
 );
 
