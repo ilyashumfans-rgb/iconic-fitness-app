@@ -81,6 +81,16 @@ export type PartnerTrainer = {
   name: string;
   specialty: string;
   gymId: number | null;
+  bio?: string;
+  photoUrl?: string;
+};
+
+export type PartnerTrainerInput = {
+  name: string;
+  specialty: string;
+  gymId: number;
+  bio?: string;
+  photoUrl?: string;
 };
 
 export type PartnerClassInput = {
@@ -236,7 +246,21 @@ export const partnerApi = {
       }),
   },
   bookings: () => request<PartnerBooking[]>("/partner/bookings"),
-  trainers: () => request<PartnerTrainer[]>("/partner/trainers"),
+  trainers: {
+    list: () => request<PartnerTrainer[]>("/partner/trainers"),
+    create: (body: PartnerTrainerInput) =>
+      request<PartnerTrainer>("/partner/trainers", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: number, body: Partial<PartnerTrainerInput>) =>
+      request<PartnerTrainer>(`/partner/trainers/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: number) =>
+      request<{ ok: true }>(`/partner/trainers/${id}`, { method: "DELETE" }),
+  },
   classes: {
     list: () => request<PartnerClass[]>("/partner/classes"),
     create: (body: PartnerClassInput) =>

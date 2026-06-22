@@ -32,6 +32,7 @@ import PartnerDashboard from "@/pages/partner/Dashboard";
 import PartnerGyms from "@/pages/partner/Gyms";
 import PartnerBookings from "@/pages/partner/Bookings";
 import PartnerClasses from "@/pages/partner/Classes";
+import PartnerTrainers from "@/pages/partner/Trainers";
 import PartnerProducts from "@/pages/partner/PartnerProducts";
 import PartnerSettings from "@/pages/partner/Settings";
 import PartnerTeam from "@/pages/partner/Team";
@@ -280,6 +281,7 @@ function AppShell() {
         <Route path="/partner/gyms" component={PartnerGyms} />
         <Route path="/partner/bookings" component={PartnerBookings} />
         <Route path="/partner/classes" component={PartnerClasses} />
+        <Route path="/partner/trainers" component={PartnerTrainers} />
         <Route path="/partner/products" component={PartnerProducts} />
         <Route path="/partner/staff" component={PartnerTeam} />
         <Route path="/partner/tickets" component={PartnerTickets} />

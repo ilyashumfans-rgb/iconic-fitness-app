@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { asc, desc, eq, gte, sql } from "drizzle-orm";
 import { db, classSessionsTable, gymsTable, trainersTable, bookingsTable } from "@workspace/db";
+import { isClassVisibleToMembers } from "../lib/classVisibility";
 import {
   ListClassesQueryParams,
   ListClassesResponse,
@@ -15,10 +16,13 @@ async function buildSessionDtos(rows: typeof classSessionsTable.$inferSelect[]) 
   const gyms = await db.select().from(gymsTable);
   const trainers = await db.select().from(trainersTable);
   const bookings = await db.select().from(bookingsTable);
+  const now = Date.now();
   return rows
     .filter((c) => {
       const g = gyms.find((x) => x.id === c.gymId);
-      return g?.isVerified === true;
+      if (g?.isVerified !== true) return false;
+      // Only surface classes inside the member visibility window (1 day before).
+      return isClassVisibleToMembers(c.startsAt, now);
     })
     .map((c) => {
     const g = gyms.find((x) => x.id === c.gymId);

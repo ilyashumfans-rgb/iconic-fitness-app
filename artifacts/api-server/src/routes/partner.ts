@@ -1597,11 +1597,134 @@ router.get(
         id: trainersTable.id,
         name: trainersTable.name,
         specialty: trainersTable.specialty,
+        bio: trainersTable.bio,
+        photoUrl: trainersTable.photoUrl,
         gymId: trainersTable.gymId,
       })
       .from(trainersTable)
       .where(inArray(trainersTable.gymId, gymIds));
     res.json(rows);
+  },
+);
+
+const DEFAULT_TRAINER_PHOTO =
+  "https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=400";
+
+function trainerDto(t: typeof trainersTable.$inferSelect) {
+  return {
+    id: t.id,
+    name: t.name,
+    specialty: t.specialty,
+    bio: t.bio,
+    photoUrl: t.photoUrl,
+    gymId: t.gymId,
+  };
+}
+
+// Create a trainer attached to one of the partner's own gyms.
+router.post(
+  "/partner/trainers",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const gymId = Number(b.gymId);
+    if (!b.name || !b.specialty || !gymId) {
+      res.status(400).json({ error: "name, specialty and gym are required" });
+      return;
+    }
+    if (!(await ensureOwnsGym(req.session.partnerId!, gymId))) {
+      res.status(403).json({ error: "You do not manage this gym" });
+      return;
+    }
+    const [gym] = await db
+      .select({ city: gymsTable.city })
+      .from(gymsTable)
+      .where(eq(gymsTable.id, gymId));
+    const [created] = await db
+      .insert(trainersTable)
+      .values({
+        name: String(b.name),
+        specialty: String(b.specialty),
+        bio: String(b.bio ?? ""),
+        photoUrl: String(b.photoUrl || DEFAULT_TRAINER_PHOTO),
+        rating: 4.7,
+        sessionsCount: 0,
+        pricePerSession: Number(b.pricePerSession ?? 1500),
+        certifications: [],
+        city: gym?.city ?? "",
+        gymId,
+      })
+      .returning();
+    res.status(201).json(trainerDto(created));
+  },
+);
+
+// Update a trainer the partner owns (optionally moving it to another owned gym).
+router.patch(
+  "/partner/trainers/:id",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const [existing] = await db
+      .select()
+      .from(trainersTable)
+      .where(eq(trainersTable.id, id));
+    if (!existing) {
+      res.status(404).json({ error: "Trainer not found" });
+      return;
+    }
+    if (
+      !existing.gymId ||
+      !(await ensureOwnsGym(req.session.partnerId!, existing.gymId))
+    ) {
+      res.status(403).json({ error: "You do not manage this trainer" });
+      return;
+    }
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const patch: Record<string, unknown> = {};
+    for (const k of ["name", "specialty", "bio", "photoUrl"]) {
+      if (b[k] !== undefined) patch[k] = String(b[k]);
+    }
+    if (b.gymId !== undefined) {
+      const newGymId = Number(b.gymId);
+      if (!(await ensureOwnsGym(req.session.partnerId!, newGymId))) {
+        res.status(403).json({ error: "You do not manage the target gym" });
+        return;
+      }
+      patch.gymId = newGymId;
+    }
+    const [updated] = await db
+      .update(trainersTable)
+      .set(patch)
+      .where(eq(trainersTable.id, id))
+      .returning();
+    res.json(trainerDto(updated));
+  },
+);
+
+// Delete a trainer the partner owns.
+router.delete(
+  "/partner/trainers/:id",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const [existing] = await db
+      .select()
+      .from(trainersTable)
+      .where(eq(trainersTable.id, id));
+    if (!existing) {
+      res.status(404).json({ error: "Trainer not found" });
+      return;
+    }
+    if (
+      !existing.gymId ||
+      !(await ensureOwnsGym(req.session.partnerId!, existing.gymId))
+    ) {
+      res.status(403).json({ error: "You do not manage this trainer" });
+      return;
+    }
+    await db.delete(trainersTable).where(eq(trainersTable.id, id));
+    res.json({ ok: true });
   },
 );
 

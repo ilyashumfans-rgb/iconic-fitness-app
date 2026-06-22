@@ -16,6 +16,7 @@ import {
   CancelBookingResponse,
 } from "@workspace/api-zod";
 import { requireUser } from "../lib/currentUser";
+import { CLASS_VISIBLE_BEFORE_MS } from "../lib/classVisibility";
 
 const router: IRouter = Router();
 
@@ -95,6 +96,24 @@ router.post("/bookings", requireUser, async (req, res): Promise<void> => {
         kind: "error" as const,
         status: 403,
         error: "This gym is not yet verified.",
+      };
+    }
+    // Booking opens only inside the member visibility window (1 day before the
+    // class starts) and closes once the class has begun.
+    const start = c.startsAt.getTime();
+    const now = Date.now();
+    if (start <= now) {
+      return {
+        kind: "error" as const,
+        status: 400,
+        error: "This class has already started.",
+      };
+    }
+    if (start - now > CLASS_VISIBLE_BEFORE_MS) {
+      return {
+        kind: "error" as const,
+        status: 403,
+        error: "Booking opens one day before the class starts.",
       };
     }
     // If the member already holds an active booking for this class, return it

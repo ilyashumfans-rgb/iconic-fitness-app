@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "wouter";
 import { PartnerLayout, PartnerCard } from "@/components/partner/PartnerLayout";
 import FileUpload from "@/components/FileUpload";
 import {
@@ -119,7 +120,7 @@ export default function PartnerClasses() {
     Promise.all([
       partnerApi.classes.list(),
       partnerApi.gyms.list(),
-      partnerApi.trainers(),
+      partnerApi.trainers.list(),
     ])
       .then(([c, g, t]) => {
         setRows(c);
@@ -570,8 +571,14 @@ export default function PartnerClasses() {
                 </select>
                 {editing.gymId && trainersForGym(editing.gymId).length === 0 && (
                   <div className="text-[11px] text-green-400 mt-1">
-                    No trainers attached to this gym yet. Ask Iconic Fitness admin to
-                    add one.
+                    No trainers attached to this gym yet.{" "}
+                    <Link
+                      href="/partner/trainers"
+                      className="underline font-semibold hover:text-lime-300"
+                    >
+                      Add a trainer
+                    </Link>{" "}
+                    first.
                   </div>
                 )}
               </div>

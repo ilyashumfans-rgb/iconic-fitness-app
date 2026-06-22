@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, eq, sql, asc, desc } from "drizzle-orm";
+import { isClassVisibleToMembers } from "../lib/classVisibility";
 import {
   db,
   gymsTable,
@@ -149,12 +150,15 @@ router.get("/gyms/:gymId", async (req, res): Promise<void> => {
     .select()
     .from(trainersTable)
     .where(eq(trainersTable.gymId, gym.id));
-  const upcoming = await db
-    .select()
-    .from(classSessionsTable)
-    .where(eq(classSessionsTable.gymId, gym.id))
-    .orderBy(asc(classSessionsTable.startsAt))
-    .limit(6);
+  const upcoming = (
+    await db
+      .select()
+      .from(classSessionsTable)
+      .where(eq(classSessionsTable.gymId, gym.id))
+      .orderBy(asc(classSessionsTable.startsAt))
+  )
+    .filter((c) => isClassVisibleToMembers(c.startsAt))
+    .slice(0, 6);
   const upcomingClasses = await Promise.all(
     upcoming.map(async (c) => {
       const trainer = trainers.find((t) => t.id === c.trainerId);
@@ -365,11 +369,13 @@ router.get("/gyms/:gymId/classes", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Gym not found" });
     return;
   }
-  const rows = await db
-    .select()
-    .from(classSessionsTable)
-    .where(eq(classSessionsTable.gymId, gym.id))
-    .orderBy(asc(classSessionsTable.startsAt));
+  const rows = (
+    await db
+      .select()
+      .from(classSessionsTable)
+      .where(eq(classSessionsTable.gymId, gym.id))
+      .orderBy(asc(classSessionsTable.startsAt))
+  ).filter((c) => isClassVisibleToMembers(c.startsAt));
   const trainers = await db.select().from(trainersTable);
   const out = rows.map((c) => {
     const trainer = trainers.find((t) => t.id === c.trainerId);
