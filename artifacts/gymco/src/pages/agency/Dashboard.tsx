@@ -21,6 +21,11 @@ function fmtTime(t: string): string {
   return `${h12}:${m ?? "00"} ${period}`;
 }
 
+function batchOf(t: string): "morning" | "evening" {
+  const h = Number((t ?? "").split(":")[0]);
+  return !Number.isNaN(h) && h < 12 ? "morning" : "evening";
+}
+
 function fmtDate(d: string): string {
   if (!d) return "No date";
   const parsed = new Date(`${d}T00:00:00`);
@@ -55,6 +60,8 @@ export default function AgencyDashboard() {
 
   const [branchFilter, setBranchFilter] = useState<string>(ALL);
   const [categoryFilter, setCategoryFilter] = useState<string>(ALL);
+  const [dateFilter, setDateFilter] = useState<string>(ALL);
+  const [batchFilter, setBatchFilter] = useState<string>(ALL);
 
   useEffect(() => {
     let cancelled = false;
@@ -108,15 +115,25 @@ export default function AgencyDashboard() {
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [bookings]);
 
+  const dateOptions = useMemo<string[]>(() => {
+    const set = new Set<string>();
+    for (const b of bookings) if (b.preferredDate) set.add(b.preferredDate);
+    // Most recent dates first.
+    return Array.from(set).sort((a, b) => b.localeCompare(a));
+  }, [bookings]);
+
   const filtered = useMemo<AgencyGxBooking[]>(() => {
     return bookings.filter((b) => {
       const branch = b.gymName || "Unassigned";
       const category = b.className?.trim() || "Group Class";
       if (branchFilter !== ALL && branch !== branchFilter) return false;
       if (categoryFilter !== ALL && category !== categoryFilter) return false;
+      if (dateFilter !== ALL && b.preferredDate !== dateFilter) return false;
+      if (batchFilter !== ALL && batchOf(b.preferredTime) !== batchFilter)
+        return false;
       return true;
     });
-  }, [bookings, branchFilter, categoryFilter]);
+  }, [bookings, branchFilter, categoryFilter, dateFilter, batchFilter]);
 
   const byBranch = useMemo<Tally[]>(() => {
     const map = new Map<string, number>();
@@ -171,7 +188,11 @@ export default function AgencyDashboard() {
   const total = filtered.length;
   const maxBranch = byBranch[0]?.count ?? 1;
   const maxCategory = byCategory[0]?.count ?? 1;
-  const hasFilter = branchFilter !== ALL || categoryFilter !== ALL;
+  const hasFilter =
+    branchFilter !== ALL ||
+    categoryFilter !== ALL ||
+    dateFilter !== ALL ||
+    batchFilter !== ALL;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -227,11 +248,26 @@ export default function AgencyDashboard() {
           <>
             {/* Filters */}
             <div className="bg-white rounded-2xl border border-slate-200 p-4 mb-6">
-              <div className="flex flex-col sm:flex-row sm:items-end gap-4">
-                <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider shrink-0 sm:pb-2">
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
                   <Filter className="h-4 w-4 text-lime-600" /> Filters
                 </div>
-                <div className="flex-1 min-w-0">
+                {hasFilter && (
+                  <button
+                    onClick={() => {
+                      setBranchFilter(ALL);
+                      setCategoryFilter(ALL);
+                      setDateFilter(ALL);
+                      setBatchFilter(ALL);
+                    }}
+                    className="shrink-0 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="min-w-0">
                   <label className="block text-xs font-semibold text-slate-500 mb-1">
                     Branch
                   </label>
@@ -248,7 +284,7 @@ export default function AgencyDashboard() {
                     ))}
                   </select>
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0">
                   <label className="block text-xs font-semibold text-slate-500 mb-1">
                     Class category
                   </label>
@@ -265,17 +301,37 @@ export default function AgencyDashboard() {
                     ))}
                   </select>
                 </div>
-                {hasFilter && (
-                  <button
-                    onClick={() => {
-                      setBranchFilter(ALL);
-                      setCategoryFilter(ALL);
-                    }}
-                    className="shrink-0 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold"
+                <div className="min-w-0">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">
+                    Date
+                  </label>
+                  <select
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-lime-500"
                   >
-                    Clear
-                  </button>
-                )}
+                    <option value={ALL}>All dates</option>
+                    {dateOptions.map((d) => (
+                      <option key={d} value={d}>
+                        {fmtDate(d)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="min-w-0">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">
+                    Batch
+                  </label>
+                  <select
+                    value={batchFilter}
+                    onChange={(e) => setBatchFilter(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-lime-500"
+                  >
+                    <option value={ALL}>All batches</option>
+                    <option value="morning">Morning (AM)</option>
+                    <option value="evening">Evening (PM)</option>
+                  </select>
+                </div>
               </div>
             </div>
 
