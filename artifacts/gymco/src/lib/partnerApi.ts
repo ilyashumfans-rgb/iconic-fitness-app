@@ -138,6 +138,21 @@ export type PartnerBooking = {
   userEmail: string;
 };
 
+export type PartnerGxBooking = {
+  id: number;
+  gymId: number | null;
+  gymName: string;
+  className: string;
+  name: string;
+  phone: string;
+  email: string;
+  preferredDate: string; // "YYYY-MM-DD"
+  preferredTime: string; // "07:00"
+  status: string;
+  source: string;
+  createdAt: string;
+};
+
 export type PartnerEarnings = {
   today: { visits: number; payoutInr: number };
   week: { visits: number; payoutInr: number };
@@ -301,6 +316,9 @@ export const partnerApi = {
       request<PartnerScheduleSlot[]>(`/partner/schedule/reset?gymId=${gymId}`, {
         method: "POST",
       }),
+  },
+  gxBookings: {
+    list: () => request<PartnerGxBooking[]>("/partner/gx-bookings"),
   },
   classes: {
     list: () => request<PartnerClass[]>("/partner/classes"),

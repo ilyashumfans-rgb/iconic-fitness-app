@@ -23,6 +23,7 @@ import {
   gymWorkoutSessionsTable,
   groupClassScheduleTable,
   partnerStaffTable,
+  leadsTable,
 } from "@workspace/db";
 import {
   hashPassword,
@@ -690,6 +691,7 @@ const STAFF_PERMISSION_PREFIXES: ReadonlyArray<[string, string]> = [
   ["/partner/amenities", "gyms"],
   ["/partner/workouts", "gyms"],
   ["/partner/bookings", "bookings"],
+  ["/partner/gx-bookings", "classes"],
   ["/partner/classes", "classes"],
   ["/partner/trainers", "classes"],
   ["/partner/schedule", "classes"],
@@ -1480,6 +1482,47 @@ router.get(
         };
       }),
     );
+  },
+);
+
+// GX (group class) booking enquiries for the partner's gyms. These come in as
+// leads (kind="class") from the public "Book a GX Class" page / class-detail
+// CTA. There is no seat cap on GX slots, so this simply surfaces every booking
+// the partner can act on; the frontend groups them by branch + day + slot.
+router.get(
+  "/partner/gx-bookings",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const gymIds = await ownedGymIds(req.session.partnerId!);
+    if (gymIds.length === 0) {
+      res.json([]);
+      return;
+    }
+    const rows = await db
+      .select({
+        id: leadsTable.id,
+        gymId: leadsTable.gymId,
+        gymName: leadsTable.gymName,
+        className: leadsTable.className,
+        name: leadsTable.name,
+        phone: leadsTable.phone,
+        email: leadsTable.email,
+        preferredDate: leadsTable.preferredDate,
+        preferredTime: leadsTable.preferredTime,
+        status: leadsTable.status,
+        source: leadsTable.source,
+        createdAt: leadsTable.createdAt,
+      })
+      .from(leadsTable)
+      .where(
+        and(
+          eq(leadsTable.kind, "class"),
+          inArray(leadsTable.gymId, gymIds),
+        ),
+      )
+      .orderBy(desc(leadsTable.preferredDate), asc(leadsTable.preferredTime))
+      .limit(5000);
+    res.json(rows);
   },
 );
 
