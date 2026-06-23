@@ -7,10 +7,9 @@ import {
   CalendarClock,
   Dumbbell,
   LogOut,
-  Phone,
-  Mail,
   Users,
   Loader2,
+  Filter,
 } from "lucide-react";
 
 function fmtTime(t: string): string {
@@ -42,8 +41,10 @@ type Slot = {
   className: string;
   date: string;
   time: string;
-  bookings: AgencyGxBooking[];
+  count: number;
 };
+
+const ALL = "__all__";
 
 export default function AgencyDashboard() {
   const [, navigate] = useLocation();
@@ -51,6 +52,9 @@ export default function AgencyDashboard() {
   const [me, setMe] = useState<AgencyUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+
+  const [branchFilter, setBranchFilter] = useState<string>(ALL);
+  const [categoryFilter, setCategoryFilter] = useState<string>(ALL);
 
   useEffect(() => {
     let cancelled = false;
@@ -89,31 +93,56 @@ export default function AgencyDashboard() {
     navigate("/agency/login");
   };
 
+  // Branch options: prefer the account's assigned branches; fall back to any
+  // branch present in the data.
+  const branchOptions = useMemo<string[]>(() => {
+    const set = new Set<string>();
+    for (const b of me?.branches ?? []) set.add(b.name);
+    for (const b of bookings) set.add(b.gymName || "Unassigned");
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [me, bookings]);
+
+  const categoryOptions = useMemo<string[]>(() => {
+    const set = new Set<string>();
+    for (const b of bookings) set.add(b.className?.trim() || "Group Class");
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [bookings]);
+
+  const filtered = useMemo<AgencyGxBooking[]>(() => {
+    return bookings.filter((b) => {
+      const branch = b.gymName || "Unassigned";
+      const category = b.className?.trim() || "Group Class";
+      if (branchFilter !== ALL && branch !== branchFilter) return false;
+      if (categoryFilter !== ALL && category !== categoryFilter) return false;
+      return true;
+    });
+  }, [bookings, branchFilter, categoryFilter]);
+
   const byBranch = useMemo<Tally[]>(() => {
     const map = new Map<string, number>();
-    for (const b of bookings) {
+    for (const b of filtered) {
       const key = b.gymName || "Unassigned";
       map.set(key, (map.get(key) ?? 0) + 1);
     }
     return Array.from(map.entries())
       .map(([label, count]) => ({ label, count }))
       .sort((a, b) => b.count - a.count);
-  }, [bookings]);
+  }, [filtered]);
 
   const byCategory = useMemo<Tally[]>(() => {
     const map = new Map<string, number>();
-    for (const b of bookings) {
+    for (const b of filtered) {
       const key = b.className?.trim() || "Group Class";
       map.set(key, (map.get(key) ?? 0) + 1);
     }
     return Array.from(map.entries())
       .map(([label, count]) => ({ label, count }))
       .sort((a, b) => b.count - a.count);
-  }, [bookings]);
+  }, [filtered]);
 
   const slots = useMemo<Slot[]>(() => {
     const map = new Map<string, Slot>();
-    for (const b of bookings) {
+    for (const b of filtered) {
       const branchKey = b.gymId != null ? `g${b.gymId}` : `n:${b.gymName}`;
       const key = `${branchKey}|${b.preferredDate}|${b.preferredTime}|${b.className}`;
       let slot = map.get(key);
@@ -124,11 +153,11 @@ export default function AgencyDashboard() {
           className: b.className || "Group Class",
           date: b.preferredDate,
           time: b.preferredTime,
-          bookings: [],
+          count: 0,
         };
         map.set(key, slot);
       }
-      slot.bookings.push(b);
+      slot.count += 1;
     }
     return Array.from(map.values()).sort((a, b) => {
       const d = (b.date || "").localeCompare(a.date || "");
@@ -137,11 +166,12 @@ export default function AgencyDashboard() {
       if (t !== 0) return t;
       return a.gymName.localeCompare(b.gymName);
     });
-  }, [bookings]);
+  }, [filtered]);
 
-  const total = bookings.length;
+  const total = filtered.length;
   const maxBranch = byBranch[0]?.count ?? 1;
   const maxCategory = byCategory[0]?.count ?? 1;
+  const hasFilter = branchFilter !== ALL || categoryFilter !== ALL;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -179,7 +209,7 @@ export default function AgencyDashboard() {
             {me && me.branches.length > 0
               ? ` across ${me.branches.map((b) => b.name).join(", ")}`
               : " across your assigned branches"}
-            , broken down by branch and by class category.
+            . Filter by branch or class category below.
           </p>
         </div>
 
@@ -195,11 +225,65 @@ export default function AgencyDashboard() {
           </div>
         ) : (
           <>
+            {/* Filters */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-4 mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+                <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider shrink-0 sm:pb-2">
+                  <Filter className="h-4 w-4 text-lime-600" /> Filters
+                </div>
+                <div className="flex-1 min-w-0">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">
+                    Branch
+                  </label>
+                  <select
+                    value={branchFilter}
+                    onChange={(e) => setBranchFilter(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-lime-500"
+                  >
+                    <option value={ALL}>All branches</option>
+                    {branchOptions.map((b) => (
+                      <option key={b} value={b}>
+                        {b}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">
+                    Class category
+                  </label>
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-lime-500"
+                  >
+                    <option value={ALL}>All categories</option>
+                    {categoryOptions.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {hasFilter && (
+                  <button
+                    onClick={() => {
+                      setBranchFilter(ALL);
+                      setCategoryFilter(ALL);
+                    }}
+                    className="shrink-0 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+
             {/* Summary cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
               <div className="bg-white rounded-2xl border border-slate-200 p-5">
                 <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                  <Users className="h-4 w-4 text-lime-600" /> Total bookings
+                  <Users className="h-4 w-4 text-lime-600" /> People booked
                 </div>
                 <div className="text-3xl font-black text-slate-900 mt-2">
                   {total}
@@ -227,8 +311,9 @@ export default function AgencyDashboard() {
               <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
                 <CalendarClock className="h-10 w-10 text-slate-300 mx-auto mb-3" />
                 <div className="text-slate-500">
-                  No GX class bookings yet. When members book a group class,
-                  they'll show up here.
+                  {hasFilter
+                    ? "No bookings match the selected filters."
+                    : "No GX class bookings yet. When members book a group class, they'll show up here."}
                 </div>
               </div>
             ) : (
@@ -248,7 +333,7 @@ export default function AgencyDashboard() {
                               {row.label}
                             </span>
                             <span className="tabular-nums font-bold text-slate-900">
-                              {row.count}
+                              {row.count} booked
                             </span>
                           </div>
                           <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
@@ -277,7 +362,7 @@ export default function AgencyDashboard() {
                               {row.label}
                             </span>
                             <span className="tabular-nums font-bold text-slate-900">
-                              {row.count}
+                              {row.count} booked
                             </span>
                           </div>
                           <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
@@ -294,70 +379,32 @@ export default function AgencyDashboard() {
                   </div>
                 </div>
 
-                {/* Per-slot detail */}
+                {/* Per-slot detail (counts only — no personal contact info) */}
                 <h2 className="text-sm font-bold text-slate-900 mb-3">
                   Every slot ({slots.length})
                 </h2>
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {slots.map((slot) => (
                     <div
                       key={slot.key}
-                      className="bg-white rounded-2xl border border-slate-200 overflow-hidden"
+                      className="bg-white rounded-2xl border border-slate-200 p-5"
                     >
-                      <div className="px-5 py-3 border-b border-lime-100 flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                          <h3 className="text-sm font-bold text-slate-900 truncate">
-                            {slot.className}
-                          </h3>
-                          <div className="text-xs text-slate-500 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                            <span className="inline-flex items-center gap-1">
-                              <Building2 className="h-3 w-3" /> {slot.gymName}
-                            </span>
-                            <span>·</span>
-                            <span>{fmtDate(slot.date)}</span>
-                            <span>·</span>
-                            <span>{fmtTime(slot.time)}</span>
-                          </div>
-                        </div>
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className="text-sm font-bold text-slate-900 truncate">
+                          {slot.className}
+                        </h3>
                         <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-gradient-to-r from-lime-500 to-lime-600 text-white shrink-0">
                           <Users className="h-3.5 w-3.5" />
-                          {slot.bookings.length} booked
+                          {slot.count} booked
                         </span>
                       </div>
-                      <ul className="divide-y divide-slate-100">
-                        {slot.bookings.map((b) => (
-                          <li
-                            key={b.id}
-                            className="px-5 py-3 flex items-center justify-between gap-3"
-                          >
-                            <div className="min-w-0">
-                              <div className="text-slate-900 font-semibold truncate">
-                                {b.name || "Guest"}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4 shrink-0 text-sm text-slate-500">
-                              {b.phone && (
-                                <a
-                                  href={`tel:${b.phone}`}
-                                  className="inline-flex items-center gap-1.5 hover:text-lime-600"
-                                >
-                                  <Phone className="h-3.5 w-3.5" />
-                                  <span className="tabular-nums">{b.phone}</span>
-                                </a>
-                              )}
-                              {b.email && (
-                                <a
-                                  href={`mailto:${b.email}`}
-                                  className="inline-flex items-center gap-1.5 hover:text-lime-600 max-w-[12rem] truncate"
-                                >
-                                  <Mail className="h-3.5 w-3.5 shrink-0" />
-                                  <span className="truncate">{b.email}</span>
-                                </a>
-                              )}
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
+                      <div className="text-xs text-slate-500 mt-2 space-y-1">
+                        <div className="inline-flex items-center gap-1">
+                          <Building2 className="h-3 w-3" /> {slot.gymName}
+                        </div>
+                        <div>{fmtDate(slot.date)}</div>
+                        <div>{fmtTime(slot.time)}</div>
+                      </div>
                     </div>
                   ))}
                 </div>

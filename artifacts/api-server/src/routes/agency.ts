@@ -112,19 +112,16 @@ router.get(
       res.json([]);
       return;
     }
+    // Aggregate-safe projection only: no name/phone/email is ever sent to the
+    // agency client (this role sees booking counts, not personal contact info).
     const rows = await db
       .select({
         id: leadsTable.id,
         gymId: leadsTable.gymId,
         gymName: leadsTable.gymName,
         className: leadsTable.className,
-        name: leadsTable.name,
-        phone: leadsTable.phone,
-        email: leadsTable.email,
         preferredDate: leadsTable.preferredDate,
         preferredTime: leadsTable.preferredTime,
-        status: leadsTable.status,
-        source: leadsTable.source,
         createdAt: leadsTable.createdAt,
       })
       .from(leadsTable)

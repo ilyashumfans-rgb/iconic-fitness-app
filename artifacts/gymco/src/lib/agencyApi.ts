@@ -17,13 +17,8 @@ export type AgencyGxBooking = {
   gymId: number | null;
   gymName: string;
   className: string;
-  name: string;
-  phone: string;
-  email: string;
   preferredDate: string; // "YYYY-MM-DD"
   preferredTime: string; // "07:00"
-  status: string;
-  source: string;
   createdAt: string;
 };
 
