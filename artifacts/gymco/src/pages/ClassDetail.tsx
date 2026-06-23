@@ -1,55 +1,19 @@
-import { useParams, Link, useLocation } from "wouter";
-import { useGetClass, useCreateBooking, getGetClassQueryKey, getListMyBookingsQueryKey, getGetDashboardQueryKey, getListClassesQueryKey, getListTrendingClassesQueryKey } from "@workspace/api-client-react";
+import { useParams, Link } from "wouter";
+import { useGetClass, getGetClassQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { MapPin, Clock, User, ChevronLeft, Zap, CheckCircle2, Sparkles } from "lucide-react";
+import { MapPin, Clock, User, ChevronLeft, Zap, Sparkles } from "lucide-react";
 import { LeadEnquiryDialog } from "@/components/LeadEnquiryDialog";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import confetti from "canvas-confetti";
 
 export default function ClassDetail() {
   const { classId } = useParams();
   const id = Number(classId);
-  const [, setLocation] = useLocation();
-  const queryClient = useQueryClient();
-  const [bookingSuccess, setBookingSuccess] = useState(false);
 
   const { data: cls, isLoading } = useGetClass(id, { query: { enabled: !!id, queryKey: getGetClassQueryKey(id) } });
-  
-  const createBooking = useCreateBooking();
-
-  const handleBook = () => {
-    createBooking.mutate(
-      { data: { classId: id } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListMyBookingsQueryKey() });
-          queryClient.invalidateQueries({ queryKey: getGetClassQueryKey(id) });
-          queryClient.invalidateQueries({ queryKey: getGetDashboardQueryKey() });
-          queryClient.invalidateQueries({ queryKey: getListClassesQueryKey() });
-          queryClient.invalidateQueries({ queryKey: getListTrendingClassesQueryKey() });
-          setBookingSuccess(true);
-          confetti({
-            particleCount: 100,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ['#ccff00', '#ffffff', '#000000'] // primary color
-          });
-        },
-        onError: () => {
-          // Most likely the class filled up — refresh the seat count so the
-          // UI reflects the latest availability and disables booking if full.
-          queryClient.invalidateQueries({ queryKey: getGetClassQueryKey(id) });
-        }
-      }
-    );
-  };
 
   const getIntensityColor = (intensity: string) => {
     switch (intensity) {
@@ -76,27 +40,6 @@ export default function ClassDetail() {
 
   if (!cls) return <div className="p-8 text-center">Class not found</div>;
 
-  if (bookingSuccess) {
-    return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center text-center p-6 animate-in fade-in zoom-in duration-500">
-        <div className="h-24 w-24 rounded-full bg-primary/20 flex items-center justify-center mb-6">
-          <CheckCircle2 className="h-12 w-12 text-primary" />
-        </div>
-        <h1 className="text-3xl font-black mb-2">You're booked!</h1>
-        <p className="text-muted-foreground mb-8 max-w-md">
-          Your spot for {cls.title} at {cls.gymName} is confirmed. Get ready to sweat.
-        </p>
-        <div className="flex flex-col gap-3 w-full max-w-xs">
-          <Button onClick={() => setLocation("/bookings")} className="w-full font-bold h-12 text-lg">
-            View Booking QR
-          </Button>
-          <Button variant="outline" onClick={() => setLocation("/classes")} className="w-full">
-            Browse More Classes
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   const isFull = cls.booked >= cls.capacity;
 
@@ -221,37 +164,12 @@ export default function ClassDetail() {
                     className="w-full h-14 text-lg font-black tracking-wide mb-3 bg-gradient-to-r from-lime-500 to-green-500 hover:from-lime-600 hover:to-green-600 text-white shadow-[0_12px_30px_-12px_rgba(101, 163, 13,0.7)]"
                   >
                     <Sparkles className="h-4 w-4 mr-2" />
-                    BOOK FREE CLASS
+                    BOOK GX CLASS
                   </Button>
                 }
               />
 
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button 
-                    className="w-full h-12 text-base font-black tracking-wide" 
-                    disabled={isFull || createBooking.isPending}
-                    variant={isFull ? "secondary" : "outline"}
-                  >
-                    {isFull ? "CLASS FULL" : "Book with membership"}
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent className="bg-card border-border">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="text-2xl font-black">Confirm Booking</AlertDialogTitle>
-                    <AlertDialogDescription className="text-base">
-                      You are about to book <strong>{cls.title}</strong> at <strong>{cls.gymName}</strong> on {format(new Date(cls.startsAt), "MMM d 'at' h:mm a")}.
-                      <br/><br/>
-                      This will use 1 class credit from your membership.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleBook} className="font-bold">Confirm Booking</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-              {createBooking.isError && (
+              {isFull && (
                 <p className="mt-3 text-sm font-semibold text-red-500 text-center">
                   This class is full. No seats are available.
                 </p>
