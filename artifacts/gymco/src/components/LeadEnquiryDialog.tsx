@@ -166,6 +166,14 @@ export function LeadEnquiryDialog(props: Props) {
   const [err, setErr] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
+  const isClass = props.kind === "class";
+  const successBadgeLabel = isClass ? "Members Only" : "2-Day Free Trial";
+  const successDescriptionText =
+    props.successDescription ??
+    (isClass
+      ? "Your spot is reserved! GX classes are exclusive to active members. Bring your membership to the gym and our team will help you get started — see you on the mat!"
+      : "You've been selected for a 2-Day FREE Trial. Visit the gym and start your fitness journey with us!");
+
   const { data: gyms } = useListGyms();
 
   useEffect(() => {
@@ -275,15 +283,14 @@ export function LeadEnquiryDialog(props: Props) {
                 {props.successTitle ?? "Congratulations!"}
               </DialogTitle>
               <DialogDescription className="text-center text-base">
-                {props.successDescription ??
-                  "You've been selected for a 2-Day FREE Trial. Visit the gym and start your fitness journey with us!"}
+                {successDescriptionText}
               </DialogDescription>
             </DialogHeader>
 
             <div className="rounded-2xl border border-lime-200 bg-lime-50 dark:bg-lime-950/30 dark:border-lime-900/50 p-4 text-left space-y-2">
               <div className="inline-flex items-center gap-1.5 rounded-full bg-lime-500 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white">
                 <Sparkles className="h-3 w-3" />
-                2-Day Free Trial
+                {successBadgeLabel}
               </div>
               {gymName ? (
                 <div className="flex items-center gap-2 text-sm font-bold text-foreground">
