@@ -1,7 +1,15 @@
 const BASE = "/api";
 
+export type AgencyBranch = {
+  id: number;
+  name: string;
+};
+
 export type AgencyUser = {
+  id: number;
   username: string;
+  name: string;
+  branches: AgencyBranch[];
 };
 
 export type AgencyGxBooking = {

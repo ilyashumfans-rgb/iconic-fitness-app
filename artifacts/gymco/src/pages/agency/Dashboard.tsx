@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
-import { agencyApi, type AgencyGxBooking } from "@/lib/agencyApi";
+import { agencyApi, type AgencyGxBooking, type AgencyUser } from "@/lib/agencyApi";
 import {
   BarChart3,
   Building2,
@@ -48,6 +48,7 @@ type Slot = {
 export default function AgencyDashboard() {
   const [, navigate] = useLocation();
   const [bookings, setBookings] = useState<AgencyGxBooking[]>([]);
+  const [me, setMe] = useState<AgencyUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
@@ -55,7 +56,10 @@ export default function AgencyDashboard() {
     let cancelled = false;
     agencyApi
       .me()
-      .then(() => agencyApi.gxBookings.list())
+      .then((u) => {
+        if (!cancelled) setMe(u);
+        return agencyApi.gxBookings.list();
+      })
       .then((b) => {
         if (!cancelled) setBookings(b);
       })
@@ -149,7 +153,7 @@ export default function AgencyDashboard() {
             </div>
             <div>
               <div className="font-extrabold text-slate-900 leading-tight">
-                Iconic Fitness
+                {me?.name || "Iconic Fitness"}
               </div>
               <div className="text-[11px] uppercase tracking-[0.2em] text-lime-600 font-bold">
                 Agency Portal
@@ -171,8 +175,11 @@ export default function AgencyDashboard() {
             GX Class Bookings
           </h1>
           <p className="text-slate-500 mt-1">
-            How many people have booked group classes across all branches, broken
-            down by branch and by class category.
+            How many people have booked group classes
+            {me && me.branches.length > 0
+              ? ` across ${me.branches.map((b) => b.name).join(", ")}`
+              : " across your assigned branches"}
+            , broken down by branch and by class category.
           </p>
         </div>
 

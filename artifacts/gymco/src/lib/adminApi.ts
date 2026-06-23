@@ -9,6 +9,14 @@ export type AdminUser = {
   role: string;
 };
 
+export type AgencyAccount = {
+  id: number;
+  username: string;
+  name: string;
+  gymIds: number[];
+  createdAt: string;
+};
+
 async function request<T>(
   path: string,
   options: RequestInit = {},
@@ -297,6 +305,35 @@ export const adminApi = {
       request<{ ok: true }>("/admin/me/notifications/read-all", {
         method: "POST",
       }),
+  },
+  agencies: {
+    list: () =>
+      request<AgencyAccount[]>("/admin/agencies"),
+    create: (body: {
+      username: string;
+      password: string;
+      name: string;
+      gymIds: number[];
+    }) =>
+      request<AgencyAccount>("/admin/agencies", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (
+      id: number,
+      body: Partial<{ username: string; name: string; gymIds: number[] }>,
+    ) =>
+      request<AgencyAccount>(`/admin/agencies/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    resetPassword: (id: number, password: string) =>
+      request<{ ok: true }>(`/admin/agencies/${id}/reset-password`, {
+        method: "POST",
+        body: JSON.stringify({ password }),
+      }),
+    remove: (id: number) =>
+      request<{ ok: true }>(`/admin/agencies/${id}`, { method: "DELETE" }),
   },
   admins: {
     list: () =>

@@ -6,6 +6,7 @@ import {
   partnersTable,
   partnerLoginTokensTable,
   gymsTable,
+  agencyUsersTable,
   trainersTable,
   classSessionsTable,
   membershipsTable,
@@ -402,6 +403,176 @@ router.delete(
       }
       throw err;
     }
+  },
+);
+
+// ───────────────────────────── Agency Accounts ─────────────────────────────
+
+function parseGymIds(value: unknown): number[] {
+  if (!Array.isArray(value)) return [];
+  const ids = value
+    .map((v) => Number(v))
+    .filter((n) => Number.isInteger(n) && n > 0);
+  return Array.from(new Set(ids));
+}
+
+router.get(
+  "/admin/agencies",
+  requireAdmin,
+  async (_req: Request, res: Response): Promise<void> => {
+    const rows = await db
+      .select({
+        id: agencyUsersTable.id,
+        username: agencyUsersTable.username,
+        name: agencyUsersTable.name,
+        gymIds: agencyUsersTable.gymIds,
+        createdAt: agencyUsersTable.createdAt,
+      })
+      .from(agencyUsersTable)
+      .orderBy(asc(agencyUsersTable.id));
+    res.json(rows);
+  },
+);
+
+router.post(
+  "/admin/agencies",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const username = String(b.username ?? "").trim();
+    const password = String(b.password ?? "");
+    const name = String(b.name ?? "").trim();
+    const gymIds = parseGymIds(b.gymIds);
+    if (!username || !password || !name) {
+      res
+        .status(400)
+        .json({ error: "name, username, password are required" });
+      return;
+    }
+    if (password.length < 6) {
+      res.status(400).json({ error: "Password must be at least 6 characters" });
+      return;
+    }
+    const [existing] = await db
+      .select({ id: agencyUsersTable.id })
+      .from(agencyUsersTable)
+      .where(eq(agencyUsersTable.username, username))
+      .limit(1);
+    if (existing) {
+      res.status(409).json({ error: "That username is already taken" });
+      return;
+    }
+    const passwordHash = await hashPassword(password);
+    const [created] = await db
+      .insert(agencyUsersTable)
+      .values({ username, name, passwordHash, gymIds })
+      .returning({
+        id: agencyUsersTable.id,
+        username: agencyUsersTable.username,
+        name: agencyUsersTable.name,
+        gymIds: agencyUsersTable.gymIds,
+        createdAt: agencyUsersTable.createdAt,
+      });
+    res.status(201).json(created);
+  },
+);
+
+router.patch(
+  "/admin/agencies/:id",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const updates: { name?: string; gymIds?: number[]; username?: string } = {};
+    if (b.name !== undefined) {
+      const name = String(b.name).trim();
+      if (!name) {
+        res.status(400).json({ error: "Name cannot be empty" });
+        return;
+      }
+      updates.name = name;
+    }
+    if (b.username !== undefined) {
+      const username = String(b.username).trim();
+      if (!username) {
+        res.status(400).json({ error: "Username cannot be empty" });
+        return;
+      }
+      const [clash] = await db
+        .select({ id: agencyUsersTable.id })
+        .from(agencyUsersTable)
+        .where(eq(agencyUsersTable.username, username))
+        .limit(1);
+      if (clash && clash.id !== id) {
+        res.status(409).json({ error: "That username is already taken" });
+        return;
+      }
+      updates.username = username;
+    }
+    if (b.gymIds !== undefined) {
+      updates.gymIds = parseGymIds(b.gymIds);
+    }
+    if (Object.keys(updates).length === 0) {
+      res.status(400).json({ error: "Nothing to update" });
+      return;
+    }
+    const [updated] = await db
+      .update(agencyUsersTable)
+      .set(updates)
+      .where(eq(agencyUsersTable.id, id))
+      .returning({
+        id: agencyUsersTable.id,
+        username: agencyUsersTable.username,
+        name: agencyUsersTable.name,
+        gymIds: agencyUsersTable.gymIds,
+        createdAt: agencyUsersTable.createdAt,
+      });
+    if (!updated) {
+      res.status(404).json({ error: "Agency account not found" });
+      return;
+    }
+    res.json(updated);
+  },
+);
+
+router.post(
+  "/admin/agencies/:id/reset-password",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const password = String((req.body ?? {}).password ?? "");
+    if (password.length < 6) {
+      res.status(400).json({ error: "Password must be at least 6 characters" });
+      return;
+    }
+    const passwordHash = await hashPassword(password);
+    const [updated] = await db
+      .update(agencyUsersTable)
+      .set({ passwordHash })
+      .where(eq(agencyUsersTable.id, id))
+      .returning({ id: agencyUsersTable.id });
+    if (!updated) {
+      res.status(404).json({ error: "Agency account not found" });
+      return;
+    }
+    res.json({ ok: true });
+  },
+);
+
+router.delete(
+  "/admin/agencies/:id",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const [deleted] = await db
+      .delete(agencyUsersTable)
+      .where(eq(agencyUsersTable.id, id))
+      .returning({ id: agencyUsersTable.id });
+    if (!deleted) {
+      res.status(404).json({ error: "Agency account not found" });
+      return;
+    }
+    res.json({ ok: true });
   },
 );
 

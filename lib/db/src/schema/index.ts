@@ -65,6 +65,20 @@ export const gymsTable = pgTable("gyms", {
   payoutTaxPct: integer("payout_tax_pct").notNull().default(18),
 });
 
+// Agency portal accounts. Each agency user is a read-only login scoped to a set
+// of branches (gymIds) that an admin assigns. They can only view GX class
+// bookings for their assigned branches.
+export const agencyUsersTable = pgTable("agency_users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  name: text("name").notNull(),
+  gymIds: integer("gym_ids").array().notNull().default([]),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const trainersTable = pgTable("trainers", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),

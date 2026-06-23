@@ -1,7 +1,8 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { and, asc, desc, eq } from "drizzle-orm";
-import { db, leadsTable } from "@workspace/db";
-import { requireAgency, verifyAgencyCredentials } from "../lib/agencyAuth";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { db, leadsTable, agencyUsersTable, gymsTable } from "@workspace/db";
+import { requireAgency } from "../lib/agencyAuth";
+import { verifyPassword } from "../lib/adminAuth";
 
 const router: IRouter = Router();
 
@@ -18,7 +19,12 @@ router.post(
       res.status(400).json({ error: "Username and password required" });
       return;
     }
-    if (!verifyAgencyCredentials(username, password)) {
+    const [user] = await db
+      .select()
+      .from(agencyUsersTable)
+      .where(eq(agencyUsersTable.username, username.trim()))
+      .limit(1);
+    if (!user || !(await verifyPassword(password, user.passwordHash))) {
       res.status(401).json({ error: "Invalid credentials" });
       return;
     }
@@ -28,40 +34,84 @@ router.post(
         res.status(500).json({ error: "Login failed" });
         return;
       }
-      req.session.agencyUser = username;
+      req.session.agencyUserId = user.id;
       req.session.save((saveErr) => {
         if (saveErr) {
           res.status(500).json({ error: "Login failed" });
           return;
         }
-        res.json({ username });
+        res.json({ id: user.id, username: user.username, name: user.name });
       });
     });
   },
 );
 
-router.post(
-  "/agency/logout",
-  (req: Request, res: Response): void => {
-    req.session.destroy(() => {
-      res.json({ ok: true });
+router.post("/agency/logout", (req: Request, res: Response): void => {
+  req.session.destroy(() => {
+    res.json({ ok: true });
+  });
+});
+
+router.get(
+  "/agency/me",
+  requireAgency,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = req.session.agencyUserId!;
+    const [user] = await db
+      .select()
+      .from(agencyUsersTable)
+      .where(eq(agencyUsersTable.id, id))
+      .limit(1);
+    if (!user) {
+      // Account was deleted while logged in — end the session.
+      req.session.destroy(() => {
+        res.status(401).json({ error: "Unauthorized" });
+      });
+      return;
+    }
+    const branches = user.gymIds.length
+      ? await db
+          .select({ id: gymsTable.id, name: gymsTable.name })
+          .from(gymsTable)
+          .where(inArray(gymsTable.id, user.gymIds))
+          .orderBy(asc(gymsTable.name))
+      : [];
+    res.json({
+      id: user.id,
+      username: user.username,
+      name: user.name,
+      branches,
     });
   },
 );
 
-router.get("/agency/me", requireAgency, (req: Request, res: Response): void => {
-  res.json({ username: req.session.agencyUser });
-});
+// ─────────────────────── GX bookings (assigned branches) ───────────────────────
 
-// ─────────────────────── GX bookings (all branches) ───────────────────────
-
-// Read-only view of every GX (group class) booking across all branches. These
-// are stored as leads with kind="class". The frontend groups them by branch and
-// by class category to show how many people have booked each.
+// Read-only view of GX (group class) bookings for the branches this agency
+// account is assigned to. Bookings are leads with kind="class". Scoping is
+// always re-read from the account row so revoked branches take effect
+// immediately.
 router.get(
   "/agency/gx-bookings",
   requireAgency,
-  async (_req: Request, res: Response): Promise<void> => {
+  async (req: Request, res: Response): Promise<void> => {
+    const id = req.session.agencyUserId!;
+    const [user] = await db
+      .select({ gymIds: agencyUsersTable.gymIds })
+      .from(agencyUsersTable)
+      .where(eq(agencyUsersTable.id, id))
+      .limit(1);
+    if (!user) {
+      // Account was deleted while logged in — end the session.
+      req.session.destroy(() => {
+        res.status(401).json({ error: "Unauthorized" });
+      });
+      return;
+    }
+    if (user.gymIds.length === 0) {
+      res.json([]);
+      return;
+    }
     const rows = await db
       .select({
         id: leadsTable.id,
@@ -78,7 +128,12 @@ router.get(
         createdAt: leadsTable.createdAt,
       })
       .from(leadsTable)
-      .where(and(eq(leadsTable.kind, "class")))
+      .where(
+        and(
+          eq(leadsTable.kind, "class"),
+          inArray(leadsTable.gymId, user.gymIds),
+        ),
+      )
       .orderBy(desc(leadsTable.preferredDate), asc(leadsTable.preferredTime));
     res.json(rows);
   },
