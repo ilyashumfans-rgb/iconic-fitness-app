@@ -19,6 +19,7 @@ import blogsRouter from "./blogs";
 import notificationsRouter from "./notifications";
 import ticketsRouter from "./tickets";
 import aiRouter from "./ai";
+import agencyRouter from "./agency";
 
 const router: IRouter = Router();
 
@@ -42,5 +43,6 @@ router.use(blogsRouter);
 router.use(notificationsRouter);
 router.use(ticketsRouter);
 router.use(aiRouter);
+router.use(agencyRouter);
 
 export default router;

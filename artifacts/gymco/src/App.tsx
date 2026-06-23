@@ -40,6 +40,8 @@ import PartnerSettings from "@/pages/partner/Settings";
 import PartnerTeam from "@/pages/partner/Team";
 import VendorLogin from "@/pages/vendor/Login";
 import VendorDashboard from "@/pages/vendor/Dashboard";
+import AgencyLogin from "@/pages/agency/Login";
+import AgencyDashboard from "@/pages/agency/Dashboard";
 import VendorProducts from "@/pages/vendor/Products";
 import VendorOrders from "@/pages/vendor/Orders";
 import VendorSettings from "@/pages/vendor/Settings";
@@ -278,6 +280,16 @@ function AppShell() {
 
   if (location.startsWith("/book-gx")) {
     return <BookGxClass />;
+  }
+
+  if (location.startsWith("/agency")) {
+    return (
+      <Switch>
+        <Route path="/agency/login" component={AgencyLogin} />
+        <Route path="/agency" component={AgencyDashboard} />
+        <Route component={NotFound} />
+      </Switch>
+    );
   }
 
   if (location.startsWith("/partner")) {
