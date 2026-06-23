@@ -230,7 +230,6 @@ function MemberShellRoutes() {
         <Route path="/bookings" component={Bookings} />
         <Route path="/memberships" component={Memberships} />
         <Route path="/be-a-member" component={BeAMember} />
-        <Route path="/book-gx" component={BookGxClass} />
         <Route path="/trainers" component={Trainers} />
         <Route path="/trainers/:trainerId" component={TrainerDetail} />
         <Route path="/wallet" component={Wallet} />
@@ -275,6 +274,10 @@ function AppShell() {
         <Route path="/sign-up/*?" component={SignUpPage} />
       </Switch>
     );
+  }
+
+  if (location.startsWith("/book-gx")) {
+    return <BookGxClass />;
   }
 
   if (location.startsWith("/partner")) {

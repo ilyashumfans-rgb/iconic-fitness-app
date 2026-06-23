@@ -345,6 +345,10 @@ export default function BookGxClass() {
           Choose your branch, pick an available slot from its weekly timetable,
           and reserve your spot. Classes can be prebooked up to 1 day ahead.
         </p>
+        <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-lime-200 bg-lime-50 px-4 py-2 text-sm font-bold text-lime-700">
+          <Sparkles className="h-4 w-4" />
+          GX classes are only allowed for members.
+        </div>
       </div>
 
       <form onSubmit={submit} className="space-y-6">
