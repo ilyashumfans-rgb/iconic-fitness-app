@@ -22,16 +22,30 @@ router.post(
       res.status(401).json({ error: "Invalid credentials" });
       return;
     }
-    req.session.agencyUser = username;
-    res.json({ username });
+    // Regenerate the session on login to guard against session fixation.
+    req.session.regenerate((err) => {
+      if (err) {
+        res.status(500).json({ error: "Login failed" });
+        return;
+      }
+      req.session.agencyUser = username;
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          res.status(500).json({ error: "Login failed" });
+          return;
+        }
+        res.json({ username });
+      });
+    });
   },
 );
 
 router.post(
   "/agency/logout",
   (req: Request, res: Response): void => {
-    delete req.session.agencyUser;
-    res.json({ ok: true });
+    req.session.destroy(() => {
+      res.json({ ok: true });
+    });
   },
 );
 
@@ -65,8 +79,7 @@ router.get(
       })
       .from(leadsTable)
       .where(and(eq(leadsTable.kind, "class")))
-      .orderBy(desc(leadsTable.preferredDate), asc(leadsTable.preferredTime))
-      .limit(10000);
+      .orderBy(desc(leadsTable.preferredDate), asc(leadsTable.preferredTime));
     res.json(rows);
   },
 );
