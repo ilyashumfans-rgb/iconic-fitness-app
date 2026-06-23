@@ -194,6 +194,9 @@ function TopNav() {
           <Link href="/explore" className="hover:text-foreground transition-colors">
             Browse Gyms
           </Link>
+          <Link href="/book-gx" className="hover:text-foreground transition-colors">
+            Book a GX Class
+          </Link>
           <Link href="/be-a-member" className="hover:text-foreground transition-colors">
             Be a Member
           </Link>
@@ -236,6 +239,7 @@ function TopNav() {
               <nav className="mt-6 flex flex-col gap-1">
                 {[
                   { href: "/explore", label: "Browse Gyms" },
+                  { href: "/book-gx", label: "Book a GX Class" },
                   { href: "/be-a-member", label: "Be a Member" },
                   { href: "/store", label: "Store" },
                   { href: "/blog", label: "Blog" },
