@@ -14,7 +14,6 @@ import * as Notifications from "expo-notifications";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AnimatedSplash } from "@/components/AnimatedSplash";
@@ -110,9 +109,7 @@ export default function RootLayout() {
             <QueryClientProvider client={queryClient}>
               <ApiAuthBridge />
               <GestureHandlerRootView style={{ flex: 1 }}>
-                <KeyboardProvider>
-                  <RootLayoutNav />
-                </KeyboardProvider>
+                <RootLayoutNav />
                 {!splashDone ? (
                   <AnimatedSplash onFinish={() => setSplashDone(true)} />
                 ) : null}

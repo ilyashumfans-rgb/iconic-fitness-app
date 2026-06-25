@@ -20,6 +20,9 @@ description: Non-obvious API/wiring gotchas when adding Clerk auth + generated A
 ## Generated react-query hooks (orval)
 - The second arg's `query` option is a **full** `UseQueryOptions` (requires `queryKey`). Passing just `{ query: { enabled } }` fails typecheck — either also pass `queryKey: getGetXQueryKey(params)` or skip `enabled` and rely on the route guard.
 
+## Expo Go native-module trap
+- The Replit Expo workflow runs in **Expo Go** ("Using Expo Go" in Metro logs), which only bundles the native modules shipped in the Expo SDK. Any third-party lib with its own native code (e.g. `react-native-keyboard-controller`) crashes the app on launch on Android/iOS while **web keeps working** (web has a JS fallback). Symptom: "android/ios not loading" but web preview fine. Fix: drop the lib (use RN built-ins like `KeyboardAvoidingView`) or move the user to a dev build. Reanimated/gesture-handler/svg/screens ARE in Expo Go, so they're safe.
+
 ## RN gotcha
 - `GestureHandlerRootView` needs `style={{ flex: 1 }}` or it collapses to zero height → fully blank white screen even though the tree mounted.
 - `Alert.alert` with multiple buttons is a no-op on React Native Web — the confirm/destructive button callbacks never fire, so any action gated behind it (e.g. logout `signOut()`) silently does nothing in the web preview. Branch on `Platform.OS === "web"` and use `window.confirm` there. **Why:** "logout button does nothing, user still sees home" is this, not an auth bug.
