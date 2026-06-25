@@ -9,4 +9,5 @@
 - [Expo Clerk mobile auth](expo-clerk-mobile.md) — `@clerk/expo` v3 Future signals API; root-level setAuthTokenGetter; orval enabled needs queryKey; GestureHandlerRootView flex:1.
 - [Code-default + lazy materialize](code-default-lazy-materialize.md) — per-entity config defaults in code, materialize rows only on first owner edit; appears on prod with no data-import dance.
 - [ffmpeg parallel encode sync flakiness](ffmpeg-parallel-encode-sync.md) — background `&`+`wait` file writes intermittently don't persist here; encode serially, `sync`, verify each with `stat`.
+- [Store vendor / order data model](store-vendor-model.md) — vendors = partners.kind vendor/both; order items snapshot name+price (no FKs) so deleting products is history-safe.
 - [Deploy typechecks ALL artifacts](deploy-builds-all-artifacts.md) — publish fails if ANY artifact has a TS error (dev/vite doesn't typecheck); Vite artifacts need `dom` lib; bare `vite build` PORT error is not a real blocker.

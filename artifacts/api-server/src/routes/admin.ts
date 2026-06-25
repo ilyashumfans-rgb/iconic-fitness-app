@@ -689,12 +689,13 @@ router.get(
 );
 
 const VALID_KINDS = new Set(["gym", "vendor", "both"]);
+const VALID_STATUSES = new Set(["pending", "active", "suspended"]);
 
 router.post(
   "/admin/partners",
   requireAdmin,
   async (req: Request, res: Response): Promise<void> => {
-    const { name, email, phone, city, password, notes, kind, amenityIds } =
+    const { name, email, phone, city, password, notes, kind, status, amenityIds } =
       (req.body ?? {}) as {
         name?: string;
         email?: string;
@@ -703,6 +704,7 @@ router.post(
         password?: string;
         notes?: string;
         kind?: string;
+        status?: string;
         amenityIds?: number[];
       };
     if (!name || !email || !phone || !city || !password) {
@@ -710,6 +712,8 @@ router.post(
       return;
     }
     const partnerKind = kind && VALID_KINDS.has(kind) ? kind : "gym";
+    const partnerStatus =
+      status && VALID_STATUSES.has(status) ? status : undefined;
     const passwordHash = await hashPassword(password);
 
     const rawIds = Array.isArray(amenityIds)
@@ -743,6 +747,7 @@ router.post(
           city,
           notes: notes ?? "",
           kind: partnerKind,
+          ...(partnerStatus ? { status: partnerStatus } : {}),
           passwordHash,
           pendingAmenityIds,
         })
@@ -827,6 +832,11 @@ router.delete(
   requireAdmin,
   async (req: Request, res: Response): Promise<void> => {
     const id = Number(req.params.id);
+    // Remove this partner's store products too. Past order items snapshot
+    // productName/unitPriceInr, so order history stays intact without them.
+    await db
+      .delete(productsTable)
+      .where(eq(productsTable.vendorPartnerId, id));
     await db.delete(partnersTable).where(eq(partnersTable.id, id));
     res.json({ ok: true });
   },

@@ -13,6 +13,7 @@ import {
   Settings2,
   Package,
   ShoppingBag,
+  Store,
   LogOut,
   RefreshCcw,
   Sparkles,
@@ -186,6 +187,11 @@ const SECTIONS: Section[] = [
   {
     title: "Store Management",
     items: [
+      {
+        label: "Vendors",
+        href: "/admin/vendors",
+        icon: <Store className="h-4 w-4" />,
+      },
       {
         label: "Products",
         href: "/admin/products",
