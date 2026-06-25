@@ -22,4 +22,5 @@ description: Non-obvious API/wiring gotchas when adding Clerk auth + generated A
 
 ## RN gotcha
 - `GestureHandlerRootView` needs `style={{ flex: 1 }}` or it collapses to zero height → fully blank white screen even though the tree mounted.
+- `Alert.alert` with multiple buttons is a no-op on React Native Web — the confirm/destructive button callbacks never fire, so any action gated behind it (e.g. logout `signOut()`) silently does nothing in the web preview. Branch on `Platform.OS === "web"` and use `window.confirm` there. **Why:** "logout button does nothing, user still sees home" is this, not an auth bug.
 - Any full-screen overlay whose dismissal is gated on a Reanimated animation callback (`withTiming(..., cb)` → `runOnJS(setDone)`) MUST also have a JS `setTimeout` fail-safe that flips the same state. If the worklet callback doesn't fire (web/reduced-motion/interrupt) the overlay traps the user forever. **Why:** an animated launch-splash gated only on the callback can lock the whole app.

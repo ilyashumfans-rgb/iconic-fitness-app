@@ -1,14 +1,20 @@
 import { Feather } from "@expo/vector-icons";
-import { useGetProgress, type ProgressDay } from "@workspace/api-client-react";
+import {
+  useGetProgress,
+  useGetTrackingSummary,
+  type ProgressDay,
+} from "@workspace/api-client-react";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
+import { HexProgress } from "@/components/HexProgress";
 import { Screen } from "@/components/Screen";
 import { LoadingView, Segmented } from "@/components/ui-bits";
 import { WeeklyBars } from "@/components/WeeklyBars";
 import { useColors } from "@/hooks/useColors";
+import { istToday } from "@/lib/dates";
 
 type Metric = "caloriesIn" | "steps" | "activeMinutes";
 
@@ -25,15 +31,25 @@ export default function ProgressScreen() {
   const colors = useColors();
   const [metric, setMetric] = useState<Metric>("caloriesIn");
   const progressQuery = useGetProgress({ days: 7 });
+  const summaryQuery = useGetTrackingSummary({ date: istToday() });
 
   const report = progressQuery.data;
   const days = report?.days ?? [];
   const cfg = METRICS[metric];
 
+  const summary = summaryQuery.data;
+  const weeklyDone = summary?.weeklyWorkouts ?? 0;
+  const weeklyGoal = Math.max(1, summary?.weeklyGoal ?? 5);
+  const weeklyPct = Math.min(1, weeklyDone / weeklyGoal);
+  const weeklyToGo = Math.max(0, weeklyGoal - weeklyDone);
+
   return (
     <Screen
       refreshing={progressQuery.isRefetching}
-      onRefresh={() => void progressQuery.refetch()}
+      onRefresh={() => {
+        void progressQuery.refetch();
+        void summaryQuery.refetch();
+      }}
       contentContainerStyle={{ paddingTop: 8 }}
     >
       <AppText weight="700" size={28} style={{ marginBottom: 16 }}>
@@ -44,6 +60,35 @@ export default function ProgressScreen() {
         <LoadingView />
       ) : (
         <>
+          {/* Weekly target hero */}
+          <Card style={styles.hero}>
+            <View style={styles.heroHead}>
+              <AppText weight="700" size={17}>
+                Weekly Target
+              </AppText>
+              <View style={styles.heroPill}>
+                <Feather name="target" size={12} color={colors.primary} />
+                <AppText size={12} weight="600" color={colors.primary}>
+                  {weeklyDone}/{weeklyGoal} sessions
+                </AppText>
+              </View>
+            </View>
+            <View style={styles.heroBody}>
+              <HexProgress
+                progress={weeklyPct}
+                centerMain={`${Math.round(weeklyPct * 100)}%`}
+                centerBottom={
+                  weeklyToGo === 0 ? "Goal smashed" : `${weeklyToGo} to go`
+                }
+              />
+            </View>
+            <AppText muted size={13} style={{ textAlign: "center" }}>
+              {weeklyToGo === 0
+                ? "You hit your weekly workout goal. Incredible work."
+                : `${weeklyToGo} more workout${weeklyToGo === 1 ? "" : "s"} to hit your weekly goal.`}
+            </AppText>
+          </Card>
+
           {/* Highlight cards */}
           <View style={styles.grid}>
             <Highlight
@@ -169,6 +214,19 @@ function DayStat({
 }
 
 const styles = StyleSheet.create({
+  hero: { alignItems: "center", gap: 14, marginBottom: 16, paddingVertical: 22 },
+  heroHead: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  heroPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  heroBody: { alignItems: "center", justifyContent: "center" },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 16 },
   highlight: { width: "47.5%", gap: 6 },
   hlIcon: {

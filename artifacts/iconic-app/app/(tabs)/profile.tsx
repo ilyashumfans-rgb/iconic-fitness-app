@@ -119,17 +119,27 @@ export default function ProfileScreen() {
     }
   };
 
+  const doSignOut = async () => {
+    try {
+      await signOut();
+    } finally {
+      queryClient.clear();
+      router.replace("/(auth)/sign-in");
+    }
+  };
+
   const onSignOut = () => {
+    if (Platform.OS === "web") {
+      const ok =
+        typeof window !== "undefined"
+          ? window.confirm("Are you sure you want to log out?")
+          : true;
+      if (ok) void doSignOut();
+      return;
+    }
     Alert.alert("Log out", "Are you sure you want to log out?", [
       { text: "Cancel", style: "cancel" },
-      {
-        text: "Log out",
-        style: "destructive",
-        onPress: async () => {
-          await signOut();
-          router.replace("/(auth)/sign-in");
-        },
-      },
+      { text: "Log out", style: "destructive", onPress: () => void doSignOut() },
     ]);
   };
 
