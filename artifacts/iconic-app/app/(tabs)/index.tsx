@@ -3,6 +3,7 @@ import { Feather } from "@expo/vector-icons";
 import {
   getGetMeQueryKey,
   getGetTrackingSummaryQueryKey,
+  getListGymsQueryKey,
   getListMyBookingsQueryKey,
   useAddWater,
   useCreateBooking,
@@ -36,6 +37,7 @@ import { ProgressRing } from "@/components/ProgressRing";
 import { Screen } from "@/components/Screen";
 import { LoadingView, SectionHeader } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
+import { useUserLocation } from "@/hooks/useUserLocation";
 import { istToday, formatClock, formatDateLabel } from "@/lib/dates";
 import { resolveImageUrl } from "@/lib/images";
 import { exploreUrl, openExternal, promoVideoUrl, storeUrl } from "@/lib/links";
@@ -218,9 +220,12 @@ export default function HomeScreen() {
         ))}
       </ScrollView>
 
-      {/* Gyms near you */}
+      {/* Gyms near me (location-aware) */}
+      <NearbyGyms onOpenGym={() => openExternal(exploreUrl)} />
+
+      {/* Top rated gyms */}
       <SectionHeader
-        title="Gyms near you"
+        title="Top rated gyms"
         action="View all"
         onAction={() => openExternal(exploreUrl)}
       />
@@ -678,7 +683,15 @@ function CategoryTile({
   );
 }
 
-function GymCard({ gym, onPress }: { gym: Gym; onPress: () => void }) {
+function GymCard({
+  gym,
+  onPress,
+  showDistance,
+}: {
+  gym: Gym;
+  onPress: () => void;
+  showDistance?: boolean;
+}) {
   const colors = useColors();
   const img = resolveImageUrl(gym.heroImage);
   return (
@@ -700,6 +713,14 @@ function GymCard({ gym, onPress }: { gym: Gym; onPress: () => void }) {
         ) : (
           <View style={[styles.gymImg, { backgroundColor: colors.elevated }]} />
         )}
+        {showDistance ? (
+          <View style={[styles.distancePill, { backgroundColor: colors.primary }]}>
+            <Feather name="navigation" size={10} color={colors.primaryForeground} />
+            <AppText weight="700" size={11} color={colors.primaryForeground}>
+              {Number.isFinite(gym.distanceKm) ? gym.distanceKm.toFixed(1) : "–"} km
+            </AppText>
+          </View>
+        ) : null}
         <View style={styles.gymRating}>
           <Feather name="star" size={10} color={colors.primary} />
           <AppText weight="700" size={11} color={colors.foreground}>
@@ -716,6 +737,9 @@ function GymCard({ gym, onPress }: { gym: Gym; onPress: () => void }) {
           <AppText muted size={12} numberOfLines={1} style={{ flex: 1 }}>
             {gym.area || gym.city}
           </AppText>
+          {gym.openNow ? (
+            <View style={[styles.openDot, { backgroundColor: colors.success }]} />
+          ) : null}
         </View>
         <AppText weight="700" size={13} color={colors.primary} style={{ marginTop: 6 }}>
           ₹{gym.priceFrom}
@@ -726,6 +750,108 @@ function GymCard({ gym, onPress }: { gym: Gym; onPress: () => void }) {
         </AppText>
       </View>
     </Pressable>
+  );
+}
+
+function NearbyGyms({ onOpenGym }: { onOpenGym: () => void }) {
+  const colors = useColors();
+  const { coords, status, request } = useUserLocation();
+
+  const nearbyQuery = useListGyms(
+    { lat: coords?.lat, lng: coords?.lng, sort: "distance" },
+    {
+      query: {
+        enabled: !!coords,
+        queryKey: getListGymsQueryKey({
+          lat: coords?.lat,
+          lng: coords?.lng,
+          sort: "distance",
+        }),
+      },
+    },
+  );
+  const nearby = useMemo(
+    () => (nearbyQuery.data ?? []).slice(0, 8),
+    [nearbyQuery.data],
+  );
+
+  // Before the user shares location: a premium call-to-action card.
+  if (status === "idle" || status === "denied" || status === "error") {
+    const denied = status === "denied" || status === "error";
+    return (
+      <Pressable onPress={request} style={{ marginBottom: 28 }}>
+        <View style={styles.nearCta}>
+          <LinearGradient
+            colors={[colors.primary, "#7C9A00"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <View style={styles.nearCtaIcon}>
+            <Feather name="navigation" size={24} color={colors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <AppText weight="700" size={18} color={colors.primaryForeground}>
+              {denied ? "Turn on location" : "Gyms near me"}
+            </AppText>
+            <AppText
+              size={13}
+              color={colors.primaryForeground}
+              style={{ marginTop: 3, opacity: 0.85 }}
+            >
+              {denied
+                ? "Allow location access to see the closest branches."
+                : "Find the closest Iconic branches around you."}
+            </AppText>
+          </View>
+          <View style={styles.nearCtaPill}>
+            <AppText weight="700" size={13} color={colors.primary}>
+              {denied ? "Retry" : "Find"}
+            </AppText>
+          </View>
+        </View>
+      </Pressable>
+    );
+  }
+
+  return (
+    <>
+      <SectionHeader title="Gyms near me" />
+      {status === "loading" || nearbyQuery.isLoading ? (
+        <View style={{ height: 200, justifyContent: "center", marginBottom: 28 }}>
+          <LoadingView />
+        </View>
+      ) : nearbyQuery.isError ? (
+        <Card style={{ marginBottom: 28 }}>
+          <AppText weight="700" size={15}>
+            Couldn’t load nearby gyms
+          </AppText>
+          <AppText muted size={13} style={{ marginTop: 4 }}>
+            Something went wrong fetching branches near you. Pull to refresh and try again.
+          </AppText>
+        </Card>
+      ) : nearby.length === 0 ? (
+        <Card style={{ marginBottom: 28 }}>
+          <AppText weight="700" size={15}>
+            No gyms found nearby
+          </AppText>
+          <AppText muted size={13} style={{ marginTop: 4 }}>
+            We couldn’t find branches close to you yet — explore all gyms instead.
+          </AppText>
+        </Card>
+      ) : (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.gymRow}
+          style={{ marginBottom: 28 }}
+        >
+          {nearby.map((g) => (
+            <GymCard key={g.id} gym={g} showDistance onPress={onOpenGym} />
+          ))}
+        </ScrollView>
+      )}
+    </>
   );
 }
 
@@ -1095,6 +1221,42 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 5,
     marginTop: 4,
+  },
+  distancePill: {
+    position: "absolute",
+    top: 10,
+    left: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  openDot: { width: 8, height: 8, borderRadius: 4 },
+
+  // Near-me CTA
+  nearCta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    padding: 18,
+    borderRadius: 22,
+    overflow: "hidden",
+  },
+  nearCtaIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(10,12,8,0.9)",
+  },
+  nearCtaPill: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: "#0A0C08",
   },
 
   // Video card
