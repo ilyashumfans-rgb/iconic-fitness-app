@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/iconic-app/"
+title = "Iconic Fitness"
+version = "1.0.0"
+id = "artifacts/iconic-app"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/iconic-app/" ]
+localPort = 18755
+
+[services.development]
+run = "pnpm --filter @workspace/iconic-app run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/iconic-app", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/iconic-app", "run", "serve" ]
+
+[services.env]
+PORT = "18755"
+BASE_PATH = "/iconic-app/"

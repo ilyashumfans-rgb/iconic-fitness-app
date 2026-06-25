@@ -35,6 +35,7 @@ async function toBookingDto(b: typeof bookingsTable.$inferSelect) {
     id: b.id,
     classId: b.classId,
     classTitle: c?.title ?? "Class",
+    gymId: c?.gymId ?? 0,
     gymName: g?.name ?? "GYMCO",
     gymCity: g?.city ?? "",
     startsAt: c?.startsAt ?? new Date(),

@@ -207,6 +207,7 @@ export interface Booking {
   id: number;
   classId: number;
   classTitle: string;
+  gymId: number;
   gymName: string;
   gymCity: string;
   startsAt: string;
@@ -270,6 +271,218 @@ export interface DashboardSummary {
   aiTip: string;
 }
 
+export interface OkResponse {
+  ok: boolean;
+}
+
+export interface Goals {
+  waterGoalMl: number;
+  calorieGoal: number;
+  proteinGoalG: number;
+  stepGoal: number;
+  /** Target workouts per week */
+  weeklyGoal: number;
+}
+
+export interface GoalsUpdate {
+  waterGoalMl?: number;
+  calorieGoal?: number;
+  proteinGoalG?: number;
+  stepGoal?: number;
+  weeklyGoal?: number;
+}
+
+export interface WaterEntry {
+  id: number;
+  amountMl: number;
+  createdAt: string;
+}
+
+export interface WaterDay {
+  date: string;
+  totalMl: number;
+  goalMl: number;
+  entries: WaterEntry[];
+}
+
+export interface WaterInput {
+  /** Millilitres to add */
+  amountMl: number;
+  /** YYYY-MM-DD (IST); defaults to today */
+  date?: string;
+}
+
+export type MealEntryMealType = typeof MealEntryMealType[keyof typeof MealEntryMealType];
+
+
+export const MealEntryMealType = {
+  breakfast: 'breakfast',
+  lunch: 'lunch',
+  dinner: 'dinner',
+  snack: 'snack',
+} as const;
+
+export interface MealEntry {
+  id: number;
+  mealType: MealEntryMealType;
+  name: string;
+  calories: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
+  createdAt: string;
+}
+
+export interface MealDay {
+  date: string;
+  totalCalories: number;
+  goalCalories: number;
+  totalProteinG: number;
+  goalProteinG: number;
+  totalCarbsG: number;
+  totalFatG: number;
+  entries: MealEntry[];
+}
+
+export type MealInputMealType = typeof MealInputMealType[keyof typeof MealInputMealType];
+
+
+export const MealInputMealType = {
+  breakfast: 'breakfast',
+  lunch: 'lunch',
+  dinner: 'dinner',
+  snack: 'snack',
+} as const;
+
+export interface MealInput {
+  name: string;
+  mealType: MealInputMealType;
+  calories: number;
+  proteinG?: number;
+  carbsG?: number;
+  fatG?: number;
+  date?: string;
+}
+
+export type WorkoutEntryType = typeof WorkoutEntryType[keyof typeof WorkoutEntryType];
+
+
+export const WorkoutEntryType = {
+  run: 'run',
+  walk: 'walk',
+  strength: 'strength',
+  cycling: 'cycling',
+  yoga: 'yoga',
+  hiit: 'hiit',
+  swim: 'swim',
+  sports: 'sports',
+  other: 'other',
+} as const;
+
+export interface WorkoutEntry {
+  id: number;
+  type: WorkoutEntryType;
+  durationMin: number;
+  calories: number;
+  steps: number;
+  createdAt: string;
+}
+
+export interface WorkoutDay {
+  date: string;
+  totalCalories: number;
+  totalMinutes: number;
+  totalSteps: number;
+  stepGoal: number;
+  count: number;
+  entries: WorkoutEntry[];
+}
+
+export type WorkoutInputType = typeof WorkoutInputType[keyof typeof WorkoutInputType];
+
+
+export const WorkoutInputType = {
+  run: 'run',
+  walk: 'walk',
+  strength: 'strength',
+  cycling: 'cycling',
+  yoga: 'yoga',
+  hiit: 'hiit',
+  swim: 'swim',
+  sports: 'sports',
+  other: 'other',
+} as const;
+
+export interface WorkoutInput {
+  type: WorkoutInputType;
+  durationMin: number;
+  calories?: number;
+  steps?: number;
+  date?: string;
+}
+
+export interface DailySummary {
+  date: string;
+  waterMl: number;
+  waterGoalMl: number;
+  /** Calories consumed today */
+  caloriesIn: number;
+  calorieGoal: number;
+  /** Calories burned today */
+  caloriesOut: number;
+  proteinG: number;
+  proteinGoalG: number;
+  steps: number;
+  stepGoal: number;
+  /** Workouts logged today */
+  workouts: number;
+  weeklyGoal: number;
+  streakDays: number;
+  weeklyWorkouts: number;
+}
+
+export interface ProgressDay {
+  date: string;
+  /** Short day label e.g. Mon */
+  label: string;
+  waterMl: number;
+  caloriesIn: number;
+  caloriesOut: number;
+  steps: number;
+  workouts: number;
+  activeMinutes: number;
+}
+
+export interface ProgressReport {
+  days: ProgressDay[];
+  streakDays: number;
+  totalWorkouts: number;
+  totalSteps: number;
+  avgCaloriesIn: number;
+}
+
+export interface Checkin {
+  id: number;
+  gymId: number;
+  gymName: string;
+  gymCity: string;
+  checkedInAt: string;
+  method: string;
+}
+
+export type CheckinInputMethod = typeof CheckinInputMethod[keyof typeof CheckinInputMethod];
+
+
+export const CheckinInputMethod = {
+  qr: 'qr',
+  manual: 'manual',
+} as const;
+
+export interface CheckinInput {
+  gymId: number;
+  method?: CheckinInputMethod;
+}
+
 export type ListGymsParams = {
 q?: string;
 city?: string;
@@ -322,5 +535,31 @@ export const ListMyBookingsStatus = {
 
 export type ListTrainersParams = {
 specialty?: string;
+};
+
+export type GetTrackingSummaryParams = {
+/**
+ * YYYY-MM-DD (IST); defaults to today
+ */
+date?: string;
+};
+
+export type GetWaterDayParams = {
+date?: string;
+};
+
+export type GetMealDayParams = {
+date?: string;
+};
+
+export type GetWorkoutDayParams = {
+date?: string;
+};
+
+export type GetProgressParams = {
+/**
+ * Number of trailing days (1-31)
+ */
+days?: number;
 };
 

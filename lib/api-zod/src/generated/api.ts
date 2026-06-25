@@ -115,6 +115,7 @@ export const GetDashboardResponse = zod.object({
   "id": zod.number(),
   "classId": zod.number(),
   "classTitle": zod.string(),
+  "gymId": zod.number(),
   "gymName": zod.string(),
   "gymCity": zod.string(),
   "startsAt": zod.coerce.date(),
@@ -444,6 +445,7 @@ export const ListMyBookingsResponseItem = zod.object({
   "id": zod.number(),
   "classId": zod.number(),
   "classTitle": zod.string(),
+  "gymId": zod.number(),
   "gymName": zod.string(),
   "gymCity": zod.string(),
   "startsAt": zod.coerce.date(),
@@ -475,6 +477,7 @@ export const CancelBookingResponse = zod.object({
   "id": zod.number(),
   "classId": zod.number(),
   "classTitle": zod.string(),
+  "gymId": zod.number(),
   "gymName": zod.string(),
   "gymCity": zod.string(),
   "startsAt": zod.coerce.date(),
@@ -542,6 +545,258 @@ export const GetWalletResponse = zod.object({
   "kind": zod.enum(['cashback', 'referral', 'refund', 'debit', 'topup']),
   "createdAt": zod.coerce.date()
 }))
+})
+
+
+/**
+ * @summary Today's wellness summary (water, calories, steps, workouts, streak)
+ */
+export const GetTrackingSummaryQueryParams = zod.object({
+  "date": zod.coerce.string().optional()
+})
+
+export const GetTrackingSummaryResponse = zod.object({
+  "date": zod.string(),
+  "waterMl": zod.number(),
+  "waterGoalMl": zod.number(),
+  "caloriesIn": zod.number().describe('Calories consumed today'),
+  "calorieGoal": zod.number(),
+  "caloriesOut": zod.number().describe('Calories burned today'),
+  "proteinG": zod.number(),
+  "proteinGoalG": zod.number(),
+  "steps": zod.number(),
+  "stepGoal": zod.number(),
+  "workouts": zod.number().describe('Workouts logged today'),
+  "weeklyGoal": zod.number(),
+  "streakDays": zod.number(),
+  "weeklyWorkouts": zod.number()
+})
+
+
+/**
+ * @summary Water intake entries for a day
+ */
+export const GetWaterDayQueryParams = zod.object({
+  "date": zod.coerce.string().optional()
+})
+
+export const GetWaterDayResponse = zod.object({
+  "date": zod.string(),
+  "totalMl": zod.number(),
+  "goalMl": zod.number(),
+  "entries": zod.array(zod.object({
+  "id": zod.number(),
+  "amountMl": zod.number(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Log water intake
+ */
+export const AddWaterBody = zod.object({
+  "amountMl": zod.number().describe('Millilitres to add'),
+  "date": zod.string().optional().describe('YYYY-MM-DD (IST); defaults to today')
+})
+
+
+/**
+ * @summary Remove a water entry
+ */
+export const DeleteWaterParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteWaterResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Meals logged for a day with calorie/macro totals
+ */
+export const GetMealDayQueryParams = zod.object({
+  "date": zod.coerce.string().optional()
+})
+
+export const GetMealDayResponse = zod.object({
+  "date": zod.string(),
+  "totalCalories": zod.number(),
+  "goalCalories": zod.number(),
+  "totalProteinG": zod.number(),
+  "goalProteinG": zod.number(),
+  "totalCarbsG": zod.number(),
+  "totalFatG": zod.number(),
+  "entries": zod.array(zod.object({
+  "id": zod.number(),
+  "mealType": zod.enum(['breakfast', 'lunch', 'dinner', 'snack']),
+  "name": zod.string(),
+  "calories": zod.number(),
+  "proteinG": zod.number(),
+  "carbsG": zod.number(),
+  "fatG": zod.number(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Log a meal / food item
+ */
+export const AddMealBody = zod.object({
+  "name": zod.string(),
+  "mealType": zod.enum(['breakfast', 'lunch', 'dinner', 'snack']),
+  "calories": zod.number(),
+  "proteinG": zod.number().optional(),
+  "carbsG": zod.number().optional(),
+  "fatG": zod.number().optional(),
+  "date": zod.string().optional()
+})
+
+
+/**
+ * @summary Remove a meal entry
+ */
+export const DeleteMealParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteMealResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Workouts logged for a day with totals
+ */
+export const GetWorkoutDayQueryParams = zod.object({
+  "date": zod.coerce.string().optional()
+})
+
+export const GetWorkoutDayResponse = zod.object({
+  "date": zod.string(),
+  "totalCalories": zod.number(),
+  "totalMinutes": zod.number(),
+  "totalSteps": zod.number(),
+  "stepGoal": zod.number(),
+  "count": zod.number(),
+  "entries": zod.array(zod.object({
+  "id": zod.number(),
+  "type": zod.enum(['run', 'walk', 'strength', 'cycling', 'yoga', 'hiit', 'swim', 'sports', 'other']),
+  "durationMin": zod.number(),
+  "calories": zod.number(),
+  "steps": zod.number(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Log a workout / activity
+ */
+export const AddWorkoutBody = zod.object({
+  "type": zod.enum(['run', 'walk', 'strength', 'cycling', 'yoga', 'hiit', 'swim', 'sports', 'other']),
+  "durationMin": zod.number(),
+  "calories": zod.number().optional(),
+  "steps": zod.number().optional(),
+  "date": zod.string().optional()
+})
+
+
+/**
+ * @summary Remove a workout entry
+ */
+export const DeleteWorkoutParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteWorkoutResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Multi-day progress series for charts
+ */
+export const getProgressQueryDaysDefault = 7;
+
+export const GetProgressQueryParams = zod.object({
+  "days": zod.coerce.number().default(getProgressQueryDaysDefault)
+})
+
+export const GetProgressResponse = zod.object({
+  "days": zod.array(zod.object({
+  "date": zod.string(),
+  "label": zod.string().describe('Short day label e.g. Mon'),
+  "waterMl": zod.number(),
+  "caloriesIn": zod.number(),
+  "caloriesOut": zod.number(),
+  "steps": zod.number(),
+  "workouts": zod.number(),
+  "activeMinutes": zod.number()
+})),
+  "streakDays": zod.number(),
+  "totalWorkouts": zod.number(),
+  "totalSteps": zod.number(),
+  "avgCaloriesIn": zod.number()
+})
+
+
+/**
+ * @summary Get the user's daily goals
+ */
+export const GetGoalsResponse = zod.object({
+  "waterGoalMl": zod.number(),
+  "calorieGoal": zod.number(),
+  "proteinGoalG": zod.number(),
+  "stepGoal": zod.number(),
+  "weeklyGoal": zod.number().describe('Target workouts per week')
+})
+
+
+/**
+ * @summary Update daily goals
+ */
+export const UpdateGoalsBody = zod.object({
+  "waterGoalMl": zod.number().optional(),
+  "calorieGoal": zod.number().optional(),
+  "proteinGoalG": zod.number().optional(),
+  "stepGoal": zod.number().optional(),
+  "weeklyGoal": zod.number().optional()
+})
+
+export const UpdateGoalsResponse = zod.object({
+  "waterGoalMl": zod.number(),
+  "calorieGoal": zod.number(),
+  "proteinGoalG": zod.number(),
+  "stepGoal": zod.number(),
+  "weeklyGoal": zod.number().describe('Target workouts per week')
+})
+
+
+/**
+ * @summary The user's recent gym check-ins
+ */
+export const ListMyCheckinsResponseItem = zod.object({
+  "id": zod.number(),
+  "gymId": zod.number(),
+  "gymName": zod.string(),
+  "gymCity": zod.string(),
+  "checkedInAt": zod.coerce.date(),
+  "method": zod.string()
+})
+export const ListMyCheckinsResponse = zod.array(ListMyCheckinsResponseItem)
+
+
+/**
+ * @summary Check in to a gym (once per gym per day)
+ */
+export const createCheckinBodyMethodDefault = `qr`;
+
+export const CreateCheckinBody = zod.object({
+  "gymId": zod.number(),
+  "method": zod.enum(['qr', 'manual']).default(createCheckinBodyMethodDefault)
 })
 
 

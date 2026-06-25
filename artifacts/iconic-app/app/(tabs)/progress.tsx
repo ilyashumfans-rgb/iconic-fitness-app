@@ -1,0 +1,196 @@
+import { Feather } from "@expo/vector-icons";
+import { useGetProgress, type ProgressDay } from "@workspace/api-client-react";
+import { useState } from "react";
+import { StyleSheet, View } from "react-native";
+
+import { AppText } from "@/components/AppText";
+import { Card } from "@/components/Card";
+import { Screen } from "@/components/Screen";
+import { LoadingView, Segmented } from "@/components/ui-bits";
+import { WeeklyBars } from "@/components/WeeklyBars";
+import { useColors } from "@/hooks/useColors";
+
+type Metric = "caloriesIn" | "steps" | "activeMinutes";
+
+const METRICS: Record<
+  Metric,
+  { label: string; color: keyof ReturnType<typeof useColors>; suffix?: string }
+> = {
+  caloriesIn: { label: "Calories", color: "calorie" },
+  steps: { label: "Steps", color: "steps" },
+  activeMinutes: { label: "Active min", color: "water", suffix: "m" },
+};
+
+export default function ProgressScreen() {
+  const colors = useColors();
+  const [metric, setMetric] = useState<Metric>("caloriesIn");
+  const progressQuery = useGetProgress({ days: 7 });
+
+  const report = progressQuery.data;
+  const days = report?.days ?? [];
+  const cfg = METRICS[metric];
+
+  return (
+    <Screen
+      refreshing={progressQuery.isRefetching}
+      onRefresh={() => void progressQuery.refetch()}
+      contentContainerStyle={{ paddingTop: 8 }}
+    >
+      <AppText weight="700" size={28} style={{ marginBottom: 16 }}>
+        Progress
+      </AppText>
+
+      {progressQuery.isLoading && !report ? (
+        <LoadingView />
+      ) : (
+        <>
+          {/* Highlight cards */}
+          <View style={styles.grid}>
+            <Highlight
+              icon="zap"
+              tint={colors.primary}
+              value={`${report?.streakDays ?? 0}`}
+              label="day streak"
+            />
+            <Highlight
+              icon="repeat"
+              tint={colors.water}
+              value={`${report?.totalWorkouts ?? 0}`}
+              label="workouts (7d)"
+            />
+            <Highlight
+              icon="navigation"
+              tint={colors.calorie}
+              value={`${Math.round((report?.totalSteps ?? 0) / 1000)}k`}
+              label="steps (7d)"
+            />
+            <Highlight
+              icon="pie-chart"
+              tint={colors.protein}
+              value={`${report?.avgCaloriesIn ?? 0}`}
+              label="avg kcal/day"
+            />
+          </View>
+
+          {/* Trend chart */}
+          <Card style={{ marginTop: 8 }}>
+            <View style={styles.chartHead}>
+              <AppText weight="700" size={17}>
+                7-day trend
+              </AppText>
+            </View>
+            <View style={{ marginBottom: 16 }}>
+              <Segmented
+                value={metric}
+                onChange={setMetric}
+                options={[
+                  { value: "caloriesIn", label: "Calories" },
+                  { value: "steps", label: "Steps" },
+                  { value: "activeMinutes", label: "Active" },
+                ]}
+              />
+            </View>
+            <WeeklyBars
+              data={days.map((d: ProgressDay) => ({
+                label: d.label,
+                value: d[metric],
+              }))}
+              color={colors[cfg.color] as string}
+              suffix={cfg.suffix}
+            />
+          </Card>
+
+          {/* Daily breakdown */}
+          <AppText weight="700" size={18} style={{ marginTop: 28, marginBottom: 14 }}>
+            Daily breakdown
+          </AppText>
+          <View style={{ gap: 10 }}>
+            {[...days].reverse().map((d: ProgressDay) => (
+              <Card key={d.date} style={styles.dayRow}>
+                <View style={styles.dayBadge}>
+                  <AppText weight="700" size={13} color={colors.primary}>
+                    {d.label}
+                  </AppText>
+                </View>
+                <DayStat icon="droplet" text={`${(d.waterMl / 1000).toFixed(1)}L`} />
+                <DayStat icon="coffee" text={`${d.caloriesIn}`} />
+                <DayStat icon="navigation" text={`${d.steps}`} />
+                <DayStat icon="activity" text={`${d.workouts}`} />
+              </Card>
+            ))}
+          </View>
+        </>
+      )}
+    </Screen>
+  );
+}
+
+function Highlight({
+  icon,
+  tint,
+  value,
+  label,
+}: {
+  icon: keyof typeof Feather.glyphMap;
+  tint: string;
+  value: string;
+  label: string;
+}) {
+  const colors = useColors();
+  return (
+    <Card style={styles.highlight}>
+      <View style={[styles.hlIcon, { backgroundColor: tint + "22" }]}>
+        <Feather name={icon} size={18} color={tint} />
+      </View>
+      <AppText weight="700" size={24}>
+        {value}
+      </AppText>
+      <AppText muted size={12}>
+        {label}
+      </AppText>
+    </Card>
+  );
+}
+
+function DayStat({
+  icon,
+  text,
+}: {
+  icon: keyof typeof Feather.glyphMap;
+  text: string;
+}) {
+  const colors = useColors();
+  return (
+    <View style={styles.dayStat}>
+      <Feather name={icon} size={13} color={colors.mutedForeground} />
+      <AppText size={12}>{text}</AppText>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 16 },
+  highlight: { width: "47.5%", gap: 6 },
+  hlIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
+  },
+  chartHead: { marginBottom: 14 },
+  dayRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    gap: 6,
+  },
+  dayBadge: { flex: 1 },
+  dayStat: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    width: 58,
+  },
+});

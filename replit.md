@@ -75,6 +75,15 @@ A standalone, view-only role for agencies to monitor GX class bookings. Admins c
 - **Frontend (agency):** standalone routes outside every member/partner/admin shell — `App.tsx` `if (location.startsWith("/agency"))` → `/agency/login` (`pages/agency/Login.tsx`) + `/agency` dashboard (`pages/agency/Dashboard.tsx`). Client: `lib/agencyApi.ts`. Dashboard shows totals + breakdown **by branch** + **by class category** (`className`) + **per-slot detail** (branch+date+time+class with each booker's contact info), all limited to assigned branches.
 - **Note:** the old single-login env secrets `AGENCY_USERNAME` / `AGENCY_PASSWORD` are no longer used (dead config) — login is fully DB-backed now.
 
+### Member mobile app (Iconic Fitness)
+
+Member-facing Expo (React Native, expo-router) app in `artifacts/iconic-app` (slug `iconic-app`, previewPath `/iconic-app/`). It talks to the existing GYMCO API over `https://$EXPO_PUBLIC_DOMAIN/api` via the generated `@workspace/api-client-react` hooks.
+
+- **Auth:** Clerk (Replit-managed) via `@clerk/expo` v3 **Future signals API** (`signIn.password`/`finalize`, `signUp.verifications.*`, `useSSO` Google). The Clerk session token is supplied to every API call by `setAuthTokenGetter` wired in `app/_layout.tsx` (root-level `ApiAuthBridge`, so root modal routes get tokens too, not just tabs). Tabs + root authed modals redirect to `/(auth)/sign-in` when signed out.
+- **Backend:** tracking endpoints live in `artifacts/api-server/src/routes/tracking.ts` (`/tracking/summary|goals|water|meals|workouts`, `/checkins`), guarded by `requireUser` (Clerk bearer via `clerkMiddleware`+`getAuth`). Bookings DTO carries `gymId` (`bookings.ts` `toBookingDto`) so members can check in from My Bookings.
+- **Features:** dashboard rings, water/diet(macros)/workout+steps logging (root modal screens), class browse+book+check-in, progress charts & streaks, editable goals, daily reminder via `expo-notifications` (web-guarded). Theme: dark `#0A0C08` + lime `#C7F000`; all dates in `Asia/Kolkata` (`lib/dates.ts`).
+- **Gotcha:** `GestureHandlerRootView` must have `style={{ flex: 1 }}` or the whole app renders blank white.
+
 ## User preferences
 
 - **Pushing data to production:** dev and prod are separate databases. To get dev catalog data (gyms, partners, etc.) onto the live site, use the admin Dashboard "Import workspace data" button — this is the standard workflow. Each time the user wants new/changed dev data live, the agent must: (1) regenerate `artifacts/api-server/src/lib/seed-snapshot.json` from the current dev DB, (2) redeploy, then (3) user clicks "Import workspace data" on the live admin Dashboard. See `.agents/memory/prod-data-import.md`.

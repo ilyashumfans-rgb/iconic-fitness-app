@@ -11,6 +11,7 @@ export interface Booking {
   id: number;
   classId: number;
   classTitle: string;
+  gymId: number;
   gymName: string;
   gymCity: string;
   startsAt: Date;

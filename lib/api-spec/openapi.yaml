@@ -17,6 +17,10 @@ tags:
   - name: trainers
   - name: wallet
   - name: dashboard
+  - name: tracking
+    description: Daily wellness tracking — water, meals/calories, workouts, steps, goals, progress
+  - name: checkins
+    description: Member gym check-ins
   - name: ai
     description: Iconic Fitness AI assistant
 paths:
@@ -365,6 +369,235 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Wallet" }
 
+  /tracking/summary:
+    get:
+      operationId: getTrackingSummary
+      tags: [tracking]
+      summary: Today's wellness summary (water, calories, steps, workouts, streak)
+      parameters:
+        - in: query
+          name: date
+          schema: { type: string, description: "YYYY-MM-DD (IST); defaults to today" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DailySummary" }
+
+  /tracking/water:
+    get:
+      operationId: getWaterDay
+      tags: [tracking]
+      summary: Water intake entries for a day
+      parameters:
+        - in: query
+          name: date
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WaterDay" }
+    post:
+      operationId: addWater
+      tags: [tracking]
+      summary: Log water intake
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WaterInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WaterDay" }
+  /tracking/water/{id}:
+    delete:
+      operationId: deleteWater
+      tags: [tracking]
+      summary: Remove a water entry
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
+  /tracking/meals:
+    get:
+      operationId: getMealDay
+      tags: [tracking]
+      summary: Meals logged for a day with calorie/macro totals
+      parameters:
+        - in: query
+          name: date
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MealDay" }
+    post:
+      operationId: addMeal
+      tags: [tracking]
+      summary: Log a meal / food item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MealInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MealDay" }
+  /tracking/meals/{id}:
+    delete:
+      operationId: deleteMeal
+      tags: [tracking]
+      summary: Remove a meal entry
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
+  /tracking/workouts:
+    get:
+      operationId: getWorkoutDay
+      tags: [tracking]
+      summary: Workouts logged for a day with totals
+      parameters:
+        - in: query
+          name: date
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkoutDay" }
+    post:
+      operationId: addWorkout
+      tags: [tracking]
+      summary: Log a workout / activity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WorkoutInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkoutDay" }
+  /tracking/workouts/{id}:
+    delete:
+      operationId: deleteWorkout
+      tags: [tracking]
+      summary: Remove a workout entry
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
+  /tracking/progress:
+    get:
+      operationId: getProgress
+      tags: [tracking]
+      summary: Multi-day progress series for charts
+      parameters:
+        - in: query
+          name: days
+          schema: { type: integer, default: 7, description: "Number of trailing days (1-31)" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProgressReport" }
+
+  /tracking/goals:
+    get:
+      operationId: getGoals
+      tags: [tracking]
+      summary: Get the user's daily goals
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Goals" }
+    patch:
+      operationId: updateGoals
+      tags: [tracking]
+      summary: Update daily goals
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GoalsUpdate" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Goals" }
+
+  /checkins:
+    get:
+      operationId: listMyCheckins
+      tags: [checkins]
+      summary: The user's recent gym check-ins
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Checkin" }
+    post:
+      operationId: createCheckin
+      tags: [checkins]
+      summary: Check in to a gym (once per gym per day)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CheckinInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Checkin" }
+
 components:
   schemas:
     AiChatMessage:
@@ -564,13 +797,14 @@ components:
       type: object
       required:
         [
-          id, classId, classTitle, gymName, gymCity, startsAt, durationMin,
+          id, classId, classTitle, gymId, gymName, gymCity, startsAt, durationMin,
           status, trainerName, coverImage, qrCode
         ]
       properties:
         id: { type: integer }
         classId: { type: integer }
         classTitle: { type: string }
+        gymId: { type: integer }
         gymName: { type: string }
         gymCity: { type: string }
         startsAt: { type: string, format: date-time }
@@ -664,3 +898,187 @@ components:
         day: { type: string, description: "Mon..Sun" }
         calories: { type: integer }
         minutes: { type: integer }
+
+    OkResponse:
+      type: object
+      required: [ok]
+      properties:
+        ok: { type: boolean }
+
+    Goals:
+      type: object
+      required: [waterGoalMl, calorieGoal, proteinGoalG, stepGoal, weeklyGoal]
+      properties:
+        waterGoalMl: { type: integer }
+        calorieGoal: { type: integer }
+        proteinGoalG: { type: integer }
+        stepGoal: { type: integer }
+        weeklyGoal: { type: integer, description: "Target workouts per week" }
+    GoalsUpdate:
+      type: object
+      properties:
+        waterGoalMl: { type: integer }
+        calorieGoal: { type: integer }
+        proteinGoalG: { type: integer }
+        stepGoal: { type: integer }
+        weeklyGoal: { type: integer }
+
+    WaterEntry:
+      type: object
+      required: [id, amountMl, createdAt]
+      properties:
+        id: { type: integer }
+        amountMl: { type: integer }
+        createdAt: { type: string, format: date-time }
+    WaterDay:
+      type: object
+      required: [date, totalMl, goalMl, entries]
+      properties:
+        date: { type: string }
+        totalMl: { type: integer }
+        goalMl: { type: integer }
+        entries:
+          type: array
+          items: { $ref: "#/components/schemas/WaterEntry" }
+    WaterInput:
+      type: object
+      required: [amountMl]
+      properties:
+        amountMl: { type: integer, description: "Millilitres to add" }
+        date: { type: string, description: "YYYY-MM-DD (IST); defaults to today" }
+
+    MealEntry:
+      type: object
+      required: [id, mealType, name, calories, proteinG, carbsG, fatG, createdAt]
+      properties:
+        id: { type: integer }
+        mealType: { type: string, enum: [breakfast, lunch, dinner, snack] }
+        name: { type: string }
+        calories: { type: integer }
+        proteinG: { type: integer }
+        carbsG: { type: integer }
+        fatG: { type: integer }
+        createdAt: { type: string, format: date-time }
+    MealDay:
+      type: object
+      required: [date, totalCalories, goalCalories, totalProteinG, goalProteinG, totalCarbsG, totalFatG, entries]
+      properties:
+        date: { type: string }
+        totalCalories: { type: integer }
+        goalCalories: { type: integer }
+        totalProteinG: { type: integer }
+        goalProteinG: { type: integer }
+        totalCarbsG: { type: integer }
+        totalFatG: { type: integer }
+        entries:
+          type: array
+          items: { $ref: "#/components/schemas/MealEntry" }
+    MealInput:
+      type: object
+      required: [name, mealType, calories]
+      properties:
+        name: { type: string }
+        mealType: { type: string, enum: [breakfast, lunch, dinner, snack] }
+        calories: { type: integer }
+        proteinG: { type: integer }
+        carbsG: { type: integer }
+        fatG: { type: integer }
+        date: { type: string }
+
+    WorkoutEntry:
+      type: object
+      required: [id, type, durationMin, calories, steps, createdAt]
+      properties:
+        id: { type: integer }
+        type: { type: string, enum: [run, walk, strength, cycling, yoga, hiit, swim, sports, other] }
+        durationMin: { type: integer }
+        calories: { type: integer }
+        steps: { type: integer }
+        createdAt: { type: string, format: date-time }
+    WorkoutDay:
+      type: object
+      required: [date, totalCalories, totalMinutes, totalSteps, stepGoal, count, entries]
+      properties:
+        date: { type: string }
+        totalCalories: { type: integer }
+        totalMinutes: { type: integer }
+        totalSteps: { type: integer }
+        stepGoal: { type: integer }
+        count: { type: integer }
+        entries:
+          type: array
+          items: { $ref: "#/components/schemas/WorkoutEntry" }
+    WorkoutInput:
+      type: object
+      required: [type, durationMin]
+      properties:
+        type: { type: string, enum: [run, walk, strength, cycling, yoga, hiit, swim, sports, other] }
+        durationMin: { type: integer }
+        calories: { type: integer }
+        steps: { type: integer }
+        date: { type: string }
+
+    DailySummary:
+      type: object
+      required:
+        [
+          date, waterMl, waterGoalMl, caloriesIn, calorieGoal, caloriesOut,
+          proteinG, proteinGoalG, steps, stepGoal, workouts, weeklyGoal,
+          streakDays, weeklyWorkouts
+        ]
+      properties:
+        date: { type: string }
+        waterMl: { type: integer }
+        waterGoalMl: { type: integer }
+        caloriesIn: { type: integer, description: "Calories consumed today" }
+        calorieGoal: { type: integer }
+        caloriesOut: { type: integer, description: "Calories burned today" }
+        proteinG: { type: integer }
+        proteinGoalG: { type: integer }
+        steps: { type: integer }
+        stepGoal: { type: integer }
+        workouts: { type: integer, description: "Workouts logged today" }
+        weeklyGoal: { type: integer }
+        streakDays: { type: integer }
+        weeklyWorkouts: { type: integer }
+
+    ProgressDay:
+      type: object
+      required: [date, label, waterMl, caloriesIn, caloriesOut, steps, workouts, activeMinutes]
+      properties:
+        date: { type: string }
+        label: { type: string, description: "Short day label e.g. Mon" }
+        waterMl: { type: integer }
+        caloriesIn: { type: integer }
+        caloriesOut: { type: integer }
+        steps: { type: integer }
+        workouts: { type: integer }
+        activeMinutes: { type: integer }
+    ProgressReport:
+      type: object
+      required: [days, streakDays, totalWorkouts, totalSteps, avgCaloriesIn]
+      properties:
+        days:
+          type: array
+          items: { $ref: "#/components/schemas/ProgressDay" }
+        streakDays: { type: integer }
+        totalWorkouts: { type: integer }
+        totalSteps: { type: integer }
+        avgCaloriesIn: { type: integer }
+
+    Checkin:
+      type: object
+      required: [id, gymId, gymName, gymCity, checkedInAt, method]
+      properties:
+        id: { type: integer }
+        gymId: { type: integer }
+        gymName: { type: string }
+        gymCity: { type: string }
+        checkedInAt: { type: string, format: date-time }
+        method: { type: string }
+    CheckinInput:
+      type: object
+      required: [gymId]
+      properties:
+        gymId: { type: integer }
+        method: { type: string, enum: [qr, manual], default: qr }

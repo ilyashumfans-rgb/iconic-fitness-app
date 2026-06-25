@@ -6,6 +6,12 @@ uri = "file://artifacts/gymco/public/media/gymco-logo.png"
 type = "image"
 title = "gymco logo G barbell"
 
+[[generated]]
+id = "6qMoUkLewRhaBzuyURIxi"
+uri = "file://artifacts/iconic-app/assets/images/icon.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "ybRqAnKqCdDGnRf9yM6Hp"
 uri = "file://iconic-fitness-code.zip"

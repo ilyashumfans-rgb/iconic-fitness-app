@@ -29,6 +29,10 @@ export const usersTable = pgTable("users", {
   restingHr: integer("resting_hr").notNull().default(60),
   streakDays: integer("streak_days").notNull().default(0),
   weeklyGoal: integer("weekly_goal").notNull().default(5),
+  waterGoalMl: integer("water_goal_ml").notNull().default(3000),
+  calorieGoal: integer("calorie_goal").notNull().default(2200),
+  proteinGoalG: integer("protein_goal_g").notNull().default(120),
+  stepGoal: integer("step_goal").notNull().default(8000),
   memberCode: text("member_code").notNull(),
   joinedAt: timestamp("joined_at", { withTimezone: true })
     .notNull()
@@ -598,6 +602,48 @@ export const uploadedImagesTable = pgTable("uploaded_images", {
   mimeType: text("mime_type").notNull(),
   sizeBytes: integer("size_bytes").notNull(),
   dataBase64: text("data_base64").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// ─── Daily wellness tracking (Iconic Fitness mobile app) ───
+// Per-entry logs; daily totals are computed by summing rows for a given
+// loggedDate (YYYY-MM-DD, computed in Asia/Kolkata so a "day" matches IST).
+
+export const waterLogsTable = pgTable("water_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  loggedDate: text("logged_date").notNull(),
+  amountMl: integer("amount_ml").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const mealLogsTable = pgTable("meal_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  loggedDate: text("logged_date").notNull(),
+  mealType: text("meal_type").notNull(),
+  name: text("name").notNull(),
+  calories: integer("calories").notNull(),
+  proteinG: integer("protein_g").notNull().default(0),
+  carbsG: integer("carbs_g").notNull().default(0),
+  fatG: integer("fat_g").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const workoutLogsTable = pgTable("workout_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  loggedDate: text("logged_date").notNull(),
+  type: text("type").notNull(),
+  durationMin: integer("duration_min").notNull(),
+  calories: integer("calories").notNull().default(0),
+  steps: integer("steps").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

@@ -20,6 +20,7 @@ import notificationsRouter from "./notifications";
 import ticketsRouter from "./tickets";
 import aiRouter from "./ai";
 import agencyRouter from "./agency";
+import trackingRouter from "./tracking";
 
 const router: IRouter = Router();
 
@@ -44,5 +45,6 @@ router.use(notificationsRouter);
 router.use(ticketsRouter);
 router.use(aiRouter);
 router.use(agencyRouter);
+router.use(trackingRouter);
 
 export default router;
