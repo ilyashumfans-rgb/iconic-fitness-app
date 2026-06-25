@@ -18,10 +18,12 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Image,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -40,7 +42,42 @@ import { useColors } from "@/hooks/useColors";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { istToday, formatClock, formatDateLabel } from "@/lib/dates";
 import { resolveImageUrl } from "@/lib/images";
-import { exploreUrl, openExternal, promoVideoUrl, storeUrl } from "@/lib/links";
+import { exploreUrl, openExternal, storeUrl, websiteUrl } from "@/lib/links";
+
+type StoryVideo = {
+  name: string;
+  role: string;
+  quote: string;
+  src: string;
+  poster: string;
+};
+
+const STORY_VIDEOS: StoryVideo[] = [
+  {
+    name: "Rikitha",
+    role: "Fashion Designer · Entrepreneur",
+    quote:
+      "One pass, every gym near me — I finally stopped making excuses and started showing up.",
+    src: `${websiteUrl}/media/testimonial-rikitha.mp4`,
+    poster: `${websiteUrl}/media/testimonial-rikitha-poster.jpg`,
+  },
+  {
+    name: "Suraj",
+    role: "Product Manager · IT Services",
+    quote:
+      "The flexibility is unreal. I train wherever my day takes me and never miss a session.",
+    src: `${websiteUrl}/media/testimonial-suraj.mp4`,
+    poster: `${websiteUrl}/media/testimonial-suraj-poster.jpg`,
+  },
+  {
+    name: "Albha",
+    role: "IT Professional",
+    quote:
+      "Best decision I made this year. The gyms are world-class and the community keeps me going.",
+    src: `${websiteUrl}/media/testimonial-albha.mp4`,
+    poster: `${websiteUrl}/media/testimonial-albha-poster.jpg`,
+  },
+];
 
 const CATEGORIES: {
   label: string;
@@ -259,31 +296,8 @@ export default function HomeScreen() {
         </ScrollView>
       )}
 
-      {/* Watch our story (promo video) */}
-      <Pressable onPress={() => openExternal(promoVideoUrl)}>
-        <View style={[styles.videoCard, { borderColor: colors.border }]}>
-          <LinearGradient
-            colors={["#1F2A12", "#0A0C08"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-          <View style={styles.videoText}>
-            <AppText weight="600" size={12} color={colors.primary}>
-              WATCH OUR STORY
-            </AppText>
-            <AppText weight="700" size={20} style={{ marginTop: 4 }}>
-              See Iconic in motion
-            </AppText>
-            <AppText muted size={13} style={{ marginTop: 4 }}>
-              A look inside the experience.
-            </AppText>
-          </View>
-          <View style={[styles.playBtn, { backgroundColor: colors.primary }]}>
-            <Feather name="play" size={26} color={colors.primaryForeground} />
-          </View>
-        </View>
-      </Pressable>
+      {/* Watch our story (member testimonials) */}
+      <StorySection />
 
       {/* Shop + Website */}
       <View style={styles.linkRow}>
@@ -680,6 +694,112 @@ function CategoryTile({
         {label}
       </AppText>
     </Pressable>
+  );
+}
+
+function StorySection() {
+  const colors = useColors();
+  const [active, setActive] = useState<StoryVideo | null>(null);
+
+  return (
+    <>
+      <SectionHeader title="Watch our story" />
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.gymRow}
+        style={{ marginBottom: 28 }}
+      >
+        {STORY_VIDEOS.map((s) => (
+          <Pressable
+            key={s.name}
+            onPress={() => setActive(s)}
+            style={({ pressed }) => [
+              styles.storyCard,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+                opacity: pressed ? 0.92 : 1,
+              },
+            ]}
+          >
+            <View style={styles.storyPosterWrap}>
+              <Image source={{ uri: s.poster }} style={styles.storyPoster} />
+              <LinearGradient
+                colors={["transparent", "rgba(10,12,8,0.85)"]}
+                style={StyleSheet.absoluteFill}
+              />
+              <View
+                style={[styles.storyPlayBtn, { backgroundColor: colors.primary }]}
+              >
+                <Feather name="play" size={24} color={colors.primaryForeground} />
+              </View>
+            </View>
+            <View style={styles.storyBody}>
+              <AppText weight="700" size={16}>
+                {s.name}
+              </AppText>
+              <AppText size={12} color={colors.primary} style={{ marginTop: 2 }}>
+                {s.role}
+              </AppText>
+              <AppText muted size={13} style={{ marginTop: 8 }} numberOfLines={3}>
+                “{s.quote}”
+              </AppText>
+            </View>
+          </Pressable>
+        ))}
+      </ScrollView>
+
+      {active ? (
+        <StoryVideoModal story={active} onClose={() => setActive(null)} />
+      ) : null}
+    </>
+  );
+}
+
+function StoryVideoModal({
+  story,
+  onClose,
+}: {
+  story: StoryVideo;
+  onClose: () => void;
+}) {
+  const player = useVideoPlayer(story.src, (p) => {
+    p.play();
+  });
+
+  return (
+    <Modal
+      visible
+      animationType="fade"
+      onRequestClose={onClose}
+      supportedOrientations={["portrait", "landscape"]}
+    >
+      <View style={styles.storyModalRoot}>
+        <VideoView
+          player={player}
+          style={styles.storyModalVideo}
+          contentFit="contain"
+          allowsFullscreen
+          nativeControls
+        />
+        <View style={styles.storyModalCaption} pointerEvents="none">
+          <AppText weight="700" size={18} color="#FFFFFF">
+            {story.name}
+          </AppText>
+          <AppText size={13} color="rgba(255,255,255,0.7)" style={{ marginTop: 2 }}>
+            {story.role}
+          </AppText>
+        </View>
+        <Pressable
+          onPress={onClose}
+          style={styles.storyModalClose}
+          hitSlop={10}
+        >
+          <Feather name="x" size={22} color="#FFFFFF" />
+        </Pressable>
+      </View>
+    </Modal>
   );
 }
 
@@ -1259,25 +1379,48 @@ const styles = StyleSheet.create({
     backgroundColor: "#0A0C08",
   },
 
-  // Video card
-  videoCard: {
-    height: 130,
-    borderRadius: 22,
+  // Story testimonial cards
+  storyCard: {
+    width: 230,
+    borderRadius: 20,
     overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    marginBottom: 24,
   },
-  videoText: { flex: 1 },
-  playBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  storyPosterWrap: { height: 300, width: "100%" },
+  storyPoster: { width: "100%", height: "100%" },
+  storyPlayBtn: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    marginTop: -27,
+    marginLeft: -27,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     alignItems: "center",
     justifyContent: "center",
   },
+  storyBody: { padding: 14 },
+  // Story video player modal
+  storyModalRoot: {
+    flex: 1,
+    backgroundColor: "#000",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  storyModalVideo: { width: "100%", height: "78%" },
+  storyModalClose: {
+    position: "absolute",
+    top: 54,
+    right: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.14)",
+  },
+  storyModalCaption: { position: "absolute", bottom: 64, left: 24, right: 24 },
 
   // Link tiles
   linkRow: { flexDirection: "row", gap: 12, marginBottom: 28 },
