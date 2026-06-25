@@ -18,6 +18,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AnimatedSplash } from "@/components/AnimatedSplash";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { GuestProvider } from "@/hooks/useGuest";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -108,12 +109,14 @@ export default function RootLayout() {
           <ErrorBoundary>
             <QueryClientProvider client={queryClient}>
               <ApiAuthBridge />
-              <GestureHandlerRootView style={{ flex: 1 }}>
-                <RootLayoutNav />
-                {!splashDone ? (
-                  <AnimatedSplash onFinish={() => setSplashDone(true)} />
-                ) : null}
-              </GestureHandlerRootView>
+              <GuestProvider>
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                  <RootLayoutNav />
+                  {!splashDone ? (
+                    <AnimatedSplash onFinish={() => setSplashDone(true)} />
+                  ) : null}
+                </GestureHandlerRootView>
+              </GuestProvider>
             </QueryClientProvider>
           </ErrorBoundary>
         </SafeAreaProvider>

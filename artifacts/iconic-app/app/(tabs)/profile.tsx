@@ -18,6 +18,7 @@ import { Field } from "@/components/Field";
 import { Screen } from "@/components/Screen";
 import { Chip, ChipRow, SectionHeader } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
+import { useGuest } from "@/hooks/useGuest";
 import {
   cancelDailyReminder,
   getReminderHour,
@@ -31,6 +32,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { user } = useUser();
   const { signOut } = useClerk();
+  const { isGuest, exitGuest } = useGuest();
   const queryClient = useQueryClient();
 
   const meQuery = useGetMe();
@@ -123,9 +125,15 @@ export default function ProfileScreen() {
     try {
       await signOut();
     } finally {
+      exitGuest();
       queryClient.clear();
       router.replace("/(auth)/sign-in");
     }
+  };
+
+  const onLogIn = () => {
+    exitGuest();
+    router.replace("/(auth)/sign-in");
   };
 
   const onSignOut = () => {
@@ -254,12 +262,20 @@ export default function ProfileScreen() {
       </Card>
 
       <View style={{ marginTop: 28 }}>
-        <Button
-          label="Log out"
-          onPress={onSignOut}
-          variant="ghost"
-          icon="log-out"
-        />
+        {isGuest ? (
+          <Button
+            label="Log in or create account"
+            onPress={onLogIn}
+            icon="log-in"
+          />
+        ) : (
+          <Button
+            label="Log out"
+            onPress={onSignOut}
+            variant="ghost"
+            icon="log-out"
+          />
+        )}
       </View>
     </Screen>
   );

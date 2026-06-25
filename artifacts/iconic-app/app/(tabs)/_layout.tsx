@@ -3,13 +3,15 @@ import { Feather } from "@expo/vector-icons";
 import { Redirect, Tabs } from "expo-router";
 
 import { useColors } from "@/hooks/useColors";
+import { useGuest } from "@/hooks/useGuest";
 
 export default function TabsLayout() {
   const colors = useColors();
   const { isLoaded, isSignedIn } = useAuth();
+  const { isGuest } = useGuest();
 
   if (!isLoaded) return null;
-  if (!isSignedIn) return <Redirect href="/(auth)/sign-in" />;
+  if (!isSignedIn && !isGuest) return <Redirect href="/(auth)/sign-in" />;
 
   return (
     <Tabs

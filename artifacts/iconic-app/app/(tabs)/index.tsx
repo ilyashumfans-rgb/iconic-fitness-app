@@ -65,6 +65,8 @@ export default function HomeScreen() {
       await queryClient.invalidateQueries({
         queryKey: getGetTrackingSummaryQueryKey(),
       });
+    } catch {
+      // Guests (and any unauthenticated state) can't log data — fail quietly.
     } finally {
       setQuickLogging(false);
     }

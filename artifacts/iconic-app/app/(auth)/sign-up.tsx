@@ -1,10 +1,10 @@
 import { useSignUp, useSSO } from "@clerk/expo";
-import { Feather } from "@expo/vector-icons";
 import * as AuthSession from "expo-auth-session";
 import { Link, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useCallback, useEffect, useState } from "react";
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -18,6 +18,7 @@ import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
 import { Field } from "@/components/Field";
 import { useColors } from "@/hooks/useColors";
+import { useGuest } from "@/hooks/useGuest";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -27,6 +28,7 @@ export default function SignUpScreen() {
   const insets = useSafeAreaInsets();
   const { signUp, fetchStatus } = useSignUp();
   const { startSSOFlow } = useSSO();
+  const { exitGuest } = useGuest();
 
   const [stage, setStage] = useState<"form" | "verify">("form");
   const [name, setName] = useState("");
@@ -74,6 +76,7 @@ export default function SignUpScreen() {
             // Name is optional; ignore if the instance rejects it.
           }
         }
+        exitGuest();
         await signUp.finalize({ navigate: () => router.replace("/(tabs)") });
       } else {
         setError("Invalid code. Please try again.");
@@ -93,6 +96,7 @@ export default function SignUpScreen() {
         redirectUrl: AuthSession.makeRedirectUri(),
       });
       if (createdSessionId && setActive) {
+        exitGuest();
         await setActive({
           session: createdSessionId,
           navigate: () => router.replace("/(tabs)"),
@@ -118,9 +122,11 @@ export default function SignUpScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.logo, { backgroundColor: colors.primary }]}>
-          <Feather name="zap" size={30} color={colors.primaryForeground} />
-        </View>
+        <Image
+          source={require("@/assets/images/icon.png")}
+          style={styles.logo}
+          resizeMode="cover"
+        />
 
         {stage === "form" ? (
           <>
@@ -272,11 +278,10 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { paddingHorizontal: 24 },
   logo: {
-    width: 64,
-    height: 64,
+    width: 72,
+    height: 72,
     borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
+    overflow: "hidden",
   },
   form: { gap: 16 },
   divider: { flexDirection: "row", alignItems: "center", gap: 12 },

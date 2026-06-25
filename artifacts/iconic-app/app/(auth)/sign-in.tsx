@@ -5,6 +5,7 @@ import { Link, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useCallback, useEffect, useState } from "react";
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -18,6 +19,7 @@ import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
 import { Field } from "@/components/Field";
 import { useColors } from "@/hooks/useColors";
+import { useGuest } from "@/hooks/useGuest";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -27,6 +29,7 @@ export default function SignInScreen() {
   const insets = useSafeAreaInsets();
   const { signIn, fetchStatus } = useSignIn();
   const { startSSOFlow } = useSSO();
+  const { enterGuest, exitGuest } = useGuest();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,6 +56,7 @@ export default function SignInScreen() {
         return;
       }
       if (signIn.status === "complete") {
+        exitGuest();
         await signIn.finalize({ navigate: () => router.replace("/(tabs)") });
       } else {
         setError("Additional verification is required to sign in.");
@@ -72,6 +76,7 @@ export default function SignInScreen() {
         redirectUrl: AuthSession.makeRedirectUri(),
       });
       if (createdSessionId && setActive) {
+        exitGuest();
         await setActive({
           session: createdSessionId,
           navigate: () => router.replace("/(tabs)"),
@@ -82,7 +87,12 @@ export default function SignInScreen() {
     } finally {
       setGoogleLoading(false);
     }
-  }, [googleLoading, startSSOFlow, router]);
+  }, [googleLoading, startSSOFlow, router, exitGuest]);
+
+  const onContinueWithoutLogin = useCallback(() => {
+    enterGuest();
+    router.replace("/(tabs)");
+  }, [enterGuest, router]);
 
   return (
     <KeyboardAvoidingView
@@ -97,9 +107,11 @@ export default function SignInScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.logo, { backgroundColor: colors.primary }]}>
-          <Feather name="zap" size={30} color={colors.primaryForeground} />
-        </View>
+        <Image
+          source={require("@/assets/images/icon.png")}
+          style={styles.logo}
+          resizeMode="cover"
+        />
         <AppText weight="700" size={32} style={{ marginTop: 24 }}>
           Welcome back
         </AppText>
@@ -169,6 +181,21 @@ export default function SignInScreen() {
             </Pressable>
           </Link>
         </View>
+
+        <Pressable
+          onPress={onContinueWithoutLogin}
+          hitSlop={8}
+          style={styles.skip}
+        >
+          <AppText weight="600" size={14} color={colors.mutedForeground}>
+            Continue without login
+          </AppText>
+          <Feather
+            name="arrow-right"
+            size={16}
+            color={colors.mutedForeground}
+          />
+        </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -191,13 +218,20 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { paddingHorizontal: 24 },
   logo: {
-    width: 64,
-    height: 64,
+    width: 72,
+    height: 72,
     borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
+    overflow: "hidden",
   },
   form: { gap: 16 },
+  skip: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 24,
+    paddingVertical: 8,
+  },
   divider: { flexDirection: "row", alignItems: "center", gap: 12 },
   line: { flex: 1, height: StyleSheet.hairlineWidth },
   footer: {

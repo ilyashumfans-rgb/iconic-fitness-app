@@ -1,29 +1,37 @@
 ---
-name: Iconic app login is enforced (persisted-session red herring)
-description: Why "login not required / I reach Home without signing in" reports on the Expo app are not a bug.
+name: Iconic app auth — guest mode + persisted-session red herring
+description: How login gating works on the Expo app, the "Continue without login" guest bypass, and its invariant.
 ---
 
-# "Login isn't required on my device" — almost always a remembered session
+# Login gating, guest mode, and the persisted-session red herring
 
-The Expo member app (`artifacts/iconic-app`) **does** enforce login. Every entry point
-gates on Clerk auth and `<Redirect href="/(auth)/sign-in">` when signed out:
-`(tabs)/_layout.tsx`, `(auth)/_layout.tsx` (inverse), and each root modal
-(`water.tsx`, `diet.tsx`, `workouts.tsx`). Wiring matches the clerk-auth canonical
-snippets (status `managed`).
+The Expo member app (`artifacts/iconic-app`) gates entry on Clerk auth **OR** a
+guest flag. Entry points: `(tabs)/_layout.tsx` (allows `isSignedIn || isGuest`),
+`(auth)/_layout.tsx` (redirects signed-in users to tabs), and root modals.
 
-**Why users still land on Home without a visible login:** Clerk's `tokenCache`
-(`@clerk/expo/token-cache`, expo-secure-store) persists the session across launches —
-standard "stay logged in". A leftover session from development testing makes it look
-like login is skipped.
+## Guest mode ("Continue without login")
+- In-memory React context: `hooks/useGuest.tsx` (`isGuest`, `enterGuest`, `exitGuest`),
+  provider mounted in `app/_layout.tsx`. Not persisted → resets each cold launch.
+- Sign-in screen has a "Continue without login" action → `enterGuest()` + go to tabs.
+- Profile shows "Log in or create account" (not "Log out") when `isGuest`.
 
-**Self-test / fix:** Profile tab → Log out (`useClerk().signOut()` clears the cache) →
-reopen → sign-in screen appears.
+**Invariant — keep guest state consistent with real auth:** call `exitGuest()` on every
+auth-completion path (sign-in finalize, sign-up finalize, Google SSO `setActive`) and on
+sign-out. **Why:** otherwise a stale `isGuest=true` keeps tab access open after logout, or
+mixes guest + authenticated state. **How to apply:** any new auth/logout handler must also
+clear guest.
 
-**Why:** Spent a full investigation here; the symptom is convincing but the code is
-correct. Don't re-audit the gates — confirm the user simply has a remembered session.
+**Guests + authed APIs:** tracking/bookings endpoints need a Clerk token, so they 401 for
+guests. Screens must degrade gracefully (null-safe reads; mutations need a `catch`). Don't
+let a guest-triggerable mutation throw an unhandled rejection.
 
-**How to apply:** If asked to "force login every launch", the user previously *declined*
-that (chose normal stay-logged-in). Only disable persistence if they explicitly ask.
+## Persisted-session red herring
+"Login isn't required on my device" is usually Clerk's `tokenCache` (expo-secure-store)
+remembering a session from earlier testing — not a gate bug. Fix: Profile → Log out.
 
-**Aside:** dev web preview is blank because Clerk init differs on web; verify auth on a
-device/Expo Go, not the web preview.
+**Aside:** dev web preview shows white briefly on cold load (fonts not yet loaded → root
+returns null), then a ~3s `AnimatedSplash`, then the app. Each fresh page load (incl. the
+screenshot tool) restarts that splash, so screenshots often catch the splash, not the
+screen — verify via browser logs (Clerk loaded + DOM nodes present) or on a device.
+Separately, `@clerk/expo` throws `Cannot find native module 'ClerkExpo'` in Expo Go on
+native — that's a dev-build requirement, unrelated to web rendering.
