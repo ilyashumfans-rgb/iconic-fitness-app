@@ -5,6 +5,7 @@
 - [Prod edge 403 on large uploads](prod-edge-upload-limit.md) — Google Frontend edge intermittently 403s big POST bodies before Express; recompress images client-side small. Dev works, prod 403s.
 - [Dev → prod catalog import](prod-data-import.md) — dev/prod are separate DBs; startup seeder skips populated tables. Mirror dev→prod via admin "Import workspace data" button (atomic truncate+reseed from regenerated snapshot).
 - [Gym distance display & coords](gym-distance-display.md) — distance only shows with real user coords; "all gyms same km" is a placeholder-coord DATA bug, not haversine code.
+- [Iconic app login enforced](iconic-app-auth-enforced.md) — "login not required" on the Expo app = remembered Clerk session, NOT a gate bug; fix is Profile → Log out.
 - [Expo Clerk mobile auth](expo-clerk-mobile.md) — `@clerk/expo` v3 Future signals API; root-level setAuthTokenGetter; orval enabled needs queryKey; GestureHandlerRootView flex:1.
 - [Code-default + lazy materialize](code-default-lazy-materialize.md) — per-entity config defaults in code, materialize rows only on first owner edit; appears on prod with no data-import dance.
 - [ffmpeg parallel encode sync flakiness](ffmpeg-parallel-encode-sync.md) — background `&`+`wait` file writes intermittently don't persist here; encode serially, `sync`, verify each with `stat`.
