@@ -11,12 +11,19 @@ export default function StoreDetail() {
   const [err, setErr] = useState<string | null>(null);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+  const [size, setSize] = useState<string>("");
+  const [color, setColor] = useState<string>("");
+  const [variantErr, setVariantErr] = useState<string | null>(null);
   const cart = useCart();
 
   useEffect(() => {
     if (!slug) return;
     setErr(null);
     setProduct(null);
+    setSize("");
+    setColor("");
+    setVariantErr(null);
+    setQty(1);
     storeApi
       .getProduct(slug)
       .then(setProduct)
@@ -49,7 +56,19 @@ export default function StoreDetail() {
       : 0;
   const outOfStock = product.stock <= 0;
 
-  const addToCart = () => {
+  const hasSizes = (product.sizes?.length ?? 0) > 0;
+  const hasColors = (product.colors?.length ?? 0) > 0;
+
+  const addToCart = (): boolean => {
+    if (hasSizes && !product.sizes.includes(size)) {
+      setVariantErr("Please select a size.");
+      return false;
+    }
+    if (hasColors && !product.colors.includes(color)) {
+      setVariantErr("Please select a colour.");
+      return false;
+    }
+    setVariantErr(null);
     cart.add(
       {
         productId: product.id,
@@ -59,16 +78,18 @@ export default function StoreDetail() {
         imageUrl: product.imageUrl,
         vendorPartnerId: product.vendorPartnerId,
         vendorName: product.vendor?.name,
+        size: size || undefined,
+        color: color || undefined,
       },
       qty,
     );
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
+    return true;
   };
 
   const buyNow = () => {
-    addToCart();
-    navigate("/checkout");
+    if (addToCart()) navigate("/checkout");
   };
 
   return (
@@ -117,6 +138,60 @@ export default function StoreDetail() {
             <p className="mt-5 text-muted-foreground leading-relaxed whitespace-pre-line">
               {product.description}
             </p>
+          )}
+
+          {hasSizes && (
+            <div className="mt-6">
+              <div className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2">
+                Size
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {product.sizes.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => {
+                      setSize(s);
+                      setVariantErr(null);
+                    }}
+                    className={
+                      size === s
+                        ? "px-4 py-2 rounded-lg bg-gradient-brand text-white font-bold text-sm border border-transparent"
+                        : "px-4 py-2 rounded-lg bg-card border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:border-primary/40"
+                    }
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {hasColors && (
+            <div className="mt-5">
+              <div className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2">
+                Colour
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {product.colors.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => {
+                      setColor(c);
+                      setVariantErr(null);
+                    }}
+                    className={
+                      color === c
+                        ? "px-4 py-2 rounded-lg bg-gradient-brand text-white font-bold text-sm border border-transparent"
+                        : "px-4 py-2 rounded-lg bg-card border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:border-primary/40"
+                    }
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
 
           <div className="mt-6 flex items-center gap-3">
@@ -170,6 +245,9 @@ export default function StoreDetail() {
               Buy now
             </button>
           </div>
+          {variantErr && (
+            <p className="mt-3 text-sm text-red-500 font-semibold">{variantErr}</p>
+          )}
 
           <div className="mt-8 grid grid-cols-3 gap-3 text-xs">
             <div className="p-3 rounded-lg bg-card border border-border">

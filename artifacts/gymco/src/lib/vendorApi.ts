@@ -23,6 +23,8 @@ export type VendorProduct = {
   originalPriceInr: number;
   imageUrl: string;
   gallery: string[];
+  sizes: string[];
+  colors: string[];
   stock: number;
   status: string;
   createdAt: string;
@@ -36,6 +38,8 @@ export type VendorOrderItem = {
   productName: string;
   unitPriceInr: number;
   qty: number;
+  status: string;
+  variant: string;
 };
 
 export type VendorOrder = {
@@ -49,8 +53,21 @@ export type VendorOrder = {
   totalInr: number;
   paymentMethod: string;
   status: string;
+  vendorStatus: string;
   createdAt: string;
   items: VendorOrderItem[];
+};
+
+export type VendorStoreStats = {
+  productCount: number;
+  activeProducts: number;
+  lowStock: number;
+  outOfStock: number;
+  orderCount: number;
+  grossInr: number;
+  commissionPct: number;
+  commissionInr: number;
+  netInr: number;
 };
 
 async function request<T>(
@@ -110,6 +127,12 @@ export const vendorApi = {
       request<{ ok: true }>(`/partner/products/${id}`, { method: "DELETE" }),
   },
   orders: () => request<VendorOrder[]>("/partner/orders"),
+  updateOrderStatus: (id: number, status: string) =>
+    request<{ ok: true; status: string }>(`/partner/orders/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    }),
+  storeStats: () => request<VendorStoreStats>("/partner/store-stats"),
   notifications: {
     list: () =>
       request<

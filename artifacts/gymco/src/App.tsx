@@ -69,6 +69,7 @@ import AdminUserManagement from "@/pages/admin/UserManagement";
 import AdminMemberships from "@/pages/admin/Memberships";
 import AdminMembershipManagement from "@/pages/admin/MembershipManagement";
 import AdminProducts from "@/pages/admin/Products";
+import AdminCategories from "@/pages/admin/Categories";
 import AdminOrders from "@/pages/admin/Orders";
 import AdminVendors from "@/pages/admin/Vendors";
 import AdminSsoCallback from "@/pages/admin/SsoCallback";
@@ -348,6 +349,7 @@ function AppShell() {
         <Route path="/admin/membership-management" component={AdminMembershipManagement} />
         <Route path="/admin/vendors" component={AdminVendors} />
         <Route path="/admin/products" component={AdminProducts} />
+        <Route path="/admin/categories" component={AdminCategories} />
         <Route path="/admin/orders" component={AdminOrders} />
         <Route path="/admin/staff" component={AdminStaffManagement} />
         <Route path="/admin/admins" component={AdminTeam} />

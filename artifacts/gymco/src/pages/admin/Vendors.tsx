@@ -19,6 +19,7 @@ type Vendor = {
   city: string;
   status: string;
   kind: string;
+  commissionPct: number;
   createdAt: string;
 };
 
@@ -50,6 +51,7 @@ function CreateVendorForm({ onCreated }: { onCreated: () => void }) {
     city: "",
     password: "",
     kind: "vendor",
+    commissionPct: 10,
   };
   const [f, setF] = useState(empty);
   const [busy, setBusy] = useState(false);
@@ -159,6 +161,22 @@ function CreateVendorForm({ onCreated }: { onCreated: () => void }) {
               <option value="both">Vendor + Gym partner</option>
             </select>
           </div>
+          <div>
+            <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+              Commission %
+            </label>
+            <input
+              type="number"
+              min={0}
+              max={100}
+              className={inputCls}
+              value={f.commissionPct}
+              onChange={(e) =>
+                setF({ ...f, commissionPct: Number(e.target.value) })
+              }
+              placeholder="10"
+            />
+          </div>
         </div>
         {err && (
           <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg p-3">
@@ -193,6 +211,26 @@ function VendorRow({
   const [newPwd, setNewPwd] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [commission, setCommission] = useState(String(row.commissionPct ?? 10));
+  const [savingCommission, setSavingCommission] = useState(false);
+
+  const saveCommission = async () => {
+    const pct = Number(commission);
+    if (Number.isNaN(pct) || pct < 0 || pct > 100) {
+      setErr("Commission must be 0–100");
+      return;
+    }
+    setSavingCommission(true);
+    setErr(null);
+    try {
+      await adminApi.partners.update(row.id, { commissionPct: pct });
+      onChanged();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setSavingCommission(false);
+    }
+  };
 
   const setStatus = async (status: string) => {
     setBusy(true);
@@ -259,6 +297,26 @@ function VendorRow({
       </td>
       <td className="px-5 py-4 text-xs text-slate-400">
         {new Date(row.createdAt).toLocaleDateString()}
+      </td>
+      <td className="px-5 py-4">
+        <div className="flex items-center gap-1">
+          <input
+            type="number"
+            min={0}
+            max={100}
+            value={commission}
+            onChange={(e) => setCommission(e.target.value)}
+            className="text-xs px-2 py-1 rounded bg-slate-800 border border-slate-700 text-white w-16"
+          />
+          <span className="text-xs text-slate-500">%</span>
+          <button
+            onClick={saveCommission}
+            disabled={savingCommission || commission === String(row.commissionPct)}
+            className="text-xs px-2 py-1 rounded bg-lime-500/20 text-lime-300 border border-lime-500/40 disabled:opacity-40"
+          >
+            {savingCommission ? "…" : "Save"}
+          </button>
+        </div>
       </td>
       <td className="px-5 py-4">
         <div className="flex flex-col gap-2">
@@ -391,6 +449,7 @@ export default function AdminVendors() {
                   <th className="px-5 py-3">Vendor</th>
                   <th className="px-5 py-3">Status</th>
                   <th className="px-5 py-3">Created</th>
+                  <th className="px-5 py-3">Commission</th>
                   <th className="px-5 py-3">Actions</th>
                 </tr>
               </thead>
@@ -398,7 +457,7 @@ export default function AdminVendors() {
                 {loading ? (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={5}
                       className="px-5 py-8 text-center text-slate-500"
                     >
                       Loading…
@@ -407,7 +466,7 @@ export default function AdminVendors() {
                 ) : loadErr ? (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={5}
                       className="px-5 py-8 text-center text-red-400"
                     >
                       {loadErr}
@@ -416,7 +475,7 @@ export default function AdminVendors() {
                 ) : rows.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={5}
                       className="px-5 py-8 text-center text-slate-500"
                     >
                       No vendors yet. Create one above.

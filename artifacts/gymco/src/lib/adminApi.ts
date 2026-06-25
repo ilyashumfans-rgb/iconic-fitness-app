@@ -125,6 +125,36 @@ export const adminApi = {
     remove: (id: number) =>
       request<{ ok: true }>(`/admin/products/${id}`, { method: "DELETE" }),
   },
+  categories: {
+    list: () =>
+      request<
+        {
+          id: number;
+          name: string;
+          slug: string;
+          sortOrder: number;
+          isActive: boolean;
+          createdAt: string;
+        }[]
+      >("/admin/categories"),
+    create: (body: {
+      name: string;
+      slug?: string;
+      sortOrder?: number;
+      isActive?: boolean;
+    }) =>
+      request<any>("/admin/categories", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: number, body: Record<string, unknown>) =>
+      request<any>(`/admin/categories/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: number) =>
+      request<{ ok: true }>(`/admin/categories/${id}`, { method: "DELETE" }),
+  },
   orders: {
     list: () => request<any[]>("/admin/orders"),
     update: (id: number, body: Record<string, unknown>) =>

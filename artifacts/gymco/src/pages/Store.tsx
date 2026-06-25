@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { storeApi, type Product } from "@/lib/storeApi";
+import { storeApi, type Product, type StoreCategory } from "@/lib/storeApi";
 import { useCart } from "@/lib/cart";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,11 +73,22 @@ const CATEGORIES: Category[] = [
   },
 ];
 
+const CATEGORY_ICONS: Record<string, typeof Shirt> = {
+  apparel: Shirt,
+  supplements: FlaskConical,
+  equipment: Dumbbell,
+  accessories: Watch,
+  wellness: Leaf,
+};
+
 const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
 function ProductCard({ product }: { product: Product }) {
   const cart = useCart();
+  const [, navigate] = useLocation();
   const [added, setAdded] = useState(false);
+  const hasVariants =
+    (product.sizes?.length ?? 0) > 0 || (product.colors?.length ?? 0) > 0;
   const disc =
     product.originalPriceInr > product.priceInr
       ? Math.round(
@@ -92,6 +103,10 @@ function ProductCard({ product }: { product: Product }) {
     e.preventDefault();
     e.stopPropagation();
     if (outOfStock) return;
+    if (hasVariants) {
+      navigate(`/store/${product.slug}`);
+      return;
+    }
     cart.add({
       productId: product.id,
       slug: product.slug,
@@ -162,6 +177,7 @@ function ProductCard({ product }: { product: Product }) {
 export default function Store() {
   const cart = useCart();
   const [products, setProducts] = useState<Product[] | null>(null);
+  const [categories, setCategories] = useState<StoreCategory[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [active, setActive] = useState<string>("all");
   const [q, setQ] = useState("");
@@ -173,6 +189,10 @@ export default function Store() {
       .listProducts()
       .then((p) => alive && setProducts(p))
       .catch((e) => alive && setErr(e?.message ?? String(e)));
+    storeApi
+      .listCategories()
+      .then((c) => alive && setCategories(c))
+      .catch(() => {});
     return () => {
       alive = false;
     };
@@ -317,13 +337,13 @@ export default function Store() {
               active={active === "all"}
               onClick={() => setActive("all")}
             />
-            {CATEGORIES.map((c) => (
+            {categories.map((c) => (
               <CategoryPill
-                key={c.key}
-                label={c.label}
-                icon={c.icon}
-                active={active === c.key}
-                onClick={() => setActive(c.key)}
+                key={c.slug}
+                label={c.name}
+                icon={CATEGORY_ICONS[c.slug] ?? LayoutGrid}
+                active={active === c.slug}
+                onClick={() => setActive(c.slug)}
               />
             ))}
           </div>

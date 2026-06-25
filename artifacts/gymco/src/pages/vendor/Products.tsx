@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { VendorLayout, VendorCard } from "@/components/vendor/VendorLayout";
 import { vendorApi, type VendorProduct } from "@/lib/vendorApi";
+import { storeApi, type StoreCategory } from "@/lib/storeApi";
+import FileUpload from "@/components/FileUpload";
 import { Plus, Trash2, X, Package, Pencil } from "lucide-react";
 
 const INPUT =
@@ -13,26 +15,40 @@ type FormState = {
   priceInr: number;
   originalPriceInr: number;
   imageUrl: string;
+  gallery: string[];
+  sizes: string;
+  colors: string;
   stock: number;
   status: string;
 };
 
-const blank = (): FormState => ({
+const blank = (category: string): FormState => ({
   name: "",
   description: "",
-  category: "apparel",
+  category,
   priceInr: 0,
   originalPriceInr: 0,
   imageUrl: "",
+  gallery: [],
+  sizes: "",
+  colors: "",
   stock: 0,
   status: "active",
 });
 
+function toList(s: string): string[] {
+  return s
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
+}
+
 export default function VendorProducts() {
   const [rows, setRows] = useState<VendorProduct[]>([]);
+  const [categories, setCategories] = useState<StoreCategory[]>([]);
   const [editing, setEditing] = useState<VendorProduct | null>(null);
   const [creating, setCreating] = useState(false);
-  const [form, setForm] = useState<FormState>(blank());
+  const [form, setForm] = useState<FormState>(blank("apparel"));
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -40,6 +56,9 @@ export default function VendorProducts() {
     vendorApi.products.list().then(setRows).catch(() => setRows([]));
   };
   useEffect(load, []);
+  useEffect(() => {
+    storeApi.listCategories().then(setCategories).catch(() => setCategories([]));
+  }, []);
 
   const inr = new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -47,8 +66,10 @@ export default function VendorProducts() {
     maximumFractionDigits: 0,
   });
 
+  const defaultCat = categories[0]?.slug ?? "apparel";
+
   const openCreate = () => {
-    setForm(blank());
+    setForm(blank(defaultCat));
     setEditing(null);
     setCreating(true);
     setErr(null);
@@ -61,6 +82,9 @@ export default function VendorProducts() {
       priceInr: p.priceInr,
       originalPriceInr: p.originalPriceInr,
       imageUrl: p.imageUrl,
+      gallery: p.gallery ?? [],
+      sizes: (p.sizes ?? []).join(", "),
+      colors: (p.colors ?? []).join(", "),
       stock: p.stock,
       status: p.status,
     });
@@ -77,10 +101,15 @@ export default function VendorProducts() {
     setBusy(true);
     setErr(null);
     try {
+      const payload = {
+        ...form,
+        sizes: toList(form.sizes),
+        colors: toList(form.colors),
+      };
       if (editing) {
-        await vendorApi.products.update(editing.id, form);
+        await vendorApi.products.update(editing.id, payload);
       } else {
-        await vendorApi.products.create(form);
+        await vendorApi.products.create(payload);
       }
       close();
       load();
@@ -128,6 +157,7 @@ export default function VendorProducts() {
               <tr className="text-left text-xs uppercase tracking-wide text-slate-400 border-b border-lime-100">
                 <th className="px-5 py-3">Product</th>
                 <th className="px-5 py-3">Category</th>
+                <th className="px-5 py-3">Variants</th>
                 <th className="px-5 py-3">Price</th>
                 <th className="px-5 py-3">Stock</th>
                 <th className="px-5 py-3">Status</th>
@@ -161,6 +191,21 @@ export default function VendorProducts() {
                   </td>
                   <td className="px-5 py-3 capitalize text-slate-600">
                     {p.category}
+                  </td>
+                  <td className="px-5 py-3 text-xs text-slate-500">
+                    {(p.sizes?.length ?? 0) === 0 &&
+                    (p.colors?.length ?? 0) === 0 ? (
+                      <span className="text-slate-300">—</span>
+                    ) : (
+                      <div className="space-y-0.5">
+                        {p.sizes?.length ? (
+                          <div>Sizes: {p.sizes.join(", ")}</div>
+                        ) : null}
+                        {p.colors?.length ? (
+                          <div>Colours: {p.colors.join(", ")}</div>
+                        ) : null}
+                      </div>
+                    )}
                   </td>
                   <td className="px-5 py-3">
                     <div className="font-bold">{inr.format(p.priceInr)}</div>
@@ -254,11 +299,15 @@ export default function VendorProducts() {
                       setForm({ ...form, category: e.target.value })
                     }
                   >
-                    <option value="apparel">Apparel</option>
-                    <option value="equipment">Equipment</option>
-                    <option value="supplements">Supplements</option>
-                    <option value="accessories">Accessories</option>
-                    <option value="wellness">Wellness</option>
+                    {categories.length === 0 ? (
+                      <option value={form.category}>{form.category}</option>
+                    ) : (
+                      categories.map((c) => (
+                        <option key={c.slug} value={c.slug}>
+                          {c.name}
+                        </option>
+                      ))
+                    )}
                   </select>
                 </div>
                 <div>
@@ -319,17 +368,100 @@ export default function VendorProducts() {
                     }
                   />
                 </div>
-                <div className="sm:col-span-2">
+                <div>
                   <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5 font-bold">
-                    Image URL
+                    Sizes (comma separated)
                   </label>
                   <input
                     className={INPUT}
+                    value={form.sizes}
+                    onChange={(e) =>
+                      setForm({ ...form, sizes: e.target.value })
+                    }
+                    placeholder="S, M, L, XL"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5 font-bold">
+                    Colours (comma separated)
+                  </label>
+                  <input
+                    className={INPUT}
+                    value={form.colors}
+                    onChange={(e) =>
+                      setForm({ ...form, colors: e.target.value })
+                    }
+                    placeholder="Black, White, Lime"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5 font-bold">
+                    Main image
+                  </label>
+                  <div className="flex items-center gap-3">
+                    {form.imageUrl ? (
+                      <img
+                        src={form.imageUrl}
+                        alt=""
+                        className="h-16 w-16 rounded-lg object-cover border border-lime-100"
+                      />
+                    ) : (
+                      <div className="h-16 w-16 rounded-lg bg-lime-50 border border-lime-100" />
+                    )}
+                    <FileUpload
+                      label="Upload image"
+                      onUploaded={(urls) =>
+                        urls[0] && setForm((f) => ({ ...f, imageUrl: urls[0] }))
+                      }
+                    />
+                  </div>
+                  <input
+                    className={`${INPUT} mt-2`}
                     value={form.imageUrl}
                     onChange={(e) =>
                       setForm({ ...form, imageUrl: e.target.value })
                     }
-                    placeholder="https://…"
+                    placeholder="…or paste an image URL"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-xs uppercase tracking-wide text-slate-500 block mb-1.5 font-bold">
+                    Gallery images
+                  </label>
+                  {form.gallery.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {form.gallery.map((g, i) => (
+                        <div key={`${g}-${i}`} className="relative">
+                          <img
+                            src={g}
+                            alt=""
+                            className="h-16 w-16 rounded-lg object-cover border border-lime-100"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setForm((f) => ({
+                                ...f,
+                                gallery: f.gallery.filter((_, j) => j !== i),
+                              }))
+                            }
+                            className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <FileUpload
+                    label="Add gallery images"
+                    multiple
+                    onUploaded={(urls) =>
+                      setForm((f) => ({
+                        ...f,
+                        gallery: [...f.gallery, ...urls],
+                      }))
+                    }
                   />
                 </div>
                 <div className="sm:col-span-2">

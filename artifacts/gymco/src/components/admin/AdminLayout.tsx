@@ -14,6 +14,7 @@ import {
   Package,
   ShoppingBag,
   Store,
+  Tags,
   LogOut,
   RefreshCcw,
   Sparkles,
@@ -196,6 +197,11 @@ const SECTIONS: Section[] = [
         label: "Products",
         href: "/admin/products",
         icon: <Package className="h-4 w-4" />,
+      },
+      {
+        label: "Categories",
+        href: "/admin/categories",
+        icon: <Tags className="h-4 w-4" />,
       },
       {
         label: "Orders",

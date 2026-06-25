@@ -5,23 +5,56 @@ import { ReceiptText, Printer } from "lucide-react";
 
 const STATUS_STYLES: Record<string, string> = {
   placed: "bg-lime-50 text-lime-700 border-lime-200",
+  processing: "bg-amber-50 text-amber-700 border-amber-200",
   shipped: "bg-blue-50 text-blue-700 border-blue-200",
   delivered: "bg-emerald-50 text-emerald-700 border-emerald-200",
   cancelled: "bg-red-50 text-red-600 border-red-200",
 };
 
+const VENDOR_STATUSES = [
+  "placed",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+];
+
 export default function VendorOrders() {
   const [orders, setOrders] = useState<VendorOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState<VendorOrder | null>(null);
+  const [savingId, setSavingId] = useState<number | null>(null);
 
-  useEffect(() => {
+  const load = () => {
     vendorApi
       .orders()
       .then(setOrders)
       .catch(() => setOrders([]))
       .finally(() => setLoading(false));
-  }, []);
+  };
+  useEffect(load, []);
+
+  const changeStatus = async (orderId: number, status: string) => {
+    setSavingId(orderId);
+    try {
+      await vendorApi.updateOrderStatus(orderId, status);
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                vendorStatus: status,
+                items: o.items.map((it) => ({ ...it, status })),
+              }
+            : o,
+        ),
+      );
+    } catch {
+      load();
+    } finally {
+      setSavingId(null);
+    }
+  };
 
   const inr = new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -56,7 +89,7 @@ export default function VendorOrders() {
                 <th className="px-5 py-3">Ship to</th>
                 <th className="px-5 py-3">Items</th>
                 <th className="px-5 py-3">Your total</th>
-                <th className="px-5 py-3">Status</th>
+                <th className="px-5 py-3">Your status</th>
                 <th className="px-5 py-3 text-right">Bill</th>
               </tr>
             </thead>
@@ -88,14 +121,21 @@ export default function VendorOrders() {
                     {inr.format(myTotal(o))}
                   </td>
                   <td className="px-5 py-3">
-                    <span
-                      className={`text-[11px] font-bold uppercase tracking-wide px-2 py-1 rounded-md border ${
-                        STATUS_STYLES[o.status] ??
+                    <select
+                      value={o.vendorStatus}
+                      disabled={savingId === o.id}
+                      onChange={(e) => changeStatus(o.id, e.target.value)}
+                      className={`text-[11px] font-bold uppercase tracking-wide px-2 py-1 rounded-md border focus:outline-none focus:ring-2 focus:ring-lime-500/50 disabled:opacity-60 ${
+                        STATUS_STYLES[o.vendorStatus] ??
                         "bg-slate-100 text-slate-600 border-slate-200"
                       }`}
                     >
-                      {o.status}
-                    </span>
+                      {VENDOR_STATUSES.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
                   </td>
                   <td className="px-5 py-3 text-right">
                     <button
@@ -182,7 +222,15 @@ export default function VendorOrders() {
                 <tbody>
                   {open.items.map((it) => (
                     <tr key={it.id} className="border-b border-lime-100/60">
-                      <td className="py-2">{it.productName}</td>
+                      <td className="py-2">
+                        {it.productName}
+                        {it.variant ? (
+                          <span className="text-xs text-slate-500">
+                            {" "}
+                            · {it.variant}
+                          </span>
+                        ) : null}
+                      </td>
                       <td className="py-2 text-right">{it.qty}</td>
                       <td className="py-2 text-right">
                         {inr.format(it.unitPriceInr)}

@@ -697,6 +697,7 @@ const STAFF_PERMISSION_PREFIXES: ReadonlyArray<[string, string]> = [
   ["/partner/schedule", "classes"],
   ["/partner/products", "products"],
   ["/partner/orders", "products"],
+  ["/partner/store-stats", "products"],
 ];
 const STAFF_OWNER_ONLY_PREFIXES: ReadonlyArray<string> = ["/partner/documents"];
 // Routes open to every signed-in team member regardless of permissions
@@ -2191,6 +2192,8 @@ router.post(
         originalPriceInr: Number(b.originalPriceInr ?? b.priceInr),
         imageUrl: String(b.imageUrl),
         gallery: Array.isArray(b.gallery) ? b.gallery.map(String) : [],
+        sizes: Array.isArray(b.sizes) ? b.sizes.map(String) : [],
+        colors: Array.isArray(b.colors) ? b.colors.map(String) : [],
         stock: Number(b.stock ?? 0),
         status: String(b.status ?? "active"),
       })
@@ -2214,6 +2217,9 @@ router.patch(
     if (b.originalPriceInr !== undefined)
       patch.originalPriceInr = Number(b.originalPriceInr);
     if (b.imageUrl !== undefined) patch.imageUrl = String(b.imageUrl);
+    if (Array.isArray(b.gallery)) patch.gallery = b.gallery.map(String);
+    if (Array.isArray(b.sizes)) patch.sizes = b.sizes.map(String);
+    if (Array.isArray(b.colors)) patch.colors = b.colors.map(String);
     if (b.stock !== undefined) patch.stock = Number(b.stock);
     if (b.status !== undefined) patch.status = String(b.status);
     // vendorPartnerId is NOT patchable — locks ownership to the authenticated partner.
@@ -2283,8 +2289,110 @@ router.get(
       list.push(it);
       byOrder.set(it.orderId, list);
     }
-    // Only return this vendor's items (not other vendors' items in the same order)
-    res.json(orders.map((o) => ({ ...o, items: byOrder.get(o.id) ?? [] })));
+    // Only return this vendor's items (not other vendors' items in the same order).
+    // `vendorStatus` reflects this vendor's own fulfillment progress, derived
+    // from their items (the vendor PATCH sets all their items together, so they
+    // are uniform — "mixed" only appears for legacy/partial data).
+    res.json(
+      orders.map((o) => {
+        const its = byOrder.get(o.id) ?? [];
+        const statuses = Array.from(new Set(its.map((i) => i.status)));
+        const vendorStatus =
+          statuses.length === 1 ? statuses[0] : statuses.length === 0 ? "placed" : "mixed";
+        return { ...o, items: its, vendorStatus };
+      }),
+    );
+  },
+);
+
+const VENDOR_ORDER_STATUSES = new Set([
+  "placed",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+]);
+
+// A vendor updates the fulfillment status of *their own* items within an order.
+// Other vendors' items in the same (multi-vendor) order are untouched.
+router.patch(
+  "/partner/orders/:id",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const partnerId = req.session.partnerId!;
+    const orderId = Number(req.params.id);
+    if (!Number.isInteger(orderId)) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+    const status = String((req.body ?? {}).status ?? "");
+    if (!VENDOR_ORDER_STATUSES.has(status)) {
+      res.status(400).json({ error: "Invalid status" });
+      return;
+    }
+    const updated = await db
+      .update(productOrderItemsTable)
+      .set({ status })
+      .where(
+        and(
+          eq(productOrderItemsTable.orderId, orderId),
+          eq(productOrderItemsTable.vendorPartnerId, partnerId),
+        ),
+      )
+      .returning();
+    if (updated.length === 0) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+    res.json({ ok: true, status, items: updated });
+  },
+);
+
+// Store dashboard metrics for the authenticated vendor: catalog health plus
+// gross sales, platform commission, and net payout.
+router.get(
+  "/partner/store-stats",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const partnerId = req.session.partnerId!;
+    const products = await db
+      .select()
+      .from(productsTable)
+      .where(eq(productsTable.vendorPartnerId, partnerId));
+    const productCount = products.length;
+    const activeProducts = products.filter((p) => p.status === "active").length;
+    const lowStock = products.filter((p) => p.stock > 0 && p.stock <= 5).length;
+    const outOfStock = products.filter((p) => p.stock <= 0).length;
+
+    const myItems = await db
+      .select()
+      .from(productOrderItemsTable)
+      .where(eq(productOrderItemsTable.vendorPartnerId, partnerId));
+    const orderCount = new Set(myItems.map((i) => i.orderId)).size;
+    // Gross excludes cancelled items so payout reflects fulfillable revenue.
+    const grossInr = myItems
+      .filter((i) => i.status !== "cancelled")
+      .reduce((sum, i) => sum + i.unitPriceInr * i.qty, 0);
+
+    const [partner] = await db
+      .select({ commissionPct: partnersTable.commissionPct })
+      .from(partnersTable)
+      .where(eq(partnersTable.id, partnerId));
+    const commissionPct = partner?.commissionPct ?? 10;
+    const commissionInr = Math.round((grossInr * commissionPct) / 100);
+    const netInr = grossInr - commissionInr;
+
+    res.json({
+      productCount,
+      activeProducts,
+      lowStock,
+      outOfStock,
+      orderCount,
+      grossInr,
+      commissionPct,
+      commissionInr,
+      netInr,
+    });
   },
 );
 

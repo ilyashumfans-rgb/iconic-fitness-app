@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { useCart } from "@/lib/cart";
+import { useCart, cartKey } from "@/lib/cart";
 import { Trash2, ShoppingCart, ArrowRight } from "lucide-react";
 
 export default function Cart() {
@@ -30,9 +30,12 @@ export default function Cart() {
       </h1>
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-3">
-          {cart.items.map((i) => (
+          {cart.items.map((i) => {
+            const key = cartKey(i);
+            const variant = [i.size, i.color].filter(Boolean).join(" / ");
+            return (
             <div
-              key={i.productId}
+              key={key}
               className="flex items-center gap-4 p-3 rounded-2xl bg-card border border-border"
             >
               <Link
@@ -52,6 +55,11 @@ export default function Cart() {
                 >
                   {i.name}
                 </Link>
+                {variant && (
+                  <div className="text-xs font-semibold text-primary mt-0.5">
+                    {variant}
+                  </div>
+                )}
                 {i.vendorName && (
                   <div className="text-xs text-muted-foreground">
                     {i.vendorName}
@@ -63,14 +71,14 @@ export default function Cart() {
               </div>
               <div className="inline-flex items-center bg-background border border-border rounded-lg overflow-hidden">
                 <button
-                  onClick={() => cart.setQty(i.productId, i.qty - 1)}
+                  onClick={() => cart.setQty(key, i.qty - 1)}
                   className="px-2.5 py-1 text-base font-bold text-muted-foreground hover:text-foreground"
                 >
                   −
                 </button>
                 <span className="px-3 font-bold text-sm">{i.qty}</span>
                 <button
-                  onClick={() => cart.setQty(i.productId, i.qty + 1)}
+                  onClick={() => cart.setQty(key, i.qty + 1)}
                   className="px-2.5 py-1 text-base font-bold text-muted-foreground hover:text-foreground"
                 >
                   +
@@ -80,14 +88,15 @@ export default function Cart() {
                 ₹{(i.priceInr * i.qty).toLocaleString("en-IN")}
               </div>
               <button
-                onClick={() => cart.remove(i.productId)}
+                onClick={() => cart.remove(key)}
                 className="p-2 text-muted-foreground hover:text-red-500"
                 title="Remove"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
             </div>
-          ))}
+            );
+          })}
         </div>
         <aside className="p-5 rounded-2xl bg-card border border-border h-fit sticky top-24">
           <div className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-3">

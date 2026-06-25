@@ -11,6 +11,8 @@ export type Product = {
   originalPriceInr: number;
   imageUrl: string;
   gallery: string[];
+  sizes: string[];
+  colors: string[];
   stock: number;
   status: string;
   createdAt?: string;
@@ -21,6 +23,8 @@ export type ProductWithVendor = Product & {
 };
 
 export type Vendor = { id: number; name: string; city: string };
+
+export type StoreCategory = { name: string; slug: string; sortOrder: number };
 
 export type ProductOrder = {
   id: number;
@@ -42,6 +46,8 @@ export type ProductOrder = {
     productName: string;
     unitPriceInr: number;
     qty: number;
+    status?: string;
+    variant?: string;
   }>;
 };
 
@@ -69,6 +75,7 @@ export const storeApi = {
   },
   getProduct: (slug: string) => req<ProductWithVendor>(`/store/products/${slug}`),
   listVendors: () => req<Vendor[]>("/store/vendors"),
+  listCategories: () => req<StoreCategory[]>("/store/categories"),
   checkout: (body: {
     customerName: string;
     customerEmail: string;
@@ -76,7 +83,7 @@ export const storeApi = {
     shippingAddress: string;
     shippingCity: string;
     shippingPincode: string;
-    items: { productId: number; qty: number }[];
+    items: { productId: number; qty: number; size?: string; color?: string }[];
   }) =>
     req<{ ok: true; orderId: number; total: number }>("/store/checkout", {
       method: "POST",

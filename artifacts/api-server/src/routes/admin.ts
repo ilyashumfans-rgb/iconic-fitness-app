@@ -17,6 +17,7 @@ import {
   productsTable,
   productOrdersTable,
   productOrderItemsTable,
+  productCategoriesTable,
   amenitiesTable,
   workoutsTable,
   staffTable,
@@ -30,6 +31,7 @@ import {
 } from "../lib/adminAuth";
 import { STAFF_PERMISSIONS } from "../lib/staffAuth";
 import { forceReseedFromSnapshot } from "../lib/seedFromSnapshot";
+import { DEFAULT_PRODUCT_CATEGORIES } from "../lib/productCategories.js";
 
 const loadAdminRole = async (id: number): Promise<string | undefined> => {
   const [row] = await db
@@ -682,6 +684,7 @@ router.get(
         city: p.city,
         notes: p.notes,
         kind: p.kind,
+        commissionPct: p.commissionPct,
         createdAt: p.createdAt,
       })),
     );
@@ -689,24 +692,41 @@ router.get(
 );
 
 const VALID_KINDS = new Set(["gym", "vendor", "both"]);
+
+function clampCommission(v: unknown): number | undefined {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return undefined;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
 const VALID_STATUSES = new Set(["pending", "active", "suspended"]);
 
 router.post(
   "/admin/partners",
   requireAdmin,
   async (req: Request, res: Response): Promise<void> => {
-    const { name, email, phone, city, password, notes, kind, status, amenityIds } =
-      (req.body ?? {}) as {
-        name?: string;
-        email?: string;
-        phone?: string;
-        city?: string;
-        password?: string;
-        notes?: string;
-        kind?: string;
-        status?: string;
-        amenityIds?: number[];
-      };
+    const {
+      name,
+      email,
+      phone,
+      city,
+      password,
+      notes,
+      kind,
+      status,
+      amenityIds,
+      commissionPct,
+    } = (req.body ?? {}) as {
+      name?: string;
+      email?: string;
+      phone?: string;
+      city?: string;
+      password?: string;
+      notes?: string;
+      kind?: string;
+      status?: string;
+      amenityIds?: number[];
+      commissionPct?: number;
+    };
     if (!name || !email || !phone || !city || !password) {
       res.status(400).json({ error: "name, email, phone, city, password required" });
       return;
@@ -748,6 +768,9 @@ router.post(
           notes: notes ?? "",
           kind: partnerKind,
           ...(partnerStatus ? { status: partnerStatus } : {}),
+          ...(clampCommission(commissionPct) !== undefined
+            ? { commissionPct: clampCommission(commissionPct) }
+            : {}),
           passwordHash,
           pendingAmenityIds,
         })
@@ -769,6 +792,7 @@ router.post(
       city: created.city,
       notes: created.notes,
       kind: created.kind,
+      commissionPct: created.commissionPct,
       createdAt: created.createdAt,
     });
   },
@@ -779,19 +803,21 @@ router.patch(
   requireAdmin,
   async (req: Request, res: Response): Promise<void> => {
     const id = Number(req.params.id);
-    const { name, phone, status, city, notes, kind } = (req.body ?? {}) as Record<
-      string,
-      string | undefined
-    >;
+    const { name, phone, status, city, notes, kind, commissionPct } =
+      (req.body ?? {}) as Record<string, unknown>;
+    const commission = clampCommission(commissionPct);
     const [updated] = await db
       .update(partnersTable)
       .set({
-        ...(name !== undefined && { name }),
-        ...(phone !== undefined && { phone }),
-        ...(status !== undefined && { status }),
-        ...(city !== undefined && { city }),
-        ...(notes !== undefined && { notes }),
-        ...(kind !== undefined && VALID_KINDS.has(kind) && { kind }),
+        ...(name !== undefined && { name: String(name) }),
+        ...(phone !== undefined && { phone: String(phone) }),
+        ...(status !== undefined && { status: String(status) }),
+        ...(city !== undefined && { city: String(city) }),
+        ...(notes !== undefined && { notes: String(notes) }),
+        ...(typeof kind === "string" && VALID_KINDS.has(kind) && { kind }),
+        ...(commissionPct !== undefined && commission !== undefined
+          ? { commissionPct: commission }
+          : {}),
       })
       .where(eq(partnersTable.id, id))
       .returning();
@@ -1687,6 +1713,8 @@ router.post(
         originalPriceInr: Number(b.originalPriceInr ?? b.priceInr),
         imageUrl: String(b.imageUrl),
         gallery: Array.isArray(b.gallery) ? b.gallery.map(String) : [],
+        sizes: Array.isArray(b.sizes) ? b.sizes.map(String) : [],
+        colors: Array.isArray(b.colors) ? b.colors.map(String) : [],
         stock: Number(b.stock ?? 0),
         status: String(b.status ?? "active"),
       })
@@ -1710,6 +1738,9 @@ router.patch(
     if (b.originalPriceInr !== undefined)
       patch.originalPriceInr = Number(b.originalPriceInr);
     if (b.imageUrl !== undefined) patch.imageUrl = String(b.imageUrl);
+    if (Array.isArray(b.gallery)) patch.gallery = b.gallery.map(String);
+    if (Array.isArray(b.sizes)) patch.sizes = b.sizes.map(String);
+    if (Array.isArray(b.colors)) patch.colors = b.colors.map(String);
     if (b.stock !== undefined) patch.stock = Number(b.stock);
     if (b.status !== undefined) patch.status = String(b.status);
     if (b.vendorPartnerId !== undefined)
@@ -1780,6 +1811,127 @@ router.patch(
       return;
     }
     res.json(row);
+  },
+);
+
+// ───────────────────────────── Categories (admin) ─────────────────────────────
+
+// On first open, materialize the code-default categories so the admin always
+// has rows to manage. Subsequent opens just return whatever is in the table.
+async function ensureCategoriesMaterialized(): Promise<void> {
+  const [{ c }] = await db
+    .select({ c: sql<number>`count(*)::int` })
+    .from(productCategoriesTable);
+  if (c > 0) return;
+  await db
+    .insert(productCategoriesTable)
+    .values(
+      DEFAULT_PRODUCT_CATEGORIES.map((cat) => ({
+        name: cat.name,
+        slug: cat.slug,
+        sortOrder: cat.sortOrder,
+      })),
+    )
+    .onConflictDoNothing();
+}
+
+router.get(
+  "/admin/categories",
+  requireAdmin,
+  async (_req: Request, res: Response): Promise<void> => {
+    await ensureCategoriesMaterialized();
+    const rows = await db
+      .select()
+      .from(productCategoriesTable)
+      .orderBy(asc(productCategoriesTable.sortOrder), asc(productCategoriesTable.id));
+    res.json(rows);
+  },
+);
+
+router.post(
+  "/admin/categories",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const name = String(b.name ?? "").trim();
+    if (!name) {
+      res.status(400).json({ error: "Category name is required" });
+      return;
+    }
+    const slug = b.slug ? slugify(String(b.slug)) : slugify(name);
+    if (!slug) {
+      res.status(400).json({ error: "Invalid category name" });
+      return;
+    }
+    try {
+      const [row] = await db
+        .insert(productCategoriesTable)
+        .values({
+          name,
+          slug,
+          sortOrder: Number.isFinite(Number(b.sortOrder))
+            ? Number(b.sortOrder)
+            : 0,
+          isActive: b.isActive === undefined ? true : Boolean(b.isActive),
+        })
+        .returning();
+      res.status(201).json(row);
+    } catch (e: unknown) {
+      res.status(409).json({
+        error: "A category with that slug already exists.",
+      });
+    }
+  },
+);
+
+router.patch(
+  "/admin/categories/:id",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const patch: Record<string, unknown> = {};
+    if (b.name !== undefined) patch.name = String(b.name).trim();
+    if (b.slug !== undefined) patch.slug = slugify(String(b.slug));
+    if (b.sortOrder !== undefined && Number.isFinite(Number(b.sortOrder)))
+      patch.sortOrder = Number(b.sortOrder);
+    if (b.isActive !== undefined) patch.isActive = Boolean(b.isActive);
+    try {
+      const [row] = await db
+        .update(productCategoriesTable)
+        .set(patch)
+        .where(eq(productCategoriesTable.id, id))
+        .returning();
+      if (!row) {
+        res.status(404).json({ error: "Category not found" });
+        return;
+      }
+      res.json(row);
+    } catch (e: unknown) {
+      res.status(409).json({
+        error: "A category with that slug already exists.",
+      });
+    }
+  },
+);
+
+router.delete(
+  "/admin/categories/:id",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+    await db
+      .delete(productCategoriesTable)
+      .where(eq(productCategoriesTable.id, id));
+    res.json({ ok: true });
   },
 );
 

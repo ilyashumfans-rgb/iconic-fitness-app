@@ -334,6 +334,8 @@ export const productsTable = pgTable("products", {
   originalPriceInr: integer("original_price_inr").notNull(),
   imageUrl: text("image_url").notNull(),
   gallery: text("gallery").array().notNull().default([]),
+  sizes: text("sizes").array().notNull().default([]),
+  colors: text("colors").array().notNull().default([]),
   stock: integer("stock").notNull().default(0),
   status: text("status").notNull().default("active"),
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -365,6 +367,24 @@ export const productOrderItemsTable = pgTable("product_order_items", {
   productName: text("product_name").notNull(),
   unitPriceInr: integer("unit_price_inr").notNull(),
   qty: integer("qty").notNull(),
+  // Per-item fulfillment status so each vendor manages their own portion of a
+  // (possibly multi-vendor) order independently of the order-level status.
+  status: text("status").notNull().default("placed"),
+  // Snapshot of the chosen variant, e.g. "M / Black" (empty when no variants).
+  variant: text("variant").notNull().default(""),
+});
+
+// Admin-managed storefront product categories. A code default list is used as a
+// fallback until the table is materialized (see routes/store.ts categories).
+export const productCategoriesTable = pgTable("product_categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 export const partnersTable = pgTable("partners", {
@@ -384,6 +404,8 @@ export const partnersTable = pgTable("partners", {
   // kind = "gym" → gym operator (default), "vendor" → store seller,
   // "both"   → can sign in to both the partner portal and the vendor portal.
   kind: text("kind").notNull().default("gym"),
+  // Platform commission percentage taken from this vendor's store sales.
+  commissionPct: integer("commission_pct").notNull().default(10),
   pendingAmenityIds: integer("pending_amenity_ids")
     .array()
     .notNull()

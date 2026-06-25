@@ -1,12 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { VendorLayout, VendorCard } from "@/components/vendor/VendorLayout";
-import { vendorApi, type VendorOrder, type VendorProduct } from "@/lib/vendorApi";
+import {
+  vendorApi,
+  type VendorOrder,
+  type VendorProduct,
+  type VendorStoreStats,
+} from "@/lib/vendorApi";
 import {
   Package,
   AlertTriangle,
   ReceiptText,
   IndianRupee,
   TrendingUp,
+  Wallet,
+  Percent,
 } from "lucide-react";
 
 function StatTile({
@@ -43,36 +50,22 @@ function StatTile({
 export default function VendorDashboard() {
   const [products, setProducts] = useState<VendorProduct[]>([]);
   const [orders, setOrders] = useState<VendorOrder[]>([]);
+  const [stats, setStats] = useState<VendorStoreStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([vendorApi.products.list(), vendorApi.orders()])
-      .then(([p, o]) => {
+    Promise.all([
+      vendorApi.products.list(),
+      vendorApi.orders(),
+      vendorApi.storeStats(),
+    ])
+      .then(([p, o, s]) => {
         setProducts(p);
         setOrders(o);
+        setStats(s);
       })
       .finally(() => setLoading(false));
   }, []);
-
-  const stats = useMemo(() => {
-    const activeProducts = products.filter((p) => p.status === "active").length;
-    const lowStock = products.filter((p) => p.stock > 0 && p.stock < 5).length;
-    const outOfStock = products.filter((p) => p.stock === 0).length;
-    const revenue = orders.reduce(
-      (sum, o) =>
-        sum +
-        o.items.reduce((s, it) => s + it.unitPriceInr * it.qty, 0),
-      0,
-    );
-    return {
-      products: products.length,
-      activeProducts,
-      lowStock,
-      outOfStock,
-      orders: orders.length,
-      revenue,
-    };
-  }, [products, orders]);
 
   const inr = new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -89,31 +82,55 @@ export default function VendorDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatTile
               label="Products"
-              value={stats.products}
-              hint={`${stats.activeProducts} active`}
+              value={stats?.productCount ?? 0}
+              hint={`${stats?.activeProducts ?? 0} active`}
               iconBg="bg-lime-500"
               icon={<Package className="h-5 w-5 text-white" />}
             />
             <StatTile
               label="Low / Out of Stock"
-              value={`${stats.lowStock} / ${stats.outOfStock}`}
+              value={`${stats?.lowStock ?? 0} / ${stats?.outOfStock ?? 0}`}
               hint="Restock soon"
               iconBg="bg-green-500"
               icon={<AlertTriangle className="h-5 w-5 text-white" />}
             />
             <StatTile
               label="Orders"
-              value={stats.orders}
+              value={stats?.orderCount ?? 0}
               hint="All-time"
               iconBg="bg-lime-500"
               icon={<ReceiptText className="h-5 w-5 text-white" />}
             />
             <StatTile
-              label="Revenue"
-              value={inr.format(stats.revenue)}
-              hint="From your items"
+              label="Gross sales"
+              value={inr.format(stats?.grossInr ?? 0)}
+              hint="From your items (excl. cancelled)"
               iconBg="bg-emerald-500"
               icon={<IndianRupee className="h-5 w-5 text-white" />}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <StatTile
+              label={`Platform commission (${stats?.commissionPct ?? 0}%)`}
+              value={inr.format(stats?.commissionInr ?? 0)}
+              hint="Deducted from gross"
+              iconBg="bg-amber-500"
+              icon={<Percent className="h-5 w-5 text-white" />}
+            />
+            <StatTile
+              label="Your payout"
+              value={inr.format(stats?.netInr ?? 0)}
+              hint="Earnings after commission"
+              iconBg="bg-lime-600"
+              icon={<Wallet className="h-5 w-5 text-white" />}
+            />
+            <StatTile
+              label="Commission rate"
+              value={`${stats?.commissionPct ?? 0}%`}
+              hint="Set by the platform admin"
+              iconBg="bg-slate-700"
+              icon={<TrendingUp className="h-5 w-5 text-white" />}
             />
           </div>
 

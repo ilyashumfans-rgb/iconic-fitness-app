@@ -1,14 +1,43 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import {
   db,
   productsTable,
   productOrdersTable,
   productOrderItemsTable,
+  productCategoriesTable,
   partnersTable,
 } from "@workspace/db";
+import { DEFAULT_PRODUCT_CATEGORIES } from "../lib/productCategories.js";
 
 const router: IRouter = Router();
+
+// ── Categories (public) ──
+
+router.get(
+  "/store/categories",
+  async (_req: Request, res: Response): Promise<void> => {
+    const rows = await db
+      .select()
+      .from(productCategoriesTable)
+      .where(eq(productCategoriesTable.isActive, true))
+      .orderBy(asc(productCategoriesTable.sortOrder), asc(productCategoriesTable.id));
+    if (rows.length === 0) {
+      // Not yet materialized — fall back to the code default list.
+      res.json(
+        DEFAULT_PRODUCT_CATEGORIES.map((c) => ({
+          name: c.name,
+          slug: c.slug,
+          sortOrder: c.sortOrder,
+        })),
+      );
+      return;
+    }
+    res.json(
+      rows.map((c) => ({ name: c.name, slug: c.slug, sortOrder: c.sortOrder })),
+    );
+  },
+);
 
 // ── Public storefront ──
 
@@ -93,7 +122,14 @@ router.post(
     const shippingAddress = String(b.shippingAddress ?? "").trim();
     const shippingCity = String(b.shippingCity ?? "").trim();
     const shippingPincode = String(b.shippingPincode ?? "").trim();
-    const items = Array.isArray(b.items) ? (b.items as Array<{ productId: number; qty: number }>) : [];
+    const items = Array.isArray(b.items)
+      ? (b.items as Array<{
+          productId: number;
+          qty: number;
+          size?: string;
+          color?: string;
+        }>)
+      : [];
     if (
       !customerName ||
       !customerEmail ||
@@ -127,6 +163,7 @@ router.post(
       productName: string;
       unitPriceInr: number;
       qty: number;
+      variant: string;
     }> = [];
     for (const i of items) {
       const p = products.find((x) => x.id === Number(i.productId));
@@ -136,12 +173,20 @@ router.post(
       }
       const qty = Math.max(1, Math.min(99, Number(i.qty) || 1));
       total += p.priceInr * qty;
+      // Compose a human-readable variant label, validating against the product's
+      // configured options so clients can't inject arbitrary text.
+      const size =
+        i.size && p.sizes.includes(String(i.size)) ? String(i.size) : "";
+      const color =
+        i.color && p.colors.includes(String(i.color)) ? String(i.color) : "";
+      const variant = [size, color].filter(Boolean).join(" / ");
       lineItems.push({
         productId: p.id,
         vendorPartnerId: p.vendorPartnerId,
         productName: p.name,
         unitPriceInr: p.priceInr,
         qty,
+        variant,
       });
     }
 

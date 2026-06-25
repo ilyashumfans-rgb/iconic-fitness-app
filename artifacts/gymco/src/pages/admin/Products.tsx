@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
 import { adminApi } from "@/lib/adminApi";
+import { storeApi, type StoreCategory } from "@/lib/storeApi";
+import FileUpload from "@/components/FileUpload";
 import { Plus, Trash2, X, Package } from "lucide-react";
 
 type Product = {
@@ -13,6 +15,9 @@ type Product = {
   priceInr: number;
   originalPriceInr: number;
   imageUrl: string;
+  gallery?: string[];
+  sizes?: string[];
+  colors?: string[];
   stock: number;
   status: string;
 };
@@ -22,7 +27,23 @@ type Partner = { id: number; name: string; city: string; status: string };
 const INPUT =
   "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-lime-500/60";
 
-const blank = () => ({
+type FormState = {
+  vendorPartnerId: number;
+  name: string;
+  slug: string;
+  description: string;
+  category: string;
+  priceInr: number;
+  originalPriceInr: number;
+  imageUrl: string;
+  gallery: string[];
+  sizes: string;
+  colors: string;
+  stock: number;
+  status: string;
+};
+
+const blank = (): FormState => ({
   vendorPartnerId: 0,
   name: "",
   slug: "",
@@ -31,16 +52,27 @@ const blank = () => ({
   priceInr: 0,
   originalPriceInr: 0,
   imageUrl: "",
+  gallery: [],
+  sizes: "",
+  colors: "",
   stock: 0,
   status: "active",
 });
 
+function toList(s: string): string[] {
+  return s
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
+}
+
 export default function AdminProducts() {
   const [rows, setRows] = useState<Product[]>([]);
   const [partners, setPartners] = useState<Partner[]>([]);
+  const [categories, setCategories] = useState<StoreCategory[]>([]);
   const [editing, setEditing] = useState<Product | null>(null);
   const [creating, setCreating] = useState(false);
-  const [form, setForm] = useState(blank());
+  const [form, setForm] = useState<FormState>(blank());
   const [err, setErr] = useState<string | null>(null);
 
   const load = () => {
@@ -52,17 +84,34 @@ export default function AdminProducts() {
     );
   };
   useEffect(load, []);
+  useEffect(() => {
+    storeApi.listCategories().then(setCategories).catch(() => setCategories([]));
+  }, []);
 
   const startEdit = (p: Product) => {
     setEditing(p);
     setCreating(false);
-    setForm({ ...p });
+    setForm({
+      vendorPartnerId: p.vendorPartnerId,
+      name: p.name,
+      slug: p.slug,
+      description: p.description,
+      category: p.category,
+      priceInr: p.priceInr,
+      originalPriceInr: p.originalPriceInr,
+      imageUrl: p.imageUrl,
+      gallery: p.gallery ?? [],
+      sizes: (p.sizes ?? []).join(", "),
+      colors: (p.colors ?? []).join(", "),
+      stock: p.stock,
+      status: p.status,
+    });
     setErr(null);
   };
   const startCreate = () => {
     setCreating(true);
     setEditing(null);
-    setForm(blank());
+    setForm({ ...blank(), category: categories[0]?.slug ?? "apparel" });
     setErr(null);
   };
   const cancel = () => {
@@ -75,8 +124,13 @@ export default function AdminProducts() {
     e.preventDefault();
     setErr(null);
     try {
-      if (creating) await adminApi.products.create(form);
-      else if (editing) await adminApi.products.update(editing.id, form);
+      const payload = {
+        ...form,
+        sizes: toList(form.sizes),
+        colors: toList(form.colors),
+      };
+      if (creating) await adminApi.products.create(payload);
+      else if (editing) await adminApi.products.update(editing.id, payload);
       load();
       cancel();
     } catch (e: any) {
@@ -159,11 +213,15 @@ export default function AdminProducts() {
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
                 className={INPUT + " mt-1"}
               >
-                <option value="apparel">Apparel</option>
-                <option value="supplements">Supplements</option>
-                <option value="equipment">Equipment</option>
-                <option value="accessories">Accessories</option>
-                <option value="wellness">Wellness</option>
+                {categories.length === 0 ? (
+                  <option value={form.category}>{form.category}</option>
+                ) : (
+                  categories.map((c) => (
+                    <option key={c.slug} value={c.slug}>
+                      {c.name}
+                    </option>
+                  ))
+                )}
               </select>
             </label>
             <label className="block">
@@ -211,15 +269,89 @@ export default function AdminProducts() {
               />
             </label>
             <label className="block">
-              <span className="text-xs text-slate-400">Image URL</span>
+              <span className="text-xs text-slate-400">Sizes (comma separated)</span>
+              <input
+                value={form.sizes}
+                onChange={(e) => setForm({ ...form, sizes: e.target.value })}
+                className={INPUT + " mt-1"}
+                placeholder="S, M, L, XL"
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs text-slate-400">
+                Colours (comma separated)
+              </span>
+              <input
+                value={form.colors}
+                onChange={(e) => setForm({ ...form, colors: e.target.value })}
+                className={INPUT + " mt-1"}
+                placeholder="Black, White, Lime"
+              />
+            </label>
+            <div className="block md:col-span-2">
+              <span className="text-xs text-slate-400">Main image</span>
+              <div className="mt-1 flex items-center gap-3">
+                {form.imageUrl ? (
+                  <img
+                    src={form.imageUrl}
+                    alt=""
+                    className="h-16 w-16 rounded-lg object-cover border border-slate-700"
+                  />
+                ) : (
+                  <div className="h-16 w-16 rounded-lg bg-slate-800 border border-slate-700" />
+                )}
+                <FileUpload
+                  label="Upload image"
+                  onUploaded={(urls) =>
+                    urls[0] && setForm((f) => ({ ...f, imageUrl: urls[0] }))
+                  }
+                />
+              </div>
               <input
                 required
                 value={form.imageUrl}
                 onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-                className={INPUT + " mt-1"}
-                placeholder="https://…"
+                className={INPUT + " mt-2"}
+                placeholder="…or paste an image URL"
               />
-            </label>
+            </div>
+            <div className="block md:col-span-2">
+              <span className="text-xs text-slate-400">Gallery images</span>
+              {form.gallery.length > 0 && (
+                <div className="flex flex-wrap gap-2 my-2">
+                  {form.gallery.map((g, i) => (
+                    <div key={`${g}-${i}`} className="relative">
+                      <img
+                        src={g}
+                        alt=""
+                        className="h-16 w-16 rounded-lg object-cover border border-slate-700"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setForm((f) => ({
+                            ...f,
+                            gallery: f.gallery.filter((_, j) => j !== i),
+                          }))
+                        }
+                        className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="mt-1">
+                <FileUpload
+                  label="Add gallery images"
+                  multiple
+                  onUploaded={(urls) =>
+                    setForm((f) => ({ ...f, gallery: [...f.gallery, ...urls] }))
+                  }
+                />
+              </div>
+            </div>
             <label className="block md:col-span-2">
               <span className="text-xs text-slate-400">Description</span>
               <textarea

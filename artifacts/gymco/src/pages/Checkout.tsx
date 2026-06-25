@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { useCart } from "@/lib/cart";
+import { useCart, cartKey } from "@/lib/cart";
 import { storeApi } from "@/lib/storeApi";
 import { CheckCircle2, ArrowRight } from "lucide-react";
 
@@ -35,7 +35,12 @@ export default function Checkout() {
     try {
       const result = await storeApi.checkout({
         ...form,
-        items: cart.items.map((i) => ({ productId: i.productId, qty: i.qty })),
+        items: cart.items.map((i) => ({
+          productId: i.productId,
+          qty: i.qty,
+          size: i.size,
+          color: i.color,
+        })),
       });
       cart.clear();
       setSuccess({ orderId: result.orderId, total: result.total });
@@ -177,13 +182,18 @@ export default function Checkout() {
             Your order
           </div>
           <div className="space-y-2 max-h-72 overflow-y-auto">
-            {cart.items.map((i) => (
-              <div key={i.productId} className="flex items-center gap-2 text-sm">
+            {cart.items.map((i) => {
+              const variant = [i.size, i.color].filter(Boolean).join(" / ");
+              return (
+              <div key={cartKey(i)} className="flex items-center gap-2 text-sm">
                 <div className="w-10 h-10 rounded bg-muted overflow-hidden shrink-0">
                   <img src={i.imageUrl} alt="" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="truncate text-foreground">{i.name}</div>
+                  {variant && (
+                    <div className="text-xs font-semibold text-primary">{variant}</div>
+                  )}
                   <div className="text-xs text-muted-foreground">
                     Qty {i.qty} · ₹{i.priceInr.toLocaleString("en-IN")}
                   </div>
@@ -192,7 +202,8 @@ export default function Checkout() {
                   ₹{(i.priceInr * i.qty).toLocaleString("en-IN")}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
           <div className="flex justify-between items-baseline pt-3 mt-3 border-t border-border">
             <span className="font-bold">Total</span>

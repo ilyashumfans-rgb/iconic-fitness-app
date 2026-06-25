@@ -8,8 +8,20 @@ export type CartItem = {
   imageUrl: string;
   vendorPartnerId: number;
   vendorName?: string;
+  size?: string;
+  color?: string;
   qty: number;
 };
+
+// Cart lines are keyed by product + chosen variant so the same product in two
+// different sizes/colours occupies distinct lines.
+export function cartKey(item: {
+  productId: number;
+  size?: string;
+  color?: string;
+}): string {
+  return `${item.productId}|${item.size ?? ""}|${item.color ?? ""}`;
+}
 
 const KEY = "iconic.cart.v1";
 const EVT = "iconic.cart.change";
@@ -48,21 +60,22 @@ export function useCart() {
 
   const add = useCallback((item: Omit<CartItem, "qty">, qty = 1) => {
     const next = read();
-    const ex = next.find((i) => i.productId === item.productId);
+    const key = cartKey(item);
+    const ex = next.find((i) => cartKey(i) === key);
     if (ex) ex.qty = Math.min(99, ex.qty + qty);
     else next.push({ ...item, qty: Math.max(1, qty) });
     write(next);
   }, []);
 
-  const remove = useCallback((productId: number) => {
-    write(read().filter((i) => i.productId !== productId));
+  const remove = useCallback((key: string) => {
+    write(read().filter((i) => cartKey(i) !== key));
   }, []);
 
-  const setQty = useCallback((productId: number, qty: number) => {
+  const setQty = useCallback((key: string, qty: number) => {
     const next = read();
-    const ex = next.find((i) => i.productId === productId);
+    const ex = next.find((i) => cartKey(i) === key);
     if (!ex) return;
-    if (qty <= 0) write(next.filter((i) => i.productId !== productId));
+    if (qty <= 0) write(next.filter((i) => cartKey(i) !== key));
     else {
       ex.qty = Math.max(1, Math.min(99, qty));
       write(next);
