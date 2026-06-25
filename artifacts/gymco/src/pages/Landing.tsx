@@ -218,7 +218,7 @@ function TopNav() {
             </Button>
           </Link>
           <Link href="/be-a-member" className="hidden sm:inline-flex">
-            <Button className="bg-gradient-brand text-white border-none font-bold shadow-[0_8px_24px_-8px_hsl(96_56%_55%/0.7)] hover:opacity-95">
+            <Button className="bg-gradient-brand text-white border-none font-bold shadow-[0_8px_24px_-8px_hsl(91_56%_55%/0.7)] hover:opacity-95">
               Get started <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </Link>
@@ -371,7 +371,7 @@ function Hero() {
     <section className="relative pt-24 md:pt-36 pb-16 md:pb-28 overflow-hidden">
       {/* Premium mobile backdrop — subtle peach/orange wash behind headline (desktop unchanged) */}
       <div className="pointer-events-none absolute inset-0 z-0 md:hidden">
-        <div className="absolute -top-24 left-1/2 -translate-x-1/2 h-[480px] w-[480px] rounded-full bg-[radial-gradient(closest-side,hsl(96_56%_60%/0.18),transparent_70%)] dark:bg-[radial-gradient(closest-side,hsl(96_56%_60%/0.25),transparent_70%)]" />
+        <div className="absolute -top-24 left-1/2 -translate-x-1/2 h-[480px] w-[480px] rounded-full bg-[radial-gradient(closest-side,hsl(91_56%_60%/0.18),transparent_70%)] dark:bg-[radial-gradient(closest-side,hsl(91_56%_60%/0.25),transparent_70%)]" />
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-background" />
       </div>
 
@@ -437,7 +437,7 @@ function Hero() {
           transition={{ delay: 0.25, duration: 0.6 }}
           className="mt-8 md:mt-10 w-full max-w-3xl"
         >
-          <div className="rounded-2xl md:rounded-2xl bg-card/95 backdrop-blur-xl border border-border/80 p-2 shadow-[0_20px_60px_-20px_hsl(96_56%_55%/0.25)] md:shadow-[0_30px_80px_-30px_rgba(0,0,0,0.25)] flex flex-col md:flex-row gap-2">
+          <div className="rounded-2xl md:rounded-2xl bg-card/95 backdrop-blur-xl border border-border/80 p-2 shadow-[0_20px_60px_-20px_hsl(91_56%_55%/0.25)] md:shadow-[0_30px_80px_-30px_rgba(0,0,0,0.25)] flex flex-col md:flex-row gap-2">
             <div ref={searchBoxRef} className="flex-1 relative">
               <div className="flex items-center gap-3 px-4 py-1.5 bg-secondary rounded-xl text-left">
                 <Search className="h-5 w-5 text-primary shrink-0" />
@@ -525,7 +525,7 @@ function Hero() {
             <Button
               type="submit"
               size="lg"
-              className="bg-gradient-brand text-white border-none h-14 md:h-14 px-8 text-base font-black tracking-wide shadow-[0_10px_30px_-10px_hsl(96_56%_55%/0.8)] hover:opacity-95 rounded-xl whitespace-nowrap"
+              className="bg-gradient-brand text-white border-none h-14 md:h-14 px-8 text-base font-black tracking-wide shadow-[0_10px_30px_-10px_hsl(91_56%_55%/0.8)] hover:opacity-95 rounded-xl whitespace-nowrap"
             >
               <Search className="h-5 w-5 mr-2" />
               Search
@@ -556,7 +556,7 @@ function Hero() {
           <Link href="/memberships" className="w-full sm:w-auto">
             <Button
               size="lg"
-              className="bg-gradient-brand text-white border-none h-14 px-8 text-base font-black tracking-wide shadow-[0_16px_50px_-12px_hsl(96_56%_55%/0.6)] hover:opacity-95 w-full sm:w-auto"
+              className="bg-gradient-brand text-white border-none h-14 px-8 text-base font-black tracking-wide shadow-[0_16px_50px_-12px_hsl(91_56%_55%/0.6)] hover:opacity-95 w-full sm:w-auto"
             >
               Get Iconic Fitness Pass <ArrowRight className="h-5 w-5 ml-2" />
             </Button>
@@ -607,7 +607,7 @@ function Hero() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.7 }}
-          className="mt-12 md:mt-20 w-full grid grid-cols-2 md:grid-cols-4 gap-px rounded-2xl overflow-hidden bg-border border border-border shadow-[0_20px_60px_-30px_hsl(96_56%_55%/0.4)] md:shadow-[0_30px_80px_-40px_rgba(0,0,0,0.2)]"
+          className="mt-12 md:mt-20 w-full grid grid-cols-2 md:grid-cols-4 gap-px rounded-2xl overflow-hidden bg-border border border-border shadow-[0_20px_60px_-30px_hsl(91_56%_55%/0.4)] md:shadow-[0_30px_80px_-40px_rgba(0,0,0,0.2)]"
         >
           {stats.map((s) => (
             <div key={s.label} className="bg-card/95 backdrop-blur p-5 md:p-8 text-left">
@@ -919,7 +919,7 @@ function HowItWorks() {
                   <div className="text-7xl font-black text-foreground/[0.04] absolute -top-4 -right-2 select-none">
                     0{i + 1}
                   </div>
-                  <div className="h-14 w-14 rounded-2xl bg-gradient-brand flex items-center justify-center mb-6 shadow-[0_10px_30px_-10px_hsl(96_56%_55%/0.7)]">
+                  <div className="h-14 w-14 rounded-2xl bg-gradient-brand flex items-center justify-center mb-6 shadow-[0_10px_30px_-10px_hsl(91_56%_55%/0.7)]">
                     <step.icon className="h-7 w-7 text-white" />
                   </div>
                   <h3 className="text-2xl font-black mb-3">{step.title}</h3>

@@ -203,7 +203,7 @@ export default function Checkout() {
           <button
             type="submit"
             disabled={busy}
-            className="mt-5 w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-brand text-white font-bold shadow-[0_8px_24px_-8px_hsl(96_56%_55%/0.7)] hover:opacity-95 disabled:opacity-50"
+            className="mt-5 w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-brand text-white font-bold shadow-[0_8px_24px_-8px_hsl(91_56%_55%/0.7)] hover:opacity-95 disabled:opacity-50"
           >
             {busy ? "Placing order…" : "Place order"}
           </button>

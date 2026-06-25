@@ -161,7 +161,7 @@ export default function Explore() {
               className={cn(
                 "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all",
                 view === "grid"
-                  ? "bg-gradient-brand text-white shadow-[0_8px_20px_-8px_hsl(96_56%_55%/0.6)]"
+                  ? "bg-gradient-brand text-white shadow-[0_8px_20px_-8px_hsl(91_56%_55%/0.6)]"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -175,7 +175,7 @@ export default function Explore() {
               className={cn(
                 "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all",
                 view === "list"
-                  ? "bg-gradient-brand text-white shadow-[0_8px_20px_-8px_hsl(96_56%_55%/0.6)]"
+                  ? "bg-gradient-brand text-white shadow-[0_8px_20px_-8px_hsl(91_56%_55%/0.6)]"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >

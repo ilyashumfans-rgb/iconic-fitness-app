@@ -588,7 +588,7 @@ export default function GymDetail() {
                   <Link href="/memberships">
                     <Button
                       size="lg"
-                      className="mt-5 w-full bg-gradient-brand text-white border-none h-14 text-base font-black tracking-wide shadow-[0_16px_50px_-12px_hsl(96_56%_55%/0.6)] hover:opacity-95"
+                      className="mt-5 w-full bg-gradient-brand text-white border-none h-14 text-base font-black tracking-wide shadow-[0_16px_50px_-12px_hsl(91_56%_55%/0.6)] hover:opacity-95"
                     >
                       View plans <ArrowRight className="h-5 w-5 ml-1.5" />
                     </Button>

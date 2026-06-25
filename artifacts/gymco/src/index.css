@@ -105,12 +105,12 @@
   --popover-foreground: 240 10% 3.9%;
   --popover-border: 240 5.9% 90%;
   
-  /* Iconic Fitness green — taken from logo */
-  --primary: 96 56% 38%;
+  /* Iconic Fitness green — exact logo colour #7FC240 (deepened for white text) */
+  --primary: 91 53% 39%;
   --primary-foreground: 0 0% 100%;
-  /* Iconic Fitness accent — bright lime (companion to primary green) */
-  --brand-purple: 84 60% 50%;
-  --brand-purple-foreground: 96 60% 10%;
+  /* Iconic Fitness accent — exact logo green #7FC240 = hsl(91 52% 51%) */
+  --brand-purple: 91 52% 51%;
+  --brand-purple-foreground: 91 60% 10%;
   
   --secondary: 240 4.8% 95.9%;
   --secondary-foreground: 240 5.9% 10%;
@@ -125,11 +125,11 @@
   --destructive-foreground: 0 0% 98%;
   
   --input: 240 5.9% 90%;
-  --ring: 96 56% 38%;
-  --chart-1: 96 56% 42%;
-  --chart-2: 84 60% 50%;
+  --ring: 91 53% 39%;
+  --chart-1: 91 53% 42%;
+  --chart-2: 91 52% 51%;
   --chart-3: 152 50% 42%;
-  --chart-4: 70 65% 48%;
+  --chart-4: 78 62% 48%;
   --chart-5: 120 40% 38%;
 
   --app-font-sans: 'Plus Jakarta Sans', 'Inter', sans-serif;
@@ -198,20 +198,20 @@
   --sidebar: 260 22% 5%;
   --sidebar-foreground: 240 5% 75%;
   --sidebar-border: 260 12% 14%;
-  --sidebar-primary: 96 56% 45%;
+  --sidebar-primary: 91 53% 50%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 260 14% 13%;
   --sidebar-accent-foreground: 0 0% 98%;
-  --sidebar-ring: 96 56% 45%;
+  --sidebar-ring: 91 53% 50%;
   
   --popover: 260 22% 6%;
   --popover-foreground: 0 0% 98%;
   --popover-border: 260 12% 16%;
   
-  --primary: 96 56% 45%;
+  --primary: 91 53% 50%;
   --primary-foreground: 0 0% 100%;
-  --brand-purple: 84 60% 52%;
-  --brand-purple-foreground: 96 60% 10%;
+  --brand-purple: 91 52% 53%;
+  --brand-purple-foreground: 91 60% 10%;
   
   --secondary: 260 14% 14%;
   --secondary-foreground: 0 0% 98%;
@@ -219,18 +219,18 @@
   --muted: 260 14% 14%;
   --muted-foreground: 240 5% 70%;
   
-  --accent: 84 60% 52%;
-  --accent-foreground: 96 60% 10%;
+  --accent: 91 52% 53%;
+  --accent-foreground: 91 60% 10%;
   
   --destructive: 0 70% 50%;
   --destructive-foreground: 0 0% 98%;
   
   --input: 260 14% 16%;
-  --ring: 96 56% 45%;
-  --chart-1: 96 56% 48%;
-  --chart-2: 84 60% 52%;
+  --ring: 91 53% 50%;
+  --chart-1: 91 53% 50%;
+  --chart-2: 91 52% 53%;
   --chart-3: 152 50% 48%;
-  --chart-4: 70 65% 52%;
+  --chart-4: 78 62% 52%;
   --chart-5: 120 40% 45%;
 
   --shadow-2xs: 0px 2px 0px 0px rgba(0,0,0,0.4);
@@ -270,25 +270,25 @@
 
 @layer utilities {
   .text-gradient-brand {
-    background-image: linear-gradient(95deg, hsl(99 60% 36%) 0%, hsl(88 62% 42%) 50%, hsl(78 68% 46%) 100%);
+    background-image: linear-gradient(95deg, hsl(96 55% 34%) 0%, hsl(91 56% 42%) 50%, hsl(84 64% 48%) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
   .bg-gradient-brand {
-    background-image: linear-gradient(to right, hsl(82 78% 44%) 0%, hsl(142 71% 45%) 100%);
+    background-image: linear-gradient(to right, hsl(91 60% 46%) 0%, hsl(140 64% 40%) 100%);
   }
   .bg-gradient-brand-deep {
-    background-image: linear-gradient(135deg, hsl(99 60% 32%) 0%, hsl(90 56% 38%) 50%, hsl(82 60% 44%) 100%);
+    background-image: linear-gradient(135deg, hsl(96 56% 30%) 0%, hsl(91 56% 38%) 50%, hsl(84 60% 46%) 100%);
   }
   .bg-gradient-brand-soft {
-    background-image: linear-gradient(135deg, hsl(96 56% 42% / 0.18) 0%, hsl(82 62% 50% / 0.18) 100%);
+    background-image: linear-gradient(135deg, hsl(91 56% 42% / 0.18) 0%, hsl(84 62% 52% / 0.18) 100%);
   }
   .ring-glow-brand {
     box-shadow:
-      0 0 0 1px hsl(96 56% 42% / 0.3),
-      0 10px 40px -10px hsl(96 56% 42% / 0.4),
-      0 20px 60px -20px hsl(82 60% 46% / 0.45);
+      0 0 0 1px hsl(91 56% 42% / 0.3),
+      0 10px 40px -10px hsl(91 56% 42% / 0.4),
+      0 20px 60px -20px hsl(84 60% 48% / 0.45);
   }
   .border-gradient-brand {
     position: relative;
@@ -300,7 +300,7 @@
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(135deg, hsl(96 56% 42%), hsl(82 62% 48%));
+    background: linear-gradient(135deg, hsl(91 56% 42%), hsl(84 62% 50%));
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
             mask-composite: exclude;

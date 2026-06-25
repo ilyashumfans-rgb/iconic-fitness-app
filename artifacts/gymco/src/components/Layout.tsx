@@ -77,7 +77,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 className={cn(
                   "relative flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium overflow-hidden",
                   isActive
-                    ? "bg-gradient-brand text-primary-foreground shadow-[0_8px_24px_-8px_hsl(96_56%_55%/0.6)]"
+                    ? "bg-gradient-brand text-primary-foreground shadow-[0_8px_24px_-8px_hsl(91_56%_55%/0.6)]"
                     : "hover:bg-sidebar-accent/60 text-muted-foreground hover:text-sidebar-accent-foreground",
                 )}
               >
@@ -172,12 +172,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   )}
                 >
                   {isActive && (
-                    <span className="absolute inset-x-3 top-1 h-1 rounded-full bg-gradient-brand shadow-[0_0_10px_hsl(96_56%_55%/0.8)]" />
+                    <span className="absolute inset-x-3 top-1 h-1 rounded-full bg-gradient-brand shadow-[0_0_10px_hsl(91_56%_55%/0.8)]" />
                   )}
                   <item.icon
                     className={cn(
                       "h-5 w-5 transition-transform",
-                      isActive && "drop-shadow-[0_0_8px_hsl(96_56%_55%/0.7)] scale-110",
+                      isActive && "drop-shadow-[0_0_8px_hsl(91_56%_55%/0.7)] scale-110",
                     )}
                   />
                   <span className="text-[10px] font-semibold">{item.label}</span>

@@ -125,7 +125,7 @@ const clerkAppearance = {
     unsafe_disableDevelopmentModeWarnings: true,
   },
   variables: {
-    colorPrimary: "#5a9e2e",
+    colorPrimary: "#62982F",
     colorForeground: "hsl(222 47% 11%)",
     colorMutedForeground: "hsl(215 16% 47%)",
     colorDanger: "hsl(0 84% 60%)",
