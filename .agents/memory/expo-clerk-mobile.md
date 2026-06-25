@@ -41,5 +41,18 @@ description: Non-obvious API/wiring gotchas when adding Clerk auth + generated A
 
 ## RN gotcha
 - `GestureHandlerRootView` needs `style={{ flex: 1 }}` or it collapses to zero height → fully blank white screen even though the tree mounted.
+
+## Never block first paint on `useFonts` (`return null`)
+- A root-layout `if (!fontsLoaded && !fontError) return null;` makes the WHOLE app render nothing
+  until the Google font assets finish downloading. On a slow device / Replit tunnel that download
+  stalls, so the app paints blank white forever (web) or never hands off from Expo Go's
+  "Downloading 100.00%" loader (device). Symptom: JS clearly runs ("Running application main" in
+  web console, no errors) but screen stays blank.
+- **Fix:** render immediately — do NOT gate the tree on fonts. Let Inter swap in when ready
+  (system font is a fine first-frame fallback). Keep the native splash up via
+  `preventAutoHideAsync`, then `hideAsync` on `fontsLoaded || fontError` **OR** a ~2s timeout so a
+  stalled font load can't trap the splash either.
+- **Why:** same class of bug as the `<ClerkLoaded>` gate above — any single async dependency that
+  blocks the entire render tree becomes a permanent blank screen when that dependency is slow.
 - `Alert.alert` with multiple buttons is a no-op on React Native Web — the confirm/destructive button callbacks never fire, so any action gated behind it (e.g. logout `signOut()`) silently does nothing in the web preview. Branch on `Platform.OS === "web"` and use `window.confirm` there. **Why:** "logout button does nothing, user still sees home" is this, not an auth bug.
 - Any full-screen overlay whose dismissal is gated on a Reanimated animation callback (`withTiming(..., cb)` → `runOnJS(setDone)`) MUST also have a JS `setTimeout` fail-safe that flips the same state. If the worklet callback doesn't fire (web/reduced-motion/interrupt) the overlay traps the user forever. **Why:** an animated launch-splash gated only on the callback can lock the whole app.

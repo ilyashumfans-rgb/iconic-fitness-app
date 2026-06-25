@@ -83,10 +83,16 @@ export default function RootLayout() {
   });
   const [splashDone, setSplashDone] = useState(false);
 
+  // Hide the native splash as soon as fonts resolve — but NEVER wait on them
+  // forever. If the font download stalls (slow device / blocked tunnel), a 2s
+  // fail-safe hides the splash anyway so the app always reveals its UI.
   useEffect(() => {
     if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
+      SplashScreen.hideAsync().catch(() => {});
+      return;
     }
+    const t = setTimeout(() => SplashScreen.hideAsync().catch(() => {}), 2000);
+    return () => clearTimeout(t);
   }, [fontsLoaded, fontError]);
 
   // Fail-safe: never let the animated splash trap the user, even if the
@@ -96,7 +102,10 @@ export default function RootLayout() {
     return () => clearTimeout(t);
   }, []);
 
-  if (!fontsLoaded && !fontError) return null;
+  // IMPORTANT: do NOT gate the whole app on font loading (`return null`). Doing
+  // so leaves a permanent blank screen if the font assets are slow to download
+  // on a real device. We render immediately and let Inter swap in when ready;
+  // the system font is a perfectly fine fallback for the first moment.
 
   return (
     // NOTE: we intentionally do NOT wrap the app in <ClerkLoaded>. Gating the
