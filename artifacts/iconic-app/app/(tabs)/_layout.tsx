@@ -1,6 +1,8 @@
 import { useAuth } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
 import { Redirect, Tabs } from "expo-router";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, View } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/hooks/useGuest";
@@ -10,8 +12,34 @@ export default function TabsLayout() {
   const { isLoaded, isSignedIn } = useAuth();
   const { isGuest } = useGuest();
 
-  if (!isLoaded) return null;
-  if (!isSignedIn && !isGuest) return <Redirect href="/(auth)/sign-in" />;
+  // Fail-safe: if Clerk can't finish loading (slow/blocked network on a real
+  // device), don't trap the user on a spinner forever — fall through to sign-in,
+  // where "Continue without login" is always available.
+  const [authTimedOut, setAuthTimedOut] = useState(false);
+  useEffect(() => {
+    if (isLoaded) return;
+    const t = setTimeout(() => setAuthTimedOut(true), 5000);
+    return () => clearTimeout(t);
+  }, [isLoaded]);
+
+  const hasAccess = isGuest || (isLoaded && isSignedIn);
+  if (!hasAccess) {
+    if (!isLoaded && !authTimedOut) {
+      return (
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: colors.background,
+          }}
+        >
+          <ActivityIndicator color={colors.primary} />
+        </View>
+      );
+    }
+    return <Redirect href="/(auth)/sign-in" />;
+  }
 
   return (
     <Tabs

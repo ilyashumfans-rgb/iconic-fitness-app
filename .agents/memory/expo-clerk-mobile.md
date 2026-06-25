@@ -20,6 +20,22 @@ description: Non-obvious API/wiring gotchas when adding Clerk auth + generated A
 ## Generated react-query hooks (orval)
 - The second arg's `query` option is a **full** `UseQueryOptions` (requires `queryKey`). Passing just `{ query: { enabled } }` fails typecheck — either also pass `queryKey: getGetXQueryKey(params)` or skip `enabled` and rely on the route guard.
 
+## Never gate the whole app tree on `<ClerkLoaded>`
+- Wrapping the root layout's children (router + splash) in `<ClerkLoaded>` makes the ENTIRE
+  app wait on Clerk's network init. On a real device / embedded webview where that request is
+  slow or blocked, the native splash hands off to a permanent blank screen — symptom: "splash
+  comes then goes back, not loading". It also gates guest mode: the sign-in screen (with
+  "Continue without login") is unreachable, deadlocking guests.
+- **Fix/pattern:** render the app always under `ClerkProvider` (no `ClerkLoaded` wrapper) and
+  resolve auth state per-route: `(auth)` layout only redirects to the app when
+  `isLoaded && isSignedIn`, otherwise always shows the auth stack (guest always reachable);
+  `(tabs)` grants access on `isGuest || (isLoaded && isSignedIn)`, shows a brief spinner while
+  `!isLoaded`, and after a ~5s timeout falls through to sign-in so a stuck Clerk load never
+  traps the user. Modal screens use `if (isLoaded && !isSignedIn) <Redirect/>` (render while
+  loading, redirect only when confirmed signed-out) — same no-blank-gate principle.
+- **Why:** `ClerkLoaded` renders nothing until `clerk.loaded`; `getToken()` safely returns null
+  before load, so public data + guest flows work fine without the gate.
+
 ## Expo Go native-module trap
 - The Replit Expo workflow runs in **Expo Go** ("Using Expo Go" in Metro logs), which only bundles the native modules shipped in the Expo SDK. Any third-party lib with its own native code (e.g. `react-native-keyboard-controller`) crashes the app on launch on Android/iOS while **web keeps working** (web has a JS fallback). Symptom: "android/ios not loading" but web preview fine. Fix: drop the lib (use RN built-ins like `KeyboardAvoidingView`) or move the user to a dev build. Reanimated/gesture-handler/svg/screens ARE in Expo Go, so they're safe.
 

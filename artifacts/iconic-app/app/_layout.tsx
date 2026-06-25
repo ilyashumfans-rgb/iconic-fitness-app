@@ -1,4 +1,4 @@
-import { ClerkLoaded, ClerkProvider, useAuth } from "@clerk/expo";
+import { ClerkProvider, useAuth } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import {
   Inter_400Regular,
@@ -99,28 +99,31 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontError) return null;
 
   return (
+    // NOTE: we intentionally do NOT wrap the app in <ClerkLoaded>. Gating the
+    // whole tree on Clerk finishing its network load means a slow/blocked auth
+    // request on a real device traps the user on a blank screen after the splash
+    // (and even blocks guests from reaching "Continue without login"). Instead we
+    // always render the app and let each route handle the auth-loading state.
     <ClerkProvider
       publishableKey={publishableKey}
       tokenCache={tokenCache}
       {...(proxyUrl ? { proxyUrl } : {})}
     >
-      <ClerkLoaded>
-        <SafeAreaProvider>
-          <ErrorBoundary>
-            <QueryClientProvider client={queryClient}>
-              <ApiAuthBridge />
-              <GuestProvider>
-                <GestureHandlerRootView style={{ flex: 1 }}>
-                  <RootLayoutNav />
-                  {!splashDone ? (
-                    <AnimatedSplash onFinish={() => setSplashDone(true)} />
-                  ) : null}
-                </GestureHandlerRootView>
-              </GuestProvider>
-            </QueryClientProvider>
-          </ErrorBoundary>
-        </SafeAreaProvider>
-      </ClerkLoaded>
+      <SafeAreaProvider>
+        <ErrorBoundary>
+          <QueryClientProvider client={queryClient}>
+            <ApiAuthBridge />
+            <GuestProvider>
+              <GestureHandlerRootView style={{ flex: 1 }}>
+                <RootLayoutNav />
+                {!splashDone ? (
+                  <AnimatedSplash onFinish={() => setSplashDone(true)} />
+                ) : null}
+              </GestureHandlerRootView>
+            </GuestProvider>
+          </QueryClientProvider>
+        </ErrorBoundary>
+      </SafeAreaProvider>
     </ClerkProvider>
   );
 }
