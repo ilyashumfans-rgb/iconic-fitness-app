@@ -25,6 +25,13 @@ clear guest.
 guests. Screens must degrade gracefully (null-safe reads; mutations need a `catch`). Don't
 let a guest-triggerable mutation throw an unhandled rejection.
 
+**Pattern for guest-accessible screens — gate auth-only queries, don't just catch them:**
+pass `{ query: { enabled: !!isSignedIn, queryKey: getGetXQueryKey(params) } }` to each
+auth-only hook so guests never fire them (avoids 401 churn). Orval requires `queryKey`
+alongside `enabled` or it fails typecheck (see expo-clerk-mobile note). Public hooks
+(`useListGyms`, `useListClasses`, gym categories — gym routes have no `requireUser`) stay
+always-enabled and power the guest home. Keep the `isSignedIn` branch in JSX, not in hooks.
+
 ## Persisted-session red herring
 "Login isn't required on my device" is usually Clerk's `tokenCache` (expo-secure-store)
 remembering a session from earlier testing — not a gate bug. Fix: Profile → Log out.
