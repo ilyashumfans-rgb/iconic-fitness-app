@@ -14,6 +14,7 @@ export default function StoreDetail() {
   const [size, setSize] = useState<string>("");
   const [color, setColor] = useState<string>("");
   const [variantErr, setVariantErr] = useState<string | null>(null);
+  const [activePhoto, setActivePhoto] = useState<string>("");
   const cart = useCart();
 
   useEffect(() => {
@@ -24,9 +25,13 @@ export default function StoreDetail() {
     setColor("");
     setVariantErr(null);
     setQty(1);
+    setActivePhoto("");
     storeApi
       .getProduct(slug)
-      .then(setProduct)
+      .then((p) => {
+        setProduct(p);
+        setActivePhoto(p.imageUrl);
+      })
       .catch((e) => setErr(e?.message ?? String(e)));
   }, [slug]);
 
@@ -55,6 +60,10 @@ export default function StoreDetail() {
         )
       : 0;
   const outOfStock = product.stock <= 0;
+
+  const photos = Array.from(
+    new Set([product.imageUrl, ...(product.gallery ?? [])].filter(Boolean)),
+  );
 
   const hasSizes = (product.sizes?.length ?? 0) > 0;
   const hasColors = (product.colors?.length ?? 0) > 0;
@@ -101,12 +110,32 @@ export default function StoreDetail() {
         <ArrowLeft className="h-4 w-4" /> Back to store
       </Link>
       <div className="grid md:grid-cols-2 gap-8 md:gap-12">
-        <div className="aspect-square bg-muted rounded-2xl overflow-hidden border border-border">
-          <img
-            src={product.imageUrl}
-            alt={product.name}
-            className="w-full h-full object-cover"
-          />
+        <div>
+          <div className="aspect-square bg-muted rounded-2xl overflow-hidden border border-border">
+            <img
+              src={activePhoto || product.imageUrl}
+              alt={product.name}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          {photos.length > 1 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {photos.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setActivePhoto(p)}
+                  className={
+                    (activePhoto || product.imageUrl) === p
+                      ? "h-16 w-16 rounded-lg overflow-hidden border-2 border-primary"
+                      : "h-16 w-16 rounded-lg overflow-hidden border border-border opacity-80 hover:opacity-100"
+                  }
+                >
+                  <img src={p} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <div>
           {product.vendor && (

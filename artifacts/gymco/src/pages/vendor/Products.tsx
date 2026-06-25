@@ -409,12 +409,26 @@ export default function VendorProducts() {
                       <div className="h-16 w-16 rounded-lg bg-lime-50 border border-lime-100" />
                     )}
                     <FileUpload
-                      label="Upload image"
+                      label="Upload photos"
+                      multiple
                       onUploaded={(urls) =>
-                        urls[0] && setForm((f) => ({ ...f, imageUrl: urls[0] }))
+                        setForm((f) => {
+                          if (urls.length === 0) return f;
+                          const imageUrl = f.imageUrl || urls[0];
+                          const extras = f.imageUrl ? urls : urls.slice(1);
+                          return {
+                            ...f,
+                            imageUrl,
+                            gallery: [...f.gallery, ...extras],
+                          };
+                        })
                       }
                     />
                   </div>
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Pick several photos at once — the first becomes the main
+                    image, the rest go to the gallery.
+                  </p>
                   <input
                     className={`${INPUT} mt-2`}
                     value={form.imageUrl}
