@@ -2,14 +2,20 @@ import { useUser } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
 import {
   getGetTrackingSummaryQueryKey,
+  getListMyBookingsQueryKey,
   useAddWater,
+  useCreateBooking,
   useGetMe,
   useGetTrackingSummary,
+  useListClasses,
+  useListMyBookings,
+  type ClassSession,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useCallback, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { useCallback, useMemo, useState } from "react";
+import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
@@ -17,7 +23,7 @@ import { ProgressRing } from "@/components/ProgressRing";
 import { Screen } from "@/components/Screen";
 import { LoadingView, SectionHeader } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
-import { istToday } from "@/lib/dates";
+import { istToday, formatClock, formatDateLabel } from "@/lib/dates";
 
 export default function HomeScreen() {
   const colors = useColors();
@@ -27,13 +33,29 @@ export default function HomeScreen() {
 
   const summaryQuery = useGetTrackingSummary({ date: istToday() });
   const meQuery = useGetMe();
+  const classesQuery = useListClasses({});
+  const bookingsQuery = useListMyBookings({ status: "upcoming" });
   const addWater = useAddWater();
+  const createBooking = useCreateBooking();
   const [quickLogging, setQuickLogging] = useState(false);
+  const [bookingId, setBookingId] = useState<number | null>(null);
+
+  const bookedClassIds = useMemo(
+    () => new Set((bookingsQuery.data ?? []).map((b) => b.classId)),
+    [bookingsQuery.data],
+  );
+
+  const featured = useMemo(
+    () => (classesQuery.data ?? []).slice(0, 6),
+    [classesQuery.data],
+  );
 
   const refetchAll = useCallback(() => {
     void summaryQuery.refetch();
     void meQuery.refetch();
-  }, [summaryQuery, meQuery]);
+    void classesQuery.refetch();
+    void bookingsQuery.refetch();
+  }, [summaryQuery, meQuery, classesQuery, bookingsQuery]);
 
   const onQuickWater = useCallback(async () => {
     if (quickLogging) return;
@@ -47,6 +69,24 @@ export default function HomeScreen() {
       setQuickLogging(false);
     }
   }, [quickLogging, addWater, queryClient]);
+
+  const onBook = useCallback(
+    async (session: ClassSession) => {
+      setBookingId(session.id);
+      try {
+        await createBooking.mutateAsync({ data: { classId: session.id } });
+        await queryClient.invalidateQueries({
+          queryKey: getListMyBookingsQueryKey(),
+        });
+        Alert.alert("Booked!", `You're in for ${session.title}.`);
+      } catch {
+        Alert.alert("Could not book", "This class may be full. Try another.");
+      } finally {
+        setBookingId(null);
+      }
+    },
+    [createBooking, queryClient],
+  );
 
   const summary = summaryQuery.data;
   const firstName = user?.firstName ?? meQuery.data?.name?.split(" ")[0] ?? "";
@@ -93,48 +133,95 @@ export default function HomeScreen() {
       </View>
 
       {/* Hero rings */}
-      <Card style={styles.hero}>
-        <View style={styles.ringWrap}>
-          <ProgressRing progress={calRatio} size={150} stroke={14} color={colors.calorie}>
-            <ProgressRing
-              progress={waterRatio}
-              size={116}
-              stroke={12}
-              color={colors.water}
-            >
+      <View style={styles.heroWrap}>
+        <LinearGradient
+          colors={[colors.primary + "26", "transparent"]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={[styles.heroGlow, { pointerEvents: "none" }]}
+        />
+        <Card style={styles.hero} tone="elevated">
+          <View style={styles.ringWrap}>
+            <ProgressRing progress={calRatio} size={150} stroke={14} color={colors.calorie}>
               <ProgressRing
-                progress={stepRatio}
-                size={84}
-                stroke={11}
-                color={colors.steps}
+                progress={waterRatio}
+                size={116}
+                stroke={12}
+                color={colors.water}
               >
-                <Feather name="activity" size={26} color={colors.foreground} />
+                <ProgressRing
+                  progress={stepRatio}
+                  size={84}
+                  stroke={11}
+                  color={colors.steps}
+                >
+                  <Feather name="activity" size={26} color={colors.foreground} />
+                </ProgressRing>
               </ProgressRing>
             </ProgressRing>
-          </ProgressRing>
-        </View>
+          </View>
 
-        <View style={styles.legend}>
-          <LegendRow
-            color={colors.calorie}
-            label="Calories"
-            value={`${summary?.caloriesIn ?? 0}`}
-            goal={`${summary?.calorieGoal ?? 0} kcal`}
-          />
-          <LegendRow
-            color={colors.water}
-            label="Water"
-            value={`${((summary?.waterMl ?? 0) / 1000).toFixed(1)}L`}
-            goal={`${((summary?.waterGoalMl ?? 0) / 1000).toFixed(1)}L`}
-          />
-          <LegendRow
-            color={colors.steps}
-            label="Steps"
-            value={`${summary?.steps ?? 0}`}
-            goal={`${summary?.stepGoal ?? 0}`}
-          />
+          <View style={styles.legend}>
+            <LegendRow
+              color={colors.calorie}
+              label="Calories"
+              value={`${summary?.caloriesIn ?? 0}`}
+              goal={`${summary?.calorieGoal ?? 0} kcal`}
+            />
+            <LegendRow
+              color={colors.water}
+              label="Water"
+              value={`${((summary?.waterMl ?? 0) / 1000).toFixed(1)}L`}
+              goal={`${((summary?.waterGoalMl ?? 0) / 1000).toFixed(1)}L`}
+            />
+            <LegendRow
+              color={colors.steps}
+              label="Steps"
+              value={`${summary?.steps ?? 0}`}
+              goal={`${summary?.stepGoal ?? 0}`}
+            />
+          </View>
+        </Card>
+      </View>
+
+      {/* Book a class — gym activities */}
+      <SectionHeader
+        title="Book your next session"
+        action="See all"
+        onAction={() => router.push("/classes")}
+      />
+      {classesQuery.isLoading ? (
+        <View style={{ height: 150, justifyContent: "center" }}>
+          <LoadingView />
         </View>
-      </Card>
+      ) : featured.length === 0 ? (
+        <Card style={{ marginBottom: 28 }}>
+          <AppText weight="700" size={15}>
+            No classes scheduled
+          </AppText>
+          <AppText muted size={13} style={{ marginTop: 4 }}>
+            New sessions drop soon — pull to refresh.
+          </AppText>
+        </Card>
+      ) : (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.classRow}
+          style={{ marginBottom: 28 }}
+        >
+          {featured.map((s) => (
+            <ClassCard
+              key={s.id}
+              session={s}
+              booked={bookedClassIds.has(s.id)}
+              loading={bookingId === s.id}
+              onBook={() => onBook(s)}
+              onOpen={() => router.push("/classes")}
+            />
+          ))}
+        </ScrollView>
+      )}
 
       {/* Quick log */}
       <SectionHeader title="Quick log" />
@@ -214,6 +301,112 @@ function greeting(): string {
   if (h < 12) return "Good morning";
   if (h < 17) return "Good afternoon";
   return "Good evening";
+}
+
+function ClassCard({
+  session,
+  booked,
+  loading,
+  onBook,
+  onOpen,
+}: {
+  session: ClassSession;
+  booked: boolean;
+  loading: boolean;
+  onBook: () => void;
+  onOpen: () => void;
+}) {
+  const colors = useColors();
+  const full = session.booked >= session.capacity;
+  const tint = intensityColor(session.intensity, colors);
+
+  return (
+    <View
+      style={[
+        styles.classCard,
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.border,
+          borderRadius: colors.radius,
+        },
+      ]}
+    >
+      {/* Tapping the card body opens the full Classes screen. The Book button
+          below is a sibling (not nested) so its press can't double-fire. */}
+      <Pressable
+        onPress={onOpen}
+        style={({ pressed }) => ({ opacity: pressed ? 0.92 : 1 })}
+      >
+        <LinearGradient
+          colors={[tint + "33", "transparent"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.classBanner}
+        >
+          <View style={[styles.intensity, { backgroundColor: tint + "33" }]}>
+            <AppText weight="700" size={10} color={tint}>
+              {session.intensity.toUpperCase()}
+            </AppText>
+          </View>
+          <Feather name="activity" size={20} color={tint} />
+        </LinearGradient>
+
+        <View style={styles.classBody}>
+          <AppText weight="700" size={16} numberOfLines={1}>
+            {session.title}
+          </AppText>
+          <AppText muted size={12} numberOfLines={1} style={{ marginTop: 2 }}>
+            {session.gymName}
+          </AppText>
+
+          <View style={styles.classMetaRow}>
+            <Feather name="clock" size={12} color={colors.mutedForeground} />
+            <AppText muted size={12}>
+              {formatClock(session.startsAt)}
+            </AppText>
+            <AppText muted size={12}>
+              ·
+            </AppText>
+            <AppText muted size={12}>
+              {formatDateLabel(session.startsAt)}
+            </AppText>
+          </View>
+        </View>
+      </Pressable>
+
+      <View style={styles.bookWrap}>
+        <Pressable
+          onPress={onBook}
+          disabled={booked || full || loading}
+          style={({ pressed }) => [
+            styles.bookBtn,
+            {
+              backgroundColor: booked || full ? colors.elevated : colors.primary,
+              borderRadius: colors.radius - 6,
+              opacity: pressed ? 0.85 : 1,
+            },
+          ]}
+        >
+          <AppText
+            weight="700"
+            size={13}
+            color={booked || full ? colors.mutedForeground : colors.primaryForeground}
+          >
+            {loading ? "Booking…" : booked ? "Booked ✓" : full ? "Full" : "Book now"}
+          </AppText>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+function intensityColor(
+  intensity: string,
+  colors: ReturnType<typeof useColors>,
+): string {
+  if (intensity === "high") return colors.destructive;
+  if (intensity === "medium") return colors.calorie;
+  return colors.success;
 }
 
 function LegendRow({
@@ -331,11 +524,52 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
   },
+  heroWrap: { marginBottom: 28 },
+  heroGlow: {
+    position: "absolute",
+    top: -10,
+    left: 20,
+    right: 20,
+    height: 120,
+    borderRadius: 80,
+  },
   hero: { alignItems: "center", gap: 22, paddingVertical: 24 },
   ringWrap: { alignItems: "center", justifyContent: "center" },
   legend: { alignSelf: "stretch", gap: 12 },
   legendRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   dot: { width: 10, height: 10, borderRadius: 5 },
+  classRow: { gap: 14, paddingRight: 8, paddingVertical: 2 },
+  classCard: {
+    width: 200,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: "hidden",
+  },
+  classBanner: {
+    height: 70,
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+  },
+  intensity: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  classBody: { paddingHorizontal: 14, paddingTop: 12 },
+  classMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 10,
+  },
+  bookWrap: { paddingHorizontal: 14, paddingTop: 14, paddingBottom: 14 },
+  bookBtn: {
+    paddingVertical: 11,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   quickRow: { flexDirection: "row", gap: 12, marginBottom: 28 },
   quickTile: {
     flex: 1,

@@ -12,11 +12,12 @@ import { setAuthTokenGetter, setBaseUrl } from "@workspace/api-client-react";
 import { Stack } from "expo-router";
 import * as Notifications from "expo-notifications";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { AnimatedSplash } from "@/components/AnimatedSplash";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 SplashScreen.preventAutoHideAsync();
@@ -80,12 +81,20 @@ export default function RootLayout() {
     Inter_600SemiBold,
     Inter_700Bold,
   });
+  const [splashDone, setSplashDone] = useState(false);
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
+
+  // Fail-safe: never let the animated splash trap the user, even if the
+  // Reanimated completion callback doesn't fire (web/reduced-motion edge cases).
+  useEffect(() => {
+    const t = setTimeout(() => setSplashDone(true), 3000);
+    return () => clearTimeout(t);
+  }, []);
 
   if (!fontsLoaded && !fontError) return null;
 
@@ -104,6 +113,9 @@ export default function RootLayout() {
                 <KeyboardProvider>
                   <RootLayoutNav />
                 </KeyboardProvider>
+                {!splashDone ? (
+                  <AnimatedSplash onFinish={() => setSplashDone(true)} />
+                ) : null}
               </GestureHandlerRootView>
             </QueryClientProvider>
           </ErrorBoundary>
