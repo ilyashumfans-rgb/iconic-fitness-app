@@ -94,6 +94,10 @@ function RootLayoutNav() {
           name="meal-plans"
           options={{ presentation: "modal", headerShown: false }}
         />
+        <Stack.Screen
+          name="habits"
+          options={{ presentation: "modal", headerShown: false }}
+        />
       </Stack>
     </>
   );

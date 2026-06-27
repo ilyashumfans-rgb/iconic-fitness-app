@@ -120,6 +120,35 @@ export default function ProgressScreen() {
             <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
           </Pressable>
 
+          {/* Habit tracker entry */}
+          <Pressable
+            onPress={() => router.push("/habits")}
+            style={({ pressed }) => [
+              styles.bodyLink,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+                borderRadius: colors.radius,
+                opacity: pressed ? 0.8 : 1,
+              },
+            ]}
+          >
+            <View
+              style={[styles.bodyLinkIcon, { backgroundColor: colors.primary + "22" }]}
+            >
+              <Feather name="check-circle" size={18} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <AppText weight="700" size={15}>
+                Habit Tracker
+              </AppText>
+              <AppText muted size={12}>
+                Build daily habits and keep your streak
+              </AppText>
+            </View>
+            <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
+          </Pressable>
+
           {/* Weekly target hero */}
           <Card style={styles.hero}>
             <View style={styles.heroHead}>

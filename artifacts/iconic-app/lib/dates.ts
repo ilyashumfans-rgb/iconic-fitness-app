@@ -33,3 +33,13 @@ export function formatDateLabel(iso: string): string {
 export function isSameDayIso(isoA: string, isoB: string): boolean {
   return istDateStr(new Date(isoA)) === istDateStr(new Date(isoB));
 }
+
+/** Single-letter IST weekday for a YYYY-MM-DD date string, e.g. "M". */
+export function istWeekdayShort(dateStr: string): string {
+  // Anchor at midday UTC so the IST calendar day is unambiguous.
+  const d = new Date(`${dateStr}T12:00:00Z`);
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: IST,
+    weekday: "narrow",
+  }).format(d);
+}

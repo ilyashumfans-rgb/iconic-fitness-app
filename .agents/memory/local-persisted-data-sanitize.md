@@ -11,3 +11,11 @@ Local-first features (e.g. Body & Weight tracker) persist a JSON blob in AsyncSt
 - Do NOT re-sanitize inside the `save*` mergers by dropping `undefined` keys — callers intentionally pass `undefined` to CLEAR a field, and a sanitize-on-save that omits undefined silently breaks clear-to-blank. Load-time sanitize + UI guards are sufficient.
 
 **Why:** architect review failed this twice — first for trusting stored profile/measurements (NaN%), then the "optional" save-side re-sanitize introduced a clear-field regression.
+
+## Don't compute "today"/date windows at module scope
+Anything derived from the current date (e.g. a 7-day window via `istDateNDaysAgo`) must be
+computed inside the component (memoize keyed by `istToday()`), NOT as a module-level `const`.
+Module scope captures the date once at first import and goes stale if the app stays open
+across an IST midnight rollover — the grid then disagrees with today/streak logic. Also use
+`istWeekdayShort` (Intl with `timeZone: Asia/Kolkata`) for weekday labels, not `new
+Date(str).getDay()` which parses in device-local time and can mislabel IST dates.
