@@ -7,7 +7,6 @@ import { Card } from "@/components/Card";
 import { Screen } from "@/components/Screen";
 import { SectionHeader } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
-import { exploreUrl, openExternal, storeUrl } from "@/lib/links";
 
 type MoreLink = {
   title: string;
@@ -32,18 +31,6 @@ export default function MoreScreen() {
       subtitle: "Browse and book group classes",
       icon: "calendar",
       action: () => router.push("/classes"),
-    },
-    {
-      title: "Sports & Fitness",
-      subtitle: "Explore gyms, sports and fitness near you",
-      icon: "award",
-      action: () => openExternal(exploreUrl),
-    },
-    {
-      title: "Store",
-      subtitle: "Shop gear, supplements and more",
-      icon: "shopping-bag",
-      action: () => openExternal(storeUrl),
     },
     {
       title: "Progress",

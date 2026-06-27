@@ -6,6 +6,7 @@ import { ActivityIndicator, View } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/hooks/useGuest";
+import { exploreUrl, openExternal, storeUrl } from "@/lib/links";
 
 export default function TabsLayout() {
   const colors = useColors();
@@ -67,6 +68,36 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <Feather name="home" size={size} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="sports"
+        options={{
+          title: "Sports & Fitness",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="award" size={size} color={color} />
+          ),
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            openExternal(exploreUrl);
+          },
+        }}
+      />
+      <Tabs.Screen
+        name="store"
+        options={{
+          title: "Store",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="shopping-bag" size={size} color={color} />
+          ),
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            openExternal(storeUrl);
+          },
         }}
       />
       <Tabs.Screen
