@@ -14,7 +14,7 @@ import {
   AiCoachResponse,
 } from "@workspace/api-zod";
 import { requireUser } from "../lib/currentUser";
-import { computeHealthMetrics, deriveGoals } from "../lib/healthMetrics";
+import { computeHealthMetrics, deriveGoals, weightPlan } from "../lib/healthMetrics";
 
 const router: IRouter = Router();
 
@@ -132,12 +132,14 @@ ONBOARDING ASSESSMENT (do this FIRST when the member has not completed their ass
   - Goal: their main goal (weight loss, muscle gain, fat loss, body recomposition, strength, endurance, or general fitness).
   - Lifestyle: typical sleep hours, stress level (low / medium / high), food preference (veg / non-veg / vegan / eggetarian), whether they train at a gym or at home, and minutes available per workout.
 - Acknowledge answers warmly as you go. Once you have enough, call the save_assessment tool with everything collected (omit anything they declined). Saving also calculates their health metrics and sets personalized daily goals automatically — do not make the member do math.
-- After saving, present their results in plain language: BMI (with category), estimated body fat %, BMR, daily calorie target, protein and water targets, ideal weight range, and a fitness score. Then give a short personalized starter plan: a weekly workout split, daily focus, cardio vs strength balance, meal direction (respecting their food preference), sleep and hydration targets, and rest days — realistic for their experience level and available time.
+- After saving, present their results in plain language: BMI (with category), estimated body fat %, BMR, daily calorie target, protein and water targets, ideal weight range, and a fitness score.
+- Use their HEIGHT and WEIGHT to tell them concretely what to do: whether they should lose, gain, or maintain weight, roughly how many kg, and a realistic timeframe at a safe pace (about 0.5 kg/week to lose, 0.25 kg/week to gain). Use the "Weight plan (from height & weight)" line in MEMBER DATA below as your basis — never recommend crash dieting or losing weight too fast. If they're already in the healthy range, focus on body composition (strength + recomposition) rather than the scale.
+- Then give a short personalized starter plan that matches that weight direction: a weekly workout split, daily focus, cardio vs strength balance, meal direction (respecting their food preference), sleep and hydration targets, and rest days — realistic for their experience level and available time.
 - Finally, tell them you'll check in daily, and suggest they switch on Daily Reminders in their Profile so they get nudges for water, meals, workouts, steps and sleep.
 
 DAILY GUIDANCE (once the assessment is complete):
 - Greet them and give a brief daily check-in grounded in today's numbers: what they've done and what's still pending toward each goal (water, calories, protein, steps, workout), plus their streak.
-- Give ONE specific, actionable nudge for today (e.g. "you're 900ml short on water — have a glass now", or "great consistency — add 2.5kg to your squat next session").
+- Give ONE specific, actionable nudge for today (e.g. "you're 900ml short on water — have a glass now", or "great consistency — add 2.5kg to your squat next session"). Keep their weight plan (lose / gain / maintain, from the MEMBER DATA below) in mind so your nudges move them toward it.
 - Gently remind them about any action they haven't done yet today.
 
 Actions you can take (tools):
@@ -282,6 +284,14 @@ async function buildCoachContext(userId: number): Promise<string> {
     gender: p?.gender ?? null,
     activityLevel: p?.activityLevel ?? null,
   });
+  const weightRec = weightPlan({
+    heightCm: p?.heightCm ?? 0,
+    weightKg: p?.weightKg ?? 0,
+    age: p?.age ?? 0,
+    gender: p?.gender ?? null,
+    activityLevel: p?.activityLevel ?? null,
+    targetWeightKg: p?.targetWeightKg ?? null,
+  });
   const assessmentDone = !!p?.assessmentCompletedAt;
 
   return [
@@ -304,6 +314,7 @@ async function buildCoachContext(userId: number): Promise<string> {
     metrics.bmi > 0
       ? `Health metrics: BMI ${metrics.bmi} (${metrics.bmiCategory}), body fat ~${metrics.bodyFatPct}%, BMR ${metrics.bmr} kcal, TDEE ${metrics.tdee} kcal, ideal weight ${metrics.idealWeightLowKg}-${metrics.idealWeightHighKg} kg, hydration target ${metrics.hydrationMl} ml`
       : "Health metrics: not enough profile data yet (need height, weight, age).",
+    weightRec ? `Weight plan (from height & weight): ${weightRec.summary}` : null,
     `Today's date: ${today}`,
     `Water today: ${water?.ml ?? 0} ml of ${waterGoal} ml goal`,
     `Calories eaten today: ${meals?.cals ?? 0} kcal of ${calorieGoal} kcal goal`,

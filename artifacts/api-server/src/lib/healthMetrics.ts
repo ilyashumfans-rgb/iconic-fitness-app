@@ -102,6 +102,64 @@ export function computeHealthMetrics(input: MetricsInput): HealthMetrics {
   };
 }
 
+export interface WeightPlan {
+  direction: "lose" | "gain" | "maintain";
+  targetWeightKg: number;
+  deltaKg: number;
+  weeklyRateKg: number;
+  estWeeks: number;
+  summary: string;
+}
+
+/**
+ * Translate height + current weight (and optional explicit target) into a
+ * concrete, safe recommendation: which direction to move, how many kg, at what
+ * weekly pace, and a rough timeframe. Anchors on the healthy BMI range when the
+ * member hasn't set a target. Returns null when there isn't enough data.
+ */
+export function weightPlan(
+  input: MetricsInput & { targetWeightKg?: number | null },
+): WeightPlan | null {
+  const metrics = computeHealthMetrics(input);
+  if (metrics.bmi <= 0) return null;
+
+  const weightKg = input.weightKg;
+  const { idealWeightLowKg, idealWeightHighKg } = metrics;
+
+  // Pick a target: an explicit member target if sensible, else the nearest edge
+  // of the healthy range (or current weight when already inside it).
+  let target: number;
+  const explicit = input.targetWeightKg;
+  if (explicit != null && explicit > 0) {
+    target = explicit;
+  } else if (weightKg > idealWeightHighKg) {
+    target = idealWeightHighKg;
+  } else if (weightKg < idealWeightLowKg) {
+    target = idealWeightLowKg;
+  } else {
+    target = weightKg;
+  }
+  target = round(target, 0.1);
+
+  const deltaKg = round(weightKg - target, 0.1); // positive → need to lose
+  const direction: WeightPlan["direction"] =
+    deltaKg > 1 ? "lose" : deltaKg < -1 ? "gain" : "maintain";
+
+  // Safe pace: ~0.5 kg/week for loss, ~0.25 kg/week for gain.
+  const weeklyRateKg = direction === "lose" ? 0.5 : direction === "gain" ? 0.25 : 0;
+  const estWeeks = weeklyRateKg > 0 ? Math.ceil(Math.abs(deltaKg) / weeklyRateKg) : 0;
+
+  let summary: string;
+  if (direction === "maintain") {
+    summary = `Maintain around ${weightKg} kg (already in the healthy ${idealWeightLowKg}-${idealWeightHighKg} kg range) — focus on body composition and consistency.`;
+  } else {
+    const verb = direction === "lose" ? "Lose" : "Gain";
+    summary = `${verb} about ${Math.abs(deltaKg)} kg (from ${weightKg} kg toward ${target} kg) at a safe ~${weeklyRateKg} kg/week — roughly ${estWeeks} weeks. Healthy range for their height is ${idealWeightLowKg}-${idealWeightHighKg} kg.`;
+  }
+
+  return { direction, targetWeightKg: target, deltaKg, weeklyRateKg, estWeeks, summary };
+}
+
 export type GoalIntent = "loss" | "gain" | "maintain";
 
 /** Map a free-text fitness goal to a calorie/training intent. */
