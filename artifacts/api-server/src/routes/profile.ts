@@ -3,6 +3,7 @@ import { and, eq, gte } from "drizzle-orm";
 import { db, usersTable, bookingsTable, classSessionsTable, gymsTable } from "@workspace/db";
 import { GetMeResponse, UpdateMeBody, UpdateMeResponse } from "@workspace/api-zod";
 import { requireUser } from "../lib/currentUser";
+import { computeHealthMetrics } from "../lib/healthMetrics";
 
 const router: IRouter = Router();
 
@@ -41,6 +42,13 @@ async function loadProfile(userId: number) {
         (user.dailyWaterMl >= 2000 ? 6 : 0),
     ),
   );
+  const metrics = computeHealthMetrics({
+    heightCm: user.heightCm,
+    weightKg: user.weightKg,
+    age: user.age,
+    gender: user.gender,
+    activityLevel: user.activityLevel,
+  });
   return {
     id: user.id,
     name: user.name,
@@ -63,6 +71,12 @@ async function loadProfile(userId: number) {
     weeklyWorkouts: workouts,
     weeklyGoal: user.weeklyGoal,
     joinedAt: user.joinedAt,
+    assessmentComplete: !!user.assessmentCompletedAt,
+    experienceLevel: user.experienceLevel,
+    targetWeightKg: user.targetWeightKg,
+    bmr: metrics.bmr,
+    tdee: metrics.tdee,
+    bodyFatPct: metrics.bodyFatPct,
   };
 }
 

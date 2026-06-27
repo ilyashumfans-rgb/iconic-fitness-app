@@ -6,6 +6,7 @@ import {
   real,
   boolean,
   timestamp,
+  jsonb,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
@@ -33,6 +34,14 @@ export const usersTable = pgTable("users", {
   calorieGoal: integer("calorie_goal").notNull().default(2200),
   proteinGoalG: integer("protein_goal_g").notNull().default(120),
   stepGoal: integer("step_goal").notNull().default(8000),
+  experienceLevel: text("experience_level"),
+  targetWeightKg: real("target_weight_kg"),
+  activityLevel: text("activity_level"),
+  foodPreference: text("food_preference"),
+  assessment: jsonb("assessment"),
+  assessmentCompletedAt: timestamp("assessment_completed_at", {
+    withTimezone: true,
+  }),
   memberCode: text("member_code").notNull(),
   joinedAt: timestamp("joined_at", { withTimezone: true })
     .notNull()

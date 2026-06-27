@@ -53,6 +53,17 @@ export interface UserProfile {
   weeklyWorkouts: number;
   weeklyGoal: number;
   joinedAt: string;
+  /** True once the AI fitness assessment is done */
+  assessmentComplete: boolean;
+  /** new | experienced */
+  experienceLevel?: string | null;
+  targetWeightKg?: number | null;
+  /** Basal metabolic rate (kcal); 0 if unknown */
+  bmr: number;
+  /** Maintenance calories (kcal); 0 if unknown */
+  tdee: number;
+  /** Estimated body fat %; 0 if unknown */
+  bodyFatPct: number;
 }
 
 export interface UserProfileUpdate {

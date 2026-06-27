@@ -260,10 +260,14 @@ export default function HomeScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <AppText weight="700" size={16}>
-                Ask your AI coach
+                {meQuery.data && !meQuery.data.assessmentComplete
+                  ? "Start your fitness assessment"
+                  : "Ask your AI coach"}
               </AppText>
               <AppText muted size={13} style={{ marginTop: 2 }}>
-                Personalized tips from your workouts, meals & goals.
+                {meQuery.data && !meQuery.data.assessmentComplete
+                  ? "Answer a few questions and I'll build your plan."
+                  : "Personalized tips from your workouts, meals & goals."}
               </AppText>
             </View>
             <Feather

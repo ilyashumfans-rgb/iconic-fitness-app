@@ -21,9 +21,10 @@ import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/hooks/useGuest";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import {
-  cancelDailyReminder,
-  getReminderHour,
-  scheduleDailyReminder,
+  ACTION_REMINDERS,
+  areRemindersOn,
+  cancelActionReminders,
+  scheduleActionReminders,
 } from "@/lib/notifications";
 
 const THEME_OPTIONS: { mode: ThemeMode; label: string }[] = [
@@ -32,7 +33,13 @@ const THEME_OPTIONS: { mode: ThemeMode; label: string }[] = [
   { mode: "system", label: "System" },
 ];
 
-const REMINDER_HOURS = [6, 7, 8, 12, 18, 19, 20];
+function formatHour(h: number, m: number): string {
+  const period = h < 12 ? "AM" : "PM";
+  const display = h % 12 === 0 ? 12 : h % 12;
+  return m === 0
+    ? `${display} ${period}`
+    : `${display}:${String(m).padStart(2, "0")} ${period}`;
+}
 
 export default function ProfileScreen() {
   const colors = useColors();
@@ -55,7 +62,6 @@ export default function ProfileScreen() {
   const [saving, setSaving] = useState(false);
 
   const [reminderOn, setReminderOn] = useState(false);
-  const [reminderHour, setReminderHour] = useState(7);
 
   useEffect(() => {
     const g = goalsQuery.data;
@@ -69,12 +75,7 @@ export default function ProfileScreen() {
   }, [goalsQuery.data]);
 
   useEffect(() => {
-    void getReminderHour().then((h) => {
-      if (h != null) {
-        setReminderOn(true);
-        setReminderHour(h);
-      }
-    });
+    void areRemindersOn().then(setReminderOn);
   }, []);
 
   const onSaveGoals = async () => {
@@ -107,7 +108,7 @@ export default function ProfileScreen() {
       return;
     }
     if (value) {
-      const ok = await scheduleDailyReminder(reminderHour);
+      const ok = await scheduleActionReminders();
       if (!ok) {
         Alert.alert(
           "Permission needed",
@@ -117,15 +118,8 @@ export default function ProfileScreen() {
       }
       setReminderOn(true);
     } else {
-      await cancelDailyReminder();
+      await cancelActionReminders();
       setReminderOn(false);
-    }
-  };
-
-  const onPickHour = async (h: number) => {
-    setReminderHour(h);
-    if (reminderOn && Platform.OS !== "web") {
-      await scheduleDailyReminder(h);
     }
   };
 
@@ -257,15 +251,16 @@ export default function ProfileScreen() {
       </Card>
 
       {/* Reminders */}
-      <SectionHeader title="Daily reminder" />
+      <SectionHeader title="Daily reminders" />
       <Card style={{ gap: 14 }}>
         <View style={styles.switchRow}>
           <View style={{ flex: 1 }}>
             <AppText weight="600" size={15}>
-              Workout reminder
+              Daily action reminders
             </AppText>
             <AppText muted size={13}>
-              A nudge to log your day and keep the streak.
+              Gentle nudges through the day for water, meals, your workout, steps
+              and sleep.
             </AppText>
           </View>
           <Switch
@@ -276,20 +271,17 @@ export default function ProfileScreen() {
           />
         </View>
         {reminderOn ? (
-          <View>
-            <AppText muted size={13} style={{ marginBottom: 10 }}>
-              Remind me at
-            </AppText>
-            <ChipRow>
-              {REMINDER_HOURS.map((h) => (
-                <Chip
-                  key={h}
-                  label={formatHour(h)}
-                  active={h === reminderHour}
-                  onPress={() => onPickHour(h)}
-                />
-              ))}
-            </ChipRow>
+          <View style={{ gap: 8 }}>
+            {ACTION_REMINDERS.map((r) => (
+              <View key={r.key} style={styles.reminderRow}>
+                <AppText muted size={13} style={{ width: 76 }}>
+                  {formatHour(r.hour, r.minute)}
+                </AppText>
+                <AppText size={13} style={{ flex: 1 }}>
+                  {r.title}
+                </AppText>
+              </View>
+            ))}
           </View>
         ) : null}
       </Card>
@@ -314,12 +306,6 @@ export default function ProfileScreen() {
   );
 }
 
-function formatHour(h: number): string {
-  const period = h < 12 ? "AM" : "PM";
-  const display = h % 12 === 0 ? 12 : h % 12;
-  return `${display} ${period}`;
-}
-
 const styles = StyleSheet.create({
   profileHead: { alignItems: "center", marginBottom: 24, marginTop: 8 },
   avatar: {
@@ -332,4 +318,5 @@ const styles = StyleSheet.create({
   row2: { flexDirection: "row", gap: 12 },
   half: { flex: 1 },
   switchRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  reminderRow: { flexDirection: "row", alignItems: "center", gap: 8 },
 });

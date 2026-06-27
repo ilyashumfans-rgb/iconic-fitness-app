@@ -15,3 +15,4 @@
 - [IST date-label drift](ist-date-label-drift.md) — render YYYY-MM-DD via IST-anchored helpers (istDateLabel/istWeekdayShort), never bare formatDateLabel/new Date(str) (shows prev day on non-IST devices).
 - [Trainer booking = leads enquiry](trainer-booking-leads.md) — no booking table + db push forbidden; "book a trainer" posts to public /api/leads kind="general" (skips GX validation; needs name≥2, valid phone, non-empty date+time).
 - [Sanitize AsyncStorage data on load](local-persisted-data-sanitize.md) — local-first stored blobs are untrusted; whitelist finite>0 on load + null-not-NaN derived helpers; don't re-sanitize on save (breaks clear-to-blank).
+- [AI coach assessment tool writes](ai-assessment-tool-writes.md) — multi-turn LLM assessment save: merge (don't replace) JSON blob, gate completion stamp on core fields + idempotent, use nullable col as completion signal.

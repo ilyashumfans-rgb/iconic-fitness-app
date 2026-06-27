@@ -70,7 +70,13 @@ export const GetMeResponse = zod.object({
   "streakDays": zod.number(),
   "weeklyWorkouts": zod.number(),
   "weeklyGoal": zod.number(),
-  "joinedAt": zod.coerce.date()
+  "joinedAt": zod.coerce.date(),
+  "assessmentComplete": zod.boolean().describe('True once the AI fitness assessment is done'),
+  "experienceLevel": zod.string().nullish().describe('new | experienced'),
+  "targetWeightKg": zod.number().nullish(),
+  "bmr": zod.number().describe('Basal metabolic rate (kcal); 0 if unknown'),
+  "tdee": zod.number().describe('Maintenance calories (kcal); 0 if unknown'),
+  "bodyFatPct": zod.number().describe('Estimated body fat %; 0 if unknown')
 })
 
 
@@ -110,7 +116,13 @@ export const UpdateMeResponse = zod.object({
   "streakDays": zod.number(),
   "weeklyWorkouts": zod.number(),
   "weeklyGoal": zod.number(),
-  "joinedAt": zod.coerce.date()
+  "joinedAt": zod.coerce.date(),
+  "assessmentComplete": zod.boolean().describe('True once the AI fitness assessment is done'),
+  "experienceLevel": zod.string().nullish().describe('new | experienced'),
+  "targetWeightKg": zod.number().nullish(),
+  "bmr": zod.number().describe('Basal metabolic rate (kcal); 0 if unknown'),
+  "tdee": zod.number().describe('Maintenance calories (kcal); 0 if unknown'),
+  "bodyFatPct": zod.number().describe('Estimated body fat %; 0 if unknown')
 })
 
 

@@ -719,7 +719,8 @@ components:
           id, name, email, mobile, gender, age, heightCm, weightKg,
           fitnessGoal, avatarUrl, city, bmi, fitnessScore,
           dailyCalories, dailyWaterMl, dailySleepHours, restingHr,
-          streakDays, weeklyWorkouts, weeklyGoal, joinedAt
+          streakDays, weeklyWorkouts, weeklyGoal, joinedAt,
+          assessmentComplete, bmr, tdee, bodyFatPct
         ]
       properties:
         id: { type: integer }
@@ -743,6 +744,14 @@ components:
         weeklyWorkouts: { type: integer }
         weeklyGoal: { type: integer }
         joinedAt: { type: string, format: date-time }
+        assessmentComplete:
+          { type: boolean, description: "True once the AI fitness assessment is done" }
+        experienceLevel:
+          { type: string, nullable: true, description: "new | experienced" }
+        targetWeightKg: { type: number, nullable: true }
+        bmr: { type: number, description: "Basal metabolic rate (kcal); 0 if unknown" }
+        tdee: { type: number, description: "Maintenance calories (kcal); 0 if unknown" }
+        bodyFatPct: { type: number, description: "Estimated body fat %; 0 if unknown" }
     UserProfileUpdate:
       type: object
       properties:

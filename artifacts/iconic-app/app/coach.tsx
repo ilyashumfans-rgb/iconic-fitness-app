@@ -1,6 +1,10 @@
 import { useAuth } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
-import { useAiCoach, type AiChatMessage } from "@workspace/api-client-react";
+import {
+  useAiCoach,
+  useGetMe,
+  type AiChatMessage,
+} from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Redirect } from "expo-router";
 import { useRef, useState } from "react";
@@ -19,17 +23,23 @@ import { AppText } from "@/components/AppText";
 import { ModalHeader } from "@/components/ModalHeader";
 import { useColors } from "@/hooks/useColors";
 
-const GREETING: AiChatMessage = {
-  role: "assistant",
-  content:
-    "Hey, I'm your Iconic coach. I can see your workouts, water, meals and goals — ask me anything, or tap a starter below.",
-};
+const ASSESSED_GREETING =
+  "Hey, I'm your Iconic coach. I can see your workouts, water, meals and goals — ask me anything, or tap a starter below.";
 
-const STARTERS = [
+const ONBOARDING_GREETING =
+  "Hey, I'm your Iconic coach. Let's start with a quick fitness assessment so I can build a plan that's right for you. First up — are you new to the gym, or already training regularly?";
+
+const ASSESSED_STARTERS = [
   "How am I doing today?",
   "Build me a workout for today",
   "What should I eat to hit my protein goal?",
   "Help me keep my streak alive",
+];
+
+const ONBOARDING_STARTERS = [
+  "I'm new to the gym",
+  "I already train regularly",
+  "Start my fitness assessment",
 ];
 
 export default function CoachScreen() {
@@ -37,11 +47,21 @@ export default function CoachScreen() {
   const { isLoaded, isSignedIn } = useAuth();
   const queryClient = useQueryClient();
   const coach = useAiCoach();
-  const [messages, setMessages] = useState<AiChatMessage[]>([GREETING]);
+  const meQuery = useGetMe();
+  const [messages, setMessages] = useState<AiChatMessage[]>([]);
   const [input, setInput] = useState("");
   const scrollRef = useRef<ScrollView>(null);
 
   if (isLoaded && !isSignedIn) return <Redirect href="/(auth)/sign-in" />;
+
+  // Default to "assessed" until we know, so we never wrongly nudge an existing
+  // member to redo their assessment while /me is loading.
+  const assessmentComplete = meQuery.data?.assessmentComplete ?? true;
+  const greeting: AiChatMessage = {
+    role: "assistant",
+    content: assessmentComplete ? ASSESSED_GREETING : ONBOARDING_GREETING,
+  };
+  const starters = assessmentComplete ? ASSESSED_STARTERS : ONBOARDING_STARTERS;
 
   const send = (raw?: string) => {
     const text = (raw ?? input).trim();
@@ -52,18 +72,24 @@ export default function CoachScreen() {
     setInput("");
 
     coach.mutate(
-      { data: { messages: next.filter((m) => m !== GREETING) } },
+      { data: { messages: next } },
       {
         onSuccess: (res) => {
           setMessages((prev) => [
             ...prev,
             { role: "assistant", content: res.reply },
           ]);
-          // The coach may have logged data or changed goals — refresh the tracker.
+          // The coach may have logged data, saved the assessment, or changed
+          // goals — refresh the tracker and profile.
           void queryClient.invalidateQueries({
             predicate: (query) => {
               const key = query.queryKey[0];
-              return typeof key === "string" && key.startsWith("/api/tracking");
+              if (typeof key !== "string") return false;
+              return (
+                key.startsWith("/api/tracking") ||
+                key.startsWith("/api/me") ||
+                key.startsWith("/api/goals")
+              );
             },
           });
         },
@@ -109,15 +135,16 @@ export default function CoachScreen() {
             scrollRef.current?.scrollToEnd({ animated: true })
           }
         >
+          <Bubble message={greeting} />
           {messages.map((m, i) => (
             <Bubble key={i} message={m} />
           ))}
 
           {coach.isPending ? <Typing /> : null}
 
-          {messages.length === 1 ? (
+          {messages.length === 0 ? (
             <View style={{ gap: 8, marginTop: 8 }}>
-              {STARTERS.map((s) => (
+              {starters.map((s) => (
                 <Pressable
                   key={s}
                   onPress={() => send(s)}
