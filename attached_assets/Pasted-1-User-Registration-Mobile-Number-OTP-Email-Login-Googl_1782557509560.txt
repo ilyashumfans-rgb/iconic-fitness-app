@@ -1,0 +1,551 @@
+1. User Registration
+Mobile Number OTP
+Email Login
+Google Login
+Apple Login
+Profile Photo
+Height
+Weight
+Gender
+Age
+Fitness Goal
+Activity Level
+Medical Conditions
+Experience Level
+Dashboard
+
+Show
+
+Today's Workout
+Today's Calories
+Today's Water Intake
+Weight Progress
+Steps
+Heart Rate (Apple Health / Google Fit)
+Workout Streak
+AI Recommendation
+Gym Membership Status
+Today's Motivation
+AI Fitness Assessment
+
+Instead of a normal questionnaire
+
+AI asks
+
+Age
+Weight
+Height
+Sleep
+Stress
+Food Habits
+Water Intake
+Previous Injuries
+Gym Experience
+Available Equipment
+Available Time
+Goal
+
+Example
+
+"I want to lose 10 kg."
+
+AI generates
+
+Fitness Score (0-100)
+Body Fat Estimate
+BMI
+Muscle Score
+Mobility Score
+Recovery Score
+
+Then creates
+
+Complete Workout Plan
+Meal Suggestions
+Daily Schedule
+AI Personal Trainer
+
+Every morning
+
+AI sends
+
+Good Morning John 👋
+
+Today's Mission
+
+✅ Chest Workout
+
+30 mins
+
+Estimated Calories
+
+450 kcal
+
+Drink
+
+3.2L Water
+
+Sleep Tonight
+
+8 Hours
+
+Workout Categories
+Muscle Gain
+Beginner
+Intermediate
+Advanced
+Fat Loss
+Home Workout
+Strength
+Cardio
+HIIT
+CrossFit
+Women's Fitness
+Senior Fitness
+Yoga
+Stretching
+Mobility
+Exercise Library
+
+Every exercise includes
+
+HD Video
+3D Animation
+Target Muscle
+Difficulty
+Equipment
+Calories Burned
+Instructions
+Common Mistakes
+Alternative Exercises
+
+Example
+
+Bench Press
+
+Click
+
+Shows
+
+Video
+Muscles Worked
+Sets
+Reps
+Weight
+Rest Time
+AI Workout Generator
+
+User enters
+
+"I only have 25 minutes."
+
+AI builds workout instantly
+
+Or
+
+"I have dumbbells only."
+
+AI generates full workout.
+
+Or
+
+"I have shoulder pain."
+
+AI changes workout.
+
+Automatic Progressive Overload
+
+Example
+
+Week 1
+
+Bench
+
+40kg
+
+Week 2
+
+42.5kg
+
+Week 3
+
+45kg
+
+Week 4
+
+47.5kg
+
+Automatically calculated
+
+Weight Tracker
+
+Daily
+
+User enters
+
+Current Weight
+
+AI creates
+
+Charts
+
+Weekly
+
+Monthly
+
+Yearly
+
+Shows
+
+Starting Weight
+
+Current Weight
+
+Goal Weight
+
+Expected Date
+
+BMI
+
+Body Fat %
+
+Lean Muscle
+
+Before & After
+
+Upload
+
+Before Photo
+
+Monthly Photos
+
+AI compares
+
+Face
+Waist
+Chest
+Arms
+Legs
+
+Shows
+
+Visual Progress
+
+Measurements
+
+Track
+
+Chest
+Waist
+Hips
+Neck
+Arms
+Thigh
+Calf
+
+Charts
+
+Daily Planner
+
+Morning
+
+Workout
+
+Breakfast
+
+Water
+
+Lunch
+
+Walk
+
+Evening Workout
+
+Dinner
+
+Sleep Reminder
+
+AI Recovery System
+
+AI checks
+
+Yesterday
+
+Heavy Legs
+
+Today
+
+Upper Body
+
+Or
+
+Recovery Workout
+
+Or
+
+Stretching
+
+Automatically adjusts plan.
+
+Smart Recovery Score
+
+Uses
+
+Sleep
+Previous Workout
+Heart Rate
+Soreness
+
+Score
+
+82%
+
+Today's Recommendation
+
+Heavy Workout
+
+OR
+
+Recovery Day
+
+Nutrition
+
+Meal Plans
+
+Muscle Gain
+Fat Loss
+Keto
+Vegan
+Vegetarian
+
+Calories
+
+Protein
+
+Carbs
+
+Fat
+
+Meal Reminder
+
+Water Reminder
+
+AI Meal Scanner
+
+Take photo
+
+AI detects
+
+Food
+
+Calories
+
+Protein
+
+Carbs
+
+Fat
+
+Healthy Score
+
+Habit Tracker
+
+Track
+
+Sleep
+Meditation
+Reading
+Stretching
+Water
+Walking
+Challenges
+
+30-Day Fat Loss
+
+60-Day Muscle Gain
+
+100 Push-up Challenge
+
+Leaderboards
+
+Badges
+
+Gamification
+
+XP
+
+Coins
+
+Levels
+
+Achievements
+
+Daily Rewards
+
+Community
+
+Posts
+
+Reels
+
+Workout Videos
+
+Like
+
+Comment
+
+Follow Trainers
+
+Gym Locator
+
+Search
+
+Nearby Gyms
+
+Features
+
+Membership Plans
+
+Ratings
+
+Map
+
+Directions
+
+Personal Trainer Booking
+
+Book
+
+Trainer
+
+Dietitian
+
+Physiotherapist
+
+Online Coach
+
+Membership
+
+Buy
+
+Monthly
+
+Quarterly
+
+Yearly
+
+Online Payments
+
+Renewal Reminder
+
+QR Code Check-in
+
+Notifications
+
+Workout Reminder
+
+Water Reminder
+
+Meal Reminder
+
+Weight Reminder
+
+Sleep Reminder
+
+Gym Reminder
+
+AI Chat Coach
+
+Ask
+
+"What should I eat?"
+
+"I have knee pain."
+
+"I missed today's workout."
+
+"I only have 15 minutes."
+
+AI responds instantly.
+
+Reports
+
+Weekly
+
+Monthly
+
+Yearly
+
+Charts
+
+Calories
+
+Workout
+
+Strength Progress
+
+Weight
+
+Body Measurements
+
+Fitness Score
+
+Admin Panel
+
+Manage
+
+Users
+Trainers
+Gyms
+Exercises
+Workout Plans
+Meal Plans
+Memberships
+Challenges
+Notifications
+Reports
+Payments
+Coupons
+AI Content
+Trainer Panel
+
+Trainer can
+
+Create Workouts
+Assign Plans
+Track Clients
+Chat
+Video Calls
+Review Progress
+Super Admin
+
+Manage
+
+Multiple Gyms
+Branches
+Employees
+Memberships
+Analytics
+Revenue
+AI Settings
+Technology Stack
+Mobile App: Flutter (Android & iOS)
+Admin Panel: React
+Backend: Node.js + NestJS
+Database: PostgreSQL
+Cache: Redis
+Cloud Storage: Amazon Web Services
+AI: OpenAI APIs for coaching, workout adaptation, nutrition assistance, and progress insights.
+Authentication: Google, Apple, OTP
+Payments: Razorpay and Stripe
+Development Roadmap
+
+To maximize success, build the platform in phases:
+
+Phase 1 (MVP): User accounts, gym memberships, exercise library, workout plans, weight tracking, progress photos, notifications, and admin panel.
+Phase 2: AI fitness assessment, AI workout generator, AI coach, recovery recommendations, nutrition plans, and smart progress analytics.
+Phase 3: Community, trainer marketplace, gym locator, wearable integration, AI meal scanner, challenges, and gamification.
+
+This phased approach lets you launch in a few months, gather user feedback, and then expand with advanced AI features instead of waiting for every feature to be finished before release.
+
+With this vision, Iconic Fitness becomes more than a workout tracker—it becomes a complete AI-powered fitness platform for gym members, trainers, and gym owners.
