@@ -22,6 +22,12 @@ export default function MoreScreen() {
 
   const links: MoreLink[] = [
     {
+      title: "Train",
+      subtitle: "Workouts, programs and guided sessions",
+      icon: "activity",
+      action: () => router.push("/train"),
+    },
+    {
       title: "Classes",
       subtitle: "Browse and book group classes",
       icon: "calendar",

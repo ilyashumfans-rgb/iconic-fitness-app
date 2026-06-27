@@ -70,15 +70,6 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="train"
-        options={{
-          title: "Train",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="activity" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="more"
         options={{
           title: "More",
@@ -88,6 +79,7 @@ export default function TabsLayout() {
         }}
       />
       {/* Reachable from the More tab, hidden from the tab bar. */}
+      <Tabs.Screen name="train" options={{ href: null }} />
       <Tabs.Screen name="classes" options={{ href: null }} />
       <Tabs.Screen name="progress" options={{ href: null }} />
       <Tabs.Screen name="profile" options={{ href: null }} />
