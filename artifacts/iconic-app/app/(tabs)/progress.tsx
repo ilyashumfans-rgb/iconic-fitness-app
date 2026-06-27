@@ -91,6 +91,35 @@ export default function ProgressScreen() {
             <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
           </Pressable>
 
+          {/* Meal plans entry */}
+          <Pressable
+            onPress={() => router.push("/meal-plans")}
+            style={({ pressed }) => [
+              styles.bodyLink,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+                borderRadius: colors.radius,
+                opacity: pressed ? 0.8 : 1,
+              },
+            ]}
+          >
+            <View
+              style={[styles.bodyLinkIcon, { backgroundColor: colors.primary + "22" }]}
+            >
+              <Feather name="book-open" size={18} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <AppText weight="700" size={15}>
+                Meal Plans
+              </AppText>
+              <AppText muted size={12}>
+                Goal-based plans with macros done for you
+              </AppText>
+            </View>
+            <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
+          </Pressable>
+
           {/* Weekly target hero */}
           <Card style={styles.hero}>
             <View style={styles.heroHead}>

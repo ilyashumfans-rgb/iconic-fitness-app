@@ -42,3 +42,10 @@ screenshot tool) restarts that splash, so screenshots often catch the splash, no
 screen — verify via browser logs (Clerk loaded + DOM nodes present) or on a device.
 Separately, `@clerk/expo` throws `Cannot find native module 'ClerkExpo'` in Expo Go on
 native — that's a dev-build requirement, unrelated to web rendering.
+
+## Guest-friendly local features need a guest-reachable entry
+Local-first/guest-friendly screens (exercise library, workouts, body, meal plans) must be
+reachable from a guest-accessible screen (e.g. Progress tab, Train tab, guest Home), NOT
+only from auth-gated modals like `diet.tsx`/`water.tsx` (they `Redirect` guests to sign-in).
+Architect FAILs a guest feature whose sole entry point sits behind an auth gate. The Progress
+tab has no auth redirect — good home for such entries (mirror the "Body & Weight" Pressable).

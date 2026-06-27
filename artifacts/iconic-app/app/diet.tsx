@@ -8,7 +8,7 @@ import {
   type MealInputMealType,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Redirect } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
 
@@ -32,6 +32,7 @@ const MEAL_TYPES: MealInputMealType[] = [
 
 export default function DietScreen() {
   const colors = useColors();
+  const router = useRouter();
   const { isLoaded, isSignedIn } = useAuth();
   const queryClient = useQueryClient();
   const dayQuery = useGetMealDay({ date: istToday() });
@@ -93,6 +94,24 @@ export default function DietScreen() {
   return (
     <Screen edges={["top"]} contentContainerStyle={{ paddingTop: 8 }}>
       <ModalHeader title="Diet" />
+
+      {/* Meal plans entry */}
+      <Pressable onPress={() => router.push("/meal-plans")}>
+        <Card style={styles.planCta} tone="elevated">
+          <View style={[styles.planIcon, { backgroundColor: colors.primary + "22" }]}>
+            <Feather name="book-open" size={20} color={colors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <AppText weight="700" size={15}>
+              Meal plans
+            </AppText>
+            <AppText muted size={12}>
+              Goal-based plans with macros done for you
+            </AppText>
+          </View>
+          <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
+        </Card>
+      </Pressable>
 
       {/* Macro summary */}
       <Card style={styles.summary}>
@@ -203,6 +222,19 @@ function Macro({ label, value, color }: { label: string; value: string; color: s
 }
 
 const styles = StyleSheet.create({
+  planCta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 20,
+  },
+  planIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   summary: { gap: 18 },
   calRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   calIcon: {

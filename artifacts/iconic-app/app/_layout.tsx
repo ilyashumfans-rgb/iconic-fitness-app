@@ -73,6 +73,7 @@ function RootLayoutNav() {
         <Stack.Screen name="exercise/[slug]" />
         <Stack.Screen name="workout/[id]" />
         <Stack.Screen name="workout/generate" />
+        <Stack.Screen name="meal-plan/[id]" />
         <Stack.Screen
           name="water"
           options={{ presentation: "modal", headerShown: false }}
@@ -87,6 +88,10 @@ function RootLayoutNav() {
         />
         <Stack.Screen
           name="body"
+          options={{ presentation: "modal", headerShown: false }}
+        />
+        <Stack.Screen
+          name="meal-plans"
           options={{ presentation: "modal", headerShown: false }}
         />
       </Stack>
