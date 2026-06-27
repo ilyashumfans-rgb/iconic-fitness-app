@@ -670,3 +670,24 @@ export const workoutLogsTable = pgTable("workout_logs", {
     .notNull()
     .defaultNow(),
 });
+
+// Challenge definitions live in code (see api-server lib/challenges.ts); only
+// the opt-in participants are persisted. Leaderboards are computed live from the
+// tracking log tables, so there is no stored progress to keep in sync.
+export const challengeParticipantsTable = pgTable(
+  "challenge_participants",
+  {
+    id: serial("id").primaryKey(),
+    challengeId: integer("challenge_id").notNull(),
+    userId: integer("user_id").notNull(),
+    joinedAt: timestamp("joined_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    uniq: uniqueIndex("challenge_participants_challenge_user_unique").on(
+      t.challengeId,
+      t.userId,
+    ),
+  }),
+);

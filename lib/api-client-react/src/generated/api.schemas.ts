@@ -222,6 +222,85 @@ export interface BookingInput {
   classId: number;
 }
 
+export type ChallengeMetric = typeof ChallengeMetric[keyof typeof ChallengeMetric];
+
+
+export const ChallengeMetric = {
+  workouts: 'workouts',
+  steps: 'steps',
+  water: 'water',
+  active_days: 'active_days',
+} as const;
+
+export type ChallengePeriod = typeof ChallengePeriod[keyof typeof ChallengePeriod];
+
+
+export const ChallengePeriod = {
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export interface Challenge {
+  id: number;
+  title: string;
+  description: string;
+  metric: ChallengeMetric;
+  goal: number;
+  unit: string;
+  period: ChallengePeriod;
+  icon: string;
+  /** IST window start (YYYY-MM-DD) */
+  startDate: string;
+  /** IST window end (YYYY-MM-DD) */
+  endDate: string;
+  joined: boolean;
+  participantCount: number;
+  myProgress: number;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  name: string;
+  avatarUrl: string;
+  progress: number;
+  isMe: boolean;
+}
+
+export type ChallengeDetailMetric = typeof ChallengeDetailMetric[keyof typeof ChallengeDetailMetric];
+
+
+export const ChallengeDetailMetric = {
+  workouts: 'workouts',
+  steps: 'steps',
+  water: 'water',
+  active_days: 'active_days',
+} as const;
+
+export type ChallengeDetailPeriod = typeof ChallengeDetailPeriod[keyof typeof ChallengeDetailPeriod];
+
+
+export const ChallengeDetailPeriod = {
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export interface ChallengeDetail {
+  id: number;
+  title: string;
+  description: string;
+  metric: ChallengeDetailMetric;
+  goal: number;
+  unit: string;
+  period: ChallengeDetailPeriod;
+  icon: string;
+  startDate: string;
+  endDate: string;
+  joined: boolean;
+  participantCount: number;
+  myProgress: number;
+  leaderboard: LeaderboardEntry[];
+}
+
 export type WalletTransactionKind = typeof WalletTransactionKind[keyof typeof WalletTransactionKind];
 
 

@@ -357,6 +357,68 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Trainer" }
 
+  /challenges:
+    get:
+      operationId: listChallenges
+      tags: [challenges]
+      summary: List challenges with the current user's progress
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Challenge" }
+  /challenges/{challengeId}:
+    get:
+      operationId: getChallenge
+      tags: [challenges]
+      summary: Challenge detail with leaderboard
+      parameters:
+        - in: path
+          name: challengeId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChallengeDetail" }
+  /challenges/{challengeId}/join:
+    post:
+      operationId: joinChallenge
+      tags: [challenges]
+      summary: Join a challenge
+      parameters:
+        - in: path
+          name: challengeId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChallengeDetail" }
+  /challenges/{challengeId}/leave:
+    post:
+      operationId: leaveChallenge
+      tags: [challenges]
+      summary: Leave a challenge
+      parameters:
+        - in: path
+          name: challengeId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChallengeDetail" }
+
   /wallet:
     get:
       operationId: getWallet
@@ -840,6 +902,61 @@ components:
           type: array
           items: { type: string }
         city: { type: string }
+
+    Challenge:
+      type: object
+      required:
+        [
+          id, title, description, metric, goal, unit, period, icon,
+          startDate, endDate, joined, participantCount, myProgress
+        ]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        description: { type: string }
+        metric: { type: string, enum: [workouts, steps, water, active_days] }
+        goal: { type: integer }
+        unit: { type: string }
+        period: { type: string, enum: [weekly, monthly] }
+        icon: { type: string }
+        startDate: { type: string, description: "IST window start (YYYY-MM-DD)" }
+        endDate: { type: string, description: "IST window end (YYYY-MM-DD)" }
+        joined: { type: boolean }
+        participantCount: { type: integer }
+        myProgress: { type: integer }
+    LeaderboardEntry:
+      type: object
+      required: [rank, name, avatarUrl, progress, isMe]
+      properties:
+        rank: { type: integer }
+        name: { type: string }
+        avatarUrl: { type: string }
+        progress: { type: integer }
+        isMe: { type: boolean }
+    ChallengeDetail:
+      type: object
+      required:
+        [
+          id, title, description, metric, goal, unit, period, icon,
+          startDate, endDate, joined, participantCount, myProgress, leaderboard
+        ]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        description: { type: string }
+        metric: { type: string, enum: [workouts, steps, water, active_days] }
+        goal: { type: integer }
+        unit: { type: string }
+        period: { type: string, enum: [weekly, monthly] }
+        icon: { type: string }
+        startDate: { type: string }
+        endDate: { type: string }
+        joined: { type: boolean }
+        participantCount: { type: integer }
+        myProgress: { type: integer }
+        leaderboard:
+          type: array
+          items: { $ref: "#/components/schemas/LeaderboardEntry" }
 
     Wallet:
       type: object

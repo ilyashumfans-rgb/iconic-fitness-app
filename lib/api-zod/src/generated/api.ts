@@ -533,6 +533,120 @@ export const GetTrainerResponse = zod.object({
 
 
 /**
+ * @summary List challenges with the current user's progress
+ */
+export const ListChallengesResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "metric": zod.enum(['workouts', 'steps', 'water', 'active_days']),
+  "goal": zod.number(),
+  "unit": zod.string(),
+  "period": zod.enum(['weekly', 'monthly']),
+  "icon": zod.string(),
+  "startDate": zod.string().describe('IST window start (YYYY-MM-DD)'),
+  "endDate": zod.string().describe('IST window end (YYYY-MM-DD)'),
+  "joined": zod.boolean(),
+  "participantCount": zod.number(),
+  "myProgress": zod.number()
+})
+export const ListChallengesResponse = zod.array(ListChallengesResponseItem)
+
+
+/**
+ * @summary Challenge detail with leaderboard
+ */
+export const GetChallengeParams = zod.object({
+  "challengeId": zod.coerce.number()
+})
+
+export const GetChallengeResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "metric": zod.enum(['workouts', 'steps', 'water', 'active_days']),
+  "goal": zod.number(),
+  "unit": zod.string(),
+  "period": zod.enum(['weekly', 'monthly']),
+  "icon": zod.string(),
+  "startDate": zod.string(),
+  "endDate": zod.string(),
+  "joined": zod.boolean(),
+  "participantCount": zod.number(),
+  "myProgress": zod.number(),
+  "leaderboard": zod.array(zod.object({
+  "rank": zod.number(),
+  "name": zod.string(),
+  "avatarUrl": zod.string(),
+  "progress": zod.number(),
+  "isMe": zod.boolean()
+}))
+})
+
+
+/**
+ * @summary Join a challenge
+ */
+export const JoinChallengeParams = zod.object({
+  "challengeId": zod.coerce.number()
+})
+
+export const JoinChallengeResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "metric": zod.enum(['workouts', 'steps', 'water', 'active_days']),
+  "goal": zod.number(),
+  "unit": zod.string(),
+  "period": zod.enum(['weekly', 'monthly']),
+  "icon": zod.string(),
+  "startDate": zod.string(),
+  "endDate": zod.string(),
+  "joined": zod.boolean(),
+  "participantCount": zod.number(),
+  "myProgress": zod.number(),
+  "leaderboard": zod.array(zod.object({
+  "rank": zod.number(),
+  "name": zod.string(),
+  "avatarUrl": zod.string(),
+  "progress": zod.number(),
+  "isMe": zod.boolean()
+}))
+})
+
+
+/**
+ * @summary Leave a challenge
+ */
+export const LeaveChallengeParams = zod.object({
+  "challengeId": zod.coerce.number()
+})
+
+export const LeaveChallengeResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "metric": zod.enum(['workouts', 'steps', 'water', 'active_days']),
+  "goal": zod.number(),
+  "unit": zod.string(),
+  "period": zod.enum(['weekly', 'monthly']),
+  "icon": zod.string(),
+  "startDate": zod.string(),
+  "endDate": zod.string(),
+  "joined": zod.boolean(),
+  "participantCount": zod.number(),
+  "myProgress": zod.number(),
+  "leaderboard": zod.array(zod.object({
+  "rank": zod.number(),
+  "name": zod.string(),
+  "avatarUrl": zod.string(),
+  "progress": zod.number(),
+  "isMe": zod.boolean()
+}))
+})
+
+
+/**
  * @summary Wallet balance and recent transactions
  */
 export const GetWalletResponse = zod.object({

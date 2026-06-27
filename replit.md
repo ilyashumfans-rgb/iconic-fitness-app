@@ -84,6 +84,15 @@ Member-facing Expo (React Native, expo-router) app in `artifacts/iconic-app` (sl
 - **Features:** dashboard rings, water/diet(macros)/workout+steps logging (root modal screens), class browse+book+check-in, progress charts & streaks, editable goals, daily reminder via `expo-notifications` (web-guarded). Theme: dark `#0A0C08` + lime `#C7F000`; all dates in `Asia/Kolkata` (`lib/dates.ts`).
 - **Gotcha:** `GestureHandlerRootView` must have `style={{ flex: 1 }}` or the whole app renders blank white.
 
+### Challenges & leaderboards
+
+Member-facing challenges with live leaderboards, following the **code-default** pattern (no challenge rows in DB; only opt-in participants are persisted). Each challenge runs on a rolling/evergreen IST window (current week Mon–Sun or current month) and its leaderboard is computed live from existing tracking logs — so it reaches production with no data-import step (the one new table arrives via Replit Publish schema diff).
+
+- **Definitions in code:** `artifacts/api-server/src/lib/challenges.ts` (`DEFAULT_CHALLENGES`, metrics `workouts`/`steps`/`water`/`active_days`, periods `weekly`/`monthly`, IST `challengeWindow`). `active_days` = union-distinct of `logged_date` across water + meal + workout logs (any tracking activity counts), computed in JS — **not** workout-days only.
+- **DB:** `challengeParticipantsTable` (`challenge_participants`): plain int `challengeId`+`userId`, composite unique index, no FK (repo convention). Added additively via raw SQL, never `db push`.
+- **API:** `artifacts/api-server/src/routes/challenges.ts` (`requireUser`): `GET /challenges` (list + joined flag + my progress + participant count), `GET /challenges/:id` (detail + leaderboard), `POST /challenges/:id/{join,leave}` (scoped to `req.userId`). Leaderboard payload intentionally **omits** raw `userId` (privacy) — `isMe` flags the current user; `rank` is the stable client key.
+- **Mobile:** `app/challenges.tsx` (list, modal) + `app/challenge/[id].tsx` (detail + leaderboard + join/leave), registered in `_layout.tsx`, entry card on the Progress tab, auth-gated via `Redirect` for guests. Display formatters in `lib/challenges.ts`.
+
 ## User preferences
 
 - **Pushing data to production:** dev and prod are separate databases. To get dev catalog data (gyms, partners, etc.) onto the live site, use the admin Dashboard "Import workspace data" button — this is the standard workflow. Each time the user wants new/changed dev data live, the agent must: (1) regenerate `artifacts/api-server/src/lib/seed-snapshot.json` from the current dev DB, (2) redeploy, then (3) user clicks "Import workspace data" on the live admin Dashboard. See `.agents/memory/prod-data-import.md`.
