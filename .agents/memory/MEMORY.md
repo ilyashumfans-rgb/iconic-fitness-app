@@ -12,3 +12,4 @@
 - [Store vendor / order data model](store-vendor-model.md) — vendors = partners.kind vendor/both; order items snapshot name+price (no FKs) so deleting products is history-safe.
 - [Deploy typechecks ALL artifacts](deploy-builds-all-artifacts.md) — publish fails if ANY artifact has a TS error (dev/vite doesn't typecheck); Vite artifacts need `dom` lib; bare `vite build` PORT error is not a real blocker.
 - [RN guided-timer state machine](rn-timer-state-machine.md) — interval steppers (set/rest player): idempotent advance via ref guard, advance from effect not setState updater, "Next" = steps[index+1].
+- [Sanitize AsyncStorage data on load](local-persisted-data-sanitize.md) — local-first stored blobs are untrusted; whitelist finite>0 on load + null-not-NaN derived helpers; don't re-sanitize on save (breaks clear-to-blank).

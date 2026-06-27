@@ -4,8 +4,9 @@ import {
   useGetTrackingSummary,
   type ProgressDay,
 } from "@workspace/api-client-react";
+import { useRouter } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
@@ -29,6 +30,7 @@ const METRICS: Record<
 
 export default function ProgressScreen() {
   const colors = useColors();
+  const router = useRouter();
   const [metric, setMetric] = useState<Metric>("caloriesIn");
   const progressQuery = useGetProgress({ days: 7 });
   const summaryQuery = useGetTrackingSummary({ date: istToday() });
@@ -60,6 +62,35 @@ export default function ProgressScreen() {
         <LoadingView />
       ) : (
         <>
+          {/* Body & measurements entry */}
+          <Pressable
+            onPress={() => router.push("/body")}
+            style={({ pressed }) => [
+              styles.bodyLink,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+                borderRadius: colors.radius,
+                opacity: pressed ? 0.8 : 1,
+              },
+            ]}
+          >
+            <View
+              style={[styles.bodyLinkIcon, { backgroundColor: colors.primary + "22" }]}
+            >
+              <Feather name="trending-up" size={18} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <AppText weight="700" size={15}>
+                Body & Weight
+              </AppText>
+              <AppText muted size={12}>
+                Track weight, BMI and measurements
+              </AppText>
+            </View>
+            <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
+          </Pressable>
+
           {/* Weekly target hero */}
           <Card style={styles.hero}>
             <View style={styles.heroHead}>
@@ -236,6 +267,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 4,
+  },
+  bodyLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 14,
+    marginBottom: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  bodyLinkIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
   },
   chartHead: { marginBottom: 14 },
   dayRow: {
