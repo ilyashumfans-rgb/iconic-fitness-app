@@ -1,0 +1,203 @@
+AI User Journey for Iconic Fitness
+Step 1: AI Fitness Assessment
+
+When a new user signs up, the AI asks questions such as:
+
+Personal Information
+
+Name
+Age
+Gender
+Height
+Current Weight
+Target Weight
+Occupation
+Daily Activity Level
+
+Health Information
+
+Diabetes
+Blood Pressure
+Thyroid
+Asthma
+Heart Disease
+Joint Pain
+Previous Injuries
+Medications
+Smoking/Alcohol
+
+Fitness Goals
+
+Weight Loss
+Muscle Gain
+Fat Loss
+Body Recomposition
+Strength
+Endurance
+General Fitness
+
+Lifestyle
+
+Sleep Hours
+Water Intake
+Stress Level
+Food Preference (Veg/Non-Veg/Vegan)
+Gym Access or Home Workout
+Available Workout Time
+Step 2: AI Calculates Health Metrics
+
+Based on the user's information, the AI calculates and displays:
+
+BMI
+Estimated Body Fat %
+BMR (Basal Metabolic Rate)
+Daily Calorie Requirement (TDEE)
+Muscle Mass Estimate
+Ideal Weight Range
+Hydration Target
+Fitness Score (0–100)
+Recovery Score
+Overall Health Score
+
+Example:
+
+BMI: 31.4 (Obese)
+
+Fitness Score: 48/100
+
+Goal:
+Lose 18 kg
+
+Estimated Time:
+7 Months
+
+Daily Calories:
+2100 kcal
+
+Protein:
+150 g/day
+
+Water:
+3.5 L/day
+Step 3: AI Generates a Personalized Plan
+
+The AI creates:
+
+Weekly workout schedule
+Daily exercise plan
+Cardio recommendations
+Strength training plan
+Meal suggestions
+Sleep schedule
+Water reminders
+Rest days
+Recovery exercises
+Step 4: AI Assigns a Personal Trainer
+
+After the assessment, the AI recommends a trainer based on the user's goals and health.
+
+Examples:
+
+Weight loss specialist
+Muscle gain coach
+Women's fitness trainer
+Senior fitness coach
+Rehabilitation trainer
+Yoga trainer
+
+The trainer receives the user's:
+
+BMI
+Fitness score
+Goals
+Medical conditions
+AI-generated workout plan
+Progress history
+
+The trainer can review and adjust the AI plan before approving it.
+
+Step 5: Daily Progress Dashboard
+
+Every day, the user sees a dashboard like:
+
+Good Morning, Rahul 👋
+
+Today's Progress:
+
+Day: 18 of 90
+Workout: Upper Body
+Duration: 45 minutes
+Calories Target: 2,100 kcal
+Water Goal: 3.5 L
+Sleep Target: 8 hours
+Steps Goal: 10,000
+
+Progress:
+
+Workout: ✅ Completed
+Water: 2.8 / 3.5 L
+Steps: 8,450 / 10,000
+Calories: 1,850 / 2,100
+Weight Today: 84.6 kg
+Total Weight Lost: 4.4 kg
+
+AI Insight:
+
+"Excellent consistency! Based on your recent performance, increase your squat weight by 2.5 kg next session."
+
+Step 6: Trainer Dashboard
+
+The assigned trainer can monitor:
+
+Client list
+Daily workout completion
+Weight trends
+Progress photos
+Body measurements
+Workout history
+Missed sessions
+Chat with users
+Modify workout plans
+Approve AI recommendations
+Step 7: Monthly AI Report
+
+Each month, the AI generates a report including:
+
+Starting weight vs. current weight
+BMI changes
+Body fat trend
+Muscle gain estimate
+Strength improvements
+Workout consistency
+Nutrition adherence
+Recovery performance
+Updated fitness score
+Recommendations for the next month
+Recommended Workflow
+User Registration
+        │
+        ▼
+AI Health & Fitness Assessment
+        │
+        ▼
+BMI, Body Fat, BMR, TDEE & Fitness Score
+        │
+        ▼
+AI Creates Personalized Workout & Nutrition Plan
+        │
+        ▼
+AI Recommends and Assigns Personal Trainer
+        │
+        ▼
+Trainer Reviews and Approves Plan
+        │
+        ▼
+Daily Workout + Progress Tracking
+        │
+        ▼
+Weekly AI Adjustments
+        │
+        ▼
+Monthly Progress Report
+
+This workflow combines automated AI guidance with expert trainer oversight, giving users a personalized experience while allowing trainers to focus on coaching and plan optimization.

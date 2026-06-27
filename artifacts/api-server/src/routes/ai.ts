@@ -123,6 +123,13 @@ Your job:
 - Keep replies concise and skimmable. Use short paragraphs or simple dashes for lists. Plain text only — no markdown headings, no emojis.
 - When suggesting a workout or meals, be specific and realistic for a gym member in Bengaluru, India (Indian foods are great examples for nutrition).
 
+Actions you can take (tools):
+- You can update the member's tracker for them. Use the tools to log_water, log_meal, log_workout, and update_goals. All logs are saved for TODAY in the member's timezone.
+- Only call a tool when the member clearly wants to record or change something ("I drank 500ml", "log my breakfast", "I ran 5km", "set my step goal to 10000"). Do not log on hypotheticals, plans, or questions.
+- When the member describes food or a workout without exact numbers, estimate sensible values yourself (calories, protein, duration, steps) and log them — then tell them what you saved so they can correct it. Use realistic estimates for Indian foods.
+- After saving, briefly confirm what you logged in plain language and how it moves them toward their goal. If a save fails, tell them honestly and suggest they log it manually in the app.
+- If a request is ambiguous (e.g. amount or meal type unclear), make a reasonable assumption rather than refusing, and state the assumption.
+
 Safety:
 - You are not a doctor. For pain, injury, medical conditions, pregnancy, or medication questions, advise consulting a doctor or the in-house dietician/trainer at their branch.
 - Never recommend extreme calorie restriction, crash diets, or unsafe training. Promote sustainable habits.
@@ -261,6 +268,223 @@ async function buildCoachContext(userId: number): Promise<string> {
   ].join("\n");
 }
 
+const MEAL_TYPES = ["breakfast", "lunch", "dinner", "snack"] as const;
+const WORKOUT_TYPES = [
+  "run",
+  "walk",
+  "strength",
+  "cycling",
+  "yoga",
+  "hiit",
+  "swim",
+  "sports",
+  "other",
+] as const;
+
+// Tool/function definitions exposed to the model so it can write the member's tracker.
+const COACH_TOOLS = [
+  {
+    type: "function" as const,
+    function: {
+      name: "log_water",
+      description:
+        "Log water the member drank today. Use when they mention drinking water.",
+      parameters: {
+        type: "object",
+        properties: {
+          amountMl: {
+            type: "integer",
+            description: "Amount of water in millilitres (e.g. 250 for a glass).",
+          },
+        },
+        required: ["amountMl"],
+      },
+    },
+  },
+  {
+    type: "function" as const,
+    function: {
+      name: "log_meal",
+      description:
+        "Log a meal/snack the member ate today. Estimate calories and macros if not given.",
+      parameters: {
+        type: "object",
+        properties: {
+          name: { type: "string", description: "Short name of the food/meal." },
+          mealType: {
+            type: "string",
+            enum: ["breakfast", "lunch", "dinner", "snack"],
+          },
+          calories: { type: "integer", description: "Estimated calories (kcal)." },
+          proteinG: { type: "integer", description: "Estimated protein in grams." },
+          carbsG: { type: "integer", description: "Estimated carbs in grams." },
+          fatG: { type: "integer", description: "Estimated fat in grams." },
+        },
+        required: ["name", "mealType", "calories"],
+      },
+    },
+  },
+  {
+    type: "function" as const,
+    function: {
+      name: "log_workout",
+      description:
+        "Log a workout/activity the member did today. Estimate calories burned and steps if not given.",
+      parameters: {
+        type: "object",
+        properties: {
+          type: {
+            type: "string",
+            enum: [
+              "run",
+              "walk",
+              "strength",
+              "cycling",
+              "yoga",
+              "hiit",
+              "swim",
+              "sports",
+              "other",
+            ],
+          },
+          durationMin: { type: "integer", description: "Duration in minutes." },
+          calories: { type: "integer", description: "Estimated calories burned." },
+          steps: { type: "integer", description: "Steps taken, if relevant." },
+        },
+        required: ["type", "durationMin"],
+      },
+    },
+  },
+  {
+    type: "function" as const,
+    function: {
+      name: "update_goals",
+      description:
+        "Update one or more of the member's daily/weekly goals. Only include fields the member wants to change.",
+      parameters: {
+        type: "object",
+        properties: {
+          waterGoalMl: { type: "integer", description: "Daily water goal in ml." },
+          calorieGoal: { type: "integer", description: "Daily calorie goal (kcal)." },
+          proteinGoalG: { type: "integer", description: "Daily protein goal in grams." },
+          stepGoal: { type: "integer", description: "Daily step goal." },
+          weeklyGoal: { type: "integer", description: "Workouts per week goal." },
+        },
+      },
+    },
+  },
+];
+
+function clampInt(value: unknown, min: number, max: number): number | null {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return null;
+  return Math.min(max, Math.max(min, Math.round(n)));
+}
+
+// Executes a single tool call against the authenticated member's own records.
+async function runCoachTool(
+  userId: number,
+  name: string,
+  rawArgs: string,
+): Promise<{ ok: boolean; message: string }> {
+  let args: Record<string, unknown>;
+  try {
+    args = rawArgs ? JSON.parse(rawArgs) : {};
+  } catch {
+    return { ok: false, message: "Invalid tool arguments." };
+  }
+  const today = dateNDaysAgo(0);
+  try {
+    switch (name) {
+      case "log_water": {
+        const amountMl = clampInt(args["amountMl"], 1, 10000);
+        if (!amountMl) {
+          return { ok: false, message: "amountMl must be a positive number." };
+        }
+        await db
+          .insert(waterLogsTable)
+          .values({ userId, loggedDate: today, amountMl });
+        return { ok: true, message: `Logged ${amountMl} ml of water for today.` };
+      }
+      case "log_meal": {
+        const mealType = MEAL_TYPES.includes(args["mealType"] as never)
+          ? (args["mealType"] as (typeof MEAL_TYPES)[number])
+          : "snack";
+        const mealName = String(args["name"] ?? "").trim() || "Meal";
+        const calories = clampInt(args["calories"], 0, 10000) ?? 0;
+        const proteinG = clampInt(args["proteinG"], 0, 1000) ?? 0;
+        const carbsG = clampInt(args["carbsG"], 0, 1000) ?? 0;
+        const fatG = clampInt(args["fatG"], 0, 1000) ?? 0;
+        await db.insert(mealLogsTable).values({
+          userId,
+          loggedDate: today,
+          mealType,
+          name: mealName,
+          calories,
+          proteinG,
+          carbsG,
+          fatG,
+        });
+        return {
+          ok: true,
+          message: `Logged ${mealName} as ${mealType}: ${calories} kcal, ${proteinG}g protein.`,
+        };
+      }
+      case "log_workout": {
+        const type = WORKOUT_TYPES.includes(args["type"] as never)
+          ? (args["type"] as (typeof WORKOUT_TYPES)[number])
+          : "other";
+        const durationMin = clampInt(args["durationMin"], 0, 1440) ?? 0;
+        const calories = clampInt(args["calories"], 0, 10000) ?? 0;
+        const steps = clampInt(args["steps"], 0, 200000) ?? 0;
+        if (durationMin <= 0 && steps <= 0) {
+          return {
+            ok: false,
+            message: "Need a duration or steps to log a workout.",
+          };
+        }
+        await db.insert(workoutLogsTable).values({
+          userId,
+          loggedDate: today,
+          type,
+          durationMin,
+          calories,
+          steps,
+        });
+        return {
+          ok: true,
+          message: `Logged a ${durationMin}-min ${type} workout: ${calories} kcal, ${steps} steps.`,
+        };
+      }
+      case "update_goals": {
+        const updates: Record<string, number> = {};
+        const water = clampInt(args["waterGoalMl"], 250, 10000);
+        const cal = clampInt(args["calorieGoal"], 800, 8000);
+        const protein = clampInt(args["proteinGoalG"], 10, 400);
+        const step = clampInt(args["stepGoal"], 1000, 50000);
+        const weekly = clampInt(args["weeklyGoal"], 1, 14);
+        if (water !== null) updates["waterGoalMl"] = water;
+        if (cal !== null) updates["calorieGoal"] = cal;
+        if (protein !== null) updates["proteinGoalG"] = protein;
+        if (step !== null) updates["stepGoal"] = step;
+        if (weekly !== null) updates["weeklyGoal"] = weekly;
+        if (Object.keys(updates).length === 0) {
+          return { ok: false, message: "No valid goal values provided." };
+        }
+        await db.update(usersTable).set(updates).where(eq(usersTable.id, userId));
+        const summary = Object.entries(updates)
+          .map(([k, v]) => `${k}=${v}`)
+          .join(", ");
+        return { ok: true, message: `Updated goals: ${summary}.` };
+      }
+      default:
+        return { ok: false, message: `Unknown tool: ${name}` };
+    }
+  } catch {
+    return { ok: false, message: "Failed to save. Ask the member to try again." };
+  }
+}
+
 router.post("/ai/coach", requireUser, async (req, res): Promise<void> => {
   const parsed = AiCoachBody.safeParse(req.body);
   if (!parsed.success) {
@@ -286,21 +510,52 @@ router.post("/ai/coach", requireUser, async (req, res): Promise<void> => {
   try {
     const context = await buildCoachContext(req.userId!);
     const { openai } = await import("@workspace/integrations-openai-ai-server");
-    const completion = await openai.chat.completions.create({
-      model: "gpt-5.4",
-      max_completion_tokens: 8192,
-      messages: [
-        { role: "system", content: `${COACH_SYSTEM_PROMPT}\n\n${context}` },
-        ...parsed.data.messages.map((m) => ({
-          role: m.role,
-          content: m.content,
-        })),
-      ],
-    });
 
-    const reply =
-      completion.choices[0]?.message?.content?.trim() ||
-      "Let's keep going — tell me a bit more and I'll help.";
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const messages: any[] = [
+      { role: "system", content: `${COACH_SYSTEM_PROMPT}\n\n${context}` },
+      ...parsed.data.messages.map((m) => ({ role: m.role, content: m.content })),
+    ];
+
+    let reply = "";
+    // Tool-calling loop: let the model log/update the member's tracker, then reply.
+    for (let turn = 0; turn < 5; turn++) {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-5.4",
+        max_completion_tokens: 8192,
+        tools: COACH_TOOLS,
+        messages,
+      });
+      const message = completion.choices[0]?.message;
+      if (!message) break;
+      messages.push(message);
+
+      const toolCalls = message.tool_calls ?? [];
+      if (toolCalls.length === 0) {
+        reply = message.content?.trim() ?? "";
+        break;
+      }
+
+      for (const call of toolCalls) {
+        if (call.type !== "function") continue;
+        const result = await runCoachTool(
+          req.userId!,
+          call.function.name,
+          call.function.arguments,
+        );
+        req.log.info(
+          { tool: call.function.name, ok: result.ok },
+          "AI coach tool call",
+        );
+        messages.push({
+          role: "tool",
+          tool_call_id: call.id,
+          content: JSON.stringify(result),
+        });
+      }
+    }
+
+    if (!reply) reply = "Let's keep going — tell me a bit more and I'll help.";
 
     res.json(AiCoachResponse.parse({ reply }));
   } catch (err) {

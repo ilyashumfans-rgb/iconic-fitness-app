@@ -1,6 +1,7 @@
 import { useAuth } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
 import { useAiCoach, type AiChatMessage } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Redirect } from "expo-router";
 import { useRef, useState } from "react";
 import {
@@ -34,6 +35,7 @@ const STARTERS = [
 export default function CoachScreen() {
   const colors = useColors();
   const { isLoaded, isSignedIn } = useAuth();
+  const queryClient = useQueryClient();
   const coach = useAiCoach();
   const [messages, setMessages] = useState<AiChatMessage[]>([GREETING]);
   const [input, setInput] = useState("");
@@ -57,6 +59,13 @@ export default function CoachScreen() {
             ...prev,
             { role: "assistant", content: res.reply },
           ]);
+          // The coach may have logged data or changed goals — refresh the tracker.
+          void queryClient.invalidateQueries({
+            predicate: (query) => {
+              const key = query.queryKey[0];
+              return typeof key === "string" && key.startsWith("/api/tracking");
+            },
+          });
         },
         onError: () => {
           setMessages((prev) => [
