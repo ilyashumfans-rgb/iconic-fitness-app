@@ -146,6 +146,77 @@ export const useAiChat = <TError = ErrorType<AiChatOutput>,
       return useMutation(getAiChatMutationOptions(options));
     }
 
+export const getAiCoachUrl = () => {
+
+
+
+
+  return `/api/ai/coach`
+}
+
+/**
+ * @summary Personalized AI fitness coach (uses the member's own tracking data)
+ */
+export const aiCoach = async (aiChatInput: AiChatInput, options?: RequestInit): Promise<AiChatOutput> => {
+
+  return customFetch<AiChatOutput>(getAiCoachUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      aiChatInput,)
+  }
+);}
+
+
+
+
+export const getAiCoachMutationOptions = <TError = ErrorType<AiChatOutput>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiCoach>>, TError,{data: BodyType<AiChatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof aiCoach>>, TError,{data: BodyType<AiChatInput>}, TContext> => {
+
+const mutationKey = ['aiCoach'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof aiCoach>>, {data: BodyType<AiChatInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  aiCoach(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AiCoachMutationResult = NonNullable<Awaited<ReturnType<typeof aiCoach>>>
+    export type AiCoachMutationBody = BodyType<AiChatInput>
+    export type AiCoachMutationError = ErrorType<AiChatOutput>
+
+    /**
+ * @summary Personalized AI fitness coach (uses the member's own tracking data)
+ */
+export const useAiCoach = <TError = ErrorType<AiChatOutput>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiCoach>>, TError,{data: BodyType<AiChatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof aiCoach>>,
+        TError,
+        {data: BodyType<AiChatInput>},
+        TContext
+      > => {
+      return useMutation(getAiCoachMutationOptions(options));
+    }
+
 export const getHealthCheckUrl = () => {
 
 

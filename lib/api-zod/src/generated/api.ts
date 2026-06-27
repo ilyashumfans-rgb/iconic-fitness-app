@@ -24,6 +24,21 @@ export const AiChatResponse = zod.object({
 
 
 /**
+ * @summary Personalized AI fitness coach (uses the member's own tracking data)
+ */
+export const AiCoachBody = zod.object({
+  "messages": zod.array(zod.object({
+  "role": zod.enum(['user', 'assistant']),
+  "content": zod.string()
+}))
+})
+
+export const AiCoachResponse = zod.object({
+  "reply": zod.string()
+})
+
+
+/**
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({

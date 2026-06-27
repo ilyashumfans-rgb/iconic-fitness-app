@@ -45,6 +45,32 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/AiChatOutput" }
+  /ai/coach:
+    post:
+      operationId: aiCoach
+      tags: [ai]
+      summary: Personalized AI fitness coach (uses the member's own tracking data)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AiChatInput" }
+      responses:
+        "200":
+          description: Coach reply
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AiChatOutput" }
+        "401":
+          description: Not signed in
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AiChatOutput" }
+        "503":
+          description: AI coach not configured
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AiChatOutput" }
   /healthz:
     get:
       operationId: healthCheck

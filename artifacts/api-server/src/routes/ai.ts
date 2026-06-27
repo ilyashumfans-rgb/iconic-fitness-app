@@ -1,5 +1,19 @@
 import { Router, type IRouter } from "express";
-import { AiChatBody, AiChatResponse } from "@workspace/api-zod";
+import { and, eq, gte, sql } from "drizzle-orm";
+import {
+  db,
+  usersTable,
+  waterLogsTable,
+  mealLogsTable,
+  workoutLogsTable,
+} from "@workspace/db";
+import {
+  AiChatBody,
+  AiChatResponse,
+  AiCoachBody,
+  AiCoachResponse,
+} from "@workspace/api-zod";
+import { requireUser } from "../lib/currentUser";
 
 const router: IRouter = Router();
 
@@ -95,6 +109,205 @@ router.post("/ai/chat", async (req, res): Promise<void> => {
       AiChatResponse.parse({
         reply:
           "Something went wrong on our end. Please try again, or reach us on WhatsApp at +91 94800 00248.",
+      }),
+    );
+  }
+});
+
+const COACH_SYSTEM_PROMPT = `You are "Coach", a warm, expert personal fitness coach inside the Iconic Fitness member app. You speak directly to one member.
+
+Your job:
+- Give personalized, practical, motivating fitness, nutrition, and habit advice.
+- Use the member's live data below (today's totals, goals, streak, recent activity) to ground every answer in their reality. Reference real numbers when relevant ("you're at 1.2L of your 3L water goal").
+- Be encouraging but honest. Celebrate progress; gently nudge when they're behind.
+- Keep replies concise and skimmable. Use short paragraphs or simple dashes for lists. Plain text only — no markdown headings, no emojis.
+- When suggesting a workout or meals, be specific and realistic for a gym member in Bengaluru, India (Indian foods are great examples for nutrition).
+
+Safety:
+- You are not a doctor. For pain, injury, medical conditions, pregnancy, or medication questions, advise consulting a doctor or the in-house dietician/trainer at their branch.
+- Never recommend extreme calorie restriction, crash diets, or unsafe training. Promote sustainable habits.
+
+If the member has logged little or no data yet, encourage them to start logging water, meals, and workouts so you can coach them better.`;
+
+function istDateStr(d: Date): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(d);
+}
+function dateNDaysAgo(n: number): string {
+  return istDateStr(new Date(Date.now() - n * 86_400_000));
+}
+
+async function buildCoachContext(userId: number): Promise<string> {
+  const today = dateNDaysAgo(0);
+  const weekSince = dateNDaysAgo(6);
+  const since90 = dateNDaysAgo(89);
+
+  const [profileRows, waterRows, mealRows, workoutTodayRows, weekRows] =
+    await Promise.all([
+      db
+        .select({
+          name: usersTable.name,
+          gender: usersTable.gender,
+          age: usersTable.age,
+          heightCm: usersTable.heightCm,
+          weightKg: usersTable.weightKg,
+          fitnessGoal: usersTable.fitnessGoal,
+          waterGoalMl: usersTable.waterGoalMl,
+          calorieGoal: usersTable.calorieGoal,
+          proteinGoalG: usersTable.proteinGoalG,
+          stepGoal: usersTable.stepGoal,
+          weeklyGoal: usersTable.weeklyGoal,
+        })
+        .from(usersTable)
+        .where(eq(usersTable.id, userId)),
+      db
+        .select({ ml: sql<number>`coalesce(sum(${waterLogsTable.amountMl}),0)::int` })
+        .from(waterLogsTable)
+        .where(
+          and(eq(waterLogsTable.userId, userId), eq(waterLogsTable.loggedDate, today)),
+        ),
+      db
+        .select({
+          cals: sql<number>`coalesce(sum(${mealLogsTable.calories}),0)::int`,
+          protein: sql<number>`coalesce(sum(${mealLogsTable.proteinG}),0)::int`,
+          carbs: sql<number>`coalesce(sum(${mealLogsTable.carbsG}),0)::int`,
+          fat: sql<number>`coalesce(sum(${mealLogsTable.fatG}),0)::int`,
+        })
+        .from(mealLogsTable)
+        .where(
+          and(eq(mealLogsTable.userId, userId), eq(mealLogsTable.loggedDate, today)),
+        ),
+      db
+        .select({
+          cals: sql<number>`coalesce(sum(${workoutLogsTable.calories}),0)::int`,
+          steps: sql<number>`coalesce(sum(${workoutLogsTable.steps}),0)::int`,
+          mins: sql<number>`coalesce(sum(${workoutLogsTable.durationMin}),0)::int`,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(workoutLogsTable)
+        .where(
+          and(
+            eq(workoutLogsTable.userId, userId),
+            eq(workoutLogsTable.loggedDate, today),
+          ),
+        ),
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(workoutLogsTable)
+        .where(
+          and(
+            eq(workoutLogsTable.userId, userId),
+            gte(workoutLogsTable.loggedDate, weekSince),
+          ),
+        ),
+    ]);
+
+  // Streak = consecutive IST days with any tracking activity (water / meal / workout).
+  const [waterDays, mealDays, workoutDays] = await Promise.all([
+    db
+      .selectDistinct({ d: waterLogsTable.loggedDate })
+      .from(waterLogsTable)
+      .where(
+        and(eq(waterLogsTable.userId, userId), gte(waterLogsTable.loggedDate, since90)),
+      ),
+    db
+      .selectDistinct({ d: mealLogsTable.loggedDate })
+      .from(mealLogsTable)
+      .where(
+        and(eq(mealLogsTable.userId, userId), gte(mealLogsTable.loggedDate, since90)),
+      ),
+    db
+      .selectDistinct({ d: workoutLogsTable.loggedDate })
+      .from(workoutLogsTable)
+      .where(
+        and(
+          eq(workoutLogsTable.userId, userId),
+          gte(workoutLogsTable.loggedDate, since90),
+        ),
+      ),
+  ]);
+  const active = new Set<string>();
+  for (const r of [...waterDays, ...mealDays, ...workoutDays]) active.add(r.d);
+  let streak = 0;
+  let i = active.has(dateNDaysAgo(0)) ? 0 : 1;
+  for (; i <= 90; i++) {
+    if (active.has(dateNDaysAgo(i))) streak++;
+    else break;
+  }
+
+  const p = profileRows[0];
+  const water = waterRows[0];
+  const meals = mealRows[0];
+  const w = workoutTodayRows[0];
+  const week = weekRows[0];
+
+  const waterGoal = p?.waterGoalMl ?? 3000;
+  const calorieGoal = p?.calorieGoal ?? 2200;
+  const proteinGoal = p?.proteinGoalG ?? 120;
+  const stepGoal = p?.stepGoal ?? 8000;
+  const weeklyGoal = p?.weeklyGoal ?? 5;
+
+  return [
+    "MEMBER DATA (live, in Asia/Kolkata time):",
+    `Name: ${p?.name ?? "Member"}`,
+    `Profile: ${p?.age ?? "?"} yrs, ${p?.gender ?? "?"}, ${p?.heightCm ?? "?"} cm, ${p?.weightKg ?? "?"} kg`,
+    `Primary goal: ${p?.fitnessGoal ?? "general_fitness"}`,
+    `Today's date: ${today}`,
+    `Water today: ${water?.ml ?? 0} ml of ${waterGoal} ml goal`,
+    `Calories eaten today: ${meals?.cals ?? 0} kcal of ${calorieGoal} kcal goal`,
+    `Protein today: ${meals?.protein ?? 0} g of ${proteinGoal} g goal (carbs ${meals?.carbs ?? 0} g, fat ${meals?.fat ?? 0} g)`,
+    `Workouts today: ${w?.count ?? 0} (${w?.mins ?? 0} min, ${w?.cals ?? 0} kcal burned, ${w?.steps ?? 0} steps of ${stepGoal} step goal)`,
+    `This week: ${week?.count ?? 0} workouts of a ${weeklyGoal}/week goal`,
+    `Current streak: ${streak} day(s)`,
+  ].join("\n");
+}
+
+router.post("/ai/coach", requireUser, async (req, res): Promise<void> => {
+  const parsed = AiCoachBody.safeParse(req.body);
+  if (!parsed.success) {
+    res
+      .status(400)
+      .json(AiCoachResponse.parse({ reply: "Sorry, I couldn't understand that." }));
+    return;
+  }
+
+  if (
+    !process.env.AI_INTEGRATIONS_OPENAI_BASE_URL ||
+    !process.env.AI_INTEGRATIONS_OPENAI_API_KEY
+  ) {
+    res.status(503).json(
+      AiCoachResponse.parse({
+        reply:
+          "Your AI coach isn't available right now. Please try again in a little while.",
+      }),
+    );
+    return;
+  }
+
+  try {
+    const context = await buildCoachContext(req.userId!);
+    const { openai } = await import("@workspace/integrations-openai-ai-server");
+    const completion = await openai.chat.completions.create({
+      model: "gpt-5.4",
+      max_completion_tokens: 8192,
+      messages: [
+        { role: "system", content: `${COACH_SYSTEM_PROMPT}\n\n${context}` },
+        ...parsed.data.messages.map((m) => ({
+          role: m.role,
+          content: m.content,
+        })),
+      ],
+    });
+
+    const reply =
+      completion.choices[0]?.message?.content?.trim() ||
+      "Let's keep going — tell me a bit more and I'll help.";
+
+    res.json(AiCoachResponse.parse({ reply }));
+  } catch (err) {
+    req.log.error({ err }, "AI coach request failed");
+    res.status(502).json(
+      AiCoachResponse.parse({
+        reply: "Something went wrong on our end. Please try again in a moment.",
       }),
     );
   }

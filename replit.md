@@ -93,6 +93,14 @@ Member-facing challenges with live leaderboards, following the **code-default** 
 - **API:** `artifacts/api-server/src/routes/challenges.ts` (`requireUser`): `GET /challenges` (list + joined flag + my progress + participant count), `GET /challenges/:id` (detail + leaderboard), `POST /challenges/:id/{join,leave}` (scoped to `req.userId`). Leaderboard payload intentionally **omits** raw `userId` (privacy) — `isMe` flags the current user; `rank` is the stable client key.
 - **Mobile:** `app/challenges.tsx` (list, modal) + `app/challenge/[id].tsx` (detail + leaderboard + join/leave), registered in `_layout.tsx`, entry card on the Progress tab, auth-gated via `Redirect` for guests. Display formatters in `lib/challenges.ts`.
 
+### AI Fitness Coach (mobile)
+
+Personalized AI chat for members that grounds every answer in the member's **own** live tracking data — following the existing OpenAI integration pattern (no API key; uses Replit AI Integrations, billed to the user's credits).
+
+- **API:** `POST /ai/coach` in `artifacts/api-server/src/routes/ai.ts`, guarded by `requireUser`. `buildCoachContext(userId)` assembles a context block from the member's profile + goals (`usersTable`) and today's totals + weekly workouts + a consecutive-day activity streak (`waterLogsTable`/`mealLogsTable`/`workoutLogsTable`, all scoped to `req.userId`, IST dates). It injects that into `COACH_SYSTEM_PROMPT` and calls `openai` `gpt-5.4` (mirrors `/ai/chat`). Streak = consecutive IST days with any tracking activity (today-miss doesn't reset), 90-day bounded — same semantics as `tracking.ts`.
+- **Spec/codegen:** OpenAPI `/ai/coach` (`operationId: aiCoach`, reuses `AiChatInput`/`AiChatOutput`) → generated `useAiCoach` hook + `AiCoachBody`/`AiCoachResponse` zod.
+- **Mobile:** chat screen `app/coach.tsx` (modal, registered in `_layout.tsx`), reuses the `AiChatMessage` type + `useAiCoach` mutation. Starter prompts when empty; user/assistant bubbles; `KeyboardAvoidingView`. Auth-gated via `Redirect`. Entry points: prominent card on the Home tab (under the hero, members only) + a row on the Progress tab. Theme: dark `#0A0C08` + lime `#C7F000`.
+
 ## User preferences
 
 - **Pushing data to production:** dev and prod are separate databases. To get dev catalog data (gyms, partners, etc.) onto the live site, use the admin Dashboard "Import workspace data" button — this is the standard workflow. Each time the user wants new/changed dev data live, the agent must: (1) regenerate `artifacts/api-server/src/lib/seed-snapshot.json` from the current dev DB, (2) redeploy, then (3) user clicks "Import workspace data" on the live admin Dashboard. See `.agents/memory/prod-data-import.md`.
