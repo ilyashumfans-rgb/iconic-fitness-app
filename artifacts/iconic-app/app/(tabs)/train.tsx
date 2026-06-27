@@ -59,6 +59,45 @@ export default function TrainScreen() {
         </AppText>
       </View>
 
+      <Pressable
+        onPress={() => router.push("/trainers")}
+        style={{ marginBottom: 16 }}
+      >
+        <Card tone="elevated">
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+            <View
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: colors.primary,
+              }}
+            >
+              <Feather
+                name="users"
+                size={22}
+                color={colors.primaryForeground}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <AppText weight="700" size={16}>
+                Personal Trainers
+              </AppText>
+              <AppText muted size={13} style={{ marginTop: 2 }}>
+                Find a coach & book a 1-on-1 session
+              </AppText>
+            </View>
+            <Feather
+              name="chevron-right"
+              size={20}
+              color={colors.mutedForeground}
+            />
+          </View>
+        </Card>
+      </Pressable>
+
       <View style={{ marginBottom: 20 }}>
         <Segmented
           value={tab}
