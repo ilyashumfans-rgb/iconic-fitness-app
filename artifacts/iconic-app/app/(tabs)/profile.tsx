@@ -1,10 +1,14 @@
 import { useClerk, useUser } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
 import {
+  getGetMeQueryKey,
+  getGetMyMembershipQueryKey,
   getGetTrackingSummaryQueryKey,
   useGetGoals,
   useGetMe,
+  useGetMyMembership,
   useUpdateGoals,
+  useUpdateMe,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -20,12 +24,16 @@ import { Chip, ChipRow, SectionHeader } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/hooks/useGuest";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
+import { istDateLabel, istDateStr } from "@/lib/dates";
+import { membershipsUrl, openExternal } from "@/lib/links";
 import {
   ACTION_REMINDERS,
   areRemindersOn,
   cancelActionReminders,
   scheduleActionReminders,
 } from "@/lib/notifications";
+
+const GENDER_OPTIONS = ["male", "female", "other"];
 
 const THEME_OPTIONS: { mode: ThemeMode; label: string }[] = [
   { mode: "light", label: "Light" },
@@ -53,6 +61,10 @@ export default function ProfileScreen() {
   const meQuery = useGetMe();
   const goalsQuery = useGetGoals();
   const updateGoals = useUpdateGoals();
+  const membershipQuery = useGetMyMembership({
+    query: { queryKey: getGetMyMembershipQueryKey(), enabled: !isGuest },
+  });
+  const updateMe = useUpdateMe();
 
   const [water, setWater] = useState("");
   const [calories, setCalories] = useState("");
@@ -60,6 +72,16 @@ export default function ProfileScreen() {
   const [steps, setSteps] = useState("");
   const [weekly, setWeekly] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const [pName, setPName] = useState("");
+  const [pMobile, setPMobile] = useState("");
+  const [pCity, setPCity] = useState("");
+  const [pGender, setPGender] = useState("");
+  const [pAge, setPAge] = useState("");
+  const [pHeight, setPHeight] = useState("");
+  const [pWeight, setPWeight] = useState("");
+  const [pGoal, setPGoal] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
 
   const [reminderOn, setReminderOn] = useState(false);
 
@@ -75,8 +97,59 @@ export default function ProfileScreen() {
   }, [goalsQuery.data]);
 
   useEffect(() => {
+    const m = meQuery.data;
+    if (m) {
+      setPName(m.name ?? "");
+      setPMobile(m.mobile ?? "");
+      setPCity(m.city ?? "");
+      setPGender(m.gender ?? "");
+      setPAge(m.age ? String(m.age) : "");
+      setPHeight(m.heightCm ? String(m.heightCm) : "");
+      setPWeight(m.weightKg ? String(m.weightKg) : "");
+      setPGoal(m.fitnessGoal ?? "");
+    }
+  }, [meQuery.data]);
+
+  useEffect(() => {
     void areRemindersOn().then(setReminderOn);
   }, []);
+
+  const onSaveProfile = async () => {
+    if (!pName.trim()) {
+      Alert.alert("Name required", "Please enter your name.");
+      return;
+    }
+    const age = Number(pAge);
+    const heightCm = Number(pHeight);
+    const weightKg = Number(pWeight);
+    const ageOk = pAge.trim() !== "" && Number.isFinite(age) && age > 0;
+    const heightOk =
+      pHeight.trim() !== "" && Number.isFinite(heightCm) && heightCm > 0;
+    const weightOk =
+      pWeight.trim() !== "" && Number.isFinite(weightKg) && weightKg > 0;
+    setSavingProfile(true);
+    try {
+      await updateMe.mutateAsync({
+        data: {
+          name: pName.trim(),
+          mobile: pMobile.trim(),
+          city: pCity.trim(),
+          gender: pGender,
+          fitnessGoal: pGoal.trim(),
+          ...(ageOk ? { age } : {}),
+          ...(heightOk ? { heightCm } : {}),
+          ...(weightOk ? { weightKg } : {}),
+        },
+      });
+      await queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
+      await meQuery.refetch();
+      Alert.alert("Saved", "Your profile has been updated.");
+    } catch {
+      Alert.alert("Error", "Could not save your profile.");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   const onSaveGoals = async () => {
     setSaving(true);
@@ -176,6 +249,158 @@ export default function ProfileScreen() {
           </AppText>
         ) : null}
       </View>
+
+      {!isGuest ? (
+        <>
+          {/* Current membership plan */}
+          <SectionHeader title="Membership" />
+          <Card style={{ gap: 12 }}>
+            {membershipQuery.isLoading ? (
+              <AppText muted size={14}>
+                Loading your plan…
+              </AppText>
+            ) : membershipQuery.data ? (
+              <>
+                <View style={styles.switchRow}>
+                  <View style={{ flex: 1 }}>
+                    <AppText weight="700" size={18}>
+                      {membershipQuery.data.planName}
+                    </AppText>
+                    <AppText muted size={13} style={{ marginTop: 2 }}>
+                      Renews{" "}
+                      {istDateLabel(
+                        istDateStr(new Date(membershipQuery.data.renewsOn)),
+                      )}
+                    </AppText>
+                  </View>
+                  <View
+                    style={[
+                      styles.statusPill,
+                      { backgroundColor: colors.primary + "22" },
+                    ]}
+                  >
+                    <AppText
+                      size={12}
+                      weight="700"
+                      color={colors.primary}
+                      style={{ textTransform: "capitalize" }}
+                    >
+                      {membershipQuery.data.status}
+                    </AppText>
+                  </View>
+                </View>
+                <View style={styles.row2}>
+                  <View style={styles.half}>
+                    <AppText muted size={12}>
+                      Classes this month
+                    </AppText>
+                    <AppText weight="700" size={16}>
+                      {membershipQuery.data.classesUsed} /{" "}
+                      {membershipQuery.data.classesIncluded}
+                    </AppText>
+                  </View>
+                  <View style={styles.half}>
+                    <AppText muted size={12}>
+                      Gyms accessed
+                    </AppText>
+                    <AppText weight="700" size={16}>
+                      {membershipQuery.data.gymsAccessed}
+                    </AppText>
+                  </View>
+                </View>
+                <Button
+                  label="Manage plan"
+                  variant="secondary"
+                  icon="credit-card"
+                  onPress={() => openExternal(membershipsUrl)}
+                />
+              </>
+            ) : (
+              <>
+                <AppText weight="600" size={15}>
+                  No active plan
+                </AppText>
+                <AppText muted size={13}>
+                  Choose a membership to unlock gyms and classes.
+                </AppText>
+                <Button
+                  label="View plans"
+                  icon="credit-card"
+                  onPress={() => openExternal(membershipsUrl)}
+                />
+              </>
+            )}
+          </Card>
+
+          {/* Personal details (manage profile) */}
+          <SectionHeader title="Personal details" />
+          <Card style={{ gap: 14 }}>
+            <Field label="Name" value={pName} onChangeText={setPName} />
+            <Field
+              label="Mobile"
+              value={pMobile}
+              onChangeText={setPMobile}
+              keyboardType="phone-pad"
+            />
+            <Field label="City" value={pCity} onChangeText={setPCity} />
+            <View style={{ gap: 8 }}>
+              <AppText weight="600" size={13} muted>
+                Gender
+              </AppText>
+              <ChipRow>
+                {GENDER_OPTIONS.map((g) => (
+                  <Chip
+                    key={g}
+                    label={g.charAt(0).toUpperCase() + g.slice(1)}
+                    active={pGender === g}
+                    onPress={() => setPGender(g)}
+                  />
+                ))}
+              </ChipRow>
+            </View>
+            <View style={styles.row2}>
+              <View style={styles.half}>
+                <Field
+                  label="Age"
+                  value={pAge}
+                  onChangeText={setPAge}
+                  keyboardType="number-pad"
+                />
+              </View>
+              <View style={styles.half}>
+                <Field
+                  label="Height (cm)"
+                  value={pHeight}
+                  onChangeText={setPHeight}
+                  keyboardType="number-pad"
+                />
+              </View>
+            </View>
+            <View style={styles.row2}>
+              <View style={styles.half}>
+                <Field
+                  label="Weight (kg)"
+                  value={pWeight}
+                  onChangeText={setPWeight}
+                  keyboardType="number-pad"
+                />
+              </View>
+              <View style={styles.half}>
+                <Field
+                  label="Fitness goal"
+                  value={pGoal}
+                  onChangeText={setPGoal}
+                />
+              </View>
+            </View>
+            <Button
+              label="Save profile"
+              onPress={onSaveProfile}
+              loading={savingProfile}
+            />
+          </Card>
+        </>
+      ) : null}
 
       {/* Appearance */}
       <SectionHeader title="Appearance" />
@@ -318,5 +543,11 @@ const styles = StyleSheet.create({
   row2: { flexDirection: "row", gap: 12 },
   half: { flex: 1 },
   switchRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  statusPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    alignSelf: "flex-start",
+  },
   reminderRow: { flexDirection: "row", alignItems: "center", gap: 8 },
 });

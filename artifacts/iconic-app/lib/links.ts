@@ -7,6 +7,7 @@ const domain = process.env.EXPO_PUBLIC_DOMAIN;
 export const websiteUrl = domain ? `https://${domain}` : "https://gymco.replit.app";
 export const exploreUrl = `${websiteUrl}/explore`;
 export const storeUrl = `${websiteUrl}/store`;
+export const membershipsUrl = `${websiteUrl}/memberships`;
 export const promoVideoUrl = `${websiteUrl}/gymco-promo/`;
 
 /** Open a URL in an in-app browser, falling back to the system browser. */
