@@ -11,3 +11,4 @@
 - [ffmpeg parallel encode sync flakiness](ffmpeg-parallel-encode-sync.md) — background `&`+`wait` file writes intermittently don't persist here; encode serially, `sync`, verify each with `stat`.
 - [Store vendor / order data model](store-vendor-model.md) — vendors = partners.kind vendor/both; order items snapshot name+price (no FKs) so deleting products is history-safe.
 - [Deploy typechecks ALL artifacts](deploy-builds-all-artifacts.md) — publish fails if ANY artifact has a TS error (dev/vite doesn't typecheck); Vite artifacts need `dom` lib; bare `vite build` PORT error is not a real blocker.
+- [RN guided-timer state machine](rn-timer-state-machine.md) — interval steppers (set/rest player): idempotent advance via ref guard, advance from effect not setState updater, "Next" = steps[index+1].

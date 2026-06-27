@@ -71,6 +71,8 @@ function RootLayoutNav() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="exercise/[slug]" />
+        <Stack.Screen name="workout/[id]" />
+        <Stack.Screen name="workout/generate" />
         <Stack.Screen
           name="water"
           options={{ presentation: "modal", headerShown: false }}

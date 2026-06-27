@@ -6,13 +6,20 @@ import { Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
 import { Screen } from "@/components/Screen";
-import { SectionHeader } from "@/components/ui-bits";
+import { SectionHeader, Segmented } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
 import {
   EXERCISE_CATEGORIES,
   EXERCISES,
   type Exercise,
 } from "@/lib/exercises";
+import {
+  WORKOUT_FOCUS_LABELS,
+  WORKOUT_TEMPLATES,
+  workoutExercises,
+  workoutStats,
+  type Workout,
+} from "@/lib/workouts";
 
 const DIFFICULTY_TINT: Record<string, "success" | "warning" | "destructive"> = {
   Beginner: "success",
@@ -20,9 +27,12 @@ const DIFFICULTY_TINT: Record<string, "success" | "warning" | "destructive"> = {
   Advanced: "destructive",
 };
 
+type TrainTab = "library" | "workouts";
+
 export default function TrainScreen() {
   const colors = useColors();
   const router = useRouter();
+  const [tab, setTab] = useState<TrainTab>("library");
   const [category, setCategory] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
@@ -42,13 +52,58 @@ export default function TrainScreen() {
     <Screen contentContainerStyle={{ paddingTop: 8 }}>
       <View style={{ marginBottom: 18 }}>
         <AppText weight="700" size={28}>
-          Exercise Library
+          Train
         </AppText>
         <AppText muted size={14} style={{ marginTop: 2 }}>
-          {EXERCISES.length} exercises · technique, sets & reps for every move.
+          Browse exercises or start a ready-made workout.
         </AppText>
       </View>
 
+      <View style={{ marginBottom: 20 }}>
+        <Segmented
+          value={tab}
+          onChange={setTab}
+          options={[
+            { value: "library", label: "Library" },
+            { value: "workouts", label: "Workouts" },
+          ]}
+        />
+      </View>
+
+      {tab === "workouts" ? (
+        <WorkoutsTab />
+      ) : (
+        <LibraryTab
+          search={search}
+          setSearch={setSearch}
+          category={category}
+          setCategory={setCategory}
+          results={results}
+          onOpen={(slug) => router.push(`/exercise/${slug}`)}
+        />
+      )}
+    </Screen>
+  );
+}
+
+function LibraryTab({
+  search,
+  setSearch,
+  category,
+  setCategory,
+  results,
+  onOpen,
+}: {
+  search: string;
+  setSearch: (v: string) => void;
+  category: string | null;
+  setCategory: (v: string | null) => void;
+  results: Exercise[];
+  onOpen: (slug: string) => void;
+}) {
+  const colors = useColors();
+  return (
+    <>
       {/* Search */}
       <View
         style={[
@@ -112,12 +167,89 @@ export default function TrainScreen() {
             <ExerciseRow
               key={ex.slug}
               exercise={ex}
-              onPress={() => router.push(`/exercise/${ex.slug}`)}
+              onPress={() => onOpen(ex.slug)}
             />
           ))}
         </View>
       )}
-    </Screen>
+    </>
+  );
+}
+
+function WorkoutsTab() {
+  const colors = useColors();
+  const router = useRouter();
+  return (
+    <>
+      {/* Generator CTA */}
+      <Pressable onPress={() => router.push("/workout/generate")}>
+        <Card style={styles.genCard} tone="elevated">
+          <View style={[styles.genIcon, { backgroundColor: colors.primary }]}>
+            <Feather name="zap" size={22} color={colors.primaryForeground} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <AppText weight="700" size={16}>
+              Build my workout
+            </AppText>
+            <AppText muted size={13} style={{ marginTop: 2 }}>
+              Generate a custom routine by focus, level & time.
+            </AppText>
+          </View>
+          <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
+        </Card>
+      </Pressable>
+
+      <View style={{ height: 24 }} />
+      <SectionHeader title="Ready-made workouts" />
+
+      <View style={{ gap: 12 }}>
+        {WORKOUT_TEMPLATES.map((w) => (
+          <WorkoutRow
+            key={w.id}
+            workout={w}
+            onPress={() => router.push(`/workout/${w.id}`)}
+          />
+        ))}
+      </View>
+    </>
+  );
+}
+
+function WorkoutRow({ workout, onPress }: { workout: Workout; onPress: () => void }) {
+  const colors = useColors();
+  const stats = workoutStats(workoutExercises(workout));
+  const tint = colors[DIFFICULTY_TINT[workout.level]];
+  return (
+    <Pressable onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
+      <Card style={styles.exRow}>
+        <View
+          style={[
+            styles.exIcon,
+            { backgroundColor: colors.accent, borderColor: colors.border },
+          ]}
+        >
+          <Feather name={workout.icon} size={22} color={colors.primary} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <AppText weight="700" size={15}>
+            {workout.name}
+          </AppText>
+          <AppText muted size={12} style={{ marginTop: 2 }}>
+            {WORKOUT_FOCUS_LABELS[workout.focus]} · {stats.exercises} exercises · {stats.estMinutes}m
+          </AppText>
+          <View style={styles.metaRow}>
+            <View style={[styles.diffDot, { backgroundColor: tint }]} />
+            <AppText size={12} color={tint} weight="600">
+              {workout.level}
+            </AppText>
+            <AppText muted size={12}>
+              · ~{stats.estCalories} kcal
+            </AppText>
+          </View>
+        </View>
+        <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
+      </Card>
+    </Pressable>
   );
 }
 
@@ -242,4 +374,12 @@ const styles = StyleSheet.create({
   },
   metaRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 7 },
   diffDot: { width: 7, height: 7, borderRadius: 4 },
+  genCard: { flexDirection: "row", alignItems: "center", gap: 14, padding: 16 },
+  genIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });
