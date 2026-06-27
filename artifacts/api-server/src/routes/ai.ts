@@ -135,12 +135,14 @@ ONBOARDING ASSESSMENT (do this FIRST when the member has not completed their ass
 - After saving, present their results in plain language: BMI (with category), estimated body fat %, BMR, daily calorie target, protein and water targets, ideal weight range, and a fitness score.
 - Use their HEIGHT and WEIGHT to tell them concretely what to do: whether they should lose, gain, or maintain weight, roughly how many kg, and a realistic timeframe at a safe pace (about 0.5 kg/week to lose, 0.25 kg/week to gain). Use the "Weight plan (from height & weight)" line in MEMBER DATA below as your basis — never recommend crash dieting or losing weight too fast. If they're already in the healthy range, focus on body composition (strength + recomposition) rather than the scale.
 - Then give a short personalized starter plan that matches that weight direction: a weekly workout split, daily focus, cardio vs strength balance, meal direction (respecting their food preference), sleep and hydration targets, and rest days — realistic for their experience level and available time.
+- If the member is NEW (just starting out / experience level "new"), warmly recommend they train with one of Iconic Fitness's certified personal trainers (PT) and encourage them to commit to at least one month of PT. Explain the benefit plainly: a PT teaches correct form, prevents injury, builds the right foundation and habits, and keeps them accountable so they see results faster in their first weeks. Suggest they ask the front desk at their branch or message the team on WhatsApp at +91 94800 00248 to set it up. Be encouraging, not pushy, and mention it once during onboarding (don't repeat it every message).
 - Finally, tell them you'll check in daily, and suggest they switch on Daily Reminders in their Profile so they get nudges for water, meals, workouts, steps and sleep.
 
 DAILY GUIDANCE (once the assessment is complete):
 - Greet them and give a brief daily check-in grounded in today's numbers: what they've done and what's still pending toward each goal (water, calories, protein, steps, workout), plus their streak.
 - Give ONE specific, actionable nudge for today (e.g. "you're 900ml short on water — have a glass now", or "great consistency — add 2.5kg to your squat next session"). Keep their weight plan (lose / gain / maintain, from the MEMBER DATA below) in mind so your nudges move them toward it.
 - Gently remind them about any action they haven't done yet today.
+- If MEMBER DATA shows the member is still in their first month as a NEW member, occasionally (not every day) encourage them to take personal training (PT) sessions for at least their first month to build correct form and habits — set it up via the front desk or WhatsApp +91 94800 00248.
 
 Actions you can take (tools):
 - save_assessment: save the member's assessment answers; this also auto-calculates their metrics and sets their goals. Use it once you've gathered their details during onboarding, or again whenever they want to redo or update their assessment.
@@ -293,6 +295,16 @@ async function buildCoachContext(userId: number): Promise<string> {
     targetWeightKg: p?.targetWeightKg ?? null,
   });
   const assessmentDone = !!p?.assessmentCompletedAt;
+  const daysSinceAssessment = assessmentDone
+    ? Math.floor(
+        (Date.now() -
+          new Date(p!.assessmentCompletedAt as unknown as string).getTime()) /
+          86_400_000,
+      )
+    : null;
+  const isNewMember = (p?.experienceLevel ?? "").toLowerCase() === "new";
+  const inFirstMonth =
+    isNewMember && daysSinceAssessment != null && daysSinceAssessment < 30;
 
   return [
     "MEMBER DATA (live, in Asia/Kolkata time):",
@@ -315,6 +327,11 @@ async function buildCoachContext(userId: number): Promise<string> {
       ? `Health metrics: BMI ${metrics.bmi} (${metrics.bmiCategory}), body fat ~${metrics.bodyFatPct}%, BMR ${metrics.bmr} kcal, TDEE ${metrics.tdee} kcal, ideal weight ${metrics.idealWeightLowKg}-${metrics.idealWeightHighKg} kg, hydration target ${metrics.hydrationMl} ml`
       : "Health metrics: not enough profile data yet (need height, weight, age).",
     weightRec ? `Weight plan (from height & weight): ${weightRec.summary}` : null,
+    inFirstMonth
+      ? `New-member status: NEW member, ${daysSinceAssessment} day(s) in — still in their first month. Encourage a personal trainer (PT) for at least the first month.`
+      : isNewMember
+        ? "New-member status: NEW member, past their first month."
+        : null,
     `Today's date: ${today}`,
     `Water today: ${water?.ml ?? 0} ml of ${waterGoal} ml goal`,
     `Calories eaten today: ${meals?.cals ?? 0} kcal of ${calorieGoal} kcal goal`,
