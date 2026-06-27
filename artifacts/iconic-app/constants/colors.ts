@@ -1,16 +1,64 @@
 /**
- * Iconic Fitness — bold & energetic dark theme with a bright lime accent.
+ * Iconic Fitness — palette built around the Iconic green (logo #7FC240).
  *
- * The palette is intentionally dark so the lime (#C7F000) primary pops. Only a
- * `light` key is defined; useColors() falls back to it for every appearance, so
- * the app renders the same energetic dark UI regardless of device setting.
+ * Two full palettes are defined: `light` (clean, white-based) and `dark`
+ * (deep near-black). The active palette is chosen by the ThemeProvider
+ * (hooks/useTheme) via useColors(), so the app supports a real light/dark
+ * toggle. Both palettes share identical keys so every component just works.
  */
 
 const colors = {
   light: {
     // Legacy aliases
+    text: "#16180F",
+    tint: "#5E9E2E",
+
+    // Core surfaces
+    background: "#FFFFFF",
+    foreground: "#16180F",
+
+    // Cards / elevated surfaces
+    card: "#FFFFFF",
+    cardForeground: "#16180F",
+    elevated: "#F2F5EC",
+
+    // Primary action color (deepened green so white text passes contrast)
+    primary: "#5E9E2E",
+    primaryForeground: "#FFFFFF",
+
+    // Secondary surfaces
+    secondary: "#EEF2E6",
+    secondaryForeground: "#2A3320",
+
+    // Muted / subdued
+    muted: "#F2F5EC",
+    mutedForeground: "#6B7560",
+
+    // Accent
+    accent: "#E9F3DC",
+    accentForeground: "#3C6B12",
+
+    // Destructive
+    destructive: "#E5484D",
+    destructiveForeground: "#FFFFFF",
+
+    // Borders / inputs
+    border: "#E2E7D8",
+    input: "#EEF2E6",
+
+    // Domain accents (rings, charts, badges) — tuned for light surfaces
+    water: "#1FA0C4",
+    calorie: "#E8732B",
+    protein: "#8E5BE0",
+    steps: "#5E9E2E",
+    success: "#2F9E45",
+    warning: "#C9931A",
+  },
+
+  dark: {
+    // Legacy aliases
     text: "#F4F7EE",
-    tint: "#C7F000",
+    tint: "#7FC240",
 
     // Core surfaces
     background: "#0A0C08",
@@ -21,9 +69,9 @@ const colors = {
     cardForeground: "#F4F7EE",
     elevated: "#1B2113",
 
-    // Primary action color
-    primary: "#C7F000",
-    primaryForeground: "#0A0C08",
+    // Primary action color (bright Iconic green on dark)
+    primary: "#7FC240",
+    primaryForeground: "#0A1400",
 
     // Secondary surfaces
     secondary: "#1B2113",
@@ -35,7 +83,7 @@ const colors = {
 
     // Accent
     accent: "#1F2A12",
-    accentForeground: "#C7F000",
+    accentForeground: "#7FC240",
 
     // Destructive
     destructive: "#FF6B6B",
@@ -49,7 +97,7 @@ const colors = {
     water: "#43D6F7",
     calorie: "#FF9248",
     protein: "#B98BFF",
-    steps: "#C7F000",
+    steps: "#7FC240",
     success: "#7CE38B",
     warning: "#FFCF5C",
   },

@@ -70,6 +70,15 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="train"
+        options={{
+          title: "Train",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="activity" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="classes"
         options={{
           title: "Classes",

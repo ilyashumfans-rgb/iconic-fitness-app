@@ -19,11 +19,18 @@ import { Screen } from "@/components/Screen";
 import { Chip, ChipRow, SectionHeader } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/hooks/useGuest";
+import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import {
   cancelDailyReminder,
   getReminderHour,
   scheduleDailyReminder,
 } from "@/lib/notifications";
+
+const THEME_OPTIONS: { mode: ThemeMode; label: string }[] = [
+  { mode: "light", label: "Light" },
+  { mode: "dark", label: "Dark" },
+  { mode: "system", label: "System" },
+];
 
 const REMINDER_HOURS = [6, 7, 8, 12, 18, 19, 20];
 
@@ -33,6 +40,7 @@ export default function ProfileScreen() {
   const { user } = useUser();
   const { signOut } = useClerk();
   const { isGuest, exitGuest } = useGuest();
+  const { mode: themeMode, setMode: setThemeMode } = useTheme();
   const queryClient = useQueryClient();
 
   const meQuery = useGetMe();
@@ -174,6 +182,31 @@ export default function ProfileScreen() {
           </AppText>
         ) : null}
       </View>
+
+      {/* Appearance */}
+      <SectionHeader title="Appearance" />
+      <Card style={{ gap: 14 }}>
+        <View style={styles.switchRow}>
+          <View style={{ flex: 1 }}>
+            <AppText weight="600" size={15}>
+              Theme
+            </AppText>
+            <AppText muted size={13}>
+              Choose light, dark, or match your device.
+            </AppText>
+          </View>
+        </View>
+        <ChipRow>
+          {THEME_OPTIONS.map((opt) => (
+            <Chip
+              key={opt.mode}
+              label={opt.label}
+              active={themeMode === opt.mode}
+              onPress={() => setThemeMode(opt.mode)}
+            />
+          ))}
+        </ChipRow>
+      </Card>
 
       {/* Goals */}
       <SectionHeader title="Daily goals" />

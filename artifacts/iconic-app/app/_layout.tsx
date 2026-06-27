@@ -12,13 +12,16 @@ import { setAuthTokenGetter, setBaseUrl } from "@workspace/api-client-react";
 import { Stack } from "expo-router";
 import * as Notifications from "expo-notifications";
 import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AnimatedSplash } from "@/components/AnimatedSplash";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { useColors } from "@/hooks/useColors";
 import { GuestProvider } from "@/hooks/useGuest";
+import { ThemeProvider, useTheme } from "@/hooks/useTheme";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -54,23 +57,34 @@ function ApiAuthBridge() {
 }
 
 function RootLayoutNav() {
+  const colors = useColors();
+  const { scheme } = useTheme();
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen
-        name="water"
-        options={{ presentation: "modal", headerShown: false }}
-      />
-      <Stack.Screen
-        name="diet"
-        options={{ presentation: "modal", headerShown: false }}
-      />
-      <Stack.Screen
-        name="workouts"
-        options={{ presentation: "modal", headerShown: false }}
-      />
-    </Stack>
+    <>
+      <StatusBar style={scheme === "dark" ? "light" : "dark"} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background },
+        }}
+      >
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="exercise/[slug]" />
+        <Stack.Screen
+          name="water"
+          options={{ presentation: "modal", headerShown: false }}
+        />
+        <Stack.Screen
+          name="diet"
+          options={{ presentation: "modal", headerShown: false }}
+        />
+        <Stack.Screen
+          name="workouts"
+          options={{ presentation: "modal", headerShown: false }}
+        />
+      </Stack>
+    </>
   );
 }
 
@@ -119,19 +133,21 @@ export default function RootLayout() {
       {...(proxyUrl ? { proxyUrl } : {})}
     >
       <SafeAreaProvider>
-        <ErrorBoundary>
-          <QueryClientProvider client={queryClient}>
-            <ApiAuthBridge />
-            <GuestProvider>
-              <GestureHandlerRootView style={{ flex: 1 }}>
-                <RootLayoutNav />
-                {!splashDone ? (
-                  <AnimatedSplash onFinish={() => setSplashDone(true)} />
-                ) : null}
-              </GestureHandlerRootView>
-            </GuestProvider>
-          </QueryClientProvider>
-        </ErrorBoundary>
+        <ThemeProvider>
+          <ErrorBoundary>
+            <QueryClientProvider client={queryClient}>
+              <ApiAuthBridge />
+              <GuestProvider>
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                  <RootLayoutNav />
+                  {!splashDone ? (
+                    <AnimatedSplash onFinish={() => setSplashDone(true)} />
+                  ) : null}
+                </GestureHandlerRootView>
+              </GuestProvider>
+            </QueryClientProvider>
+          </ErrorBoundary>
+        </ThemeProvider>
       </SafeAreaProvider>
     </ClerkProvider>
   );

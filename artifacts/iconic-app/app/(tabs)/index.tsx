@@ -239,7 +239,7 @@ export default function HomeScreen() {
       <SectionHeader
         title="Find your training"
         action="See all"
-        onAction={() => router.push("/classes")}
+        onAction={() => router.push("/train")}
       />
       <ScrollView
         horizontal
@@ -252,7 +252,7 @@ export default function HomeScreen() {
             key={c.label}
             label={c.label}
             icon={c.icon}
-            onPress={() => router.push("/classes")}
+            onPress={() => router.push("/train")}
           />
         ))}
       </ScrollView>
