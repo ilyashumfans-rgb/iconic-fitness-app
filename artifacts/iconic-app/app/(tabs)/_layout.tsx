@@ -79,32 +79,18 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="classes"
+        name="more"
         options={{
-          title: "Classes",
+          title: "More",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="calendar" size={size} color={color} />
+            <Feather name="menu" size={size} color={color} />
           ),
         }}
       />
-      <Tabs.Screen
-        name="progress"
-        options={{
-          title: "Progress",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="bar-chart-2" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="user" size={size} color={color} />
-          ),
-        }}
-      />
+      {/* Reachable from the More tab, hidden from the tab bar. */}
+      <Tabs.Screen name="classes" options={{ href: null }} />
+      <Tabs.Screen name="progress" options={{ href: null }} />
+      <Tabs.Screen name="profile" options={{ href: null }} />
     </Tabs>
   );
 }

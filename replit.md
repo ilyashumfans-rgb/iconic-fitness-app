@@ -82,6 +82,7 @@ Member-facing Expo (React Native, expo-router) app in `artifacts/iconic-app` (sl
 - **Auth:** Clerk (Replit-managed) via `@clerk/expo` v3 **Future signals API** (`signIn.password`/`finalize`, `signUp.verifications.*`, `useSSO` Google). The Clerk session token is supplied to every API call by `setAuthTokenGetter` wired in `app/_layout.tsx` (root-level `ApiAuthBridge`, so root modal routes get tokens too, not just tabs). Tabs + root authed modals redirect to `/(auth)/sign-in` when signed out.
 - **Backend:** tracking endpoints live in `artifacts/api-server/src/routes/tracking.ts` (`/tracking/summary|goals|water|meals|workouts`, `/checkins`), guarded by `requireUser` (Clerk bearer via `clerkMiddleware`+`getAuth`). Bookings DTO carries `gymId` (`bookings.ts` `toBookingDto`) so members can check in from My Bookings.
 - **Features:** dashboard rings, water/diet(macros)/workout+steps logging (root modal screens), class browse+book+check-in, progress charts & streaks, editable goals, daily reminder via `expo-notifications` (web-guarded). Theme: dark `#0A0C08` + lime `#C7F000`; all dates in `Asia/Kolkata` (`lib/dates.ts`).
+- **Bottom tabs:** Home, Train, More (`app/(tabs)/_layout.tsx`). `classes`/`progress`/`profile` are still `(tabs)` routes but hidden from the bar via `options={{ href: null }}` and surfaced through the More hub (`app/(tabs)/more.tsx`), which links to them with `router.push`.
 - **Gotcha:** `GestureHandlerRootView` must have `style={{ flex: 1 }}` or the whole app renders blank white.
 
 ### Challenges & leaderboards
