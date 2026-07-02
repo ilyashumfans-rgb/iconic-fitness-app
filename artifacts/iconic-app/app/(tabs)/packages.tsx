@@ -8,12 +8,16 @@ import { useMemo } from "react";
 import { View } from "react-native";
 
 import { AppText } from "@/components/AppText";
-import { ModalHeader } from "@/components/ModalHeader";
 import { PlanCard } from "@/components/PlanCard";
 import { Screen } from "@/components/Screen";
-import { EmptyState, ErrorView, LoadingView } from "@/components/ui-bits";
+import {
+  EmptyState,
+  ErrorView,
+  LoadingView,
+  SectionHeader,
+} from "@/components/ui-bits";
 
-export default function OffersScreen() {
+export default function PackagesScreen() {
   const query = useListMemberships({
     query: { queryKey: getListMembershipsQueryKey() },
   });
@@ -21,7 +25,7 @@ export default function OffersScreen() {
     query: { queryKey: getGetMyMembershipQueryKey() },
   });
 
-  // Offers = annual plans (created under the admin "Annual Plans" tab).
+  // Packages = annual plans (created under the admin "Packages" tab).
   const visible = useMemo(
     () =>
       (query.data ?? [])
@@ -37,11 +41,10 @@ export default function OffersScreen() {
 
   return (
     <Screen
-      contentContainerStyle={{ paddingTop: 8 }}
       refreshing={query.isRefetching}
       onRefresh={() => void query.refetch()}
     >
-      <ModalHeader title="Offers" />
+      <SectionHeader title="Packages" />
       <AppText muted size={14} style={{ marginBottom: 16 }}>
         Go annual and save the most across the year.
       </AppText>
@@ -52,9 +55,9 @@ export default function OffersScreen() {
         <ErrorView onRetry={() => void query.refetch()} />
       ) : visible.length === 0 ? (
         <EmptyState
-          icon="tag"
-          title="No offers right now"
-          message="Annual offers are on the way. Check back soon."
+          icon="package"
+          title="No packages right now"
+          message="Annual packages are on the way. Check back soon."
         />
       ) : (
         <View style={{ gap: 14 }}>

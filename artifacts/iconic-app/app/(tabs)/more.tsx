@@ -45,12 +45,6 @@ export default function MoreScreen() {
       action: () => router.push("/plans"),
     },
     {
-      title: "Offers",
-      subtitle: "Annual plans with the biggest savings",
-      icon: "tag",
-      action: () => router.push("/offers"),
-    },
-    {
       title: "Profile",
       subtitle: "Goals, reminders, theme and account",
       icon: "user",

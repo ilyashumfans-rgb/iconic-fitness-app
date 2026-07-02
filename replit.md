@@ -38,7 +38,7 @@ All plans are rows in `membershipsTable` with a `billingPeriod` (`monthly`/`quar
 
 - **Admin:** `pages/admin/Memberships.tsx` = all plans; `pages/admin/AnnualPlans.tsx` = annual-only CRUD (forces `billingPeriod="annual"` on create). Both use `adminApi.memberships.*`. Form components must be keyed by `editing?.id ?? "new"` so switching records remounts (otherwise stale form state saves to the wrong plan).
 - **Website:** Pricing (`pages/Memberships.tsx`) shows non-annual; **Offers** (`pages/Offers.tsx`, route `/offers`, nav "Offers", in `PUBLIC_ROUTES`) shows annual. Both render the shared `components/MembershipPlanGrid.tsx` (ordering + empty state).
-- **Mobile:** `app/plans.tsx` (non-annual, monthly/quarterly toggle) + `app/offers.tsx` (annual) both render shared `components/PlanCard.tsx` (price suffix derived from `billingPeriod`); both registered as modals in `_layout.tsx`, surfaced from the More hub. CTAs open `membershipsUrl` externally.
+- **Mobile:** `app/plans.tsx` (non-annual, monthly/quarterly toggle, modal from the More hub) + `app/(tabs)/packages.tsx` (annual) both render shared `components/PlanCard.tsx` (price suffix derived from `billingPeriod`). **Packages is a bottom tab** (`Feather "package"` icon, in `(tabs)/_layout.tsx` before More) — the old `app/offers.tsx` modal + its More-hub entry were removed. CTAs open `membershipsUrl` externally.
 
 ### Trainers
 
