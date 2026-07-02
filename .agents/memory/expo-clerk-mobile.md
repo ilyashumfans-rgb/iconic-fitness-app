@@ -39,6 +39,13 @@ description: Non-obvious API/wiring gotchas when adding Clerk auth + generated A
 ## Expo Go native-module trap
 - The Replit Expo workflow runs in **Expo Go** ("Using Expo Go" in Metro logs), which only bundles the native modules shipped in the Expo SDK. Any third-party lib with its own native code (e.g. `react-native-keyboard-controller`) crashes the app on launch on Android/iOS while **web keeps working** (web has a JS fallback). Symptom: "android/ios not loading" but web preview fine. Fix: drop the lib (use RN built-ins like `KeyboardAvoidingView`) or move the user to a dev build. Reanimated/gesture-handler/svg/screens ARE in Expo Go, so they're safe.
 
+## `@clerk/expo` v3 crashes on Android in Expo Go ("Cannot find native module 'ClerkExpo'")
+- `@clerk/expo` v3 ships its OWN native modules (`ClerkExpo`, `ClerkGoogleSignIn`). On **Android** its spec files (`dist/specs/NativeClerk*.android.js`) call `requireNativeModule(...)` at **import time**, which THROWS when the module is absent — i.e. in Expo Go. The throw happens *before* Clerk's own graceful try/catch in `dist/utils/native-module.js`, so the whole app crashes at startup. **Web works** (no native module needed); iOS's default spec uses the non-throwing `TurboModuleRegistry.get`, so the crash is Android-specific.
+- The native module only powers optional "native client sync"; all the auth the app actually uses (`signIn.password`, `useSSO` web OAuth, `finalize`) is **network/JS-based and works fine without it**.
+- **Fix (survives reinstalls, keeps dev-build natives):** a Metro resolver in `metro.config.js` that, on `platform === "android"` and origin inside `@clerk/expo`, redirects the throwing specs (`../specs/NativeClerkModule`, `../specs/NativeClerkGoogleSignIn`) to their **platform-default `.js`** siblings (which use non-throwing `TurboModuleRegistry.get` / `requireOptionalNativeModule` → return `null` in Expo Go, real module in a production build). Verify by invoking `require("./metro.config.js").resolver.resolveRequest` with a fake context — no device needed.
+- Also add `"@clerk/expo"` to `app.json` plugins (Clerk's own error tells you to; harmless in Expo Go, needed for real dev/prod builds — Metro logs then print `✅ Clerk Android plugin loaded`).
+- **Why:** Clerk is *designed* to degrade gracefully in Expo Go; the only bug is one eager Android require throwing before the fallback. Redirecting to the safe default is the intended behavior, not a hack, and doesn't disable natives in a proper build.
+
 ## RN gotcha
 - `GestureHandlerRootView` needs `style={{ flex: 1 }}` or it collapses to zero height → fully blank white screen even though the tree mounted.
 

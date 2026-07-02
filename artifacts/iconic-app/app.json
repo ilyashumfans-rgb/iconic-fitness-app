@@ -48,7 +48,8 @@
           "color": "#C7F000"
         }
       ],
-      "expo-video"
+      "expo-video",
+      "@clerk/expo"
     ],
     "experiments": {
       "typedRoutes": true,
