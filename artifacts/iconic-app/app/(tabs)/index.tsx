@@ -205,8 +205,9 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <View style={styles.brandRow}>
           <Image
-            source={require("@/assets/images/icon.png")}
+            source={require("@/assets/images/auth-logo-mark.png")}
             style={styles.brandLogo}
+            resizeMode="contain"
           />
           <View style={{ flex: 1 }}>
             <AppText muted size={13}>
@@ -1280,12 +1281,11 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 14,
   },
   brandLogo: {
-    width: 44,
-    height: 44,
-    borderRadius: 13,
+    width: 40,
+    height: 40,
   },
   streakPill: {
     flexDirection: "row",
