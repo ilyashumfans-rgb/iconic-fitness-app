@@ -1,11 +1,13 @@
 import { useSignIn, useSSO } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
 import * as AuthSession from "expo-auth-session";
+import { LinearGradient } from "expo-linear-gradient";
 import { Link, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useCallback, useEffect, useState } from "react";
 import {
   Image,
+  ImageBackground,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -95,131 +97,176 @@ export default function SignInScreen() {
     router.replace("/(tabs)");
   }, [enterGuest, router]);
 
+  const scrim = colors.background;
+
   return (
-    <KeyboardAvoidingView
-      style={[styles.flex, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      {/* Ambient brand glow behind the hero */}
-      <View style={styles.ambientWrap}>
-        <View
-          style={[styles.ambient, { backgroundColor: colors.primary }]}
+    <View style={[styles.flex, { backgroundColor: colors.background }]}>
+      {/* Cinematic hero background */}
+      <ImageBackground
+        source={require("@/assets/images/auth-hero.png")}
+        style={StyleSheet.absoluteFill}
+        resizeMode="cover"
+      >
+        <LinearGradient
+          colors={[
+            "rgba(10,12,8,0.55)",
+            "rgba(10,12,8,0.15)",
+            "rgba(10,12,8,0.65)",
+            scrim,
+            scrim,
+          ]}
+          locations={[0, 0.28, 0.55, 0.82, 1]}
+          style={StyleSheet.absoluteFill}
         />
+      </ImageBackground>
+
+      {/* Lime ambient accent */}
+      <View pointerEvents="none" style={styles.ambientWrap}>
+        <View style={[styles.ambient, { backgroundColor: colors.primary }]} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={[
-          styles.content,
-          { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 24 },
-        ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        bounces={false}
-        overScrollMode="never"
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        {/* Brand lockup */}
-        <View style={styles.hero}>
-          <View
-            style={[styles.cardGlow, { backgroundColor: colors.primary }]}
-          />
-          <Image
-            source={require("@/assets/images/iconic-lockup-clean.png")}
-            style={styles.lockup}
-            resizeMode="contain"
-          />
-        </View>
-
-        {/* Auth form */}
-        <View style={styles.form}>
-          <Field
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            placeholder="you@email.com"
-            autoCapitalize="none"
-            keyboardType="email-address"
-            autoComplete="email"
-          />
-          <Field
-            label="Password"
-            value={password}
-            onChangeText={setPassword}
-            placeholder="••••••••"
-            secureTextEntry
-            autoComplete="password"
-          />
-
-          {error ? (
-            <AppText size={13} color={colors.destructive}>
-              {error}
+        <ScrollView
+          contentContainerStyle={[
+            styles.content,
+            {
+              paddingTop: insets.top + 20,
+              paddingBottom: insets.bottom + 20,
+            },
+          ]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+          overScrollMode="never"
+        >
+          {/* Brand mark */}
+          <View style={styles.brandRow}>
+            <Image
+              source={require("@/assets/images/iconic-logo.png")}
+              style={styles.mark}
+              resizeMode="contain"
+            />
+            <AppText size={13} weight="700" color="#FFFFFF" style={styles.wordmark}>
+              ICONIC{" "}
+              <AppText size={13} weight="700" color={colors.primary}>
+                FITNESS
+              </AppText>
             </AppText>
-          ) : null}
-
-          <Button
-            label="Log in"
-            onPress={onSignIn}
-            loading={fetchStatus === "fetching"}
-            size="lg"
-          />
-
-          <View style={styles.divider}>
-            <View style={[styles.line, { backgroundColor: colors.border }]} />
-            <AppText size={11} weight="600" muted style={styles.dividerText}>
-              OR CONTINUE WITH
-            </AppText>
-            <View style={[styles.line, { backgroundColor: colors.border }]} />
           </View>
 
-          <Button
-            label="Continue with Google"
-            onPress={onGoogle}
-            variant="secondary"
-            icon="chrome"
-            loading={googleLoading}
-            size="lg"
-          />
-        </View>
+          {/* pushes the auth block to the bottom, letting the photo breathe */}
+          <View style={styles.spacer} />
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <AppText muted size={14}>
-            New here?{" "}
-          </AppText>
-          <Link href="/(auth)/sign-up" asChild>
-            <Pressable hitSlop={8}>
-              <AppText weight="700" size={14} color={colors.primary}>
-                Create account
+          {/* Headline */}
+          <View style={styles.headingBlock}>
+            <AppText
+              size={12}
+              weight="700"
+              color={colors.primary}
+              style={styles.eyebrow}
+            >
+              WELCOME BACK
+            </AppText>
+            <AppText size={34} weight="700" color="#FFFFFF" style={styles.headline}>
+              Your iconic{"\n"}era starts here.
+            </AppText>
+          </View>
+
+          {/* Auth form */}
+          <View style={styles.form}>
+            <Field
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="you@email.com"
+              autoCapitalize="none"
+              keyboardType="email-address"
+              autoComplete="email"
+            />
+            <Field
+              label="Password"
+              value={password}
+              onChangeText={setPassword}
+              placeholder="••••••••"
+              secureTextEntry
+              autoComplete="password"
+            />
+
+            {error ? (
+              <AppText size={13} color={colors.destructive}>
+                {error}
               </AppText>
-            </Pressable>
-          </Link>
-        </View>
+            ) : null}
 
-        <Pressable
-          onPress={onContinueWithoutLogin}
-          hitSlop={8}
-          style={styles.skip}
-        >
-          <AppText weight="600" size={14} color={colors.mutedForeground}>
-            Continue without login
-          </AppText>
-          <Feather
-            name="arrow-right"
-            size={16}
-            color={colors.mutedForeground}
-          />
-        </Pressable>
+            <Button
+              label="Log in"
+              onPress={onSignIn}
+              loading={fetchStatus === "fetching"}
+              size="lg"
+            />
 
-        <Pressable
-          onPress={() => void openExternal(websiteUrl)}
-          hitSlop={8}
-          style={styles.legal}
-        >
-          <AppText size={11} weight="600" color={colors.mutedForeground}>
-            PRIVACY POLICY  ·  TERMS OF SERVICE
-          </AppText>
-        </Pressable>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            <View style={styles.divider}>
+              <View style={[styles.line, { backgroundColor: colors.border }]} />
+              <AppText size={11} weight="600" muted style={styles.dividerText}>
+                OR CONTINUE WITH
+              </AppText>
+              <View style={[styles.line, { backgroundColor: colors.border }]} />
+            </View>
+
+            <Button
+              label="Continue with Google"
+              onPress={onGoogle}
+              variant="secondary"
+              icon="chrome"
+              loading={googleLoading}
+              size="lg"
+            />
+          </View>
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <AppText muted size={14}>
+              New here?{" "}
+            </AppText>
+            <Link href="/(auth)/sign-up" asChild>
+              <Pressable hitSlop={8}>
+                <AppText weight="700" size={14} color={colors.primary}>
+                  Create account
+                </AppText>
+              </Pressable>
+            </Link>
+          </View>
+
+          <Pressable
+            onPress={onContinueWithoutLogin}
+            hitSlop={8}
+            style={styles.skip}
+          >
+            <AppText weight="600" size={14} color={colors.mutedForeground}>
+              Continue without login
+            </AppText>
+            <Feather
+              name="arrow-right"
+              size={16}
+              color={colors.mutedForeground}
+            />
+          </Pressable>
+
+          <Pressable
+            onPress={() => void openExternal(websiteUrl)}
+            hitSlop={8}
+            style={styles.legal}
+          >
+            <AppText size={11} weight="600" color={colors.mutedForeground}>
+              PRIVACY POLICY  ·  TERMS OF SERVICE
+            </AppText>
+          </Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -238,7 +285,7 @@ function clerkError(err: unknown): string {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  content: { paddingHorizontal: 24 },
+  content: { paddingHorizontal: 24, flexGrow: 1 },
   ambientWrap: {
     ...StyleSheet.absoluteFillObject,
     alignItems: "center",
@@ -246,26 +293,23 @@ const styles = StyleSheet.create({
   },
   ambient: {
     position: "absolute",
-    top: -140,
+    top: -160,
     width: 460,
     height: 460,
     borderRadius: 230,
-    opacity: 0.16,
+    opacity: 0.1,
   },
-  hero: {
+  brandRow: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    marginTop: 8,
-    marginBottom: 30,
+    gap: 10,
   },
-  cardGlow: {
-    position: "absolute",
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    opacity: 0.22,
-  },
-  lockup: { width: "78%", maxWidth: 300, aspectRatio: 1 },
+  mark: { width: 34, height: 34 },
+  wordmark: { letterSpacing: 2 },
+  spacer: { flex: 1, minHeight: 160 },
+  headingBlock: { marginBottom: 22 },
+  eyebrow: { letterSpacing: 3, marginBottom: 10 },
+  headline: { lineHeight: 38 },
   form: { gap: 16 },
   divider: { flexDirection: "row", alignItems: "center", gap: 12 },
   dividerText: { letterSpacing: 1.5 },

@@ -12,6 +12,12 @@ uri = "file://artifacts/iconic-app/assets/images/icon.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "8-G2x7VauZzcCeCcOyeql"
+uri = "file://artifacts/iconic-app/assets/images/auth-hero.png"
+type = "image"
+title = "auth hero athlete"
+
 [[outputs]]
 id = "ybRqAnKqCdDGnRf9yM6Hp"
 uri = "file://iconic-fitness-code.zip"
