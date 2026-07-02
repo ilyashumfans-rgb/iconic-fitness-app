@@ -280,7 +280,7 @@ export default function HomeScreen() {
               <PackageCard
                 key={plan.id}
                 plan={plan}
-                onPress={() => router.push("/packages")}
+                onPress={() => router.push(`/package/${plan.id}`)}
               />
             ))}
           </View>

@@ -1,12 +1,12 @@
 import { Feather } from "@expo/vector-icons";
 import { type MembershipPlan } from "@workspace/api-client-react";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import { Image, Pressable, StyleSheet, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { useColors } from "@/hooks/useColors";
 import { resolveImageUrl } from "@/lib/images";
-import { membershipsUrl, openExternal } from "@/lib/links";
 
 export function PackageCard({
   plan,
@@ -16,8 +16,9 @@ export function PackageCard({
   onPress?: () => void;
 }) {
   const colors = useColors();
+  const router = useRouter();
   const uri = resolveImageUrl(plan.imageUrl);
-  const handlePress = onPress ?? (() => openExternal(membershipsUrl));
+  const handlePress = onPress ?? (() => router.push(`/package/${plan.id}`));
 
   return (
     <Pressable

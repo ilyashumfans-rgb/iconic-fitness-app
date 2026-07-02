@@ -7,7 +7,11 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
-import { SafeAreaView, type Edge } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  type Edge,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { useColors } from "@/hooks/useColors";
 
@@ -31,7 +35,15 @@ export function Screen({
   padded = true,
 }: Props) {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const padStyle = padded ? styles.padded : undefined;
+  // On web/canvas previews there are no safe-area insets, so SafeAreaView adds
+  // no top padding and content hugs (and gets clipped by) the status bar/notch.
+  // Add a small fallback only when the top edge is requested and there's no inset.
+  const topFallback =
+    edges.includes("top") && insets.top === 0
+      ? { paddingTop: 16 }
+      : undefined;
 
   return (
     <SafeAreaView
@@ -41,7 +53,7 @@ export function Screen({
       {scroll ? (
         <ScrollView
           style={styles.flex}
-          contentContainerStyle={[padStyle, contentContainerStyle]}
+          contentContainerStyle={[padStyle, topFallback, contentContainerStyle]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           refreshControl={
@@ -58,7 +70,7 @@ export function Screen({
           {children}
         </ScrollView>
       ) : (
-        <View style={[styles.flex, padStyle, contentContainerStyle]}>
+        <View style={[styles.flex, padStyle, topFallback, contentContainerStyle]}>
           {children}
         </View>
       )}

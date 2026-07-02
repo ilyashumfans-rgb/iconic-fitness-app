@@ -75,6 +75,7 @@ function RootLayoutNav() {
         <Stack.Screen name="workout/generate" />
         <Stack.Screen name="meal-plan/[id]" />
         <Stack.Screen name="trainer/[id]" />
+        <Stack.Screen name="package/[id]" />
         <Stack.Screen name="challenge/[id]" />
         <Stack.Screen
           name="water"
