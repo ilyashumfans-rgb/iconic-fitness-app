@@ -47,7 +47,7 @@ import { useColors } from "@/hooks/useColors";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { istToday, formatClock, formatDateLabel } from "@/lib/dates";
 import { resolveImageUrl } from "@/lib/images";
-import { exploreUrl, openExternal, storeUrl, websiteUrl } from "@/lib/links";
+import { exploreUrl, openExternal, websiteUrl } from "@/lib/links";
 
 type StoryVideo = {
   name: string;
@@ -281,22 +281,6 @@ export default function HomeScreen() {
 
       {/* Watch our story (member testimonials) */}
       <StorySection />
-
-      {/* Shop + Website */}
-      <View style={styles.linkRow}>
-        <LinkTile
-          icon="shopping-bag"
-          title="Shop gear"
-          sub="Apparel & more"
-          onPress={() => openExternal(storeUrl)}
-        />
-        <LinkTile
-          icon="globe"
-          title="Our website"
-          sub="Explore everything"
-          onPress={() => openExternal(exploreUrl)}
-        />
-      </View>
 
       {/* Book a class */}
       <SectionHeader
@@ -1138,44 +1122,6 @@ function NearbyGyms({ onOpenGym }: { onOpenGym: () => void }) {
   );
 }
 
-function LinkTile({
-  icon,
-  title,
-  sub,
-  onPress,
-}: {
-  icon: keyof typeof Feather.glyphMap;
-  title: string;
-  sub: string;
-  onPress: () => void;
-}) {
-  const colors = useColors();
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.linkTile,
-        {
-          backgroundColor: colors.card,
-          borderColor: colors.border,
-          borderRadius: colors.radius,
-          opacity: pressed ? 0.85 : 1,
-        },
-      ]}
-    >
-      <View style={[styles.linkIcon, { backgroundColor: colors.accent }]}>
-        <Feather name={icon} size={20} color={colors.primary} />
-      </View>
-      <AppText weight="700" size={15} style={{ marginTop: 10 }}>
-        {title}
-      </AppText>
-      <AppText muted size={12}>
-        {sub}
-      </AppText>
-    </Pressable>
-  );
-}
-
 function ClassCard({
   session,
   booked,
@@ -1592,21 +1538,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.14)",
   },
   storyModalCaption: { position: "absolute", bottom: 64, left: 24, right: 24 },
-
-  // Link tiles
-  linkRow: { flexDirection: "row", gap: 12, marginBottom: 28 },
-  linkTile: {
-    flex: 1,
-    padding: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  linkIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
 
   // Join CTA (guests)
   joinCta: {
