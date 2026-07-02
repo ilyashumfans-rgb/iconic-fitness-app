@@ -1,0 +1,49 @@
+Design the "Ask Your AI Coach" section as the emotional centerpiece of the fitness app. Instead of a static illustration, create a hyper-premium, life-like 3D AI fitness coach that feels intelligent, approachable, and alive.
+
+AI Coach
+Ultra-realistic 3D humanoid fitness coach.
+Premium futuristic design inspired by Apple Intelligence, Figure AI, Tesla Optimus, and sci-fi minimalism.
+Soft, friendly facial expressions with natural eye contact.
+Subtle idle animations: breathing, blinking, slight head movement, and gentle hand gestures.
+High-quality skin, clothing, and materials with realistic lighting.
+Athletic appearance with a clean white and emerald-green outfit.
+Soft rim lighting and ambient glow to make the character stand out.
+The coach should feel like a real personal trainer communicating directly with the user.
+Communication
+The AI should appear to be actively talking.
+Animated lips synchronized with speech.
+Dynamic facial expressions while speaking.
+Hand gestures that naturally explain and motivate.
+Floating conversational speech bubble:
+"Hi Alex 👋 Ready for today's workout?"
+"Ask me anything about fitness, nutrition, or recovery."
+Voice-wave animation when speaking.
+Card Design
+Large premium glassmorphism card.
+Frosted glass background with subtle blur.
+Soft emerald gradient highlights.
+Rounded corners (28–32px).
+Elegant shadows and layered depth.
+Floating elements for a futuristic feel.
+Background
+Clean luxury white interface.
+Soft radial glow behind the AI.
+Floating holographic fitness icons.
+Very subtle particle effects.
+Minimal futuristic environment without clutter.
+Interaction
+AI gently turns toward the user.
+Eyes follow interaction naturally.
+CTA button: "Talk to AI Coach"
+Circular microphone button with soft pulse animation.
+Tap creates elegant ripple and glow effects.
+Visual Style
+Apple-level minimalism.
+Cinematic lighting.
+Premium 3D rendering.
+Ultra-smooth animations (60fps).
+Elegant spacing and typography.
+No cartoon, gaming, or exaggerated futuristic aesthetics.
+Overall Feel
+
+The AI coach should feel like a real luxury personal trainer brought to life—warm, intelligent, motivating, and trustworthy. The experience should resemble interacting with a living 3D assistant inside a premium fitness app, with the visual quality of an Apple keynote demo, creating an emotional connection and making users genuinely want to ask the AI for guidance.

@@ -18,6 +18,12 @@ uri = "file://artifacts/iconic-app/assets/images/auth-hero.png"
 type = "image"
 title = "auth hero athlete"
 
+[[generated]]
+id = "1ELIEZIesjh_goCrPmlMN"
+uri = "file://artifacts/iconic-app/assets/images/ai-coach.png"
+type = "image"
+title = "ai fitness coach 3d"
+
 [[outputs]]
 id = "ybRqAnKqCdDGnRf9yM6Hp"
 uri = "file://iconic-fitness-code.zip"

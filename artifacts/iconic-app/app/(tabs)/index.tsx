@@ -44,6 +44,7 @@ import {
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { AICoachCard } from "@/components/AICoachCard";
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
 import { ProgressRing } from "@/components/ProgressRing";
@@ -233,49 +234,10 @@ export default function HomeScreen() {
 
       {/* AI Coach — members only */}
       {isSignedIn ? (
-        <Pressable onPress={() => router.push("/coach")} style={{ marginTop: 20 }}>
-          <Card
-            tone="elevated"
-            style={[
-              { flexDirection: "row", alignItems: "center", gap: 14 },
-              SOFT_SHADOW,
-            ]}
-          >
-            <View
-              style={{
-                width: 46,
-                height: 46,
-                borderRadius: 14,
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: colors.primary,
-              }}
-            >
-              <Feather
-                name="message-circle"
-                size={22}
-                color={colors.primaryForeground}
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <AppText weight="700" size={16}>
-                {meQuery.data && !meQuery.data.assessmentComplete
-                  ? "Start your fitness assessment"
-                  : "Ask your AI coach"}
-              </AppText>
-              <AppText muted size={13} style={{ marginTop: 2 }}>
-                {meQuery.data && !meQuery.data.assessmentComplete
-                  ? "Answer a few questions and I'll build your plan."
-                  : "Personalized tips from your workouts, meals & goals."}
-              </AppText>
-            </View>
-            <Feather
-              name="chevron-right"
-              size={22}
-              color={colors.mutedForeground}
-            />
-          </Card>
-        </Pressable>
+        <AICoachCard
+          needsAssessment={!!meQuery.data && !meQuery.data.assessmentComplete}
+          onPress={() => router.push("/coach")}
+        />
       ) : null}
 
       {/* Shop by category */}
