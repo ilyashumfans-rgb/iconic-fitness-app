@@ -22,7 +22,7 @@ type ThemeContextValue = {
 
 const STORAGE_KEY = "iconic.themeMode";
 
-const ThemeContext = createContext<ThemeContextValue | null>(null);
+export const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const device = useDeviceColorScheme();

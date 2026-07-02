@@ -22,11 +22,29 @@ import { Button } from "@/components/Button";
 import { Field } from "@/components/Field";
 import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/hooks/useGuest";
+import { ThemeContext } from "@/hooks/useTheme";
 import { openExternal, websiteUrl } from "@/lib/links";
 
 WebBrowser.maybeCompleteAuthSession();
 
+// The login is a permanently dark, cinematic brand screen — force the dark
+// palette for this subtree so it never washes out in system light mode.
+const FORCE_DARK = {
+  mode: "dark" as const,
+  scheme: "dark" as const,
+  setMode: () => {},
+  toggle: () => {},
+};
+
 export default function SignInScreen() {
+  return (
+    <ThemeContext.Provider value={FORCE_DARK}>
+      <SignInContent />
+    </ThemeContext.Provider>
+  );
+}
+
+function SignInContent() {
   const colors = useColors();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -109,13 +127,13 @@ export default function SignInScreen() {
       >
         <LinearGradient
           colors={[
-            "rgba(10,12,8,0.55)",
-            "rgba(10,12,8,0.15)",
-            "rgba(10,12,8,0.65)",
+            "rgba(10,12,8,0.35)",
+            "rgba(10,12,8,0.10)",
+            "rgba(10,12,8,0.70)",
             scrim,
             scrim,
           ]}
-          locations={[0, 0.28, 0.55, 0.82, 1]}
+          locations={[0, 0.22, 0.5, 0.78, 1]}
           style={StyleSheet.absoluteFill}
         />
       </ImageBackground>
@@ -133,7 +151,7 @@ export default function SignInScreen() {
           contentContainerStyle={[
             styles.content,
             {
-              paddingTop: Math.max(insets.top, 44) + 20,
+              paddingTop: Math.max(insets.top, 44) + 12,
               paddingBottom: insets.bottom + 20,
             },
           ]}
@@ -142,20 +160,18 @@ export default function SignInScreen() {
           bounces={false}
           overScrollMode="never"
         >
-          {/* Brand logo */}
-          <View style={styles.brandRow}>
-            <Image
-              source={require("@/assets/images/iconic-full-logo.png")}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          </View>
+          {/* Brand logo — pinned to the top, centered */}
+          <Image
+            source={require("@/assets/images/iconic-full-logo.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
 
-          {/* pushes the auth block to the bottom, letting the photo breathe */}
+          {/* lets the hero photo breathe between logo and form */}
           <View style={styles.spacer} />
 
-          {/* Headline */}
-          <View style={styles.headingBlock}>
+          {/* Auth form */}
+          <View style={styles.form}>
             <AppText
               size={12}
               weight="700"
@@ -164,13 +180,7 @@ export default function SignInScreen() {
             >
               WELCOME BACK
             </AppText>
-            <AppText size={34} weight="700" color="#FFFFFF" style={styles.headline}>
-              Your iconic{"\n"}era starts here.
-            </AppText>
-          </View>
 
-          {/* Auth form */}
-          <View style={styles.form}>
             <Field
               label="Email"
               value={email}
@@ -293,23 +303,22 @@ const styles = StyleSheet.create({
     borderRadius: 230,
     opacity: 0.1,
   },
-  brandRow: {
-    alignItems: "center",
-    justifyContent: "center",
+  logo: {
+    width: "46%",
+    maxWidth: 168,
+    aspectRatio: 1,
+    alignSelf: "center",
   },
-  logo: { width: "62%", maxWidth: 240, aspectRatio: 1 },
-  spacer: { flex: 1, minHeight: 160 },
-  headingBlock: { marginBottom: 22 },
-  eyebrow: { letterSpacing: 3, marginBottom: 10 },
-  headline: { lineHeight: 38 },
-  form: { gap: 16 },
+  spacer: { flex: 1, minHeight: 24 },
+  eyebrow: { letterSpacing: 3, marginBottom: 2 },
+  form: { gap: 14 },
   divider: { flexDirection: "row", alignItems: "center", gap: 12 },
   dividerText: { letterSpacing: 1.5 },
   line: { flex: 1, height: StyleSheet.hairlineWidth },
   footer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 28,
+    marginTop: 22,
     alignItems: "center",
   },
   skip: {
@@ -317,13 +326,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    marginTop: 20,
+    marginTop: 16,
     paddingVertical: 8,
   },
   legal: {
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 18,
+    marginTop: 14,
     paddingVertical: 8,
   },
 });
