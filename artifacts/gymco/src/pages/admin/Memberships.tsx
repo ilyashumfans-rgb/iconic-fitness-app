@@ -63,7 +63,6 @@ function PlanForm({
           >
             <option value="monthly">Monthly</option>
             <option value="quarterly">Quarterly (3 months)</option>
-            <option value="annual">Annual (yearly)</option>
           </select>
         </div>
         <Field label="Badge" v={f.badge} on={(v) => setF({ ...f, badge: v })} />
@@ -213,7 +212,13 @@ export default function AdminMemberships() {
   const [editing, setEditing] = useState<any | null>(null);
   const [creating, setCreating] = useState(false);
 
-  const load = () => adminApi.memberships.list().then(setRows).catch(() => {});
+  // Memberships tab manages only the plans shown on the Pricing page
+  // (monthly / quarterly). Annual plans are managed under "Packages".
+  const load = () =>
+    adminApi.memberships
+      .list()
+      .then((all) => setRows(all.filter((p) => p.billingPeriod !== "annual")))
+      .catch(() => {});
   useEffect(() => { load(); }, []);
 
   const remove = async (id: number) => {
