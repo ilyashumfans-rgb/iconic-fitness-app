@@ -216,7 +216,7 @@ export default function AdminAnnualPlans() {
 
   return (
     <AdminLayout
-      title="Annual Plans"
+      title="Packages"
       actions={
         <button
           onClick={() => {
@@ -226,7 +226,7 @@ export default function AdminAnnualPlans() {
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-lime-500 to-lime-600 text-white text-sm font-medium"
         >
           <Plus className="h-3.5 w-3.5" />
-          Add Annual Plan
+          Add Package
         </button>
       }
     >
@@ -235,10 +235,10 @@ export default function AdminAnnualPlans() {
           <CalendarClock className="h-5 w-5" />
         </div>
         <div className="text-sm text-slate-600">
-          <div className="font-semibold text-slate-900">Yearly membership plans</div>
-          Plans created here are billed annually and appear under the “Annual”
-          tab on the website and mobile app pricing pages. Monthly & quarterly
-          plans are managed under <span className="font-medium">Memberships</span>.
+          <div className="font-semibold text-slate-900">Packages</div>
+          Packages created here are billed annually and appear under the “Offers”
+          tab on the website and mobile app. Monthly & quarterly plans are
+          managed under <span className="font-medium">Memberships</span>.
         </div>
       </AdminCard>
 
@@ -246,7 +246,7 @@ export default function AdminAnnualPlans() {
         <AdminCard className="p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-slate-900">
-              {editing ? `Edit Plan — ${editing.name}` : "Add Annual Plan"}
+              {editing ? `Edit Package — ${editing.name}` : "Add Package"}
             </h3>
             <button
               onClick={() => {
@@ -278,8 +278,7 @@ export default function AdminAnnualPlans() {
 
       {annualPlans.length === 0 && !creating && !editing ? (
         <AdminCard className="p-10 text-center text-slate-500">
-          No annual plans yet. Click “Add Annual Plan” to create your first
-          yearly membership.
+          No packages yet. Click “Add Package” to create your first one.
         </AdminCard>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -291,7 +290,7 @@ export default function AdminAnnualPlans() {
                 </span>
               )}
               <div className="text-xs uppercase tracking-wider text-slate-400">
-                Annual
+                Package
               </div>
               <div className="mt-1 text-lg font-bold text-slate-900">{p.name}</div>
               <div className="text-xs text-slate-500">{p.tagline}</div>

@@ -131,7 +131,7 @@ const SECTIONS: Section[] = [
         icon: <CreditCard className="h-4 w-4" />,
       },
       {
-        label: "Annual Plans",
+        label: "Packages",
         href: "/admin/annual-plans",
         icon: <CalendarClock className="h-4 w-4" />,
       },
