@@ -115,23 +115,16 @@ export default function SignInScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Brand lockup card */}
+        {/* Brand lockup */}
         <View style={styles.hero}>
           <View
             style={[styles.cardGlow, { backgroundColor: colors.primary }]}
           />
-          <View
-            style={[
-              styles.logoCard,
-              { backgroundColor: "#000000", borderColor: colors.primary },
-            ]}
-          >
-            <Image
-              source={require("@/assets/images/iconic-lockup.png")}
-              style={styles.lockup}
-              resizeMode="contain"
-            />
-          </View>
+          <Image
+            source={require("@/assets/images/iconic-lockup-clean.png")}
+            style={styles.lockup}
+            resizeMode="contain"
+          />
         </View>
 
         {/* Auth form */}
@@ -251,30 +244,26 @@ const styles = StyleSheet.create({
   },
   ambient: {
     position: "absolute",
-    top: -120,
-    width: 420,
-    height: 420,
-    borderRadius: 210,
-    opacity: 0.14,
+    top: -140,
+    width: 460,
+    height: 460,
+    borderRadius: 230,
+    opacity: 0.16,
   },
-  hero: { alignItems: "center", marginBottom: 26 },
+  hero: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 8,
+    marginBottom: 30,
+  },
   cardGlow: {
     position: "absolute",
-    top: 10,
     width: 300,
     height: 300,
     borderRadius: 150,
-    opacity: 0.16,
+    opacity: 0.22,
   },
-  logoCard: {
-    width: "100%",
-    maxWidth: 320,
-    alignItems: "center",
-    borderRadius: 28,
-    borderWidth: 1,
-    overflow: "hidden",
-  },
-  lockup: { width: "100%", aspectRatio: 1 },
+  lockup: { width: "78%", maxWidth: 300, aspectRatio: 1 },
   form: { gap: 16 },
   divider: { flexDirection: "row", alignItems: "center", gap: 12 },
   dividerText: { letterSpacing: 1.5 },
