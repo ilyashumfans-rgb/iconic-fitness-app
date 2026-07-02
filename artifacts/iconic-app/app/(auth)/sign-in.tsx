@@ -6,6 +6,7 @@ import { Link, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useCallback, useEffect, useState } from "react";
 import {
+  Image,
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
@@ -161,6 +162,13 @@ function SignInContent() {
           showsVerticalScrollIndicator={false}
           bounces={false}
         >
+          {/* Brand mark — small, top, centered */}
+          <Image
+            source={require("@/assets/images/auth-logo-mark.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+
           {/* Auth form — anchored to the bottom */}
           <View style={styles.form}>
             <AppText
@@ -293,6 +301,12 @@ const styles = StyleSheet.create({
     height: 460,
     borderRadius: 230,
     opacity: 0.1,
+  },
+  logo: {
+    width: "26%",
+    maxWidth: 96,
+    aspectRatio: 1,
+    alignSelf: "center",
   },
   eyebrow: { letterSpacing: 3, marginBottom: 2 },
   form: { gap: 14, marginTop: "auto", paddingTop: 24 },
