@@ -1,5 +1,4 @@
 import { useListMemberships, useGetMyMembership, getListMembershipsQueryKey, getGetMyMembershipQueryKey } from "@workspace/api-client-react";
-import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,26 +10,9 @@ export default function Memberships() {
   const { data: myMembership } = useGetMyMembership({ query: { queryKey: getGetMyMembershipQueryKey() } });
   const { data: plans, isLoading: loadingPlans } = useListMemberships({ query: { queryKey: getListMembershipsQueryKey() } });
 
-  const cleaned = (plans ?? []).map((p) => ({ ...p, name: p.name.trim() }));
-
-  // Billing-period toggle — only show tabs for periods that actually have plans.
-  const PERIOD_ORDER = ["monthly", "quarterly", "annual"] as const;
-  const PERIOD_LABEL: Record<string, string> = {
-    monthly: "Monthly",
-    quarterly: "Quarterly",
-    annual: "Annual",
-  };
-  const availablePeriods = PERIOD_ORDER.filter((p) =>
-    cleaned.some((pl) => pl.billingPeriod === p),
-  );
-  const [period, setPeriod] = useState<string>("monthly");
-  const activePeriod = availablePeriods.includes(period as (typeof PERIOD_ORDER)[number])
-    ? period
-    : availablePeriods[0] ?? "monthly";
-
   // Sort plans by price ascending, but force the popular plan to the end.
-  const orderedPlans = cleaned
-    .filter((p) => p.billingPeriod === activePeriod)
+  const orderedPlans = (plans ?? [])
+    .map((p) => ({ ...p, name: p.name.trim() }))
     .sort((a, b) => {
       if (a.popular && !b.popular) return 1;
       if (!a.popular && b.popular) return -1;
@@ -56,29 +38,6 @@ export default function Memberships() {
           <h2 className="text-3xl md:text-4xl font-black mb-2">Unlock the city.</h2>
           <p className="text-muted-foreground">Premium access across hundreds of locations. Longer the plan, bigger the savings.</p>
         </div>
-
-        {availablePeriods.length > 1 && (
-          <div className="flex justify-center mb-10">
-            <div className="inline-flex p-1 rounded-full bg-muted border border-border">
-              {availablePeriods.map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setPeriod(p)}
-                  className={`px-6 py-2 rounded-full text-sm font-black tracking-wide transition-all ${
-                    activePeriod === p
-                      ? "bg-slate-900 text-white shadow-md"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {PERIOD_LABEL[p]}
-                  {p === "annual" && (
-                    <span className="ml-1.5 text-[10px] font-black text-lime-500 uppercase">Save more</span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         {loadingPlans ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
