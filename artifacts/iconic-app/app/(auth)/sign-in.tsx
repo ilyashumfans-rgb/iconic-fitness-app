@@ -289,7 +289,7 @@ function clerkError(err: unknown): string {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  content: { paddingHorizontal: 24, flexGrow: 1 },
+  content: { paddingHorizontal: 24 },
   ambientWrap: {
     ...StyleSheet.absoluteFillObject,
     alignItems: "center",
@@ -304,12 +304,12 @@ const styles = StyleSheet.create({
     opacity: 0.1,
   },
   logo: {
-    width: "46%",
-    maxWidth: 168,
+    width: "42%",
+    maxWidth: 152,
     aspectRatio: 1,
     alignSelf: "center",
   },
-  spacer: { flex: 1, minHeight: 24 },
+  spacer: { height: 56 },
   eyebrow: { letterSpacing: 3, marginBottom: 2 },
   form: { gap: 14 },
   divider: { flexDirection: "row", alignItems: "center", gap: 12 },
