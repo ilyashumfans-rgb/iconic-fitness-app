@@ -79,17 +79,6 @@ const STORY_VIDEOS: StoryVideo[] = [
   },
 ];
 
-const CATEGORIES: {
-  label: string;
-  icon: keyof typeof Feather.glyphMap;
-}[] = [
-  { label: "HIIT", icon: "zap" },
-  { label: "Strength", icon: "award" },
-  { label: "Cardio", icon: "heart" },
-  { label: "Yoga", icon: "sun" },
-  { label: "Pilates", icon: "activity" },
-];
-
 export default function HomeScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -279,28 +268,6 @@ export default function HomeScreen() {
           </Card>
         </Pressable>
       ) : null}
-
-      {/* Categories */}
-      <SectionHeader
-        title="Find your training"
-        action="See all"
-        onAction={() => router.push("/train")}
-      />
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.catRow}
-        style={{ marginBottom: 28 }}
-      >
-        {CATEGORIES.map((c) => (
-          <CategoryTile
-            key={c.label}
-            label={c.label}
-            icon={c.icon}
-            onPress={() => router.push("/train")}
-          />
-        ))}
-      </ScrollView>
 
       {/* Gyms near me (location-aware) */}
       <NearbyGyms onOpenGym={() => openExternal(exploreUrl)} />
@@ -709,36 +676,6 @@ function HeroSlider({
         ))}
       </View>
     </View>
-  );
-}
-
-function CategoryTile({
-  label,
-  icon,
-  onPress,
-}: {
-  label: string;
-  icon: keyof typeof Feather.glyphMap;
-  onPress: () => void;
-}) {
-  const colors = useColors();
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [styles.catTile, { opacity: pressed ? 0.8 : 1 }]}
-    >
-      <View
-        style={[
-          styles.catIcon,
-          { backgroundColor: colors.elevated, borderColor: colors.border },
-        ]}
-      >
-        <Feather name={icon} size={22} color={colors.primary} />
-      </View>
-      <AppText weight="600" size={12}>
-        {label}
-      </AppText>
-    </Pressable>
   );
 }
 
@@ -1354,18 +1291,6 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   dot: { height: 7, borderRadius: 4 },
-
-  // Categories
-  catRow: { gap: 16, paddingRight: 8, paddingVertical: 2 },
-  catTile: { alignItems: "center", gap: 8, width: 68 },
-  catIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: StyleSheet.hairlineWidth,
-  },
 
   // Gym cards
   gymRow: { gap: 14, paddingRight: 8, paddingVertical: 2 },
