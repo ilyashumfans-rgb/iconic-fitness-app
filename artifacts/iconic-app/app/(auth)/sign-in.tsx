@@ -147,30 +147,29 @@ function SignInContent() {
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
+        {/* Logo pinned top; form anchored bottom via marginTop:auto.
+            Scrolls only when the viewport/keyboard leaves too little room. */}
         <ScrollView
+          style={styles.flex}
           contentContainerStyle={[
             styles.content,
             {
-              paddingTop: Math.max(insets.top, 44) + 12,
-              paddingBottom: insets.bottom + 20,
+              paddingTop: Math.max(insets.top, 44) + 8,
+              paddingBottom: Math.max(insets.bottom, 16) + 8,
             },
           ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           bounces={false}
-          overScrollMode="never"
         >
-          {/* Brand logo — pinned to the top, centered */}
+          {/* Brand logo — small, top, centered */}
           <Image
             source={require("@/assets/images/iconic-full-logo.png")}
             style={styles.logo}
             resizeMode="contain"
           />
 
-          {/* lets the hero photo breathe between logo and form */}
-          <View style={styles.spacer} />
-
-          {/* Auth form */}
+          {/* Auth form — anchored to the bottom */}
           <View style={styles.form}>
             <AppText
               size={12}
@@ -228,46 +227,46 @@ function SignInContent() {
               loading={googleLoading}
               size="lg"
             />
+
+            {/* Footer */}
+            <View style={styles.footer}>
+              <AppText muted size={14}>
+                New here?{" "}
+              </AppText>
+              <Link href="/(auth)/sign-up" asChild>
+                <Pressable hitSlop={8}>
+                  <AppText weight="700" size={14} color={colors.primary}>
+                    Create account
+                  </AppText>
+                </Pressable>
+              </Link>
+            </View>
+
+            <Pressable
+              onPress={onContinueWithoutLogin}
+              hitSlop={8}
+              style={styles.skip}
+            >
+              <AppText weight="600" size={14} color={colors.mutedForeground}>
+                Continue without login
+              </AppText>
+              <Feather
+                name="arrow-right"
+                size={16}
+                color={colors.mutedForeground}
+              />
+            </Pressable>
+
+            <Pressable
+              onPress={() => void openExternal(websiteUrl)}
+              hitSlop={8}
+              style={styles.legal}
+            >
+              <AppText size={11} weight="600" color={colors.mutedForeground}>
+                PRIVACY POLICY  ·  TERMS OF SERVICE
+              </AppText>
+            </Pressable>
           </View>
-
-          {/* Footer */}
-          <View style={styles.footer}>
-            <AppText muted size={14}>
-              New here?{" "}
-            </AppText>
-            <Link href="/(auth)/sign-up" asChild>
-              <Pressable hitSlop={8}>
-                <AppText weight="700" size={14} color={colors.primary}>
-                  Create account
-                </AppText>
-              </Pressable>
-            </Link>
-          </View>
-
-          <Pressable
-            onPress={onContinueWithoutLogin}
-            hitSlop={8}
-            style={styles.skip}
-          >
-            <AppText weight="600" size={14} color={colors.mutedForeground}>
-              Continue without login
-            </AppText>
-            <Feather
-              name="arrow-right"
-              size={16}
-              color={colors.mutedForeground}
-            />
-          </Pressable>
-
-          <Pressable
-            onPress={() => void openExternal(websiteUrl)}
-            hitSlop={8}
-            style={styles.legal}
-          >
-            <AppText size={11} weight="600" color={colors.mutedForeground}>
-              PRIVACY POLICY  ·  TERMS OF SERVICE
-            </AppText>
-          </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -289,7 +288,7 @@ function clerkError(err: unknown): string {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  content: { paddingHorizontal: 24 },
+  content: { flexGrow: 1, paddingHorizontal: 24 },
   ambientWrap: {
     ...StyleSheet.absoluteFillObject,
     alignItems: "center",
@@ -304,21 +303,20 @@ const styles = StyleSheet.create({
     opacity: 0.1,
   },
   logo: {
-    width: "42%",
-    maxWidth: 152,
+    width: "32%",
+    maxWidth: 116,
     aspectRatio: 1,
     alignSelf: "center",
   },
-  spacer: { height: 56 },
   eyebrow: { letterSpacing: 3, marginBottom: 2 },
-  form: { gap: 14 },
+  form: { gap: 14, marginTop: "auto", paddingTop: 24 },
   divider: { flexDirection: "row", alignItems: "center", gap: 12 },
   dividerText: { letterSpacing: 1.5 },
   line: { flex: 1, height: StyleSheet.hairlineWidth },
   footer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 22,
+    marginTop: 8,
     alignItems: "center",
   },
   skip: {
@@ -326,13 +324,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    marginTop: 16,
-    paddingVertical: 8,
+    paddingVertical: 4,
   },
   legal: {
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 14,
-    paddingVertical: 8,
+    paddingVertical: 2,
   },
 });
