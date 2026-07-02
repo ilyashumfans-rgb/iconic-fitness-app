@@ -1,35 +1,25 @@
-import { Feather } from "@expo/vector-icons";
 import {
   useListMemberships,
   useGetMyMembership,
   getListMembershipsQueryKey,
   getGetMyMembershipQueryKey,
-  type MembershipPlan,
 } from "@workspace/api-client-react";
 import { useMemo, useState } from "react";
 import { Pressable, View, StyleSheet } from "react-native";
 
 import { AppText } from "@/components/AppText";
-import { Button } from "@/components/Button";
-import { Card } from "@/components/Card";
 import { ModalHeader } from "@/components/ModalHeader";
+import { PlanCard } from "@/components/PlanCard";
 import { Screen } from "@/components/Screen";
 import { EmptyState, ErrorView, LoadingView } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
-import { membershipsUrl, openExternal } from "@/lib/links";
 
-type Period = "monthly" | "quarterly" | "annual";
+type Period = "monthly" | "quarterly";
 
-const PERIOD_ORDER: Period[] = ["monthly", "quarterly", "annual"];
+const PERIOD_ORDER: Period[] = ["monthly", "quarterly"];
 const PERIOD_LABEL: Record<Period, string> = {
   monthly: "Monthly",
   quarterly: "Quarterly",
-  annual: "Annual",
-};
-const PERIOD_SUFFIX: Record<Period, string> = {
-  monthly: "/mo",
-  quarterly: "/qtr",
-  annual: "/yr",
 };
 
 export default function PlansScreen() {
@@ -41,23 +31,23 @@ export default function PlansScreen() {
     query: { queryKey: getGetMyMembershipQueryKey() },
   });
 
-  const plans = query.data ?? [];
+  // Membership plans only — annual plans live on the Offers screen.
+  const plans = useMemo(
+    () => (query.data ?? []).filter((p) => p.billingPeriod !== "annual"),
+    [query.data],
+  );
 
   // Which billing periods actually have plans (keeps the toggle honest).
   const availablePeriods = useMemo(
-    () =>
-      PERIOD_ORDER.filter((p) =>
-        plans.some((pl) => pl.billingPeriod === p),
-      ),
+    () => PERIOD_ORDER.filter((p) => plans.some((pl) => pl.billingPeriod === p)),
     [plans],
   );
 
   const [period, setPeriod] = useState<Period>("monthly");
   // Default the toggle to the first period that has plans.
-  const activePeriod =
-    availablePeriods.includes(period)
-      ? period
-      : availablePeriods[0] ?? "monthly";
+  const activePeriod = availablePeriods.includes(period)
+    ? period
+    : availablePeriods[0] ?? "monthly";
 
   const visible = useMemo(
     () =>
@@ -131,7 +121,6 @@ export default function PlansScreen() {
               <PlanCard
                 key={plan.id}
                 plan={plan}
-                period={activePeriod}
                 isCurrent={mine.data?.planId === plan.id}
               />
             ))}
@@ -139,135 +128,6 @@ export default function PlansScreen() {
         </>
       )}
     </Screen>
-  );
-}
-
-function PlanCard({
-  plan,
-  period,
-  isCurrent,
-}: {
-  plan: MembershipPlan;
-  period: Period;
-  isCurrent: boolean;
-}) {
-  const colors = useColors();
-  const savings =
-    plan.originalPriceInr > plan.priceInr
-      ? Math.round(
-          ((plan.originalPriceInr - plan.priceInr) / plan.originalPriceInr) * 100,
-        )
-      : 0;
-
-  return (
-    <Card
-      style={{
-        gap: 12,
-        borderWidth: plan.popular ? 1.5 : StyleSheet.hairlineWidth,
-        borderColor: plan.popular ? colors.primary : colors.border,
-      }}
-    >
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        <View style={{ flex: 1 }}>
-          <AppText weight="700" size={18}>
-            {plan.name}
-          </AppText>
-          {plan.tagline ? (
-            <AppText muted size={13} style={{ marginTop: 2 }}>
-              {plan.tagline}
-            </AppText>
-          ) : null}
-        </View>
-        {plan.popular ? (
-          <View
-            style={[styles.pill, { backgroundColor: colors.primary + "22" }]}
-          >
-            <Feather name="star" size={11} color={colors.primary} />
-            <AppText size={11} weight="700" color={colors.primary}>
-              Popular
-            </AppText>
-          </View>
-        ) : isCurrent ? (
-          <View
-            style={[styles.pill, { backgroundColor: colors.primary + "22" }]}
-          >
-            <AppText size={11} weight="700" color={colors.primary}>
-              Current
-            </AppText>
-          </View>
-        ) : null}
-      </View>
-
-      <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 8 }}>
-        <AppText weight="700" size={30}>
-          ₹{plan.priceInr.toLocaleString("en-IN")}
-        </AppText>
-        <AppText muted size={14} style={{ marginBottom: 5 }}>
-          {PERIOD_SUFFIX[period]}
-        </AppText>
-        {savings > 0 ? (
-          <View
-            style={[
-              styles.pill,
-              { backgroundColor: colors.success + "22", marginBottom: 4 },
-            ]}
-          >
-            <AppText size={11} weight="700" color={colors.success}>
-              SAVE {savings}%
-            </AppText>
-          </View>
-        ) : null}
-      </View>
-      {plan.originalPriceInr > plan.priceInr ? (
-        <AppText
-          muted
-          size={13}
-          style={{ marginTop: -6, textDecorationLine: "line-through" }}
-        >
-          ₹{plan.originalPriceInr.toLocaleString("en-IN")}
-        </AppText>
-      ) : null}
-
-      <View style={{ gap: 8, marginTop: 2 }}>
-        <Perk text={`${plan.gymsIncluded}+ premium gyms`} />
-        <Perk text={`${plan.classesPerMonth} classes / month`} />
-        {plan.perks.map((perk) => (
-          <Perk key={perk} text={perk} />
-        ))}
-      </View>
-
-      {isCurrent ? (
-        <Button
-          label="Current plan"
-          variant="secondary"
-          disabled
-          onPress={() => {}}
-        />
-      ) : (
-        <Button
-          label="Get this plan"
-          icon="arrow-right"
-          onPress={() => openExternal(membershipsUrl)}
-        />
-      )}
-    </Card>
-  );
-}
-
-function Perk({ text }: { text: string }) {
-  const colors = useColors();
-  return (
-    <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 8 }}>
-      <Feather
-        name="check"
-        size={16}
-        color={colors.primary}
-        style={{ marginTop: 1 }}
-      />
-      <AppText size={14} style={{ flex: 1 }}>
-        {text}
-      </AppText>
-    </View>
   );
 }
 
@@ -285,14 +145,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 9,
-    borderRadius: 999,
-  },
-  pill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
     borderRadius: 999,
   },
 });

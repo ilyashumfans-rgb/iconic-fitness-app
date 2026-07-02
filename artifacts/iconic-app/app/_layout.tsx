@@ -116,6 +116,10 @@ function RootLayoutNav() {
           name="plans"
           options={{ presentation: "modal", headerShown: false }}
         />
+        <Stack.Screen
+          name="offers"
+          options={{ presentation: "modal", headerShown: false }}
+        />
       </Stack>
     </>
   );

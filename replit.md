@@ -32,6 +32,14 @@ _Populate as you build — non-obvious choices a reader couldn't infer from the 
 
 GYMCO is a multi-role gym marketplace: members discover/join gyms, partners manage their gyms, staff support partners, and admins run the platform.
 
+### Membership plans, Annual Plans & Offers
+
+All plans are rows in `membershipsTable` with a `billingPeriod` (`monthly`/`quarterly`/`annual`) — no separate table. The single discriminator `billingPeriod === "annual"` splits "membership" from "annual/offers" everywhere; reuse existing `useListMemberships` + `MembershipPlan` (no DB/OpenAPI change needed).
+
+- **Admin:** `pages/admin/Memberships.tsx` = all plans; `pages/admin/AnnualPlans.tsx` = annual-only CRUD (forces `billingPeriod="annual"` on create). Both use `adminApi.memberships.*`. Form components must be keyed by `editing?.id ?? "new"` so switching records remounts (otherwise stale form state saves to the wrong plan).
+- **Website:** Pricing (`pages/Memberships.tsx`) shows non-annual; **Offers** (`pages/Offers.tsx`, route `/offers`, nav "Offers", in `PUBLIC_ROUTES`) shows annual. Both render the shared `components/MembershipPlanGrid.tsx` (ordering + empty state).
+- **Mobile:** `app/plans.tsx` (non-annual, monthly/quarterly toggle) + `app/offers.tsx` (annual) both render shared `components/PlanCard.tsx` (price suffix derived from `billingPeriod`); both registered as modals in `_layout.tsx`, surfaced from the More hub. CTAs open `membershipsUrl` externally.
+
 ### Trainers
 
 Partners manage their own trainers from `/partner/trainers` (CRUD scoped to gyms they own via `ensureOwnsGym`; manual `partnerApi.trainers.{list,create,update,remove}`, no OpenAPI). Admins still have global trainer CRUD. Trainers are attached to a gym and selectable when scheduling classes.

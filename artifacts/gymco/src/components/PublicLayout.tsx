@@ -28,6 +28,7 @@ function PublicNav() {
     { href: "/store", label: "Store" },
     { href: "/blog", label: "Blog" },
     { href: "/memberships", label: "Pricing" },
+    { href: "/offers", label: "Offers" },
   ];
 
   let isSignedIn = false;

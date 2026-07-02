@@ -1,41 +1,39 @@
 import { useListMemberships, useGetMyMembership, getListMembershipsQueryKey, getGetMyMembershipQueryKey } from "@workspace/api-client-react";
-import { Sparkles } from "lucide-react";
+import { Tag } from "lucide-react";
 import { MembershipPlanGrid } from "@/components/MembershipPlanGrid";
 
-export default function Memberships() {
+export default function Offers() {
   const { data: myMembership } = useGetMyMembership({ query: { queryKey: getGetMyMembershipQueryKey() } });
   const { data: plans, isLoading: loadingPlans } = useListMemberships({ query: { queryKey: getListMembershipsQueryKey() } });
 
-  // Pricing page shows the regular membership plans (monthly / quarterly).
-  // Annual plans live on the dedicated "Offers" page.
-  const membershipPlans = (plans ?? []).filter((p) => p.billingPeriod !== "annual");
+  // Offers page shows the annual plans created under the admin "Annual Plans" tab.
+  const annualPlans = (plans ?? []).filter((p) => p.billingPeriod === "annual");
 
   return (
     <div className="space-y-12 animate-in fade-in duration-500">
       <div>
-        <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary/80 mb-2">Iconic Fitness Pass</div>
+        <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-primary/80 mb-2">Annual Savings</div>
         <h1 className="text-4xl md:text-5xl font-black tracking-tight">
-          One pass. <span className="text-gradient-brand">Every gym.</span>
+          Special <span className="text-gradient-brand">Offers.</span>
         </h1>
-        <p className="text-muted-foreground mt-2 text-lg">Premium memberships built for the way you train.</p>
+        <p className="text-muted-foreground mt-2 text-lg">Go annual and save the most across the year.</p>
       </div>
 
-      {/* Plans — single row, premium */}
       <section>
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lime-500/10 border border-lime-500/30 text-[11px] font-black tracking-[0.2em] text-lime-600 uppercase mb-3">
-            <Sparkles className="h-3 w-3" /> Choose your pass
+            <Tag className="h-3 w-3" /> Best value
           </div>
-          <h2 className="text-3xl md:text-4xl font-black mb-2">Unlock the city.</h2>
-          <p className="text-muted-foreground">Premium access across hundreds of locations. Longer the plan, bigger the savings.</p>
+          <h2 className="text-3xl md:text-4xl font-black mb-2">Yearly plans, bigger savings.</h2>
+          <p className="text-muted-foreground">Commit for the year and unlock our lowest per-month pricing.</p>
         </div>
 
         <MembershipPlanGrid
-          plans={membershipPlans}
+          plans={annualPlans}
           loading={loadingPlans}
           currentPlanId={myMembership?.planId}
-          emptyTitle="No plans yet"
-          emptyMessage="Membership plans are on the way. Check back soon."
+          emptyTitle="No offers right now"
+          emptyMessage="Annual offers are on the way. Check back soon."
         />
       </section>
     </div>

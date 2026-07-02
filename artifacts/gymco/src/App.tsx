@@ -19,6 +19,7 @@ import Classes from "@/pages/Classes";
 import ClassDetail from "@/pages/ClassDetail";
 import Bookings from "@/pages/Bookings";
 import Memberships from "@/pages/Memberships";
+import Offers from "@/pages/Offers";
 import Trainers from "@/pages/Trainers";
 import TrainerDetail from "@/pages/TrainerDetail";
 import Wallet from "@/pages/Wallet";
@@ -180,6 +181,7 @@ const PUBLIC_ROUTES = [
   "/classes",
   "/trainers",
   "/memberships",
+  "/offers",
   "/be-a-member",
   "/store",
   "/cart",
@@ -236,6 +238,7 @@ function MemberShellRoutes() {
         <Route path="/classes/:classId" component={ClassDetail} />
         <Route path="/bookings" component={Bookings} />
         <Route path="/memberships" component={Memberships} />
+        <Route path="/offers" component={Offers} />
         <Route path="/be-a-member" component={BeAMember} />
         <Route path="/trainers" component={Trainers} />
         <Route path="/trainers/:trainerId" component={TrainerDetail} />

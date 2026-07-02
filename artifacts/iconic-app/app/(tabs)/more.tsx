@@ -39,6 +39,18 @@ export default function MoreScreen() {
       action: () => router.push("/progress"),
     },
     {
+      title: "Membership Plans",
+      subtitle: "One pass. Every gym. Pick your plan",
+      icon: "credit-card",
+      action: () => router.push("/plans"),
+    },
+    {
+      title: "Offers",
+      subtitle: "Annual plans with the biggest savings",
+      icon: "tag",
+      action: () => router.push("/offers"),
+    },
+    {
       title: "Profile",
       subtitle: "Goals, reminders, theme and account",
       icon: "user",
