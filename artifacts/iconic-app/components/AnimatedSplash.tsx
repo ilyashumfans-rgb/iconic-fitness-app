@@ -1,7 +1,5 @@
-import { Feather } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
 import Animated, {
   Easing,
   runOnJS,
@@ -15,15 +13,17 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { AppText } from "@/components/AppText";
-import { useColors } from "@/hooks/useColors";
+
+const BRAND_BG = "#0A0C08";
+const BRAND_LIME = "#C7F000";
+const BRAND_INK = "#F4F7EC";
 
 /**
  * Premium launch animation: a glowing lime mark springs in, a halo pulses,
  * the ICONIC wordmark rises, then the whole overlay fades to reveal the app.
+ * Always renders the dark, branded palette regardless of system light/dark mode.
  */
 export function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
-  const colors = useColors();
-
   const container = useSharedValue(1);
   const markScale = useSharedValue(0.55);
   const markOpacity = useSharedValue(0);
@@ -88,8 +88,8 @@ export function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
     transform: [{ scale: markScale.value }],
   }));
   const glowStyle = useAnimatedStyle(() => ({
-    opacity: glow.value * 0.5,
-    transform: [{ scale: 1 + glow.value * 0.25 }],
+    opacity: glow.value * 0.22,
+    transform: [{ scale: 1 + glow.value * 0.35 }],
   }));
   const ringStyle = useAnimatedStyle(() => ({
     opacity: Math.max(0, 0.5 - (ring.value - 0.4) * 0.5),
@@ -106,7 +106,7 @@ export function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
       style={[
         StyleSheet.absoluteFill,
         styles.root,
-        { backgroundColor: colors.background, pointerEvents: "none" },
+        { backgroundColor: BRAND_BG, pointerEvents: "none" },
         containerStyle,
       ]}
     >
@@ -115,31 +115,28 @@ export function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
           <Animated.View
             style={[
               styles.glow,
-              { backgroundColor: colors.primary },
+              { backgroundColor: BRAND_LIME },
               glowStyle,
             ]}
           />
           <Animated.View
             style={[
               styles.ring,
-              { borderColor: colors.primary },
+              { borderColor: BRAND_LIME },
               ringStyle,
             ]}
           />
           <Animated.View style={markStyle}>
-            <LinearGradient
-              colors={["#E6FF4D", colors.primary, "#9FCB00"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
+            <Image
+              source={require("@/assets/images/iconic-logo.png")}
               style={styles.mark}
-            >
-              <Feather name="zap" size={46} color={colors.primaryForeground} />
-            </LinearGradient>
+              resizeMode="contain"
+            />
           </Animated.View>
         </View>
 
         <Animated.View style={[styles.wordRow, wordStyle]}>
-          <AppText weight="700" size={38} style={styles.word}>
+          <AppText weight="700" size={38} color={BRAND_INK} style={styles.word}>
             ICONIC
           </AppText>
         </Animated.View>
@@ -147,7 +144,7 @@ export function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
           <AppText
             weight="600"
             size={13}
-            color={colors.primary}
+            color={BRAND_LIME}
             style={styles.tagline}
           >
             FITNESS
@@ -162,31 +159,28 @@ const styles = StyleSheet.create({
   root: { zIndex: 100, alignItems: "center", justifyContent: "center" },
   center: { alignItems: "center" },
   markWrap: {
-    width: 160,
-    height: 160,
+    width: 200,
+    height: 200,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 28,
   },
   glow: {
     position: "absolute",
-    width: 150,
-    height: 150,
-    borderRadius: 75,
+    width: 190,
+    height: 190,
+    borderRadius: 95,
   },
   ring: {
     position: "absolute",
-    width: 110,
-    height: 110,
-    borderRadius: 55,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
     borderWidth: 2,
   },
   mark: {
-    width: 104,
-    height: 104,
-    borderRadius: 30,
-    alignItems: "center",
-    justifyContent: "center",
+    width: 168,
+    height: 168,
   },
   wordRow: { flexDirection: "row" },
   word: { letterSpacing: 8, marginLeft: 8 },
