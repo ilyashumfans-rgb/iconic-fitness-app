@@ -123,58 +123,16 @@ export default function SignInScreen() {
           <View
             style={[
               styles.logoCard,
-              { backgroundColor: "#0B0E07", borderColor: colors.primary },
+              { backgroundColor: "#000000", borderColor: colors.primary },
             ]}
           >
             <Image
-              source={require("@/assets/images/iconic-logo.png")}
-              style={styles.logo}
+              source={require("@/assets/images/iconic-lockup.png")}
+              style={styles.lockup}
               resizeMode="contain"
             />
-            <AppText weight="700" size={40} color="#FFFFFF" style={styles.brand}>
-              iconic
-            </AppText>
-            <AppText
-              weight="700"
-              size={18}
-              color={colors.primary}
-              style={styles.brandSub}
-            >
-              FITNESS
-            </AppText>
-            <AppText
-              weight="600"
-              size={12}
-              color="#C9D2BE"
-              style={styles.tagline}
-            >
-              THE FITNESS COMPANY
-            </AppText>
           </View>
         </View>
-
-        {/* Headline */}
-        <View style={styles.headlineRow}>
-          <AppText weight="700" size={30} color={colors.foreground}>
-            TRAIN{" "}
-          </AppText>
-          <AppText
-            weight="700"
-            size={30}
-            color={colors.primary}
-            style={styles.headlineAccent}
-          >
-            ICONIC
-          </AppText>
-        </View>
-        <AppText
-          weight="600"
-          size={12}
-          color={colors.mutedForeground}
-          style={styles.subhead}
-        >
-          YOUR PERSONAL FITNESS INTELLIGENCE
-        </AppText>
 
         {/* Auth form */}
         <View style={styles.form}>
@@ -312,28 +270,11 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 320,
     alignItems: "center",
-    paddingVertical: 26,
-    paddingHorizontal: 20,
     borderRadius: 28,
     borderWidth: 1,
+    overflow: "hidden",
   },
-  logo: { width: 128, height: 128 },
-  brand: { marginTop: 6, letterSpacing: -1 },
-  brandSub: { letterSpacing: 8, marginTop: 2 },
-  tagline: { letterSpacing: 3, marginTop: 12 },
-  headlineRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "baseline",
-    flexWrap: "wrap",
-  },
-  headlineAccent: { fontStyle: "italic", letterSpacing: 0.5 },
-  subhead: {
-    textAlign: "center",
-    letterSpacing: 2.5,
-    marginTop: 8,
-    marginBottom: 28,
-  },
+  lockup: { width: "100%", aspectRatio: 1 },
   form: { gap: 16 },
   divider: { flexDirection: "row", alignItems: "center", gap: 12 },
   dividerText: { letterSpacing: 1.5 },
