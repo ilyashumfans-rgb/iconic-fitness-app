@@ -16,6 +16,7 @@
 - [Trainer booking = leads enquiry](trainer-booking-leads.md) — no booking table + db push forbidden; "book a trainer" posts to public /api/leads kind="general" (skips GX validation; needs name≥2, valid phone, non-empty date+time).
 - [RN/web bottom-anchored auth layout](rn-login-scroll-anchor.md) — logo top + form bottom: ScrollView contentContainer flexGrow:1 + form marginTop:auto; never a flex:1 spacer child (drifts/clips on web).
 - [Sanitize AsyncStorage data on load](local-persisted-data-sanitize.md) — local-first stored blobs are untrusted; whitelist finite>0 on load + null-not-NaN derived helpers; don't re-sanitize on save (breaks clear-to-blank).
+- [RN shadow + overflow:hidden](rn-shadow-overflow-hidden.md) — iOS clips a view's own shadow when it has overflow:hidden; put shadow+radius+bg on an outer wrapper, clipping on the inner view.
 - [Inline autoplay YouTube (Expo web+native)](rn-inline-youtube-autoplay.md) — platform-split .web.tsx iframe / .tsx react-native-webview, mute=1 to autoplay, pointerEvents:none so carousel swipe/tap still work; web insets.top===0.
 - [Brand button gradient](brand-button-gradient.md) — iconic-app primary buttons use `primaryGradient` token (LinearGradient fill) + white text; edit the token to restyle all; non-buttons stay flat.
 - [AI coach assessment tool writes](ai-assessment-tool-writes.md) — multi-turn LLM assessment save: merge (don't replace) JSON blob, gate completion stamp on core fields + idempotent, use nullable col as completion signal.

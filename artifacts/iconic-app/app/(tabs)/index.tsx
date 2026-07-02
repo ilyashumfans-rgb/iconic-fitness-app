@@ -31,6 +31,7 @@ import {
   Alert,
   Image,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -38,6 +39,7 @@ import {
   View,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
+  type ViewStyle,
 } from "react-native";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -47,6 +49,10 @@ import { Card } from "@/components/Card";
 import { ProgressRing } from "@/components/ProgressRing";
 import { Screen } from "@/components/Screen";
 import { YouTubeInline } from "@/components/YouTubeInline";
+import {
+  CategoryCardSkeleton,
+  GymCardSkeleton,
+} from "@/components/Skeleton";
 import { LoadingView, SectionHeader } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
 import { useUserLocation } from "@/hooks/useUserLocation";
@@ -88,6 +94,30 @@ const STORY_VIDEOS: StoryVideo[] = [
     poster: `${websiteUrl}/media/testimonial-albha-poster.jpg`,
   },
 ];
+
+// Premium floating-card shadow (soft, brand-neutral). Web uses boxShadow to
+// avoid the deprecated shadow* warning; native uses shadow*/elevation.
+const CARD_SHADOW = Platform.select({
+  web: { boxShadow: "0 14px 34px rgba(0,0,0,0.30)" },
+  default: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.22,
+    shadowRadius: 18,
+    elevation: 7,
+  },
+}) as ViewStyle;
+
+const SOFT_SHADOW = Platform.select({
+  web: { boxShadow: "0 8px 22px rgba(0,0,0,0.20)" },
+  default: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+}) as ViewStyle;
 
 export default function HomeScreen() {
   const colors = useColors();
@@ -206,7 +236,10 @@ export default function HomeScreen() {
         <Pressable onPress={() => router.push("/coach")} style={{ marginTop: 20 }}>
           <Card
             tone="elevated"
-            style={{ flexDirection: "row", alignItems: "center", gap: 14 }}
+            style={[
+              { flexDirection: "row", alignItems: "center", gap: 14 },
+              SOFT_SHADOW,
+            ]}
           >
             <View
               style={{
@@ -258,9 +291,16 @@ export default function HomeScreen() {
         onAction={() => openExternal(exploreUrl)}
       />
       {gymsQuery.isLoading ? (
-        <View style={{ height: 200, justifyContent: "center", marginBottom: 28 }}>
-          <LoadingView />
-        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.gymRow}
+          style={{ marginBottom: 28 }}
+        >
+          {[0, 1, 2].map((k) => (
+            <GymCardSkeleton key={k} />
+          ))}
+        </ScrollView>
       ) : gyms.length === 0 ? (
         <Card style={{ marginBottom: 28 }}>
           <AppText weight="700" size={15}>
@@ -277,10 +317,11 @@ export default function HomeScreen() {
           contentContainerStyle={styles.gymRow}
           style={{ marginBottom: 28 }}
         >
-          {gyms.slice(0, 8).map((g) => (
+          {gyms.slice(0, 8).map((g, i) => (
             <GymCard
               key={g.id}
               gym={g}
+              index={i}
               onPress={() => openExternal(exploreUrl)}
             />
           ))}
@@ -467,7 +508,7 @@ export default function HomeScreen() {
         </>
       ) : (
         <Pressable onPress={() => router.push("/(auth)/sign-in")}>
-          <Card style={styles.joinCta} tone="elevated">
+          <Card style={[styles.joinCta, SOFT_SHADOW]} tone="elevated">
             <View style={[styles.joinIcon, { backgroundColor: colors.primary }]}>
               <Feather name="user-plus" size={22} color={colors.primaryForeground} />
             </View>
@@ -962,69 +1003,94 @@ function GymCard({
   gym,
   onPress,
   showDistance,
+  index = 0,
 }: {
   gym: Gym;
   onPress: () => void;
   showDistance?: boolean;
+  index?: number;
 }) {
   const colors = useColors();
   const img = resolveImageUrl(gym.heroImage);
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.gymCard,
-        {
-          backgroundColor: colors.card,
-          borderColor: colors.border,
-          borderRadius: colors.radius,
-          opacity: pressed ? 0.92 : 1,
-        },
-      ]}
+    <Animated.View
+      entering={FadeInDown.delay(index * 70).springify().damping(16)}
+      style={[CARD_SHADOW, { borderRadius: 26, backgroundColor: colors.card }]}
     >
-      <View style={styles.gymImgWrap}>
-        {img ? (
-          <Image source={{ uri: img }} style={styles.gymImg} />
-        ) : (
-          <View style={[styles.gymImg, { backgroundColor: colors.elevated }]} />
-        )}
-        {showDistance ? (
-          <View style={[styles.distancePill, { backgroundColor: colors.primary }]}>
-            <Feather name="navigation" size={10} color={colors.primaryForeground} />
-            <AppText weight="700" size={11} color={colors.primaryForeground}>
-              {Number.isFinite(gym.distanceKm) ? gym.distanceKm.toFixed(1) : "–"} km
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.gymCard,
+          {
+            backgroundColor: colors.card,
+            borderColor: colors.border,
+            transform: [{ scale: pressed ? 0.97 : 1 }],
+          },
+        ]}
+      >
+        <View style={styles.gymImgWrap}>
+          {img ? (
+            <Image source={{ uri: img }} style={styles.gymImg} resizeMode="cover" />
+          ) : (
+            <View style={[styles.gymImg, { backgroundColor: colors.elevated }]} />
+          )}
+          {/* Bottom scrim so the floating badges always read cleanly. */}
+          <LinearGradient
+            colors={["transparent", "rgba(10,12,8,0.55)"]}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
+          {showDistance ? (
+            <View style={[styles.distancePill, { backgroundColor: colors.primary }]}>
+              <Feather name="navigation" size={10} color={colors.primaryForeground} />
+              <AppText weight="700" size={11} color={colors.primaryForeground}>
+                {Number.isFinite(gym.distanceKm) ? gym.distanceKm.toFixed(1) : "–"} km
+              </AppText>
+            </View>
+          ) : gym.isPremium ? (
+            <View style={[styles.gymPremium, { backgroundColor: colors.primary }]}>
+              <AppText weight="700" size={10} color={colors.primaryForeground}>
+                PREMIUM
+              </AppText>
+            </View>
+          ) : null}
+          <View style={styles.gymRating}>
+            <Feather name="star" size={11} color={colors.primary} />
+            <AppText weight="700" size={12} color="#FFFFFF">
+              {gym.rating.toFixed(1)}
             </AppText>
           </View>
-        ) : null}
-        <View style={styles.gymRating}>
-          <Feather name="star" size={10} color={colors.primary} />
-          <AppText weight="700" size={11} color={colors.foreground}>
-            {gym.rating.toFixed(1)}
-          </AppText>
         </View>
-      </View>
-      <View style={styles.gymBody}>
-        <AppText weight="700" size={15} numberOfLines={1}>
-          {gym.name}
-        </AppText>
-        <View style={styles.gymMetaRow}>
-          <Feather name="map-pin" size={11} color={colors.mutedForeground} />
-          <AppText muted size={12} numberOfLines={1} style={{ flex: 1 }}>
-            {gym.area || gym.city}
+        <View style={styles.gymBody}>
+          <AppText weight="700" size={16} numberOfLines={1}>
+            {gym.name}
           </AppText>
-          {gym.openNow ? (
-            <View style={[styles.openDot, { backgroundColor: colors.success }]} />
-          ) : null}
+          <View style={styles.gymMetaRow}>
+            <Feather name="map-pin" size={12} color={colors.mutedForeground} />
+            <AppText muted size={12} numberOfLines={1} style={{ flex: 1 }}>
+              {gym.area || gym.city}
+            </AppText>
+          </View>
+          <View style={styles.gymFooter}>
+            <AppText weight="700" size={15} color={colors.foreground}>
+              ₹{gym.priceFrom}
+              <AppText muted size={11}>
+                {" "}
+                /mo
+              </AppText>
+            </AppText>
+            {gym.openNow ? (
+              <View style={styles.openBadge}>
+                <View style={[styles.openDot, { backgroundColor: colors.success }]} />
+                <AppText weight="600" size={11} color={colors.success}>
+                  Open now
+                </AppText>
+              </View>
+            ) : null}
+          </View>
         </View>
-        <AppText weight="700" size={13} color={colors.primary} style={{ marginTop: 6 }}>
-          ₹{gym.priceFrom}
-          <AppText muted size={11}>
-            {" "}
-            /mo
-          </AppText>
-        </AppText>
-      </View>
-    </Pressable>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -1073,9 +1139,16 @@ function ShopByCategory() {
     return (
       <>
         <SectionHeader title="Shop by category" />
-        <View style={{ height: 190, justifyContent: "center", marginBottom: 28 }}>
-          <LoadingView />
-        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.catRow}
+          style={{ marginBottom: 28 }}
+        >
+          {[0, 1, 2, 3].map((k) => (
+            <CategoryCardSkeleton key={k} />
+          ))}
+        </ScrollView>
       </>
     );
   }
@@ -1128,7 +1201,10 @@ function CategoryCard({
   const uri = resolveImageUrl(image);
 
   return (
-    <Animated.View entering={FadeInDown.delay(index * 80).springify().damping(16)}>
+    <Animated.View
+      entering={FadeInDown.delay(index * 80).springify().damping(16)}
+      style={[CARD_SHADOW, { borderRadius: 22, backgroundColor: "#0A0C08" }]}
+    >
       <Pressable
         onPress={() => openExternal(`${storeUrl}?category=${category.slug}`)}
         style={({ pressed }) => [
@@ -1209,38 +1285,61 @@ function NearbyGyms({ onOpenGym }: { onOpenGym: () => void }) {
   if (status === "idle" || status === "denied" || status === "error") {
     const denied = status === "denied" || status === "error";
     return (
-      <Pressable onPress={request} style={{ marginBottom: 28 }}>
-        <View style={styles.nearCta}>
-          <LinearGradient
-            colors={colors.primaryGradient as [string, string]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-          <View style={styles.nearCtaIcon}>
-            <Feather name="navigation" size={24} color={colors.primary} />
+      <Animated.View
+        entering={FadeInDown.springify().damping(16)}
+        style={[
+          CARD_SHADOW,
+          { marginBottom: 28, borderRadius: 26, backgroundColor: "#0A0C08" },
+        ]}
+      >
+        <Pressable onPress={request}>
+          <View style={styles.nearCta}>
+            <LinearGradient
+              colors={colors.primaryGradient as [string, string]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.nearGlow} pointerEvents="none" />
+            <View style={styles.nearCtaIcon}>
+              <Feather name="navigation" size={26} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <AppText
+                weight="700"
+                size={11}
+                color={colors.primaryForeground}
+                style={{ opacity: 0.85, letterSpacing: 1.2 }}
+              >
+                {denied ? "LOCATION OFF" : "DISCOVER"}
+              </AppText>
+              <AppText
+                weight="700"
+                size={20}
+                color={colors.primaryForeground}
+                style={{ marginTop: 4 }}
+              >
+                {denied ? "Turn on location" : "Gyms near me"}
+              </AppText>
+              <AppText
+                size={13}
+                color={colors.primaryForeground}
+                style={{ marginTop: 5, opacity: 0.9 }}
+              >
+                {denied
+                  ? "Allow location access to see the closest branches."
+                  : "Find the closest Iconic branches around you."}
+              </AppText>
+              <View style={styles.nearCtaPill}>
+                <AppText weight="700" size={13} color={colors.primary}>
+                  {denied ? "Retry" : "Find gyms"}
+                </AppText>
+                <Feather name="arrow-right" size={14} color={colors.primary} />
+              </View>
+            </View>
           </View>
-          <View style={{ flex: 1 }}>
-            <AppText weight="700" size={18} color={colors.primaryForeground}>
-              {denied ? "Turn on location" : "Gyms near me"}
-            </AppText>
-            <AppText
-              size={13}
-              color={colors.primaryForeground}
-              style={{ marginTop: 3, opacity: 0.85 }}
-            >
-              {denied
-                ? "Allow location access to see the closest branches."
-                : "Find the closest Iconic branches around you."}
-            </AppText>
-          </View>
-          <View style={styles.nearCtaPill}>
-            <AppText weight="700" size={13} color={colors.primary}>
-              {denied ? "Retry" : "Find"}
-            </AppText>
-          </View>
-        </View>
-      </Pressable>
+        </Pressable>
+      </Animated.View>
     );
   }
 
@@ -1248,9 +1347,16 @@ function NearbyGyms({ onOpenGym }: { onOpenGym: () => void }) {
     <>
       <SectionHeader title="Gyms near me" />
       {status === "loading" || nearbyQuery.isLoading ? (
-        <View style={{ height: 200, justifyContent: "center", marginBottom: 28 }}>
-          <LoadingView />
-        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.gymRow}
+          style={{ marginBottom: 28 }}
+        >
+          {[0, 1, 2].map((k) => (
+            <GymCardSkeleton key={k} />
+          ))}
+        </ScrollView>
       ) : nearbyQuery.isError ? (
         <Card style={{ marginBottom: 28 }}>
           <AppText weight="700" size={15}>
@@ -1276,8 +1382,14 @@ function NearbyGyms({ onOpenGym }: { onOpenGym: () => void }) {
           contentContainerStyle={styles.gymRow}
           style={{ marginBottom: 28 }}
         >
-          {nearby.map((g) => (
-            <GymCard key={g.id} gym={g} showDistance onPress={onOpenGym} />
+          {nearby.map((g, i) => (
+            <GymCard
+              key={g.id}
+              gym={g}
+              index={i}
+              showDistance
+              onPress={onOpenGym}
+            />
           ))}
         </ScrollView>
       )}
@@ -1527,11 +1639,20 @@ const styles = StyleSheet.create({
   // Slider — full-bleed banner pinned to the top of the screen. Negative
   // margins cancel the Screen's horizontal padding and top padding so it sits
   // edge-to-edge and flush with the top.
-  sliderWrap: { marginHorizontal: -20, marginTop: 0, marginBottom: 24 },
+  sliderWrap: {
+    marginHorizontal: -20,
+    marginTop: 0,
+    marginBottom: 24,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    ...SOFT_SHADOW,
+  },
   slide: {
-    height: 300,
+    height: 320,
     overflow: "hidden",
     justifyContent: "flex-end",
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   slideBadge: {
     position: "absolute",
@@ -1623,11 +1744,12 @@ const styles = StyleSheet.create({
   // Gym cards
   gymRow: { gap: 14, paddingRight: 8, paddingVertical: 2 },
   gymCard: {
-    width: 230,
+    width: 250,
+    borderRadius: 26,
     borderWidth: StyleSheet.hairlineWidth,
     overflow: "hidden",
   },
-  gymImgWrap: { height: 130 },
+  gymImgWrap: { height: 172 },
   gymImg: { width: "100%", height: "100%" },
   gymRating: {
     position: "absolute",
@@ -1641,13 +1763,28 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
   },
-  gymBody: { padding: 14 },
+  gymBody: { padding: 16 },
   gymMetaRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    marginTop: 4,
+    marginTop: 6,
   },
+  gymPremium: {
+    position: "absolute",
+    top: 10,
+    left: 10,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  gymFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 12,
+  },
+  openBadge: { flexDirection: "row", alignItems: "center", gap: 5 },
   distancePill: {
     position: "absolute",
     top: 10,
@@ -1664,25 +1801,39 @@ const styles = StyleSheet.create({
   // Near-me CTA
   nearCta: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    padding: 18,
-    borderRadius: 22,
+    alignItems: "flex-start",
+    gap: 16,
+    padding: 22,
+    borderRadius: 26,
     overflow: "hidden",
   },
+  nearGlow: {
+    position: "absolute",
+    top: -46,
+    right: -34,
+    width: 170,
+    height: 170,
+    borderRadius: 85,
+    backgroundColor: "rgba(255,255,255,0.12)",
+  },
   nearCtaIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(10,12,8,0.9)",
+    backgroundColor: "#FFFFFF",
   },
   nearCtaPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    alignSelf: "flex-start",
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 999,
-    backgroundColor: "#0A0C08",
+    backgroundColor: "#FFFFFF",
+    marginTop: 16,
   },
 
   // Story testimonial cards
