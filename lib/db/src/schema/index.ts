@@ -163,6 +163,7 @@ export const membershipsTable = pgTable("memberships", {
   perks: text("perks").array().notNull().default([]),
   badge: text("badge").notNull(),
   popular: boolean("popular").notNull().default(false),
+  imageUrl: text("image_url").notNull().default(""),
 });
 
 export const userMembershipsTable = pgTable("user_memberships", {

@@ -1,14 +1,12 @@
 import {
   useListMemberships,
-  useGetMyMembership,
   getListMembershipsQueryKey,
-  getGetMyMembershipQueryKey,
 } from "@workspace/api-client-react";
 import { useMemo } from "react";
 import { View } from "react-native";
 
 import { AppText } from "@/components/AppText";
-import { PlanCard } from "@/components/PlanCard";
+import { PackageCard } from "@/components/PackageCard";
 import { Screen } from "@/components/Screen";
 import {
   EmptyState,
@@ -21,9 +19,6 @@ export default function PackagesScreen() {
   const query = useListMemberships({
     query: { queryKey: getListMembershipsQueryKey() },
   });
-  const mine = useGetMyMembership({
-    query: { queryKey: getGetMyMembershipQueryKey() },
-  });
 
   // Packages = annual plans (created under the admin "Packages" tab).
   const visible = useMemo(
@@ -32,8 +27,8 @@ export default function PackagesScreen() {
         .filter((p) => p.billingPeriod === "annual")
         .map((p) => ({ ...p, name: p.name.trim() }))
         .sort((a, b) => {
-          if (a.popular && !b.popular) return 1;
-          if (!a.popular && b.popular) return -1;
+          if (a.popular && !b.popular) return -1;
+          if (!a.popular && b.popular) return 1;
           return a.priceInr - b.priceInr;
         }),
     [query.data],
@@ -62,11 +57,7 @@ export default function PackagesScreen() {
       ) : (
         <View style={{ gap: 14 }}>
           {visible.map((plan) => (
-            <PlanCard
-              key={plan.id}
-              plan={plan}
-              isCurrent={mine.data?.planId === plan.id}
-            />
+            <PackageCard key={plan.id} plan={plan} />
           ))}
         </View>
       )}

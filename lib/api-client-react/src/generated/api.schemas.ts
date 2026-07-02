@@ -222,6 +222,7 @@ export interface MembershipPlan {
   perks: string[];
   badge: string;
   popular: boolean;
+  imageUrl?: string;
 }
 
 export type MyMembershipStatus = typeof MyMembershipStatus[keyof typeof MyMembershipStatus];

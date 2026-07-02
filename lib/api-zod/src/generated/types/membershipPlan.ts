@@ -19,4 +19,5 @@ export interface MembershipPlan {
   perks: string[];
   badge: string;
   popular: boolean;
+  imageUrl?: string;
 }

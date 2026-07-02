@@ -1529,6 +1529,7 @@ router.post(
         perks: Array.isArray(b.perks) ? (b.perks as string[]) : [],
         badge: String(b.badge ?? ""),
         popular: Boolean(b.popular ?? false),
+        imageUrl: String(b.imageUrl ?? ""),
       })
       .returning();
     res.status(201).json(created);
@@ -1542,7 +1543,7 @@ router.patch(
     const id = Number(req.params.id);
     const b = (req.body ?? {}) as Record<string, unknown>;
     const patch: Record<string, unknown> = {};
-    for (const k of ["name", "tagline", "badge"]) {
+    for (const k of ["name", "tagline", "badge", "imageUrl"]) {
       if (b[k] !== undefined) patch[k] = String(b[k]);
     }
     if (b.billingPeriod !== undefined) {

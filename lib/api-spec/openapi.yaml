@@ -960,6 +960,7 @@ components:
           items: { type: string }
         badge: { type: string }
         popular: { type: boolean }
+        imageUrl: { type: string }
     MyMembership:
       type: object
       required: [planId, planName, renewsOn, classesUsed, classesIncluded, gymsAccessed, status]

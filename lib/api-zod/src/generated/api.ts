@@ -491,7 +491,8 @@ export const ListMembershipsResponseItem = zod.object({
   "classesPerMonth": zod.number(),
   "perks": zod.array(zod.string()),
   "badge": zod.string(),
-  "popular": zod.boolean()
+  "popular": zod.boolean(),
+  "imageUrl": zod.string().optional()
 })
 export const ListMembershipsResponse = zod.array(ListMembershipsResponseItem)
 

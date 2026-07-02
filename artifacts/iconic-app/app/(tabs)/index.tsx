@@ -4,6 +4,7 @@ import {
   getGetMeQueryKey,
   getGetTrackingSummaryQueryKey,
   getListGymsQueryKey,
+  getListMembershipsQueryKey,
   getListMyBookingsQueryKey,
   useAddWater,
   useCreateBooking,
@@ -11,6 +12,7 @@ import {
   useGetTrackingSummary,
   useListClasses,
   useListGyms,
+  useListMemberships,
   useListMyBookings,
   useListHomeSlides,
   useListStoreCategories,
@@ -47,6 +49,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AICoachCard } from "@/components/AICoachCard";
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
+import { PackageCard } from "@/components/PackageCard";
 import { ProgressRing } from "@/components/ProgressRing";
 import { Screen } from "@/components/Screen";
 import { YouTubeInline } from "@/components/YouTubeInline";
@@ -129,6 +132,9 @@ export default function HomeScreen() {
   // Public, no-auth content — works for guests and members alike.
   const gymsQuery = useListGyms({ sort: "rating" });
   const classesQuery = useListClasses({});
+  const membershipsQuery = useListMemberships({
+    query: { queryKey: getListMembershipsQueryKey() },
+  });
 
   // Personal content — only fetched when signed in (guests get 401 otherwise).
   const summaryQuery = useGetTrackingSummary(
@@ -169,16 +175,37 @@ export default function HomeScreen() {
     () => (classesQuery.data ?? []).slice(0, 6),
     [classesQuery.data],
   );
+  const packages = useMemo(
+    () =>
+      (membershipsQuery.data ?? [])
+        .filter((p) => p.billingPeriod === "annual")
+        .sort((a, b) => {
+          if (a.popular && !b.popular) return -1;
+          if (!a.popular && b.popular) return 1;
+          return a.priceInr - b.priceInr;
+        })
+        .slice(0, 4),
+    [membershipsQuery.data],
+  );
 
   const refetchAll = useCallback(() => {
     void gymsQuery.refetch();
     void classesQuery.refetch();
+    void membershipsQuery.refetch();
     if (isSignedIn) {
       void summaryQuery.refetch();
       void meQuery.refetch();
       void bookingsQuery.refetch();
     }
-  }, [gymsQuery, classesQuery, isSignedIn, summaryQuery, meQuery, bookingsQuery]);
+  }, [
+    gymsQuery,
+    classesQuery,
+    membershipsQuery,
+    isSignedIn,
+    summaryQuery,
+    meQuery,
+    bookingsQuery,
+  ]);
 
   const onQuickWater = useCallback(async () => {
     if (quickLogging) return;
@@ -238,6 +265,26 @@ export default function HomeScreen() {
           needsAssessment={!!meQuery.data && !meQuery.data.assessmentComplete}
           onPress={() => router.push("/coach")}
         />
+      ) : null}
+
+      {/* Explore packages (annual plans) */}
+      {packages.length > 0 ? (
+        <>
+          <SectionHeader
+            title="Explore packages"
+            action="View all"
+            onAction={() => router.push("/packages")}
+          />
+          <View style={{ gap: 12, marginBottom: 8 }}>
+            {packages.map((plan) => (
+              <PackageCard
+                key={plan.id}
+                plan={plan}
+                onPress={() => router.push("/packages")}
+              />
+            ))}
+          </View>
+        </>
       ) : null}
 
       {/* Shop by category */}

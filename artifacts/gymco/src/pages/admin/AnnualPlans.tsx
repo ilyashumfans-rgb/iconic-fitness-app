@@ -1,10 +1,69 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
 import { adminApi } from "@/lib/adminApi";
-import { Check, Plus, Tag, Trash2, X, CalendarClock } from "lucide-react";
+import {
+  Check,
+  Image as ImageIcon,
+  Plus,
+  Tag,
+  Trash2,
+  Upload,
+  X,
+  CalendarClock,
+} from "lucide-react";
 
 const inputCls =
   "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-lime-500/60";
+
+const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
+
+// Compress raster images so uploads stay small/reliable; GIFs pass through raw.
+async function compressImage(file: File): Promise<File> {
+  const bitmap = await createImageBitmap(file);
+  const maxDim = 1280;
+  const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+  const w = Math.max(1, Math.round(bitmap.width * scale));
+  const h = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return file;
+  ctx.drawImage(bitmap, 0, 0, w, h);
+  const keepAlpha = file.type === "image/png" || file.type === "image/webp";
+  const type = keepAlpha ? "image/png" : "image/jpeg";
+  const blob = await new Promise<Blob | null>((r) =>
+    canvas.toBlob(r, type, 0.85),
+  );
+  bitmap.close?.();
+  if (!blob) return file;
+  const base = file.name.replace(/\.[^.]+$/, "") || "image";
+  return new File([blob], `${base}.${keepAlpha ? "png" : "jpg"}`, { type });
+}
+
+async function uploadInline(file: File): Promise<string> {
+  const res = await fetch("/api/storage/uploads/inline", {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": file.type || "application/octet-stream",
+      "X-Filename": encodeURIComponent(file.name),
+    },
+    body: file,
+  });
+  if (!res.ok) {
+    let msg = `Upload failed (${res.status})`;
+    try {
+      const j = (await res.json()) as { error?: string };
+      if (j?.error) msg = j.error;
+    } catch {
+      // keep status message
+    }
+    throw new Error(msg);
+  }
+  const { url } = (await res.json()) as { url: string };
+  return url;
+}
 
 function PlanForm({
   initial,
@@ -25,8 +84,32 @@ function PlanForm({
     perks: (initial?.perks ?? []).join(", "),
     badge: initial?.badge ?? "",
     popular: initial?.popular ?? false,
+    imageUrl: initial?.imageUrl ?? "",
   });
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadErr, setUploadErr] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (file: File) => {
+    setUploadErr(null);
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setUploadErr("Image is too large. Please pick one under 15MB.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const isGif = file.type === "image/gif";
+      const toUpload = isGif ? file : await compressImage(file);
+      const url = await uploadInline(toUpload);
+      setF((prev) => ({ ...prev, imageUrl: url }));
+    } catch (e) {
+      setUploadErr(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +145,61 @@ function PlanForm({
         <Field type="number" label="Classes/Month" v={f.classesPerMonth} on={(v) => setF({ ...f, classesPerMonth: v as any })} />
         <div className="sm:col-span-2">
           <Field label="Perks (comma)" v={f.perks} on={(v) => setF({ ...f, perks: v })} />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+            Package image
+          </label>
+          <div className="flex items-center gap-4">
+            <div className="h-20 w-28 shrink-0 rounded-lg overflow-hidden bg-slate-800 border border-slate-700 flex items-center justify-center">
+              {f.imageUrl ? (
+                <img
+                  src={f.imageUrl}
+                  alt="Package"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <ImageIcon className="h-6 w-6 text-slate-600" />
+              )}
+            </div>
+            <div className="flex flex-col items-start gap-2">
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void handleFile(file);
+                }}
+              />
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={() => fileRef.current?.click()}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 text-sm disabled:opacity-60"
+              >
+                <Upload className="h-3.5 w-3.5" />
+                {uploading ? "Uploading…" : f.imageUrl ? "Replace image" : "Upload image"}
+              </button>
+              {f.imageUrl ? (
+                <button
+                  type="button"
+                  onClick={() => setF((prev) => ({ ...prev, imageUrl: "" }))}
+                  className="text-xs text-slate-400 hover:text-slate-200"
+                >
+                  Remove image
+                </button>
+              ) : null}
+              {uploadErr ? (
+                <span className="text-xs text-red-400">{uploadErr}</span>
+              ) : (
+                <span className="text-[11px] text-slate-500">
+                  Shown on the app’s Packages cards. JPG/PNG/WebP.
+                </span>
+              )}
+            </div>
+          </div>
         </div>
         <label className="flex items-center gap-2 text-sm text-slate-300 sm:col-span-2">
           <input
