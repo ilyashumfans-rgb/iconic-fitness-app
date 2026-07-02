@@ -1,27 +1,24 @@
-import { useEffect } from "react";
 import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/AppText";
-import { Button } from "@/components/Button";
-import { Screen } from "@/components/Screen";
-import { exploreUrl, openExternal } from "@/lib/links";
+import { SiteWebView } from "@/components/SiteWebView";
+import { useColors } from "@/hooks/useColors";
+import { exploreUrl } from "@/lib/links";
 
 export default function SportsScreen() {
-  useEffect(() => {
-    openExternal(exploreUrl);
-  }, []);
-
+  const colors = useColors();
   return (
-    <Screen>
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 16 }}>
-        <AppText weight="700" size={18}>
+    <SafeAreaView
+      edges={["top"]}
+      style={{ flex: 1, backgroundColor: colors.background }}
+    >
+      <View style={{ paddingHorizontal: 20, paddingBottom: 12, paddingTop: 8 }}>
+        <AppText weight="700" size={22}>
           Sports & Fitness
         </AppText>
-        <AppText muted size={14} style={{ textAlign: "center" }}>
-          Explore gyms, sports and fitness near you.
-        </AppText>
-        <Button label="Open" onPress={() => openExternal(exploreUrl)} />
       </View>
-    </Screen>
+      <SiteWebView url={exploreUrl} />
+    </SafeAreaView>
   );
 }

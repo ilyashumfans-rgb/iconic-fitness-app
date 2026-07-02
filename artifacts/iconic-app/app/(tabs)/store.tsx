@@ -1,27 +1,24 @@
-import { useEffect } from "react";
 import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/AppText";
-import { Button } from "@/components/Button";
-import { Screen } from "@/components/Screen";
-import { openExternal, storeUrl } from "@/lib/links";
+import { SiteWebView } from "@/components/SiteWebView";
+import { useColors } from "@/hooks/useColors";
+import { storeUrl } from "@/lib/links";
 
 export default function StoreScreen() {
-  useEffect(() => {
-    openExternal(storeUrl);
-  }, []);
-
+  const colors = useColors();
   return (
-    <Screen>
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 16 }}>
-        <AppText weight="700" size={18}>
+    <SafeAreaView
+      edges={["top"]}
+      style={{ flex: 1, backgroundColor: colors.background }}
+    >
+      <View style={{ paddingHorizontal: 20, paddingBottom: 12, paddingTop: 8 }}>
+        <AppText weight="700" size={22}>
           Store
         </AppText>
-        <AppText muted size={14} style={{ textAlign: "center" }}>
-          Shop gear, supplements and more.
-        </AppText>
-        <Button label="Open" onPress={() => openExternal(storeUrl)} />
       </View>
-    </Screen>
+      <SiteWebView url={storeUrl} />
+    </SafeAreaView>
   );
 }
