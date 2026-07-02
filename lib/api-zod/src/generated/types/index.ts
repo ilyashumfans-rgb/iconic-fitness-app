@@ -39,6 +39,8 @@ export * from './goalsUpdate';
 export * from './gym';
 export * from './gymDetail';
 export * from './healthStatus';
+export * from './homeSlide';
+export * from './homeSlideKind';
 export * from './leaderboardEntry';
 export * from './listClassesParams';
 export * from './listGymsParams';

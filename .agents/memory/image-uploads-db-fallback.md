@@ -36,3 +36,12 @@ user-uploaded-then-served file.
 The legacy object-storage code (`routes/storage.ts` request-url route, `lib/objectStorage.ts`)
 is left in place but unused; if object storage is ever properly provisioned, the inline
 path can be swapped back.
+
+**GIF animation passthrough (important for any slider/banner upload):** the shared
+`FileUpload.tsx` re-encodes every image through a `<canvas>`, which flattens animated
+GIFs to a single static frame. To keep GIFs animated, upload the raw file bytes directly
+to `POST /api/storage/uploads/inline` (the endpoint accepts `image/gif` via magic-byte
+sniffing) and only canvas-compress non-GIF rasters. The admin Home-slider editor
+(`pages/admin/HomeSlides.tsx`) does exactly this (`isGif ? file : compressImage(file)`).
+On the mobile side, React Native / Expo `<Image>` animates GIFs from a db-image URL with
+no extra deps.

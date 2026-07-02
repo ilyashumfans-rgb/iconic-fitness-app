@@ -75,6 +75,15 @@ A standalone, view-only role for agencies to monitor GX class bookings. Admins c
 - **Frontend (agency):** standalone routes outside every member/partner/admin shell — `App.tsx` `if (location.startsWith("/agency"))` → `/agency/login` (`pages/agency/Login.tsx`) + `/agency` dashboard (`pages/agency/Dashboard.tsx`). Client: `lib/agencyApi.ts`. Dashboard shows totals + breakdown **by branch** + **by class category** (`className`) + **per-slot detail** (branch+date+time+class with each booker's contact info), all limited to assigned branches.
 - **Note:** the old single-login env secrets `AGENCY_USERNAME` / `AGENCY_PASSWORD` are no longer used (dead config) — login is fully DB-backed now.
 
+### Home banner slider (admin-managed)
+
+The mobile Home screen opens with a full-bleed banner slider at the very top (the old greeting/logo/streak header was removed). Admins manage the slides from the web admin.
+
+- **DB:** `homeSlidesTable` (`home_slides`, `lib/db/src/schema/index.ts`): `kind` (image|gif|youtube), `mediaUrl`, `title`, `subtitle`, `ctaLabel`, `ctaUrl`, `sortOrder`, `isActive`, `createdAt`. Added additively via `CREATE TABLE IF NOT EXISTS` (never `db push`); reaches prod via Replit Publish schema diff.
+- **API:** `artifacts/api-server/src/routes/homeSlides.ts` — public `GET /home-slides` (active rows, ordered) + admin CRUD `GET/POST/PATCH/DELETE /admin/home-slides` under `requireAdmin`. Server validates kind↔mediaUrl consistency (`validateMedia`): YouTube kind needs a valid YouTube link/ID; image/gif needs an http(s) or `/api/...` URL and rejects YouTube links. OpenAPI: `HomeSlide` + `listHomeSlides` → generated `useListHomeSlides` hook.
+- **Admin UI:** `pages/admin/HomeSlides.tsx` (nav "Home Slider" under Content). Upload jpg/png/webp (canvas-compressed client-side) or **GIF (uploaded raw to preserve animation)** via `POST /api/storage/uploads/inline`, or paste a YouTube link; reorder (up/down swap `sortOrder`), show/hide, edit, delete. Client methods `adminApi.homeSlides.*`.
+- **Mobile:** `HeroSlider` in `app/(tabs)/index.tsx` uses `useListHomeSlides`. Full-bleed via negative margins on `sliderWrap`. image/gif render inline via RN `<Image>` (Expo animates GIFs); youtube slides show `img.youtube.com/vi/<id>/hqdefault.jpg` + a play badge and open the video via `openExternal`; tapping a slide opens its `ctaUrl` (or explore fallback). **Code-default fallback**: when no admin slides exist, the slider shows a brand intro + top gyms so it's never empty on fresh installs/prod.
+
 ### Member mobile app (Iconic Fitness)
 
 Member-facing Expo (React Native, expo-router) app in `artifacts/iconic-app` (slug `iconic-app`, previewPath `/iconic-app/`). It talks to the existing GYMCO API over `https://$EXPO_PUBLIC_DOMAIN/api` via the generated `@workspace/api-client-react` hooks.

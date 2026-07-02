@@ -92,6 +92,24 @@ export const agencyUsersTable = pgTable("agency_users", {
     .defaultNow(),
 });
 
+// Home banner slides shown at the top of the mobile Home screen. Admins manage
+// these (images / GIFs uploaded to db-images, or YouTube links). Rendered in
+// sortOrder; only active rows are served to members.
+export const homeSlidesTable = pgTable("home_slides", {
+  id: serial("id").primaryKey(),
+  kind: text("kind").notNull().default("image"), // image | gif | youtube
+  mediaUrl: text("media_url").notNull().default(""), // db-image URL, gif URL, or YouTube URL
+  title: text("title").notNull().default(""),
+  subtitle: text("subtitle").notNull().default(""),
+  ctaLabel: text("cta_label").notNull().default(""),
+  ctaUrl: text("cta_url").notNull().default(""),
+  sortOrder: integer("sort_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const trainersTable = pgTable("trainers", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),

@@ -9,6 +9,19 @@ export type AdminUser = {
   role: string;
 };
 
+export type HomeSlide = {
+  id: number;
+  kind: "image" | "gif" | "youtube";
+  mediaUrl: string;
+  title: string;
+  subtitle: string;
+  ctaLabel: string;
+  ctaUrl: string;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+};
+
 export type AgencyAccount = {
   id: number;
   username: string;
@@ -461,6 +474,21 @@ export const adminApi = {
         partners: { id: number; name: string; email: string }[];
         admins: { id: number; name: string; email: string }[];
       }>("/admin/tickets/assignees"),
+  },
+  homeSlides: {
+    list: () => request<HomeSlide[]>("/admin/home-slides"),
+    create: (body: Partial<HomeSlide>) =>
+      request<HomeSlide>("/admin/home-slides", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: number, body: Partial<HomeSlide>) =>
+      request<HomeSlide>(`/admin/home-slides/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: number) =>
+      request<{ ok: true }>(`/admin/home-slides/${id}`, { method: "DELETE" }),
   },
   reseedFromSnapshot: () =>
     request<{ ok: true; inserted: Record<string, number> }>(

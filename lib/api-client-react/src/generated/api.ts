@@ -43,6 +43,7 @@ import type {
   Gym,
   GymDetail,
   HealthStatus,
+  HomeSlide,
   ListClassesParams,
   ListGymsParams,
   ListMyBookingsParams,
@@ -507,6 +508,83 @@ export function useGetDashboard<TData = Awaited<ReturnType<typeof getDashboard>>
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetDashboardQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListHomeSlidesUrl = () => {
+
+
+
+
+  return `/api/home-slides`
+}
+
+/**
+ * @summary Active home banner slides (public)
+ */
+export const listHomeSlides = async ( options?: RequestInit): Promise<HomeSlide[]> => {
+
+  return customFetch<HomeSlide[]>(getListHomeSlidesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListHomeSlidesQueryKey = () => {
+    return [
+    `/api/home-slides`
+    ] as const;
+    }
+
+
+export const getListHomeSlidesQueryOptions = <TData = Awaited<ReturnType<typeof listHomeSlides>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listHomeSlides>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListHomeSlidesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listHomeSlides>>> = ({ signal }) => listHomeSlides({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listHomeSlides>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListHomeSlidesQueryResult = NonNullable<Awaited<ReturnType<typeof listHomeSlides>>>
+export type ListHomeSlidesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Active home banner slides (public)
+ */
+
+export function useListHomeSlides<TData = Awaited<ReturnType<typeof listHomeSlides>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listHomeSlides>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListHomeSlidesQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

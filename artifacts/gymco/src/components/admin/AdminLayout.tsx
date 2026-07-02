@@ -26,6 +26,7 @@ import {
   BookOpen,
   Megaphone,
   LifeBuoy,
+  GalleryHorizontalEnd,
   Menu,
   X,
 } from "lucide-react";
@@ -173,6 +174,11 @@ const SECTIONS: Section[] = [
   {
     title: "Content",
     items: [
+      {
+        label: "Home Slider",
+        href: "/admin/home-slider",
+        icon: <GalleryHorizontalEnd className="h-4 w-4" />,
+      },
       {
         label: "Blog Posts",
         href: "/admin/blogs",

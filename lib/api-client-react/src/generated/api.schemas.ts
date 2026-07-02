@@ -78,6 +78,26 @@ export interface UserProfileUpdate {
   weeklyGoal?: number;
 }
 
+export type HomeSlideKind = typeof HomeSlideKind[keyof typeof HomeSlideKind];
+
+
+export const HomeSlideKind = {
+  image: 'image',
+  gif: 'gif',
+  youtube: 'youtube',
+} as const;
+
+export interface HomeSlide {
+  id: number;
+  kind: HomeSlideKind;
+  /** db-image URL / GIF URL, or a YouTube URL when kind=youtube */
+  mediaUrl: string;
+  title: string;
+  subtitle: string;
+  ctaLabel: string;
+  ctaUrl: string;
+}
+
 export interface Gym {
   id: number;
   name: string;

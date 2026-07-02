@@ -22,6 +22,7 @@ import aiRouter from "./ai";
 import agencyRouter from "./agency";
 import trackingRouter from "./tracking";
 import challengesRouter from "./challenges";
+import homeSlidesRouter from "./homeSlides";
 
 const router: IRouter = Router();
 
@@ -48,5 +49,6 @@ router.use(aiRouter);
 router.use(agencyRouter);
 router.use(trackingRouter);
 router.use(challengesRouter);
+router.use(homeSlidesRouter);
 
 export default router;

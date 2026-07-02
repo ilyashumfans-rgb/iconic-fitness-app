@@ -1,4 +1,4 @@
-import { useAuth, useUser } from "@clerk/expo";
+import { useAuth } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
 import {
   getGetMeQueryKey,
@@ -12,8 +12,10 @@ import {
   useListClasses,
   useListGyms,
   useListMyBookings,
+  useListHomeSlides,
   type ClassSession,
   type Gym,
+  type HomeSlide,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
@@ -82,7 +84,6 @@ const STORY_VIDEOS: StoryVideo[] = [
 export default function HomeScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { user } = useUser();
   const { isSignedIn } = useAuth();
   const queryClient = useQueryClient();
 
@@ -178,7 +179,6 @@ export default function HomeScreen() {
   );
 
   const summary = summaryQuery.data;
-  const firstName = user?.firstName ?? meQuery.data?.name?.split(" ")[0] ?? "";
 
   const calRatio = summary ? summary.caloriesIn / (summary.calorieGoal || 1) : 0;
   const waterRatio = summary ? summary.waterMl / (summary.waterGoalMl || 1) : 0;
@@ -190,37 +190,8 @@ export default function HomeScreen() {
       onRefresh={refetchAll}
       contentContainerStyle={{ paddingTop: 8 }}
     >
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.brandRow}>
-          <Image
-            source={require("@/assets/images/auth-logo-mark.png")}
-            style={styles.brandLogo}
-            resizeMode="contain"
-          />
-          <View style={{ flex: 1 }}>
-            <AppText muted size={13}>
-              {greeting()}
-            </AppText>
-            <AppText weight="700" size={22}>
-              {firstName ? firstName : "Welcome to Iconic"}
-            </AppText>
-          </View>
-        </View>
-        {isSignedIn ? (
-          <View
-            style={[
-              styles.streakPill,
-              { backgroundColor: colors.accent, borderColor: colors.border },
-            ]}
-          >
-            <Feather name="zap" size={15} color={colors.primary} />
-            <AppText weight="700" size={14} color={colors.primary}>
-              {summary?.streakDays ?? 0}
-            </AppText>
-          </View>
-        ) : null}
-      </View>
+      {/* Home banner slider (admin-managed) — full-bleed at the very top */}
+      <HeroSlider gyms={heroGyms} onExplore={() => openExternal(exploreUrl)} />
 
       {/* AI Coach — members only */}
       {isSignedIn ? (
@@ -517,18 +488,21 @@ export default function HomeScreen() {
           </Card>
         </Pressable>
       )}
-
-      {/* Hero slider */}
-      <HeroSlider gyms={heroGyms} onExplore={() => openExternal(exploreUrl)} />
     </Screen>
   );
 }
 
-function greeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
+type RenderSlide =
+  | { key: string; type: "brand" }
+  | { key: string; type: "gym"; gym: Gym }
+  | { key: string; type: "admin"; slide: HomeSlide };
+
+function youtubeThumb(url: string): string | undefined {
+  const m = url.match(
+    /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/,
+  );
+  const id = m ? m[1] : /^[\w-]{11}$/.test(url.trim()) ? url.trim() : null;
+  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : undefined;
 }
 
 function HeroSlider({
@@ -540,17 +514,44 @@ function HeroSlider({
 }) {
   const colors = useColors();
   const { width } = useWindowDimensions();
-  const SLIDE_W = width - 40;
+  const SLIDE_W = width; // full-bleed, edge to edge
   const scrollRef = useRef<ScrollView>(null);
   const [active, setActive] = useState(0);
   const activeRef = useRef(0);
 
-  // The first slide is an always-present brand intro; gyms follow.
-  const total = gyms.length + 1;
+  const slidesQuery = useListHomeSlides();
+  const adminSlides = slidesQuery.data ?? [];
+
+  // Admin-managed slides take over the banner entirely. When none exist yet
+  // (fresh install / prod before setup) we fall back to a code default so the
+  // banner is never empty: a brand intro followed by the top gyms.
+  const slides: RenderSlide[] = useMemo(() => {
+    if (adminSlides.length > 0) {
+      return adminSlides.map((s) => ({
+        key: `a${s.id}`,
+        type: "admin" as const,
+        slide: s,
+      }));
+    }
+    return [
+      { key: "brand", type: "brand" as const },
+      ...gyms.map((g) => ({ key: `g${g.id}`, type: "gym" as const, gym: g })),
+    ];
+  }, [adminSlides, gyms]);
+
+  const total = slides.length;
 
   useEffect(() => {
     activeRef.current = active;
   }, [active]);
+
+  // Keep the active index valid if the slide count shrinks.
+  useEffect(() => {
+    if (active > total - 1) {
+      setActive(0);
+      scrollRef.current?.scrollTo({ x: 0, animated: false });
+    }
+  }, [total, active]);
 
   useEffect(() => {
     if (total <= 1) return;
@@ -558,7 +559,7 @@ function HeroSlider({
       const next = (activeRef.current + 1) % total;
       scrollRef.current?.scrollTo({ x: next * SLIDE_W, animated: true });
       setActive(next);
-    }, 4000);
+    }, 4500);
     return () => clearInterval(t);
   }, [total, SLIDE_W]);
 
@@ -566,6 +567,20 @@ function HeroSlider({
     const idx = Math.round(e.nativeEvent.contentOffset.x / SLIDE_W);
     setActive(idx);
   };
+
+  const onAdminPress = (s: HomeSlide) => {
+    if (s.kind === "youtube") {
+      openExternal(s.mediaUrl);
+      return;
+    }
+    if (s.ctaUrl) {
+      openExternal(s.ctaUrl);
+      return;
+    }
+    onExplore();
+  };
+
+  if (total === 0) return null;
 
   return (
     <View style={styles.sliderWrap}>
@@ -576,84 +591,209 @@ function HeroSlider({
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={onMomentumEnd}
       >
-        {/* Brand intro slide */}
-        <Pressable onPress={onExplore} style={{ width: SLIDE_W }}>
-          <View style={[styles.slide, { backgroundColor: colors.card }]}>
-            <LinearGradient
-              colors={colors.primaryGradient as [string, string]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-            <View style={styles.slideContent}>
-              <AppText weight="700" size={12} color={colors.primaryForeground}>
-                ICONIC FITNESS
-              </AppText>
-              <AppText
-                weight="700"
-                size={26}
-                color={colors.primaryForeground}
-                style={{ marginTop: 6 }}
+        {slides.map((item) => {
+          if (item.type === "brand") {
+            return (
+              <Pressable
+                key={item.key}
+                onPress={onExplore}
+                style={{ width: SLIDE_W }}
               >
-                Train like you mean it.
-              </AppText>
-              <View style={styles.sliderCtaPill}>
-                <AppText weight="700" size={13} color={colors.primary}>
-                  Explore gyms
-                </AppText>
-                <Feather name="arrow-right" size={14} color={colors.primary} />
-              </View>
-            </View>
-          </View>
-        </Pressable>
+                <View style={[styles.slide, { backgroundColor: colors.card }]}>
+                  <LinearGradient
+                    colors={colors.primaryGradient as [string, string]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <View style={styles.slideContent}>
+                    <AppText
+                      weight="700"
+                      size={12}
+                      color={colors.primaryForeground}
+                    >
+                      ICONIC FITNESS
+                    </AppText>
+                    <AppText
+                      weight="700"
+                      size={26}
+                      color={colors.primaryForeground}
+                      style={{ marginTop: 6 }}
+                    >
+                      Train like you mean it.
+                    </AppText>
+                    <View style={styles.sliderCtaPill}>
+                      <AppText weight="700" size={13} color={colors.primary}>
+                        Explore gyms
+                      </AppText>
+                      <Feather
+                        name="arrow-right"
+                        size={14}
+                        color={colors.primary}
+                      />
+                    </View>
+                  </View>
+                </View>
+              </Pressable>
+            );
+          }
 
-        {/* Gym slides */}
-        {gyms.map((g) => {
-          const img = resolveImageUrl(g.heroImage);
+          if (item.type === "gym") {
+            const g = item.gym;
+            const img = resolveImageUrl(g.heroImage);
+            return (
+              <Pressable
+                key={item.key}
+                onPress={onExplore}
+                style={{ width: SLIDE_W }}
+              >
+                <View style={[styles.slide, { backgroundColor: colors.card }]}>
+                  {img ? (
+                    <Image
+                      source={{ uri: img }}
+                      style={StyleSheet.absoluteFill}
+                    />
+                  ) : null}
+                  <LinearGradient
+                    colors={["transparent", "rgba(10,12,8,0.92)"]}
+                    start={{ x: 0.5, y: 0 }}
+                    end={{ x: 0.5, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <View style={styles.slideTopRow}>
+                    {g.isPremium ? (
+                      <View
+                        style={[styles.badge, { backgroundColor: colors.primary }]}
+                      >
+                        <AppText
+                          weight="700"
+                          size={10}
+                          color={colors.primaryForeground}
+                        >
+                          PREMIUM
+                        </AppText>
+                      </View>
+                    ) : (
+                      <View />
+                    )}
+                    <View style={styles.ratingPill}>
+                      <Feather name="star" size={11} color={colors.primary} />
+                      <AppText weight="700" size={11} color={colors.foreground}>
+                        {g.rating.toFixed(1)}
+                      </AppText>
+                    </View>
+                  </View>
+                  <View style={styles.slideContent}>
+                    <AppText weight="700" size={22} color={colors.foreground}>
+                      {g.name}
+                    </AppText>
+                    <View style={styles.slideMetaRow}>
+                      <Feather
+                        name="map-pin"
+                        size={13}
+                        color={colors.mutedForeground}
+                      />
+                      <AppText size={13} color={colors.mutedForeground}>
+                        {g.area || g.city}
+                      </AppText>
+                      <AppText size={13} color={colors.primary} weight="700">
+                        {"  ₹"}
+                        {g.priceFrom}/mo
+                      </AppText>
+                    </View>
+                  </View>
+                </View>
+              </Pressable>
+            );
+          }
+
+          // Admin-managed slide (image / gif / youtube)
+          const s = item.slide;
+          const isYt = s.kind === "youtube";
+          const mediaUri = isYt
+            ? youtubeThumb(s.mediaUrl)
+            : resolveImageUrl(s.mediaUrl);
+          const hasText = !!(s.title || s.subtitle || s.ctaLabel);
           return (
-            <Pressable key={g.id} onPress={onExplore} style={{ width: SLIDE_W }}>
+            <Pressable
+              key={item.key}
+              onPress={() => onAdminPress(s)}
+              style={{ width: SLIDE_W }}
+            >
               <View style={[styles.slide, { backgroundColor: colors.card }]}>
-                {img ? (
-                  <Image source={{ uri: img }} style={StyleSheet.absoluteFill} />
+                {mediaUri ? (
+                  <Image
+                    source={{ uri: mediaUri }}
+                    style={StyleSheet.absoluteFill}
+                    resizeMode="cover"
+                  />
                 ) : null}
                 <LinearGradient
-                  colors={["transparent", "rgba(10,12,8,0.92)"]}
+                  colors={[
+                    "rgba(10,12,8,0.10)",
+                    "rgba(10,12,8,0.45)",
+                    "rgba(10,12,8,0.92)",
+                  ]}
+                  locations={[0, 0.55, 1]}
                   start={{ x: 0.5, y: 0 }}
                   end={{ x: 0.5, y: 1 }}
                   style={StyleSheet.absoluteFill}
                 />
-                <View style={styles.slideTopRow}>
-                  {g.isPremium ? (
-                    <View style={[styles.badge, { backgroundColor: colors.primary }]}>
-                      <AppText weight="700" size={10} color={colors.primaryForeground}>
-                        PREMIUM
-                      </AppText>
+                {isYt ? (
+                  <View style={styles.slidePlayWrap} pointerEvents="none">
+                    <View
+                      style={[
+                        styles.slidePlayBtn,
+                        { backgroundColor: colors.primary },
+                      ]}
+                    >
+                      <Feather
+                        name="play"
+                        size={22}
+                        color={colors.primaryForeground}
+                      />
                     </View>
-                  ) : (
-                    <View />
-                  )}
-                  <View style={styles.ratingPill}>
-                    <Feather name="star" size={11} color={colors.primary} />
-                    <AppText weight="700" size={11} color={colors.foreground}>
-                      {g.rating.toFixed(1)}
-                    </AppText>
                   </View>
-                </View>
-                <View style={styles.slideContent}>
-                  <AppText weight="700" size={22} color={colors.foreground}>
-                    {g.name}
-                  </AppText>
-                  <View style={styles.slideMetaRow}>
-                    <Feather name="map-pin" size={13} color={colors.mutedForeground} />
-                    <AppText size={13} color={colors.mutedForeground}>
-                      {g.area || g.city}
-                    </AppText>
-                    <AppText size={13} color={colors.primary} weight="700">
-                      {"  ₹"}
-                      {g.priceFrom}/mo
-                    </AppText>
+                ) : null}
+                {hasText ? (
+                  <View style={styles.slideContent}>
+                    {s.title ? (
+                      <AppText weight="700" size={24} color="#FFFFFF">
+                        {s.title}
+                      </AppText>
+                    ) : null}
+                    {s.subtitle ? (
+                      <AppText
+                        size={14}
+                        color="rgba(255,255,255,0.85)"
+                        style={{ marginTop: 4 }}
+                      >
+                        {s.subtitle}
+                      </AppText>
+                    ) : null}
+                    {s.ctaLabel ? (
+                      <View
+                        style={[
+                          styles.sliderCtaPill,
+                          { backgroundColor: colors.primary },
+                        ]}
+                      >
+                        <AppText
+                          weight="700"
+                          size={13}
+                          color={colors.primaryForeground}
+                        >
+                          {s.ctaLabel}
+                        </AppText>
+                        <Feather
+                          name="arrow-right"
+                          size={14}
+                          color={colors.primaryForeground}
+                        />
+                      </View>
+                    ) : null}
                   </View>
-                </View>
+                ) : null}
               </View>
             </Pressable>
           );
@@ -661,20 +801,22 @@ function HeroSlider({
       </ScrollView>
 
       {/* Dots */}
-      <View style={styles.dots}>
-        {Array.from({ length: total }).map((_, i) => (
-          <View
-            key={i}
-            style={[
-              styles.dot,
-              {
-                backgroundColor: i === active ? colors.primary : colors.border,
-                width: i === active ? 22 : 7,
-              },
-            ]}
-          />
-        ))}
-      </View>
+      {total > 1 ? (
+        <View style={styles.dots}>
+          {slides.map((item, i) => (
+            <View
+              key={item.key}
+              style={[
+                styles.dot,
+                {
+                  backgroundColor: i === active ? colors.primary : colors.border,
+                  width: i === active ? 22 : 7,
+                },
+              ]}
+            />
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -1234,13 +1376,26 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
 
-  // Slider
-  sliderWrap: { marginBottom: 28 },
+  // Slider — full-bleed banner pinned to the top of the screen. Negative
+  // margins cancel the Screen's horizontal padding and top padding so it sits
+  // edge-to-edge and flush with the top.
+  sliderWrap: { marginHorizontal: -20, marginTop: -8, marginBottom: 24 },
   slide: {
-    height: 210,
-    borderRadius: 22,
+    height: 230,
     overflow: "hidden",
     justifyContent: "flex-end",
+  },
+  slidePlayWrap: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  slidePlayBtn: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
   },
   slideTopRow: {
     position: "absolute",

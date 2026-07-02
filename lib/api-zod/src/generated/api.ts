@@ -196,6 +196,21 @@ export const GetDashboardResponse = zod.object({
 
 
 /**
+ * @summary Active home banner slides (public)
+ */
+export const ListHomeSlidesResponseItem = zod.object({
+  "id": zod.number(),
+  "kind": zod.enum(['image', 'gif', 'youtube']),
+  "mediaUrl": zod.string().describe('db-image URL \/ GIF URL, or a YouTube URL when kind=youtube'),
+  "title": zod.string(),
+  "subtitle": zod.string(),
+  "ctaLabel": zod.string(),
+  "ctaUrl": zod.string()
+})
+export const ListHomeSlidesResponse = zod.array(ListHomeSlidesResponseItem)
+
+
+/**
  * @summary Search and filter gyms
  */
 export const ListGymsQueryParams = zod.object({

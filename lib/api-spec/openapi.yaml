@@ -122,6 +122,19 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/DashboardSummary" }
 
+  /home-slides:
+    get:
+      operationId: listHomeSlides
+      tags: [gyms]
+      summary: Active home banner slides (public)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/HomeSlide" }
   /gyms:
     get:
       operationId: listGyms
@@ -765,6 +778,18 @@ components:
         city: { type: string }
         weeklyGoal: { type: integer }
 
+    HomeSlide:
+      type: object
+      required: [id, kind, mediaUrl, title, subtitle, ctaLabel, ctaUrl]
+      properties:
+        id: { type: integer }
+        kind: { type: string, enum: [image, gif, youtube] }
+        mediaUrl:
+          { type: string, description: "db-image URL / GIF URL, or a YouTube URL when kind=youtube" }
+        title: { type: string }
+        subtitle: { type: string }
+        ctaLabel: { type: string }
+        ctaUrl: { type: string }
     Gym:
       type: object
       required:
