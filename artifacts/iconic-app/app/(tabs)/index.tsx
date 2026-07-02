@@ -1397,7 +1397,7 @@ const styles = StyleSheet.create({
   // edge-to-edge and flush with the top.
   sliderWrap: { marginHorizontal: -20, marginTop: 0, marginBottom: 24 },
   slide: {
-    height: 230,
+    height: 300,
     overflow: "hidden",
     justifyContent: "flex-end",
   },
