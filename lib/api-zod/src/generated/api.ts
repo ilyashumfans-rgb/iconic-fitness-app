@@ -512,6 +512,40 @@ export const GetMyMembershipResponse = zod.union([zod.object({
 
 
 /**
+ * @summary List the member's notifications (newest first)
+ */
+export const ListMyNotificationsResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "link": zod.string(),
+  "readAt": zod.union([zod.coerce.date(),zod.null()]),
+  "createdAt": zod.coerce.date()
+})
+export const ListMyNotificationsResponse = zod.array(ListMyNotificationsResponseItem)
+
+
+/**
+ * @summary Mark one notification as read
+ */
+export const MarkNotificationReadParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const MarkNotificationReadResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Mark all of the member's notifications as read
+ */
+export const MarkAllNotificationsReadResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
  * @summary List the user's bookings
  */
 export const ListMyBookingsQueryParams = zod.object({

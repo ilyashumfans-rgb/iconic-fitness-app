@@ -37,7 +37,7 @@ Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
     shouldShowList: true,
-    shouldPlaySound: false,
+    shouldPlaySound: true,
     shouldSetBadge: false,
   }),
 });
@@ -77,6 +77,10 @@ function RootLayoutNav() {
         <Stack.Screen name="trainer/[id]" />
         <Stack.Screen name="package/[id]" />
         <Stack.Screen name="challenge/[id]" />
+        <Stack.Screen
+          name="notifications"
+          options={{ presentation: "modal", headerShown: false }}
+        />
         <Stack.Screen
           name="water"
           options={{ presentation: "modal", headerShown: false }}

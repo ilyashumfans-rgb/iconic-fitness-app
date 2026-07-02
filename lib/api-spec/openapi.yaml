@@ -347,6 +347,47 @@ paths:
                   - $ref: "#/components/schemas/MyMembership"
                   - type: "null"
 
+  /notifications/mine:
+    get:
+      operationId: listMyNotifications
+      tags: [notifications]
+      summary: List the member's notifications (newest first)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Notification" }
+  /notifications/mine/{id}/read:
+    post:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark one notification as read
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+  /notifications/mine/read-all:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all of the member's notifications as read
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+
   /bookings:
     get:
       operationId: listMyBookings
@@ -1139,6 +1180,21 @@ components:
       required: [ok]
       properties:
         ok: { type: boolean }
+
+    Notification:
+      type: object
+      required: [id, title, body, link, readAt, createdAt]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        body: { type: string }
+        link: { type: string }
+        readAt:
+          oneOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        createdAt: { type: string, format: date-time }
 
     Goals:
       type: object

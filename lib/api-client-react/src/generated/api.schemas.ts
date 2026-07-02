@@ -405,6 +405,15 @@ export interface OkResponse {
   ok: boolean;
 }
 
+export interface Notification {
+  id: number;
+  title: string;
+  body: string;
+  link: string;
+  readAt: string | null;
+  createdAt: string;
+}
+
 export interface Goals {
   waterGoalMl: number;
   calorieGoal: number;

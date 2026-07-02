@@ -49,6 +49,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AICoachCard } from "@/components/AICoachCard";
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
+import { NotificationBell } from "@/components/NotificationBell";
 import { PackageCard } from "@/components/PackageCard";
 import { ProgressRing } from "@/components/ProgressRing";
 import { Screen } from "@/components/Screen";
@@ -251,6 +252,7 @@ export default function HomeScreen() {
   const stepRatio = summary ? summary.steps / (summary.stepGoal || 1) : 0;
 
   return (
+    <View style={{ flex: 1 }}>
     <Screen
       refreshing={summaryQuery.isRefetching || gymsQuery.isRefetching}
       onRefresh={refetchAll}
@@ -534,6 +536,8 @@ export default function HomeScreen() {
         </Pressable>
       )}
     </Screen>
+      <NotificationBell />
+    </View>
   );
 }
 

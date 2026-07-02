@@ -75,12 +75,55 @@ export const ACTION_REMINDERS: ActionReminder[] = [
   },
 ];
 
+const ANDROID_CHANNEL_ID = "reminders";
+
+/**
+ * On Android the notification sound + heads-up banner come from the channel, not
+ * the per-notification content. Create a high-importance channel with the default
+ * sound so reminders actually chime and pop up. No-op on iOS/web.
+ */
+export async function ensureAndroidChannel(): Promise<void> {
+  if (Platform.OS !== "android") return;
+  await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_ID, {
+    name: "Reminders",
+    importance: Notifications.AndroidImportance.HIGH,
+    sound: "default",
+    vibrationPattern: [0, 250, 250, 250],
+  });
+}
+
 export async function ensureNotificationPermission(): Promise<boolean> {
   if (Platform.OS === "web") return false;
   const current = await Notifications.getPermissionsAsync();
   if (current.granted) return true;
   const requested = await Notifications.requestPermissionsAsync();
   return requested.granted;
+}
+
+/**
+ * Fire a notification right now (with sound). Used when the app detects a new
+ * server-side notification while open, so the member gets an audible heads-up
+ * banner even without push infrastructure. No-op on web / if permission denied.
+ */
+export async function presentLocalNotification(
+  title: string,
+  body: string,
+): Promise<void> {
+  if (Platform.OS === "web") return;
+  const granted = await ensureNotificationPermission();
+  if (!granted) return;
+  await ensureAndroidChannel();
+  await Notifications.scheduleNotificationAsync({
+    content: { title, body, sound: "default" },
+    trigger:
+      Platform.OS === "android"
+        ? ({
+            type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+            seconds: 1,
+            channelId: ANDROID_CHANNEL_ID,
+          } as Notifications.TimeIntervalTriggerInput)
+        : null,
+  });
 }
 
 /**
@@ -93,14 +136,16 @@ export async function scheduleActionReminders(): Promise<boolean> {
   const granted = await ensureNotificationPermission();
   if (!granted) return false;
 
+  await ensureAndroidChannel();
   await Notifications.cancelAllScheduledNotificationsAsync();
   for (const r of ACTION_REMINDERS) {
     await Notifications.scheduleNotificationAsync({
-      content: { title: r.title, body: r.body },
+      content: { title: r.title, body: r.body, sound: "default" },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
         hour: r.hour,
         minute: r.minute,
+        channelId: ANDROID_CHANNEL_ID,
       },
     });
   }

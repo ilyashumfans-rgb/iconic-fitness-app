@@ -45,6 +45,12 @@ export default function MoreScreen() {
       action: () => router.push("/plans"),
     },
     {
+      title: "Notifications",
+      subtitle: "Updates, offers and announcements",
+      icon: "bell",
+      action: () => router.push("/notifications"),
+    },
+    {
       title: "Profile",
       subtitle: "Goals, reminders, theme and account",
       icon: "user",

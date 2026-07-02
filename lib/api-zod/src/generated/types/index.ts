@@ -58,6 +58,7 @@ export * from './membershipPlan';
 export * from './membershipPlanBillingPeriod';
 export * from './myMembership';
 export * from './myMembershipStatus';
+export * from './notification';
 export * from './okResponse';
 export * from './progressDay';
 export * from './progressReport';
