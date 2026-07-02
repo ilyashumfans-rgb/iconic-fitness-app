@@ -162,9 +162,9 @@ function SignInContent() {
           showsVerticalScrollIndicator={false}
           bounces={false}
         >
-          {/* Brand mark — small, top, centered */}
+          {/* Brand logo — top, centered */}
           <Image
-            source={require("@/assets/images/auth-logo-mark.png")}
+            source={require("@/assets/images/auth-full-logo.png")}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -303,8 +303,8 @@ const styles = StyleSheet.create({
     opacity: 0.1,
   },
   logo: {
-    width: 128,
-    height: 128,
+    width: 180,
+    height: 180,
     alignSelf: "center",
   },
   eyebrow: { letterSpacing: 3, marginBottom: 2 },
