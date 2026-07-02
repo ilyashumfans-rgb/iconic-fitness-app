@@ -1,5 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import {
   ActivityIndicator,
   Platform,
@@ -36,22 +37,21 @@ export function Button({
 }: Props) {
   const colors = useColors();
   const isDisabled = disabled || loading;
+  const isPrimary = variant === "primary";
 
-  const bg =
-    variant === "primary"
-      ? colors.primary
-      : variant === "danger"
-        ? colors.destructive
-        : variant === "secondary"
-          ? colors.elevated
-          : "transparent";
+  const bg = isPrimary
+    ? "transparent"
+    : variant === "danger"
+      ? colors.destructive
+      : variant === "secondary"
+        ? colors.elevated
+        : "transparent";
 
-  const fg =
-    variant === "primary"
-      ? colors.primaryForeground
-      : variant === "danger"
-        ? colors.destructiveForeground
-        : colors.foreground;
+  const fg = isPrimary
+    ? "#FFFFFF"
+    : variant === "danger"
+      ? colors.destructiveForeground
+      : colors.foreground;
 
   const handlePress = () => {
     if (isDisabled) return;
@@ -76,9 +76,18 @@ export function Button({
           opacity: isDisabled ? 0.5 : pressed ? 0.85 : 1,
           alignSelf: full ? "stretch" : "flex-start",
           paddingHorizontal: full ? 16 : 22,
+          overflow: "hidden",
         },
       ]}
     >
+      {isPrimary ? (
+        <LinearGradient
+          colors={colors.primaryGradient as [string, string]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      ) : null}
       {loading ? (
         <ActivityIndicator color={fg} />
       ) : (

@@ -612,7 +612,7 @@ function HeroSlider({
         <Pressable onPress={onExplore} style={{ width: SLIDE_W }}>
           <View style={[styles.slide, { backgroundColor: colors.card }]}>
             <LinearGradient
-              colors={[colors.primary, "#7C9A00"]}
+              colors={colors.primaryGradient as [string, string]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFill}
@@ -946,7 +946,7 @@ function NearbyGyms({ onOpenGym }: { onOpenGym: () => void }) {
       <Pressable onPress={request} style={{ marginBottom: 28 }}>
         <View style={styles.nearCta}>
           <LinearGradient
-            colors={[colors.primary, "#7C9A00"]}
+            colors={colors.primaryGradient as [string, string]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}
@@ -1135,16 +1135,25 @@ function ClassCard({
           style={({ pressed }) => [
             styles.bookBtn,
             {
-              backgroundColor: booked || full ? colors.elevated : colors.primary,
+              backgroundColor: booked || full ? colors.elevated : "transparent",
               borderRadius: colors.radius - 6,
               opacity: pressed ? 0.85 : 1,
+              overflow: "hidden",
             },
           ]}
         >
+          {!booked && !full ? (
+            <LinearGradient
+              colors={colors.primaryGradient as [string, string]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+          ) : null}
           <AppText
             weight="700"
             size={13}
-            color={booked || full ? colors.mutedForeground : colors.primaryForeground}
+            color={booked || full ? colors.mutedForeground : "#FFFFFF"}
           >
             {loading ? "Booking…" : booked ? "Booked ✓" : full ? "Full" : "Book now"}
           </AppText>

@@ -147,10 +147,16 @@ export function WorkoutDetailView({
         >
           <Pressable
             onPress={onStart}
-            style={[styles.startBtn, { backgroundColor: colors.primary }]}
+            style={[styles.startBtn, { overflow: "hidden" }]}
           >
-            <Feather name="play" size={20} color={colors.primaryForeground} />
-            <AppText weight="700" size={16} color={colors.primaryForeground}>
+            <LinearGradient
+              colors={colors.primaryGradient as [string, string]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <Feather name="play" size={20} color="#FFFFFF" />
+            <AppText weight="700" size={16} color="#FFFFFF">
               Start workout
             </AppText>
           </Pressable>

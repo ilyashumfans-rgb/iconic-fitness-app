@@ -6,6 +6,7 @@ import {
   type AiChatMessage,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { LinearGradient } from "expo-linear-gradient";
 import { Redirect } from "expo-router";
 import { useRef, useState } from "react";
 import {
@@ -14,6 +15,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  StyleSheet,
   TextInput,
   View,
 } from "react-native";
@@ -220,11 +222,17 @@ export default function CoachScreen() {
               borderRadius: 22,
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: colors.primary,
+              overflow: "hidden",
               opacity: !input.trim() || coach.isPending ? 0.5 : 1,
             }}
           >
-            <Feather name="arrow-up" size={20} color={colors.primaryForeground} />
+            <LinearGradient
+              colors={colors.primaryGradient as [string, string]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <Feather name="arrow-up" size={20} color="#FFFFFF" />
           </Pressable>
         </View>
       </KeyboardAvoidingView>

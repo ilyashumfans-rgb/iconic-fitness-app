@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -131,10 +132,16 @@ export default function GenerateWorkoutScreen() {
             setSeed((s) => s + 1);
             setGenerated(true);
           }}
-          style={[styles.cta, { backgroundColor: colors.primary }]}
+          style={[styles.cta, { overflow: "hidden" }]}
         >
-          <Feather name="zap" size={20} color={colors.primaryForeground} />
-          <AppText weight="700" size={16} color={colors.primaryForeground}>
+          <LinearGradient
+            colors={colors.primaryGradient as [string, string]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <Feather name="zap" size={20} color="#FFFFFF" />
+          <AppText weight="700" size={16} color="#FFFFFF">
             Generate workout
           </AppText>
         </Pressable>

@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
@@ -125,9 +126,15 @@ export function WorkoutPlayer({
 
           <Pressable
             onPress={onClose}
-            style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
+            style={[styles.primaryBtn, { overflow: "hidden" }]}
           >
-            <AppText weight="700" size={16} color={colors.primaryForeground}>
+            <LinearGradient
+              colors={colors.primaryGradient as [string, string]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <AppText weight="700" size={16} color="#FFFFFF">
               Done
             </AppText>
           </Pressable>
@@ -219,10 +226,16 @@ export function WorkoutPlayer({
 
             <Pressable
               onPress={completeSet}
-              style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
+              style={[styles.primaryBtn, { overflow: "hidden" }]}
             >
-              <Feather name="check" size={20} color={colors.primaryForeground} />
-              <AppText weight="700" size={16} color={colors.primaryForeground}>
+              <LinearGradient
+                colors={colors.primaryGradient as [string, string]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <Feather name="check" size={20} color="#FFFFFF" />
+              <AppText weight="700" size={16} color="#FFFFFF">
                 {index + 1 >= steps.length ? "Finish workout" : "Complete set"}
               </AppText>
             </Pressable>
