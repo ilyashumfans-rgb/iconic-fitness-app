@@ -13,15 +13,20 @@ import {
   useListGyms,
   useListMyBookings,
   useListHomeSlides,
+  useListStoreCategories,
+  useListStoreProducts,
   type ClassSession,
   type Gym,
   type HomeSlide,
+  type StoreCategory,
+  type StoreProduct,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import {
   Alert,
   Image,
@@ -47,7 +52,7 @@ import { useColors } from "@/hooks/useColors";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { istToday, formatClock, formatDateLabel } from "@/lib/dates";
 import { resolveImageUrl } from "@/lib/images";
-import { exploreUrl, openExternal, websiteUrl } from "@/lib/links";
+import { exploreUrl, openExternal, storeUrl, websiteUrl } from "@/lib/links";
 
 type StoryVideo = {
   name: string;
@@ -239,6 +244,9 @@ export default function HomeScreen() {
           </Card>
         </Pressable>
       ) : null}
+
+      {/* Shop by category */}
+      <ShopByCategory />
 
       {/* Gyms near me (location-aware) */}
       <NearbyGyms onOpenGym={() => openExternal(exploreUrl)} />
@@ -1020,6 +1028,161 @@ function GymCard({
   );
 }
 
+// Fallback gradient palettes + icons keyed by category slug so a category with
+// no product imagery still renders a rich, on-brand tile.
+const CATEGORY_META: Record<
+  string,
+  { icon: keyof typeof Feather.glyphMap; colors: [string, string] }
+> = {
+  apparel: { icon: "shopping-bag", colors: ["#1E3A2F", "#0A0C08"] },
+  equipment: { icon: "activity", colors: ["#2A2352", "#0A0C08"] },
+  supplements: { icon: "droplet", colors: ["#123A44", "#0A0C08"] },
+  accessories: { icon: "watch", colors: ["#402438", "#0A0C08"] },
+  wellness: { icon: "heart", colors: ["#3A2A12", "#0A0C08"] },
+};
+const CATEGORY_FALLBACK_GRADIENTS: [string, string][] = [
+  ["#1E3A2F", "#0A0C08"],
+  ["#2A2352", "#0A0C08"],
+  ["#123A44", "#0A0C08"],
+  ["#402438", "#0A0C08"],
+];
+
+function ShopByCategory() {
+  const catsQuery = useListStoreCategories();
+  const productsQuery = useListStoreProducts();
+
+  const cats = catsQuery.data ?? [];
+  const products = useMemo(
+    () => productsQuery.data ?? [],
+    [productsQuery.data],
+  );
+
+  // First active product image + item count per category slug.
+  const byCategory = useMemo(() => {
+    const map = new Map<string, { image?: string; count: number }>();
+    for (const p of products) {
+      const entry = map.get(p.category) ?? { image: undefined, count: 0 };
+      entry.count += 1;
+      if (!entry.image && p.imageUrl) entry.image = p.imageUrl;
+      map.set(p.category, entry);
+    }
+    return map;
+  }, [products]);
+
+  if (catsQuery.isLoading) {
+    return (
+      <>
+        <SectionHeader title="Shop by category" />
+        <View style={{ height: 190, justifyContent: "center", marginBottom: 28 }}>
+          <LoadingView />
+        </View>
+      </>
+    );
+  }
+  if (cats.length === 0) return null;
+
+  return (
+    <>
+      <SectionHeader
+        title="Shop by category"
+        action="Shop all"
+        onAction={() => openExternal(storeUrl)}
+      />
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.catRow}
+        style={{ marginBottom: 28 }}
+      >
+        {cats.map((c, i) => (
+          <CategoryCard
+            key={c.slug}
+            category={c}
+            index={i}
+            image={byCategory.get(c.slug)?.image}
+            count={byCategory.get(c.slug)?.count ?? 0}
+          />
+        ))}
+      </ScrollView>
+    </>
+  );
+}
+
+function CategoryCard({
+  category,
+  index,
+  image,
+  count,
+}: {
+  category: StoreCategory;
+  index: number;
+  image?: string;
+  count: number;
+}) {
+  const colors = useColors();
+  const meta = CATEGORY_META[category.slug];
+  const gradient =
+    meta?.colors ??
+    CATEGORY_FALLBACK_GRADIENTS[index % CATEGORY_FALLBACK_GRADIENTS.length];
+  const icon = meta?.icon ?? "tag";
+  const uri = resolveImageUrl(image);
+
+  return (
+    <Animated.View entering={FadeInDown.delay(index * 80).springify().damping(16)}>
+      <Pressable
+        onPress={() => openExternal(`${storeUrl}?category=${category.slug}`)}
+        style={({ pressed }) => [
+          styles.catCard,
+          { transform: [{ scale: pressed ? 0.96 : 1 }] },
+        ]}
+      >
+        {/* Base gradient — always present (also the fallback when no image). */}
+        <LinearGradient
+          colors={gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        {uri ? (
+          <Image
+            source={{ uri }}
+            style={StyleSheet.absoluteFill}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.catIconWrap}>
+            <Feather name={icon} size={30} color={colors.primary} />
+          </View>
+        )}
+        {/* Bottom scrim so the label always reads. */}
+        <LinearGradient
+          colors={["transparent", "rgba(10,12,8,0.15)", "rgba(10,12,8,0.92)"]}
+          locations={[0, 0.45, 1]}
+          style={StyleSheet.absoluteFill}
+        />
+        {/* Lime arrow badge. */}
+        <View style={[styles.catArrow, { backgroundColor: colors.primary }]}>
+          <Feather name="arrow-up-right" size={16} color={colors.primaryForeground} />
+        </View>
+        <View style={styles.catLabel}>
+          <AppText weight="700" size={16} color="#FFFFFF">
+            {category.name}
+          </AppText>
+          {count > 0 ? (
+            <AppText size={12} color="#FFFFFF" style={{ opacity: 0.8, marginTop: 2 }}>
+              {count} {count === 1 ? "item" : "items"}
+            </AppText>
+          ) : (
+            <AppText size={12} color="#FFFFFF" style={{ opacity: 0.8, marginTop: 2 }}>
+              Shop now
+            </AppText>
+          )}
+        </View>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
 function NearbyGyms({ onOpenGym }: { onOpenGym: () => void }) {
   const colors = useColors();
   const { coords, status, request } = useUserLocation();
@@ -1430,6 +1593,32 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   dot: { height: 7, borderRadius: 4 },
+
+  // Shop by category
+  catRow: { gap: 14, paddingRight: 8, paddingVertical: 2 },
+  catCard: {
+    width: 150,
+    height: 190,
+    borderRadius: 22,
+    overflow: "hidden",
+    justifyContent: "flex-end",
+  },
+  catIconWrap: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  catArrow: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  catLabel: { padding: 14 },
 
   // Gym cards
   gymRow: { gap: 14, paddingRight: 8, paddingVertical: 2 },

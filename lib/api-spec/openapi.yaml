@@ -135,6 +135,41 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/HomeSlide" }
+  /store/categories:
+    get:
+      operationId: listStoreCategories
+      tags: [gyms]
+      summary: Active storefront product categories (public)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/StoreCategory" }
+  /store/products:
+    get:
+      operationId: listStoreProducts
+      tags: [gyms]
+      summary: Active storefront products (public)
+      parameters:
+        - in: query
+          name: category
+          required: false
+          schema: { type: string }
+        - in: query
+          name: q
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/StoreProduct" }
   /gyms:
     get:
       operationId: listGyms
@@ -790,6 +825,28 @@ components:
         subtitle: { type: string }
         ctaLabel: { type: string }
         ctaUrl: { type: string }
+    StoreCategory:
+      type: object
+      required: [name, slug, sortOrder]
+      properties:
+        name: { type: string }
+        slug: { type: string }
+        sortOrder: { type: integer }
+    StoreProduct:
+      type: object
+      required:
+        [id, name, slug, category, priceInr, originalPriceInr, imageUrl]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        slug: { type: string }
+        category: { type: string }
+        priceInr: { type: integer }
+        originalPriceInr: { type: integer }
+        imageUrl: { type: string }
+        gallery: { type: array, items: { type: string } }
+        stock: { type: integer }
+        status: { type: string }
     Gym:
       type: object
       required:

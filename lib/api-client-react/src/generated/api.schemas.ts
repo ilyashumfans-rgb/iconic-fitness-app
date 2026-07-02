@@ -98,6 +98,25 @@ export interface HomeSlide {
   ctaUrl: string;
 }
 
+export interface StoreCategory {
+  name: string;
+  slug: string;
+  sortOrder: number;
+}
+
+export interface StoreProduct {
+  id: number;
+  name: string;
+  slug: string;
+  category: string;
+  priceInr: number;
+  originalPriceInr: number;
+  imageUrl: string;
+  gallery?: string[];
+  stock?: number;
+  status?: string;
+}
+
 export interface Gym {
   id: number;
   name: string;
@@ -592,6 +611,11 @@ export interface CheckinInput {
   gymId: number;
   method?: CheckinInputMethod;
 }
+
+export type ListStoreProductsParams = {
+category?: string;
+q?: string;
+};
 
 export type ListGymsParams = {
 q?: string;

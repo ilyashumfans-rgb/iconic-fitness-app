@@ -211,6 +211,40 @@ export const ListHomeSlidesResponse = zod.array(ListHomeSlidesResponseItem)
 
 
 /**
+ * @summary Active storefront product categories (public)
+ */
+export const ListStoreCategoriesResponseItem = zod.object({
+  "name": zod.string(),
+  "slug": zod.string(),
+  "sortOrder": zod.number()
+})
+export const ListStoreCategoriesResponse = zod.array(ListStoreCategoriesResponseItem)
+
+
+/**
+ * @summary Active storefront products (public)
+ */
+export const ListStoreProductsQueryParams = zod.object({
+  "category": zod.coerce.string().optional(),
+  "q": zod.coerce.string().optional()
+})
+
+export const ListStoreProductsResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "slug": zod.string(),
+  "category": zod.string(),
+  "priceInr": zod.number(),
+  "originalPriceInr": zod.number(),
+  "imageUrl": zod.string(),
+  "gallery": zod.array(zod.string()).optional(),
+  "stock": zod.number().optional(),
+  "status": zod.string().optional()
+})
+export const ListStoreProductsResponse = zod.array(ListStoreProductsResponseItem)
+
+
+/**
  * @summary Search and filter gyms
  */
 export const ListGymsQueryParams = zod.object({

@@ -1,0 +1,71 @@
+Prompt: Premium Home Screen Redesign (Luxury Fitness App)
+
+Design a world-class, premium, luxury fitness app home screen that feels as polished as Apple, Nike Training Club, and Airbnb. The UI should instantly communicate trust, exclusivity, elegance, and high-end quality. Every element must feel intentional, spacious, refined, and visually satisfying.
+
+Design Direction
+Premium, minimal, modern, luxurious aesthetic.
+Clean layouts with generous white space.
+Soft rounded corners (20–28px) throughout.
+Perfect visual hierarchy with balanced spacing.
+Elegant typography using SF Pro Display / Inter with strong font weights.
+Smooth gradients, soft shadows, subtle glassmorphism where appropriate.
+High-quality photography with cinematic color grading.
+Every card should feel like a premium product, not a generic app component.
+Avoid clutter, cheap icons, heavy borders, or outdated UI patterns.
+Hero Section
+Replace the current video area with a premium immersive hero banner.
+Full-width edge-to-edge banner with rounded corners.
+Auto-playing muted promotional video or cinematic image carousel.
+Dark gradient overlay for better readability.
+Elegant page indicators.
+Floating CTA such as "Start Your Fitness Journey" or "Explore Clubs".
+Smooth transitions and subtle parallax effects.
+Location Card
+Transform the "Gyms Near Me" section into a luxury feature card.
+Premium green gradient background.
+Glass effect or soft elevation.
+Circular location icon with elegant styling.
+Bold headline.
+Refined supporting text.
+Premium pill-shaped CTA button.
+Rich spacing with perfectly aligned elements.
+Top Rated Gyms
+Large premium cards with beautiful photography.
+Image occupies 60–65% of the card.
+Rating badge floating over image with translucent background.
+Gym name in bold.
+Location with subtle icon.
+Price displayed elegantly.
+Small status indicator.
+Soft shadows and floating card appearance.
+Rounded corners (24px+).
+Bottom Navigation
+Floating premium navigation bar.
+Frosted glass or elevated white background.
+Soft shadow.
+Active tab highlighted with elegant green accent.
+Premium outlined icons.
+Perfect spacing and touch targets.
+Color Palette
+Primary: Premium Emerald Green (#4CAF50 or refined luxury green)
+White background with warm tone.
+Charcoal text (#1B1B1B).
+Light gray surfaces (#F7F8F6).
+Very subtle gradients.
+No harsh colors.
+Typography
+Large bold headlines.
+Elegant medium-weight body text.
+High readability.
+Consistent typography scale.
+Spacious line heights.
+Motion
+Smooth Apple-level animations.
+Cards gently lift on interaction.
+Hero carousel slides smoothly.
+Soft fade transitions.
+Micro-interactions throughout.
+Premium loading skeletons and shimmer effects.
+Overall Feel
+
+The screen should feel like a ₹100 Crore premium fitness brand, not a template. It should look expensive, exclusive, modern, luxurious, clean, and highly polished. Every component must have pixel-perfect alignment, consistent spacing, refined shadows, premium imagery, and elegant animations. The final result should be App Store featured quality, with the visual excellence of Apple, Nike, Tesla, Airbnb, and Stripe, creating a memorable first impression that immediately builds trust and encourages users to explore nearby gyms.
