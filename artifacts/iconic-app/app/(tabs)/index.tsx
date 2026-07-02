@@ -222,9 +222,6 @@ export default function HomeScreen() {
         ) : null}
       </View>
 
-      {/* Hero slider */}
-      <HeroSlider gyms={heroGyms} onExplore={() => openExternal(exploreUrl)} />
-
       {/* AI Coach — members only */}
       {isSignedIn ? (
         <Pressable onPress={() => router.push("/coach")} style={{ marginTop: 20 }}>
@@ -520,6 +517,9 @@ export default function HomeScreen() {
           </Card>
         </Pressable>
       )}
+
+      {/* Hero slider */}
+      <HeroSlider gyms={heroGyms} onExplore={() => openExternal(exploreUrl)} />
     </Screen>
   );
 }
