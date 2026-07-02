@@ -1,3 +1,5 @@
+import "@/lib/silenceExpoGoPushWarning";
+
 import { ClerkProvider, useAuth } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import {
