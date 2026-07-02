@@ -513,6 +513,14 @@ function youtubeThumb(url: string): string | undefined {
   return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : undefined;
 }
 
+function isVideoSlide(item: RenderSlide): boolean {
+  return (
+    item.type === "admin" &&
+    item.slide.kind === "youtube" &&
+    !!youtubeId(item.slide.mediaUrl)
+  );
+}
+
 function HeroSlider({
   gyms,
   onExplore,
@@ -562,15 +570,22 @@ function HeroSlider({
     }
   }, [total, active]);
 
+  const goToNext = useCallback(() => {
+    if (total <= 1) return;
+    const next = (activeRef.current + 1) % total;
+    scrollRef.current?.scrollTo({ x: next * SLIDE_W, animated: true });
+    setActive(next);
+  }, [total, SLIDE_W]);
+
+  // Auto-advance: image/gif/gym/brand slides advance on a timer. Video slides
+  // do NOT — they advance via `onEnded` once the video finishes playing.
   useEffect(() => {
     if (total <= 1) return;
-    const t = setInterval(() => {
-      const next = (activeRef.current + 1) % total;
-      scrollRef.current?.scrollTo({ x: next * SLIDE_W, animated: true });
-      setActive(next);
-    }, 4500);
-    return () => clearInterval(t);
-  }, [total, SLIDE_W]);
+    const current = slides[active];
+    if (current && isVideoSlide(current)) return;
+    const t = setTimeout(goToNext, 4500);
+    return () => clearTimeout(t);
+  }, [active, total, slides, goToNext]);
 
   const onMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const idx = Math.round(e.nativeEvent.contentOffset.x / SLIDE_W);
@@ -608,7 +623,7 @@ function HeroSlider({
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={onMomentumEnd}
       >
-        {slides.map((item) => {
+        {slides.map((item, index) => {
           if (item.type === "brand") {
             return (
               <Pressable
@@ -740,9 +755,17 @@ function HeroSlider({
             >
               <View style={[styles.slide, { backgroundColor: colors.card }]}>
                 {isYt && ytId ? (
-                  // Auto-playing (muted + looping) inline video. Non-interactive
-                  // so taps open the full video and swipes still page the slider.
-                  <YouTubeInline videoId={ytId} style={StyleSheet.absoluteFill} />
+                  // Auto-playing muted inline video. Plays only while this slide
+                  // is active; when it ends the carousel advances (onEnded). A
+                  // lone video loops. Non-interactive so taps open the full video
+                  // and swipes still page the slider.
+                  <YouTubeInline
+                    videoId={ytId}
+                    active={active === index}
+                    loop={total <= 1}
+                    onEnded={goToNext}
+                    style={StyleSheet.absoluteFill}
+                  />
                 ) : mediaUri ? (
                   <Image
                     source={{ uri: mediaUri }}

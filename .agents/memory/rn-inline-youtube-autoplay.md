@@ -25,6 +25,28 @@ video externally; the director wanted it playing "there itself".
 - Inside a horizontal paging carousel, make the player **non-interactive**: wrap it in a `View pointerEvents="none"` (and `pointerEvents:"none"` in the iframe inline style / on the WebView). Then the surrounding `Pressable` still gets taps and the `ScrollView` still gets swipes. An interactive iframe/webview would swallow both.
 - Multiple muted iframes autoplaying at once is fine (no audio); keep slide count modest for perf.
 
+**Active-slide playback + advance-on-end (IFrame Player API, not the embed URL):**
+to (a) play only the *active* carousel slide and (b) advance the carousel when a
+video ends, switch from the embed-URL iframe to the **YT IFrame Player API** so
+you get `onReady`/`onStateChange`. `state === 0` is ENDED → fire `onEnded`
+(unless single-slide `loop`, which loops via `loop:1,playlist:<id>`).
+
+**Readiness race — the non-obvious bug (both web + native):** never seed
+play/pause from a mount-time `active` snapshot. The slide can change *before* the
+player is ready, so a play/pause call is a no-op and then `onReady` applies the
+STALE initial value → wrong slide plays (or the active video never starts, so
+`onEnded` never fires and the carousel stalls, since the timer is intentionally
+off for video slides). Fix = single source of truth applied on ready:
+- Keep a `latestActiveRef` updated every render from the `active` prop.
+- In `onReady`, apply `latestActive` (not the snapshot).
+- Native: put a `setActive(a)` fn *inside the WebView HTML* holding
+  `desiredActive` + a `ready` flag; `onReady` calls `setActive(desiredActive)`.
+  React injects `setActive(<active>)` from the `active` effect and from
+  `onLoadEnd` (page-loaded fires before YT-ready, so injecting play/pause
+  directly at onLoadEnd no-ops — set desiredActive instead and let onReady apply).
+- Carousel side: non-video slides advance on a `setTimeout`; video slides skip
+  the timer entirely and advance only via `onEnded`.
+
 **Related — safe-area on web:** `useSafeAreaInsets().top` is `0` on web/expo-web,
 so a full-bleed top banner sits under the mockup device notch. Guard with
 `insets.top === 0 ? { paddingTop: N } : null` rather than a negative marginTop,
