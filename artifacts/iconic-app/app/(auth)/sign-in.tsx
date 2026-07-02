@@ -142,19 +142,13 @@ export default function SignInScreen() {
           bounces={false}
           overScrollMode="never"
         >
-          {/* Brand mark */}
+          {/* Brand logo */}
           <View style={styles.brandRow}>
             <Image
-              source={require("@/assets/images/iconic-logo.png")}
-              style={styles.mark}
+              source={require("@/assets/images/iconic-full-logo.png")}
+              style={styles.logo}
               resizeMode="contain"
             />
-            <AppText size={13} weight="700" color="#FFFFFF" style={styles.wordmark}>
-              ICONIC{" "}
-              <AppText size={13} weight="700" color={colors.primary}>
-                FITNESS
-              </AppText>
-            </AppText>
           </View>
 
           {/* pushes the auth block to the bottom, letting the photo breathe */}
@@ -300,12 +294,10 @@ const styles = StyleSheet.create({
     opacity: 0.1,
   },
   brandRow: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    justifyContent: "center",
   },
-  mark: { width: 34, height: 34 },
-  wordmark: { letterSpacing: 2 },
+  logo: { width: "62%", maxWidth: 240, aspectRatio: 1 },
   spacer: { flex: 1, minHeight: 160 },
   headingBlock: { marginBottom: 22 },
   eyebrow: { letterSpacing: 3, marginBottom: 10 },
