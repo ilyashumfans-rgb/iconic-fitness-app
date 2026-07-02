@@ -35,10 +35,13 @@ import {
   type NativeSyntheticEvent,
 } from "react-native";
 
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
 import { ProgressRing } from "@/components/ProgressRing";
 import { Screen } from "@/components/Screen";
+import { YouTubeInline } from "@/components/YouTubeInline";
 import { LoadingView, SectionHeader } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
 import { useUserLocation } from "@/hooks/useUserLocation";
@@ -497,11 +500,16 @@ type RenderSlide =
   | { key: string; type: "gym"; gym: Gym }
   | { key: string; type: "admin"; slide: HomeSlide };
 
-function youtubeThumb(url: string): string | undefined {
+function youtubeId(url: string): string | undefined {
   const m = url.match(
     /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/,
   );
   const id = m ? m[1] : /^[\w-]{11}$/.test(url.trim()) ? url.trim() : null;
+  return id ?? undefined;
+}
+
+function youtubeThumb(url: string): string | undefined {
+  const id = youtubeId(url);
   return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : undefined;
 }
 
@@ -513,6 +521,7 @@ function HeroSlider({
   onExplore: () => void;
 }) {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const SLIDE_W = width; // full-bleed, edge to edge
   const scrollRef = useRef<ScrollView>(null);
@@ -583,7 +592,15 @@ function HeroSlider({
   if (total === 0) return null;
 
   return (
-    <View style={styles.sliderWrap}>
+    <View
+      style={[
+        styles.sliderWrap,
+        // On native the Screen's SafeAreaView already clears the notch/status
+        // bar. On web there are no safe-area insets, so add a little top space
+        // so the banner never sits under the status bar / device notch.
+        insets.top === 0 ? { paddingTop: 24 } : null,
+      ]}
+    >
       <ScrollView
         ref={scrollRef}
         horizontal
@@ -710,6 +727,7 @@ function HeroSlider({
           // Admin-managed slide (image / gif / youtube)
           const s = item.slide;
           const isYt = s.kind === "youtube";
+          const ytId = isYt ? youtubeId(s.mediaUrl) : undefined;
           const mediaUri = isYt
             ? youtubeThumb(s.mediaUrl)
             : resolveImageUrl(s.mediaUrl);
@@ -721,7 +739,11 @@ function HeroSlider({
               style={{ width: SLIDE_W }}
             >
               <View style={[styles.slide, { backgroundColor: colors.card }]}>
-                {mediaUri ? (
+                {isYt && ytId ? (
+                  // Auto-playing (muted + looping) inline video. Non-interactive
+                  // so taps open the full video and swipes still page the slider.
+                  <YouTubeInline videoId={ytId} style={StyleSheet.absoluteFill} />
+                ) : mediaUri ? (
                   <Image
                     source={{ uri: mediaUri }}
                     style={StyleSheet.absoluteFill}
@@ -738,21 +760,15 @@ function HeroSlider({
                   start={{ x: 0.5, y: 0 }}
                   end={{ x: 0.5, y: 1 }}
                   style={StyleSheet.absoluteFill}
+                  pointerEvents="none"
                 />
                 {isYt ? (
-                  <View style={styles.slidePlayWrap} pointerEvents="none">
-                    <View
-                      style={[
-                        styles.slidePlayBtn,
-                        { backgroundColor: colors.primary },
-                      ]}
-                    >
-                      <Feather
-                        name="play"
-                        size={22}
-                        color={colors.primaryForeground}
-                      />
-                    </View>
+                  <View style={styles.slideBadge} pointerEvents="none">
+                    <Feather
+                      name="maximize-2"
+                      size={13}
+                      color={colors.primaryForeground}
+                    />
                   </View>
                 ) : null}
                 {hasText ? (
@@ -1379,23 +1395,22 @@ const styles = StyleSheet.create({
   // Slider — full-bleed banner pinned to the top of the screen. Negative
   // margins cancel the Screen's horizontal padding and top padding so it sits
   // edge-to-edge and flush with the top.
-  sliderWrap: { marginHorizontal: -20, marginTop: -8, marginBottom: 24 },
+  sliderWrap: { marginHorizontal: -20, marginTop: 0, marginBottom: 24 },
   slide: {
     height: 230,
     overflow: "hidden",
     justifyContent: "flex-end",
   },
-  slidePlayWrap: {
-    ...StyleSheet.absoluteFillObject,
+  slideBadge: {
+    position: "absolute",
+    top: 14,
+    right: 16,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
-  },
-  slidePlayBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: "rgba(10,12,8,0.55)",
   },
   slideTopRow: {
     position: "absolute",
