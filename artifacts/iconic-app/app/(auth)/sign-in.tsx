@@ -114,6 +114,8 @@ export default function SignInScreen() {
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        bounces={false}
+        overScrollMode="never"
       >
         {/* Brand lockup */}
         <View style={styles.hero}>
