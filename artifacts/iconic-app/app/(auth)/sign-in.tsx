@@ -133,7 +133,7 @@ export default function SignInScreen() {
           contentContainerStyle={[
             styles.content,
             {
-              paddingTop: insets.top + 20,
+              paddingTop: Math.max(insets.top, 44) + 20,
               paddingBottom: insets.bottom + 20,
             },
           ]}
