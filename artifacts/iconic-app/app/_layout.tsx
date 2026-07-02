@@ -112,6 +112,10 @@ function RootLayoutNav() {
           name="coach"
           options={{ presentation: "modal", headerShown: false }}
         />
+        <Stack.Screen
+          name="plans"
+          options={{ presentation: "modal", headerShown: false }}
+        />
       </Stack>
     </>
   );

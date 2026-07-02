@@ -326,7 +326,7 @@ export default function ProfileScreen() {
                 <Button
                   label="View plans"
                   icon="credit-card"
-                  onPress={() => openExternal(membershipsUrl)}
+                  onPress={() => router.push("/plans")}
                 />
               </>
             )}

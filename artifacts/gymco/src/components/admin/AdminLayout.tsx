@@ -27,6 +27,7 @@ import {
   Megaphone,
   LifeBuoy,
   GalleryHorizontalEnd,
+  CalendarClock,
   Menu,
   X,
 } from "lucide-react";
@@ -128,6 +129,11 @@ const SECTIONS: Section[] = [
         label: "Memberships",
         href: "/admin/memberships",
         icon: <CreditCard className="h-4 w-4" />,
+      },
+      {
+        label: "Annual Plans",
+        href: "/admin/annual-plans",
+        icon: <CalendarClock className="h-4 w-4" />,
       },
       {
         label: "Membership Management",
