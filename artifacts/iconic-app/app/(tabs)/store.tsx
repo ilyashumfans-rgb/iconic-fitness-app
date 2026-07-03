@@ -10,9 +10,12 @@ import { storeUrl } from "@/lib/links";
 export default function StoreScreen() {
   const colors = useColors();
   const { category } = useLocalSearchParams<{ category?: string }>();
-  const url = category
+  const base = category
     ? `${storeUrl}?category=${encodeURIComponent(category)}`
     : storeUrl;
+  // `embed=1` tells the website to hide its own header/footer so the store
+  // renders as a clean in-app screen (no duplicate logo + menu button).
+  const url = `${base}${base.includes("?") ? "&" : "?"}embed=1`;
   return (
     <SafeAreaView
       edges={["top"]}

@@ -216,14 +216,39 @@ function PublicNav() {
   );
 }
 
+/**
+ * Embed mode strips the site chrome (header logo + menu, footer) so the store
+ * renders cleanly inside the Iconic mobile app's in-app WebView. Triggered by
+ * `?embed=1` and kept sticky in sessionStorage so it survives client-side
+ * navigation (e.g. tapping into a product) within the embedded session.
+ */
+function isEmbedMode(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("embed") === "1") {
+      sessionStorage.setItem("iconic.embed", "1");
+      return true;
+    }
+    return sessionStorage.getItem("iconic.embed") === "1";
+  } catch {
+    return false;
+  }
+}
+
 export function PublicLayout({ children }: { children: React.ReactNode }) {
+  const embed = isEmbedMode();
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
-      <PublicNav />
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-12">
+      {!embed && <PublicNav />}
+      <main
+        className={`flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 ${
+          embed ? "py-4" : "py-8 md:py-12"
+        }`}
+      >
         {children}
       </main>
-      <SiteFooter />
+      {!embed && <SiteFooter />}
     </div>
   );
 }
