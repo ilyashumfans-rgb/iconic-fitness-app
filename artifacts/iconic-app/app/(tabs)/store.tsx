@@ -1,5 +1,6 @@
 import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocalSearchParams } from "expo-router";
 
 import { AppText } from "@/components/AppText";
 import { SiteWebView } from "@/components/SiteWebView";
@@ -8,6 +9,10 @@ import { storeUrl } from "@/lib/links";
 
 export default function StoreScreen() {
   const colors = useColors();
+  const { category } = useLocalSearchParams<{ category?: string }>();
+  const url = category
+    ? `${storeUrl}?category=${encodeURIComponent(category)}`
+    : storeUrl;
   return (
     <SafeAreaView
       edges={["top"]}
@@ -18,7 +23,7 @@ export default function StoreScreen() {
           Store
         </AppText>
       </View>
-      <SiteWebView url={storeUrl} />
+      <SiteWebView key={url} url={url} />
     </SafeAreaView>
   );
 }

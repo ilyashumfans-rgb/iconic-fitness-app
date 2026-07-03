@@ -77,7 +77,6 @@ import {
   exploreUrl,
   membershipsUrl,
   openExternal,
-  storeUrl,
   websiteUrl,
 } from "@/lib/links";
 
@@ -1359,6 +1358,7 @@ const CATEGORY_FALLBACK_GRADIENTS: [string, string][] = [
 ];
 
 function ShopByCategory() {
+  const router = useRouter();
   const catsQuery = useListStoreCategories();
   const productsQuery = useListStoreProducts();
 
@@ -1404,7 +1404,7 @@ function ShopByCategory() {
       <SectionHeader
         title="Shop by category"
         action="Shop all"
-        onAction={() => openExternal(storeUrl)}
+        onAction={() => router.push("/store")}
       />
       <ScrollView
         horizontal
@@ -1437,6 +1437,7 @@ function CategoryCard({
   image?: string;
   count: number;
 }) {
+  const router = useRouter();
   const colors = useColors();
   const meta = CATEGORY_META[category.slug];
   const gradient =
@@ -1451,7 +1452,9 @@ function CategoryCard({
       style={[CARD_SHADOW, { borderRadius: 22, backgroundColor: "#0A0C08" }]}
     >
       <Pressable
-        onPress={() => openExternal(`${storeUrl}?category=${category.slug}`)}
+        onPress={() =>
+          router.push(`/store?category=${encodeURIComponent(category.slug)}`)
+        }
         style={({ pressed }) => [
           styles.catCard,
           { transform: [{ scale: pressed ? 0.96 : 1 }] },
