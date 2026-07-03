@@ -8,6 +8,9 @@ const router: IRouter = Router();
 const KINDS = ["image", "gif", "youtube"] as const;
 type SlideKind = (typeof KINDS)[number];
 
+const AUDIENCES = ["all", "members", "customers"] as const;
+type SlideAudience = (typeof AUDIENCES)[number];
+
 function toPublicDto(row: typeof homeSlidesTable.$inferSelect) {
   return {
     id: row.id,
@@ -17,11 +20,18 @@ function toPublicDto(row: typeof homeSlidesTable.$inferSelect) {
     subtitle: row.subtitle,
     ctaLabel: row.ctaLabel,
     ctaUrl: row.ctaUrl,
+    audience: row.audience,
   };
 }
 
 function cleanKind(value: unknown): SlideKind {
   return KINDS.includes(value as SlideKind) ? (value as SlideKind) : "image";
+}
+
+function cleanAudience(value: unknown): SlideAudience {
+  return AUDIENCES.includes(value as SlideAudience)
+    ? (value as SlideAudience)
+    : "all";
 }
 
 function cleanStr(value: unknown, max = 500): string {
@@ -101,6 +111,7 @@ router.post(
         subtitle: cleanStr(body.subtitle),
         ctaLabel: cleanStr(body.ctaLabel, 80),
         ctaUrl: cleanStr(body.ctaUrl, 2000),
+        audience: cleanAudience(body.audience),
         isActive: body.isActive === false ? false : true,
         sortOrder:
           typeof body.sortOrder === "number" ? body.sortOrder : nextOrder,
@@ -127,6 +138,7 @@ router.patch(
     if (body.subtitle !== undefined) patch.subtitle = cleanStr(body.subtitle);
     if (body.ctaLabel !== undefined) patch.ctaLabel = cleanStr(body.ctaLabel, 80);
     if (body.ctaUrl !== undefined) patch.ctaUrl = cleanStr(body.ctaUrl, 2000);
+    if (body.audience !== undefined) patch.audience = cleanAudience(body.audience);
     if (body.isActive !== undefined) patch.isActive = Boolean(body.isActive);
     if (typeof body.sortOrder === "number") patch.sortOrder = body.sortOrder;
     if (Object.keys(patch).length === 0) {

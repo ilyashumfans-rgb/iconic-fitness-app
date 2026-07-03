@@ -17,6 +17,7 @@ export type HomeSlide = {
   subtitle: string;
   ctaLabel: string;
   ctaUrl: string;
+  audience: "all" | "members" | "customers";
   sortOrder: number;
   isActive: boolean;
   createdAt: string;

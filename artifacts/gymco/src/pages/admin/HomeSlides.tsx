@@ -13,6 +13,24 @@ import {
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
 import { adminApi, type HomeSlide } from "@/lib/adminApi";
 
+type Audience = "all" | "members" | "customers";
+
+const AUDIENCE_OPTIONS: { value: Audience; label: string; hint: string }[] = [
+  { value: "all", label: "Everyone", hint: "All app users" },
+  { value: "members", label: "Members only", hint: "People with an active plan" },
+  {
+    value: "customers",
+    label: "Customers only",
+    hint: "People without a plan yet",
+  },
+];
+
+const AUDIENCE_LABEL: Record<Audience, string> = {
+  all: "Everyone",
+  members: "Members",
+  customers: "Customers",
+};
+
 type Draft = {
   mediaType: "upload" | "youtube";
   kind: "image" | "gif" | "youtube";
@@ -21,6 +39,7 @@ type Draft = {
   subtitle: string;
   ctaLabel: string;
   ctaUrl: string;
+  audience: Audience;
   isActive: boolean;
 };
 
@@ -32,6 +51,7 @@ const EMPTY_DRAFT: Draft = {
   subtitle: "",
   ctaLabel: "",
   ctaUrl: "",
+  audience: "all",
   isActive: true,
 };
 
@@ -285,6 +305,22 @@ function SlideEditor({
               onChange={(e) => set({ ctaUrl: e.target.value })}
             />
           </div>
+          <div>
+            <label className="block text-[12px] font-semibold text-slate-600 mb-1">
+              Who sees this slide?
+            </label>
+            <select
+              className={input}
+              value={draft.audience}
+              onChange={(e) => set({ audience: e.target.value as Audience })}
+            >
+              {AUDIENCE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label} — {o.hint}
+                </option>
+              ))}
+            </select>
+          </div>
           <label className="flex items-center gap-2 text-sm text-slate-600">
             <input
               type="checkbox"
@@ -292,7 +328,7 @@ function SlideEditor({
               onChange={(e) => set({ isActive: e.target.checked })}
               className="h-4 w-4 accent-lime-500"
             />
-            Visible to members
+            Active (shown in the app)
           </label>
         </div>
       </div>
@@ -332,6 +368,7 @@ function slideToDraft(s: HomeSlide): Draft {
     subtitle: s.subtitle,
     ctaLabel: s.ctaLabel,
     ctaUrl: s.ctaUrl,
+    audience: s.audience,
     isActive: s.isActive,
   };
 }
@@ -365,6 +402,7 @@ export default function AdminHomeSlides() {
       subtitle: draft.subtitle,
       ctaLabel: draft.ctaLabel,
       ctaUrl: draft.ctaUrl,
+      audience: draft.audience,
       isActive: draft.isActive,
     });
     await load();
@@ -378,6 +416,7 @@ export default function AdminHomeSlides() {
       subtitle: draft.subtitle,
       ctaLabel: draft.ctaLabel,
       ctaUrl: draft.ctaUrl,
+      audience: draft.audience,
       isActive: draft.isActive,
     });
     setEditingId(null);
@@ -481,6 +520,9 @@ export default function AdminHomeSlides() {
                             </span>
                             <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-lime-100 text-lime-700 font-bold">
                               {s.kind}
+                            </span>
+                            <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-sky-100 text-sky-700 font-bold">
+                              {AUDIENCE_LABEL[s.audience]}
                             </span>
                             {!s.isActive ? (
                               <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-slate-200 text-slate-500 font-bold">

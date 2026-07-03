@@ -205,7 +205,8 @@ export const ListHomeSlidesResponseItem = zod.object({
   "title": zod.string(),
   "subtitle": zod.string(),
   "ctaLabel": zod.string(),
-  "ctaUrl": zod.string()
+  "ctaUrl": zod.string(),
+  "audience": zod.enum(['all', 'members', 'customers']).describe('Who sees this slide: all viewers, members (active plan) only, or customers (non-members) only')
 })
 export const ListHomeSlidesResponse = zod.array(ListHomeSlidesResponseItem)
 

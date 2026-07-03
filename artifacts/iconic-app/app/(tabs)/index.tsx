@@ -2,6 +2,7 @@ import { useAuth } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
 import {
   getGetMeQueryKey,
+  getGetMyMembershipQueryKey,
   getGetTrackingSummaryQueryKey,
   getListGymsQueryKey,
   getListMembershipsQueryKey,
@@ -9,6 +10,7 @@ import {
   useAddWater,
   useCreateBooking,
   useGetMe,
+  useGetMyMembership,
   useGetTrackingSummary,
   useListClasses,
   useListGyms,
@@ -150,6 +152,18 @@ export default function HomeScreen() {
   const meQuery = useGetMe({
     query: { enabled: !!isSignedIn, queryKey: getGetMeQueryKey() },
   });
+  // Membership status drives which admin banner slides this viewer sees.
+  // Guests can't call this endpoint (401), so it's only fetched when signed in;
+  // a signed-in viewer with a non-null active plan counts as a "member".
+  const myMembershipQuery = useGetMyMembership({
+    query: { enabled: !!isSignedIn, queryKey: getGetMyMembershipQueryKey() },
+  });
+  // Guests are known non-members immediately. For signed-in viewers we only
+  // "know" their status once /memberships/mine resolves — until then (or on a
+  // transient error) targeting stays unsettled so we never misclassify a
+  // member as a customer while loading.
+  const membershipSettled = !isSignedIn || myMembershipQuery.isSuccess;
+  const isMember = !!isSignedIn && !!myMembershipQuery.data;
   const bookingsQuery = useListMyBookings(
     { status: "upcoming" },
     {
@@ -196,6 +210,7 @@ export default function HomeScreen() {
     if (isSignedIn) {
       void summaryQuery.refetch();
       void meQuery.refetch();
+      void myMembershipQuery.refetch();
       void bookingsQuery.refetch();
     }
   }, [
@@ -205,6 +220,7 @@ export default function HomeScreen() {
     isSignedIn,
     summaryQuery,
     meQuery,
+    myMembershipQuery,
     bookingsQuery,
   ]);
 
@@ -259,7 +275,12 @@ export default function HomeScreen() {
       contentContainerStyle={{ paddingTop: 8 }}
     >
       {/* Home banner slider (admin-managed) — full-bleed at the very top */}
-      <HeroSlider gyms={heroGyms} onExplore={() => openExternal(exploreUrl)} />
+      <HeroSlider
+        gyms={heroGyms}
+        isMember={isMember}
+        membershipSettled={membershipSettled}
+        onExplore={() => openExternal(exploreUrl)}
+      />
 
       {/* AI Coach — members only */}
       {isSignedIn ? (
@@ -569,9 +590,13 @@ function isVideoSlide(item: RenderSlide): boolean {
 
 function HeroSlider({
   gyms,
+  isMember,
+  membershipSettled,
   onExplore,
 }: {
   gyms: Gym[];
+  isMember: boolean;
+  membershipSettled: boolean;
   onExplore: () => void;
 }) {
   const colors = useColors();
@@ -585,12 +610,28 @@ function HeroSlider({
   const slidesQuery = useListHomeSlides();
   const adminSlides = slidesQuery.data ?? [];
 
-  // Admin-managed slides take over the banner entirely. When none exist yet
-  // (fresh install / prod before setup) we fall back to a code default so the
+  // Show only slides targeted at this viewer: "all" for everyone, "members"
+  // for viewers with an active plan, "customers" for viewers without one.
+  // Until membership status is settled we show only "all" slides so a member
+  // is never briefly shown customer-only content (and vice versa).
+  const visibleAdminSlides = useMemo(
+    () =>
+      adminSlides.filter((s) => {
+        if (s.audience === "all") return true;
+        if (!membershipSettled) return false;
+        if (s.audience === "members") return isMember;
+        return !isMember; // "customers"
+      }),
+    [adminSlides, isMember, membershipSettled],
+  );
+
+  // Admin-managed slides take over the banner entirely. When none are visible
+  // to this viewer (fresh install / prod before setup, or every slide is
+  // targeted at the other audience) we fall back to a code default so the
   // banner is never empty: a brand intro followed by the top gyms.
   const slides: RenderSlide[] = useMemo(() => {
-    if (adminSlides.length > 0) {
-      return adminSlides.map((s) => ({
+    if (visibleAdminSlides.length > 0) {
+      return visibleAdminSlides.map((s) => ({
         key: `a${s.id}`,
         type: "admin" as const,
         slide: s,
@@ -600,7 +641,7 @@ function HeroSlider({
       { key: "brand", type: "brand" as const },
       ...gyms.map((g) => ({ key: `g${g.id}`, type: "gym" as const, gym: g })),
     ];
-  }, [adminSlides, gyms]);
+  }, [visibleAdminSlides, gyms]);
 
   const total = slides.length;
 

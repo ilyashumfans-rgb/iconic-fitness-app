@@ -87,6 +87,18 @@ export const HomeSlideKind = {
   youtube: 'youtube',
 } as const;
 
+/**
+ * Who sees this slide: all viewers, members (active plan) only, or customers (non-members) only
+ */
+export type HomeSlideAudience = typeof HomeSlideAudience[keyof typeof HomeSlideAudience];
+
+
+export const HomeSlideAudience = {
+  all: 'all',
+  members: 'members',
+  customers: 'customers',
+} as const;
+
 export interface HomeSlide {
   id: number;
   kind: HomeSlideKind;
@@ -96,6 +108,8 @@ export interface HomeSlide {
   subtitle: string;
   ctaLabel: string;
   ctaUrl: string;
+  /** Who sees this slide: all viewers, members (active plan) only, or customers (non-members) only */
+  audience: HomeSlideAudience;
 }
 
 export interface StoreCategory {

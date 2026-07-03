@@ -103,6 +103,7 @@ export const homeSlidesTable = pgTable("home_slides", {
   subtitle: text("subtitle").notNull().default(""),
   ctaLabel: text("cta_label").notNull().default(""),
   ctaUrl: text("cta_url").notNull().default(""),
+  audience: text("audience").notNull().default("all"), // all | members | customers
   sortOrder: integer("sort_order").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true })

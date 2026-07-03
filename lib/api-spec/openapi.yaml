@@ -856,7 +856,7 @@ components:
 
     HomeSlide:
       type: object
-      required: [id, kind, mediaUrl, title, subtitle, ctaLabel, ctaUrl]
+      required: [id, kind, mediaUrl, title, subtitle, ctaLabel, ctaUrl, audience]
       properties:
         id: { type: integer }
         kind: { type: string, enum: [image, gif, youtube] }
@@ -866,6 +866,10 @@ components:
         subtitle: { type: string }
         ctaLabel: { type: string }
         ctaUrl: { type: string }
+        audience:
+          type: string
+          enum: [all, members, customers]
+          description: "Who sees this slide: all viewers, members (active plan) only, or customers (non-members) only"
     StoreCategory:
       type: object
       required: [name, slug, sortOrder]

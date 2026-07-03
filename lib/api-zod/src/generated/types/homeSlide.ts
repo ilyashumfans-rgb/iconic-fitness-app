@@ -5,6 +5,7 @@
  * GYMCO customer API — multi-gym memberships, classes, bookings, check-ins, and fitness tracking.
  * OpenAPI spec version: 0.1.0
  */
+import type { HomeSlideAudience } from './homeSlideAudience';
 import type { HomeSlideKind } from './homeSlideKind';
 
 export interface HomeSlide {
@@ -16,4 +17,6 @@ export interface HomeSlide {
   subtitle: string;
   ctaLabel: string;
   ctaUrl: string;
+  /** Who sees this slide: all viewers, members (active plan) only, or customers (non-members) only */
+  audience: HomeSlideAudience;
 }
