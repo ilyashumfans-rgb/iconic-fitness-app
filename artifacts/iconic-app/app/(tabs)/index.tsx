@@ -12,6 +12,7 @@ import {
   useGetMe,
   useGetMyMembership,
   useGetTrackingSummary,
+  type MyMembership,
   useListClasses,
   useListGyms,
   useListMemberships,
@@ -50,6 +51,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AICoachCard } from "@/components/AICoachCard";
 import { AppText } from "@/components/AppText";
+import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { NotificationBell } from "@/components/NotificationBell";
 import { PackageCard } from "@/components/PackageCard";
@@ -63,9 +65,21 @@ import {
 import { LoadingView, SectionHeader } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
 import { useUserLocation } from "@/hooks/useUserLocation";
-import { istToday, formatClock, formatDateLabel } from "@/lib/dates";
+import {
+  istToday,
+  formatClock,
+  formatDateLabel,
+  istDateStr,
+  istDateLabel,
+} from "@/lib/dates";
 import { resolveImageUrl } from "@/lib/images";
-import { exploreUrl, openExternal, storeUrl, websiteUrl } from "@/lib/links";
+import {
+  exploreUrl,
+  membershipsUrl,
+  openExternal,
+  storeUrl,
+  websiteUrl,
+} from "@/lib/links";
 
 type StoryVideo = {
   name: string;
@@ -114,6 +128,117 @@ const CARD_SHADOW = Platform.select({
     elevation: 7,
   },
 }) as ViewStyle;
+
+// Number of days before renewal that we start warning the member.
+const EXPIRY_SOON_DAYS = 7;
+
+/** Whole IST calendar days from today until `dateIso` (negative = past). */
+function daysUntilIst(dateIso: string): number {
+  const today = Date.parse(`${istDateStr()}T00:00:00Z`);
+  const target = Date.parse(`${istDateStr(new Date(dateIso))}T00:00:00Z`);
+  return Math.round((target - today) / 86_400_000);
+}
+
+/** Plan card pinned to the top of Home for members with a plan. */
+function MembershipStatusCard({
+  membership,
+  onManage,
+}: {
+  membership: MyMembership;
+  onManage: () => void;
+}) {
+  const colors = useColors();
+  const days = daysUntilIst(membership.renewsOn);
+  const isExpired = membership.status === "expired" || days < 0;
+  const expiringSoon =
+    !isExpired &&
+    membership.status === "active" &&
+    days <= EXPIRY_SOON_DAYS;
+  const alert = isExpired || expiringSoon;
+  const accent = isExpired ? "#FF6B6B" : expiringSoon ? "#FFB020" : colors.primary;
+  const dateLabel = istDateLabel(istDateStr(new Date(membership.renewsOn)));
+
+  const renewText = isExpired
+    ? `Expired on ${dateLabel} — renew to keep access`
+    : expiringSoon
+      ? days <= 0
+        ? `Expires today (${dateLabel}) — renew now`
+        : `Expiring in ${days} day${days === 1 ? "" : "s"} · ${dateLabel}`
+      : `Renews ${dateLabel}`;
+
+  return (
+    <Card style={{ gap: 12, marginBottom: 16 }}>
+      <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+        <View style={{ flex: 1 }}>
+          <AppText muted size={11} style={{ letterSpacing: 1 }}>
+            YOUR MEMBERSHIP
+          </AppText>
+          <AppText weight="700" size={20} style={{ marginTop: 2 }}>
+            {membership.planName}
+          </AppText>
+        </View>
+        <View
+          style={{
+            paddingHorizontal: 10,
+            paddingVertical: 4,
+            borderRadius: 999,
+            backgroundColor: accent + "22",
+          }}
+        >
+          <AppText
+            size={12}
+            weight="700"
+            color={accent}
+            style={{ textTransform: "capitalize" }}
+          >
+            {membership.status}
+          </AppText>
+        </View>
+      </View>
+
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <Feather
+          name={alert ? "alert-triangle" : "calendar"}
+          size={14}
+          color={alert ? accent : colors.mutedForeground}
+        />
+        <AppText
+          size={13}
+          weight={alert ? "700" : "400"}
+          color={alert ? accent : undefined}
+        >
+          {renewText}
+        </AppText>
+      </View>
+
+      <View style={{ flexDirection: "row", gap: 12 }}>
+        <View style={{ flex: 1 }}>
+          <AppText muted size={12}>
+            Classes this month
+          </AppText>
+          <AppText weight="700" size={16}>
+            {membership.classesUsed} / {membership.classesIncluded}
+          </AppText>
+        </View>
+        <View style={{ flex: 1 }}>
+          <AppText muted size={12}>
+            Gyms accessed
+          </AppText>
+          <AppText weight="700" size={16}>
+            {membership.gymsAccessed}
+          </AppText>
+        </View>
+      </View>
+
+      <Button
+        label={alert ? "Renew plan" : "Manage plan"}
+        variant="secondary"
+        icon="credit-card"
+        onPress={onManage}
+      />
+    </Card>
+  );
+}
 
 const SOFT_SHADOW = Platform.select({
   web: { boxShadow: "0 8px 22px rgba(0,0,0,0.20)" },
@@ -164,6 +289,13 @@ export default function HomeScreen() {
   // member as a customer while loading.
   const membershipSettled = !isSignedIn || myMembershipQuery.isSuccess;
   const isMember = !!isSignedIn && !!myMembershipQuery.data;
+  const membership = myMembershipQuery.data ?? null;
+  // An "active member" gets a plan-focused Home: their plan pinned to the top,
+  // and the discovery sections (Explore packages / Top rated gyms) hidden.
+  const hasActivePlan = isMember && membership?.status === "active";
+  // Only reveal the discovery sections once membership status is settled, so a
+  // signed-in active member never briefly flashes them while the plan loads.
+  const showDiscovery = membershipSettled && !hasActivePlan;
   const bookingsQuery = useListMyBookings(
     { status: "upcoming" },
     {
@@ -282,6 +414,14 @@ export default function HomeScreen() {
         onExplore={() => openExternal(exploreUrl)}
       />
 
+      {/* Current membership — pinned to the top for members with a plan */}
+      {membership ? (
+        <MembershipStatusCard
+          membership={membership}
+          onManage={() => openExternal(membershipsUrl)}
+        />
+      ) : null}
+
       {/* AI Coach — members only */}
       {isSignedIn ? (
         <AICoachCard
@@ -290,8 +430,8 @@ export default function HomeScreen() {
         />
       ) : null}
 
-      {/* Explore packages (annual plans) */}
-      {packages.length > 0 ? (
+      {/* Explore packages (annual plans) — hidden for active members */}
+      {showDiscovery && packages.length > 0 ? (
         <>
           <SectionHeader
             title="Explore packages"
@@ -316,49 +456,53 @@ export default function HomeScreen() {
       {/* Gyms near me (location-aware) */}
       <NearbyGyms onOpenGym={() => openExternal(exploreUrl)} />
 
-      {/* Top rated gyms */}
-      <SectionHeader
-        title="Top rated gyms"
-        action="View all"
-        onAction={() => openExternal(exploreUrl)}
-      />
-      {gymsQuery.isLoading ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.gymRow}
-          style={{ marginBottom: 28 }}
-        >
-          {[0, 1, 2].map((k) => (
-            <GymCardSkeleton key={k} />
-          ))}
-        </ScrollView>
-      ) : gyms.length === 0 ? (
-        <Card style={{ marginBottom: 28 }}>
-          <AppText weight="700" size={15}>
-            No gyms to show yet
-          </AppText>
-          <AppText muted size={13} style={{ marginTop: 4 }}>
-            Pull to refresh or explore on our website.
-          </AppText>
-        </Card>
-      ) : (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.gymRow}
-          style={{ marginBottom: 28 }}
-        >
-          {gyms.slice(0, 8).map((g, i) => (
-            <GymCard
-              key={g.id}
-              gym={g}
-              index={i}
-              onPress={() => openExternal(exploreUrl)}
-            />
-          ))}
-        </ScrollView>
-      )}
+      {/* Top rated gyms — hidden for active members */}
+      {showDiscovery ? (
+        <>
+          <SectionHeader
+            title="Top rated gyms"
+            action="View all"
+            onAction={() => openExternal(exploreUrl)}
+          />
+          {gymsQuery.isLoading ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.gymRow}
+              style={{ marginBottom: 28 }}
+            >
+              {[0, 1, 2].map((k) => (
+                <GymCardSkeleton key={k} />
+              ))}
+            </ScrollView>
+          ) : gyms.length === 0 ? (
+            <Card style={{ marginBottom: 28 }}>
+              <AppText weight="700" size={15}>
+                No gyms to show yet
+              </AppText>
+              <AppText muted size={13} style={{ marginTop: 4 }}>
+                Pull to refresh or explore on our website.
+              </AppText>
+            </Card>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.gymRow}
+              style={{ marginBottom: 28 }}
+            >
+              {gyms.slice(0, 8).map((g, i) => (
+                <GymCard
+                  key={g.id}
+                  gym={g}
+                  index={i}
+                  onPress={() => openExternal(exploreUrl)}
+                />
+              ))}
+            </ScrollView>
+          )}
+        </>
+      ) : null}
 
       {/* Watch our story (member testimonials) */}
       <StorySection />
