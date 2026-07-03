@@ -45,6 +45,8 @@ All plans are rows in `membershipsTable` with a `billingPeriod` (`monthly`/`quar
 
 Partners manage their own trainers from `/partner/trainers` (CRUD scoped to gyms they own via `ensureOwnsGym`; manual `partnerApi.trainers.{list,create,update,remove}`, no OpenAPI). Admins still have global trainer CRUD. Trainers are attached to a gym and selectable when scheduling classes.
 
+- **Mobile discovery:** members browse trainers on `app/trainers.tsx` (list + specialty filter, `useListTrainers`) → `app/trainer/[id].tsx` detail; booking a 1-on-1 posts a `kind="general"` lead. Home entry point is the `PersonalTrainersCard` in `app/(tabs)/index.tsx` (shown to everyone, below the AI Coach card) → `router.push("/trainers")`.
+
 ### Class visibility & booking window
 
 Classes are hidden from members and not bookable until 1 day (24h) before start. Single source of truth: `artifacts/api-server/src/lib/classVisibility.ts` (`CLASS_VISIBLE_BEFORE_MS`, `isClassVisibleToMembers`). Applied to all member-facing class listings (`classes.ts` `buildSessionDtos`; `gyms.ts` gym-detail + `/gyms/:id/classes`) and the `POST /bookings` gate (started → 400, >24h away → 403). Partner/admin views are unaffected.

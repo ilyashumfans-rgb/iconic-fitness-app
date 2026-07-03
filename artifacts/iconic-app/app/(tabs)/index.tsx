@@ -240,6 +240,50 @@ function MembershipStatusCard({
   );
 }
 
+/** Entry card that opens the member-facing trainers list. */
+function PersonalTrainersCard({ onPress }: { onPress: () => void }) {
+  const colors = useColors();
+  return (
+    <Pressable onPress={onPress} style={{ marginBottom: 16 }}>
+      {({ pressed }) => (
+        <Card style={{ opacity: pressed ? 0.92 : 1 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+            <View
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: 14,
+                backgroundColor: colors.primary,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Feather
+                name="users"
+                size={24}
+                color={colors.primaryForeground}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <AppText weight="700" size={17}>
+                Personal Trainers
+              </AppText>
+              <AppText muted size={13} style={{ marginTop: 2 }}>
+                Find a coach & book a 1-on-1 session
+              </AppText>
+            </View>
+            <Feather
+              name="chevron-right"
+              size={22}
+              color={colors.mutedForeground}
+            />
+          </View>
+        </Card>
+      )}
+    </Pressable>
+  );
+}
+
 const SOFT_SHADOW = Platform.select({
   web: { boxShadow: "0 8px 22px rgba(0,0,0,0.20)" },
   default: {
@@ -429,6 +473,9 @@ export default function HomeScreen() {
           onPress={() => router.push("/coach")}
         />
       ) : null}
+
+      {/* Personal Trainers — find a coach & book a 1-on-1 session */}
+      <PersonalTrainersCard onPress={() => router.push("/trainers")} />
 
       {/* Explore packages (annual plans) — hidden for active members */}
       {showDiscovery && packages.length > 0 ? (
