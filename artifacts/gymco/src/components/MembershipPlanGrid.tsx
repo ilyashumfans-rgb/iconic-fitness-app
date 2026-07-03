@@ -7,7 +7,13 @@ import { Check, Crown, Dumbbell, Tag } from "lucide-react";
 import { Link } from "wouter";
 
 function periodSuffix(billingPeriod: string) {
-  return billingPeriod === "monthly" ? "mo" : billingPeriod === "annual" ? "yr" : "qtr";
+  return billingPeriod === "monthly"
+    ? "mo"
+    : billingPeriod === "annual" || billingPeriod === "yearly"
+      ? "yr"
+      : billingPeriod === "half_yearly"
+        ? "6mo"
+        : "qtr";
 }
 
 export function MembershipPlanGrid({

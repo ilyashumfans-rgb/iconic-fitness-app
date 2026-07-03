@@ -14,12 +14,14 @@ import { Screen } from "@/components/Screen";
 import { EmptyState, ErrorView, LoadingView } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
 
-type Period = "monthly" | "quarterly";
+type Period = "monthly" | "quarterly" | "half_yearly" | "yearly";
 
-const PERIOD_ORDER: Period[] = ["monthly", "quarterly"];
+const PERIOD_ORDER: Period[] = ["monthly", "quarterly", "half_yearly", "yearly"];
 const PERIOD_LABEL: Record<Period, string> = {
   monthly: "Monthly",
   quarterly: "Quarterly",
+  half_yearly: "6 Months",
+  yearly: "Yearly",
 };
 
 export default function PlansScreen() {

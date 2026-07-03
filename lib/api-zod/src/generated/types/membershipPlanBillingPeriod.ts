@@ -12,5 +12,7 @@ export type MembershipPlanBillingPeriod = typeof MembershipPlanBillingPeriod[key
 export const MembershipPlanBillingPeriod = {
   monthly: 'monthly',
   quarterly: 'quarterly',
+  half_yearly: 'half_yearly',
+  yearly: 'yearly',
   annual: 'annual',
 } as const;

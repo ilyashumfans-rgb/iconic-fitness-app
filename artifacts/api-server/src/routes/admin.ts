@@ -1519,7 +1519,7 @@ router.post(
       .values({
         name: String(b.name),
         tagline: String(b.tagline ?? ""),
-        billingPeriod: ["monthly", "quarterly", "annual"].includes(String(b.billingPeriod))
+        billingPeriod: ["monthly", "quarterly", "half_yearly", "yearly", "annual"].includes(String(b.billingPeriod))
           ? String(b.billingPeriod)
           : "monthly",
         priceInr: Number(b.priceInr),
@@ -1548,7 +1548,7 @@ router.patch(
     }
     if (b.billingPeriod !== undefined) {
       const bp = String(b.billingPeriod);
-      patch.billingPeriod = ["monthly", "quarterly", "annual"].includes(bp) ? bp : "monthly";
+      patch.billingPeriod = ["monthly", "quarterly", "half_yearly", "yearly", "annual"].includes(bp) ? bp : "monthly";
     }
     for (const k of [
       "priceInr",

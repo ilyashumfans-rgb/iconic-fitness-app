@@ -56,9 +56,11 @@ export function PricingTeaserSection() {
             const period =
               plan.billingPeriod === "monthly"
                 ? "mo"
-                : plan.billingPeriod === "annual"
+                : plan.billingPeriod === "annual" || plan.billingPeriod === "yearly"
                   ? "yr"
-                  : "qtr";
+                  : plan.billingPeriod === "half_yearly"
+                    ? "6mo"
+                    : "qtr";
             const savings =
               plan.originalPriceInr > plan.priceInr
                 ? Math.round(

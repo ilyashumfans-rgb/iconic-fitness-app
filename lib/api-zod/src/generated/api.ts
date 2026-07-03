@@ -484,7 +484,7 @@ export const ListMembershipsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "tagline": zod.string(),
-  "billingPeriod": zod.enum(['monthly', 'quarterly', 'annual']),
+  "billingPeriod": zod.enum(['monthly', 'quarterly', 'half_yearly', 'yearly', 'annual']),
   "priceInr": zod.number(),
   "originalPriceInr": zod.number(),
   "gymsIncluded": zod.number(),

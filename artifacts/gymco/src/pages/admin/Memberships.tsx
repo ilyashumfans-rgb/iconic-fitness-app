@@ -63,6 +63,8 @@ function PlanForm({
           >
             <option value="monthly">Monthly</option>
             <option value="quarterly">Quarterly (3 months)</option>
+            <option value="half_yearly">Half-Yearly (6 months)</option>
+            <option value="yearly">Yearly</option>
           </select>
         </div>
         <Field label="Badge" v={f.badge} on={(v) => setF({ ...f, badge: v })} />

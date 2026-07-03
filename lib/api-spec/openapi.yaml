@@ -991,7 +991,7 @@ components:
         id: { type: integer }
         name: { type: string }
         tagline: { type: string }
-        billingPeriod: { type: string, enum: [monthly, quarterly, annual] }
+        billingPeriod: { type: string, enum: [monthly, quarterly, half_yearly, yearly, annual] }
         priceInr: { type: integer }
         originalPriceInr: { type: integer }
         gymsIncluded: { type: integer }

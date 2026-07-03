@@ -11,6 +11,8 @@ import { membershipsUrl, openExternal } from "@/lib/links";
 const PERIOD_SUFFIX: Record<string, string> = {
   monthly: "/mo",
   quarterly: "/qtr",
+  half_yearly: "/6mo",
+  yearly: "/yr",
   annual: "/yr",
 };
 
