@@ -4,6 +4,7 @@ import pinoHttp from "pino-http";
 import { clerkMiddleware } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
 import router from "./routes";
+import healthRouter from "./routes/health";
 import { logger } from "./lib/logger";
 import { sessionMiddleware } from "./lib/adminAuth";
 import { seedDefaultAdmin } from "./lib/seedAdmin";
@@ -40,6 +41,12 @@ app.use(
     },
   }),
 );
+
+// The startup/health probe must NOT depend on the database or session store.
+// Mounting it before session & clerk middleware guarantees a 200 even when the
+// DB is briefly unavailable during a deploy's promote step — otherwise the
+// session store errors out and the probe 500s, failing the whole deployment.
+app.use("/api", healthRouter);
 
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 

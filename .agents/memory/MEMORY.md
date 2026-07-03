@@ -21,3 +21,4 @@
 - [Brand button gradient](brand-button-gradient.md) — iconic-app primary buttons use `primaryGradient` token (LinearGradient fill) + white text; edit the token to restyle all; non-buttons stay flat.
 - [AI coach assessment tool writes](ai-assessment-tool-writes.md) — multi-turn LLM assessment save: merge (don't replace) JSON blob, gate completion stamp on core fields + idempotent, use nullable col as completion signal.
 - [Expo notification sound + delivery](expo-notification-sound-delivery.md) — no push in Expo Go: poll /notifications/mine + fire LOCAL notif on per-user id delta; sound needs handler shouldPlaySound + Android channel.
+- [Deploy promote fails: probe & pg pool](deploy-healthcheck-and-pool.md) — build ok but "failed to initialize": mount /healthz before DB/session middleware; add pool.on('error') so idle-conn drops don't crash Node.
