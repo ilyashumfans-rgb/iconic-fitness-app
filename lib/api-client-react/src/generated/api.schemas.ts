@@ -250,6 +250,14 @@ export const MyMembershipStatus = {
   expired: 'expired',
 } as const;
 
+export type MyMembershipSource = typeof MyMembershipSource[keyof typeof MyMembershipSource];
+
+
+export const MyMembershipSource = {
+  local: 'local',
+  yoactiv: 'yoactiv',
+} as const;
+
 export interface MyMembership {
   planId: number;
   planName: string;
@@ -258,6 +266,7 @@ export interface MyMembership {
   classesIncluded: number;
   gymsAccessed: number;
   status: MyMembershipStatus;
+  source?: MyMembershipSource;
 }
 
 export type BookingStatus = typeof BookingStatus[keyof typeof BookingStatus];

@@ -1017,6 +1017,7 @@ components:
         classesIncluded: { type: integer }
         gymsAccessed: { type: integer }
         status: { type: string, enum: [active, paused, expired] }
+        source: { type: string, enum: [local, yoactiv] }
 
     Booking:
       type: object

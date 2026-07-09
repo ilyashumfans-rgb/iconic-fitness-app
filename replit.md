@@ -104,6 +104,14 @@ For a signed-in **active member** (`useGetMyMembership` → status `active`), th
 - **`showDiscovery = membershipSettled && !hasActivePlan`** guards the two sections so a signed-in active member never briefly flashes them while `/memberships/mine` loads (same `membershipSettled` tri-state used by `HeroSlider`).
 - **Expiry warning (IST):** `daysUntilIst(renewsOn)` diffs IST calendar days (`istDateStr`). Within `EXPIRY_SOON_DAYS` (7) → amber "Expiring in N day(s)" / "Expires today"; expired (or past date) → red "Expired on …"; otherwise "Renews …". The CTA reads "Renew plan" when alerting, else "Manage plan", opening `membershipsUrl` externally. No DB/OpenAPI change — reuses the existing `MyMembership` DTO.
 
+### YoActiv integration (live membership data)
+
+The real gym-management software (YoActiv, api.yoactiv.com) is the source of truth for member plans. `GET /memberships/mine` first looks the signed-in user up in YoActiv by mobile number and, if found, returns their real plan (name, active/paused/expired, expiry as `renewsOn`, sessions, branch count) — falling back to the local `userMembershipsTable` row when unmatched/unreachable. Optional `source: local|yoactiv` on the `MyMembership` DTO tells which path served it. No client changes needed — Home plan card, Profile, hero-slider gating all pick it up.
+
+- **Client:** `artifacts/api-server/src/lib/yoactiv.ts` — all POST JSON with `API_Key`+`Branch_Id` headers; member lookup body field is `Mobile_No`; dates DD-MM-YYYY; freeze/hold statuses map to `paused`. `Users/Branches` finds the member's branches, `Users/Fetch` per branch (parallel), 6s global deadline, 5-min success / 60s failure cache, 8s per-request timeout.
+- **Keys/branches:** secrets `YOACTIV_SANDBOX_API_KEY`/`YOACTIV_API_KEY_1`/`YOACTIV_API_KEY_2` + env `YOACTIV_BRANCH_IDS_1`/`_2` (16 prod branches each), sandbox branch `YOACTIV_SANDBOX_BRANCH_ID` (7820). **Slot names are not trusted** — the values were pasted swapped, so the client probes each key against each branch set once per process and auto-assigns (partial resolution retries after 60s). Mode: sandbox in dev, live keys in production (`YOACTIV_MODE` overrides).
+- Next phases planned: payments/renewal history, trainers.
+
 ### Member notifications & sound (mobile)
 
 Members get an in-app notification bell + audible alerts. Admins create member notifications via the existing `POST /notifications` (`requireAdmin`, `recipientType="user"`); the member-facing feed endpoints already existed and are now in OpenAPI.

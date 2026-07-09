@@ -508,7 +508,8 @@ export const GetMyMembershipResponse = zod.union([zod.object({
   "classesUsed": zod.number(),
   "classesIncluded": zod.number(),
   "gymsAccessed": zod.number(),
-  "status": zod.enum(['active', 'paused', 'expired'])
+  "status": zod.enum(['active', 'paused', 'expired']),
+  "source": zod.enum(['local', 'yoactiv']).optional()
 }),zod.null()])
 
 

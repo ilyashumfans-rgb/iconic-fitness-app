@@ -58,6 +58,7 @@ export * from './mealInputMealType';
 export * from './membershipPlan';
 export * from './membershipPlanBillingPeriod';
 export * from './myMembership';
+export * from './myMembershipSource';
 export * from './myMembershipStatus';
 export * from './notification';
 export * from './okResponse';

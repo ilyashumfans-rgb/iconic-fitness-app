@@ -20,6 +20,7 @@
 - [Inline autoplay YouTube (Expo web+native)](rn-inline-youtube-autoplay.md) — platform-split .web.tsx iframe / .tsx react-native-webview, mute=1 to autoplay, pointerEvents:none so carousel swipe/tap still work; web insets.top===0.
 - [Brand button gradient](brand-button-gradient.md) — iconic-app primary buttons use `primaryGradient` token (LinearGradient fill) + white text; edit the token to restyle all; non-buttons stay flat.
 - [AI coach assessment tool writes](ai-assessment-tool-writes.md) — multi-turn LLM assessment save: merge (don't replace) JSON blob, gate completion stamp on core fields + idempotent, use nullable col as completion signal.
+- [YoActiv API integration](yoactiv-integration.md) — POST + API_Key/Branch_Id headers, `Mobile_No` field, key secrets pasted in swapped slots → keys auto-assigned by live probing.
 - [Expo notification sound + delivery](expo-notification-sound-delivery.md) — no push in Expo Go: poll /notifications/mine + fire LOCAL notif on per-user id delta; sound needs handler shouldPlaySound + Android channel.
 - [Async-derived UI gating](async-derived-ui-gating.md) — gate per-viewer content (audience/role/flags) on query-settled tri-state, not `!!data`, or members flash the wrong audience's content while loading.
 - [Deploy promote fails: probe & pg pool](deploy-healthcheck-and-pool.md) — build ok but "failed to initialize": mount /healthz before DB/session middleware; add pool.on('error') so idle-conn drops don't crash Node.
