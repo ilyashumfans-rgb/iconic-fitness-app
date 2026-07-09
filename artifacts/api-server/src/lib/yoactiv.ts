@@ -392,3 +392,84 @@ export function pickPrimaryMembership(
   });
   return rows[0] ?? null;
 }
+
+// ─── Personal trainer roster ─────────────────────────────────────────────────
+
+export type YoactivTrainer = {
+  id: string;
+  name: string;
+};
+
+type StaffRow = { ID?: unknown; Staff?: unknown; Mobile?: unknown };
+type GetStaffResponse = { Data?: { PTStaffs?: StaffRow[] } };
+
+const TRAINERS_SUCCESS_TTL_MS = 10 * 60 * 1000;
+const TRAINERS_FAILURE_TTL_MS = 60 * 1000;
+const TRAINERS_BUDGET_MS = 10_000;
+
+let trainersCache: { at: number; ttlMs: number; value: YoactivTrainer[] } | null =
+  null;
+
+/**
+ * Fetch the personal-trainer (PT staff) roster across every configured
+ * branch, deduped by mobile number. Trainer mobile numbers are intentionally
+ * NOT exposed on the returned shape — they are staff PII; booking goes
+ * through the in-app leads flow instead.
+ */
+export async function fetchYoactivTrainers(): Promise<YoactivTrainer[]> {
+  if (trainersCache && Date.now() - trainersCache.at < trainersCache.ttlMs) {
+    return trainersCache.value;
+  }
+  const configs = await yoactivKeyConfigs();
+  if (configs.length === 0) return [];
+  try {
+    const value = await withDeadline(
+      fetchTrainersAcrossKeys(configs),
+      TRAINERS_BUDGET_MS,
+    );
+    trainersCache = { at: Date.now(), ttlMs: TRAINERS_SUCCESS_TTL_MS, value };
+    return value;
+  } catch (err) {
+    logger.warn({ err }, "yoactiv trainer roster fetch failed");
+    const stale = trainersCache?.value ?? [];
+    trainersCache = { at: Date.now(), ttlMs: TRAINERS_FAILURE_TTL_MS, value: stale };
+    return stale;
+  }
+}
+
+async function fetchTrainersAcrossKeys(
+  configs: KeyConfig[],
+): Promise<YoactivTrainer[]> {
+  const perBranch = configs.flatMap((config) =>
+    config.branchIds.map(async (branchId) => {
+      try {
+        const res = await yoactivPost<GetStaffResponse>(
+          "/Billing/GetStaff",
+          config.apiKey,
+          branchId,
+          { PT: 1 },
+        );
+        return res.Data?.PTStaffs ?? [];
+      } catch {
+        return [] as StaffRow[];
+      }
+    }),
+  );
+  const rows = (await Promise.all(perBranch)).flat();
+  const seen = new Set<string>();
+  const trainers: YoactivTrainer[] = [];
+  for (const row of rows) {
+    const id = String(row.ID ?? "").trim();
+    const name = String(row.Staff ?? "").trim();
+    if (!id || !name) continue;
+    // Dedupe: the same trainer can appear under multiple branches. Mobile is
+    // the stable identity when present; fall back to the staff id.
+    const mobile = normalizeMobile(typeof row.Mobile === "string" ? row.Mobile : null);
+    const dedupeKey = mobile ?? `id:${id}`;
+    if (seen.has(dedupeKey)) continue;
+    seen.add(dedupeKey);
+    trainers.push({ id, name });
+  }
+  trainers.sort((a, b) => a.name.localeCompare(b.name));
+  return trainers;
+}

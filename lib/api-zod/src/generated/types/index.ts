@@ -50,6 +50,7 @@ export * from './listMyBookingsParams';
 export * from './listMyBookingsStatus';
 export * from './listStoreProductsParams';
 export * from './listTrainersParams';
+export * from './liveTrainer';
 export * from './mealDay';
 export * from './mealEntry';
 export * from './mealEntryMealType';

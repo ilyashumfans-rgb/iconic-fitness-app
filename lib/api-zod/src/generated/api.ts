@@ -621,6 +621,16 @@ export const CancelBookingResponse = zod.object({
 
 
 /**
+ * @summary Live personal-trainer roster from the gym-management system (empty if unavailable)
+ */
+export const ListLiveTrainersResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string()
+})
+export const ListLiveTrainersResponse = zod.array(ListLiveTrainersResponseItem)
+
+
+/**
  * @summary Browse trainers in the marketplace
  */
 export const ListTrainersQueryParams = zod.object({

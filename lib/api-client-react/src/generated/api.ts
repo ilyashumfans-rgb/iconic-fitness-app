@@ -49,6 +49,7 @@ import type {
   ListMyBookingsParams,
   ListStoreProductsParams,
   ListTrainersParams,
+  LiveTrainer,
   MealDay,
   MealInput,
   MembershipPayment,
@@ -2065,6 +2066,83 @@ export const useCancelBooking = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getCancelBookingMutationOptions(options));
     }
+
+export const getListLiveTrainersUrl = () => {
+
+
+
+
+  return `/api/trainers/live`
+}
+
+/**
+ * @summary Live personal-trainer roster from the gym-management system (empty if unavailable)
+ */
+export const listLiveTrainers = async ( options?: RequestInit): Promise<LiveTrainer[]> => {
+
+  return customFetch<LiveTrainer[]>(getListLiveTrainersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListLiveTrainersQueryKey = () => {
+    return [
+    `/api/trainers/live`
+    ] as const;
+    }
+
+
+export const getListLiveTrainersQueryOptions = <TData = Awaited<ReturnType<typeof listLiveTrainers>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listLiveTrainers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListLiveTrainersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listLiveTrainers>>> = ({ signal }) => listLiveTrainers({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listLiveTrainers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListLiveTrainersQueryResult = NonNullable<Awaited<ReturnType<typeof listLiveTrainers>>>
+export type ListLiveTrainersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Live personal-trainer roster from the gym-management system (empty if unavailable)
+ */
+
+export function useListLiveTrainers<TData = Awaited<ReturnType<typeof listLiveTrainers>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listLiveTrainers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListLiveTrainersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getListTrainersUrl = (params?: ListTrainersParams,) => {
   const normalizedParams = new URLSearchParams();

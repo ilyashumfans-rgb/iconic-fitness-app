@@ -1,5 +1,10 @@
 import { Feather } from "@expo/vector-icons";
-import { useListTrainers, type Trainer } from "@workspace/api-client-react";
+import {
+  useListLiveTrainers,
+  useListTrainers,
+  type LiveTrainer,
+  type Trainer,
+} from "@workspace/api-client-react";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Image, Pressable, View } from "react-native";
@@ -20,8 +25,17 @@ import { resolveImageUrl } from "@/lib/images";
 
 export default function TrainersScreen() {
   const router = useRouter();
+  const liveQuery = useListLiveTrainers();
   const query = useListTrainers({});
   const [specialty, setSpecialty] = useState<string | null>(null);
+
+  const liveTrainers = useMemo(
+    () => liveQuery.data ?? [],
+    [liveQuery.data],
+  );
+  // The gym-management system is the real roster; fall back to the in-app
+  // trainer profiles only when it has nothing for us.
+  const useLive = liveTrainers.length > 0;
 
   const trainers = useMemo(() => query.data ?? [], [query.data]);
   const specialties = useMemo(
@@ -37,16 +51,34 @@ export default function TrainersScreen() {
   return (
     <Screen
       contentContainerStyle={{ paddingTop: 8 }}
-      refreshing={query.isRefetching}
-      onRefresh={() => void query.refetch()}
+      refreshing={liveQuery.isRefetching || query.isRefetching}
+      onRefresh={() => {
+        void liveQuery.refetch();
+        void query.refetch();
+      }}
     >
       <ModalHeader title="Personal Trainers" />
       <AppText muted size={14} style={{ marginBottom: 16 }}>
         Browse certified coaches and request a 1-on-1 session.
       </AppText>
 
-      {query.isLoading ? (
+      {liveQuery.isLoading || (!useLive && query.isLoading) ? (
         <LoadingView />
+      ) : useLive ? (
+        <View style={{ gap: 12 }}>
+          {liveTrainers.map((t) => (
+            <LiveTrainerCard
+              key={t.id}
+              trainer={t}
+              onPress={() =>
+                router.push({
+                  pathname: "/book-trainer",
+                  params: { trainerName: t.name },
+                })
+              }
+            />
+          ))}
+        </View>
       ) : query.isError ? (
         <ErrorView onRetry={() => void query.refetch()} />
       ) : trainers.length === 0 ? (
@@ -89,6 +121,58 @@ export default function TrainersScreen() {
         </>
       )}
     </Screen>
+  );
+}
+
+function LiveTrainerCard({
+  trainer,
+  onPress,
+}: {
+  trainer: LiveTrainer;
+  onPress: () => void;
+}) {
+  const colors = useColors();
+  const initials = trainer.name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]!.toUpperCase())
+    .join("");
+
+  return (
+    <Pressable onPress={onPress}>
+      <Card>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+          <View
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: 14,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: colors.elevated,
+            }}
+          >
+            <AppText weight="700" size={16} color={colors.primary}>
+              {initials || "PT"}
+            </AppText>
+          </View>
+          <View style={{ flex: 1 }}>
+            <AppText weight="700" size={16}>
+              {trainer.name}
+            </AppText>
+            <AppText muted size={13} style={{ marginTop: 1 }}>
+              Personal Trainer
+            </AppText>
+          </View>
+          <Feather
+            name="chevron-right"
+            size={20}
+            color={colors.mutedForeground}
+          />
+        </View>
+      </Card>
+    </Pressable>
   );
 }
 

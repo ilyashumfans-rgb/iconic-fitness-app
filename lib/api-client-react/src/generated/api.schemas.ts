@@ -269,6 +269,11 @@ export interface MyMembership {
   source?: MyMembershipSource;
 }
 
+export interface LiveTrainer {
+  id: string;
+  name: string;
+}
+
 export type MembershipPaymentStatus = typeof MembershipPaymentStatus[keyof typeof MembershipPaymentStatus];
 
 

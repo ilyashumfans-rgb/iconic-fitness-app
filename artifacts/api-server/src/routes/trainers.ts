@@ -4,11 +4,24 @@ import { db, trainersTable } from "@workspace/db";
 import {
   ListTrainersQueryParams,
   ListTrainersResponse,
+  ListLiveTrainersResponse,
   GetTrainerParams,
   GetTrainerResponse,
 } from "@workspace/api-zod";
+import { fetchYoactivTrainers, yoactivConfigured } from "../lib/yoactiv";
 
 const router: IRouter = Router();
+
+// NOTE: must be registered before /trainers/:trainerId so "live" isn't
+// captured as a trainer id.
+router.get("/trainers/live", async (_req, res): Promise<void> => {
+  if (!yoactivConfigured()) {
+    res.json(ListLiveTrainersResponse.parse([]));
+    return;
+  }
+  const trainers = await fetchYoactivTrainers();
+  res.json(ListLiveTrainersResponse.parse(trainers));
+});
 
 router.get("/trainers", async (req, res): Promise<void> => {
   const parsed = ListTrainersQueryParams.safeParse(req.query);
