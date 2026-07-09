@@ -22,6 +22,7 @@ import {
   workoutsTable,
   staffTable,
   partnerDocumentsTable,
+  trainerBookingsTable,
 } from "@workspace/db";
 import {
   hashPassword,
@@ -1037,6 +1038,12 @@ router.post(
             : Number(b.ownerPartnerId),
         payoutPerVisitInr: Number(b.payoutPerVisitInr ?? 0),
         payoutTaxPct: Number(b.payoutTaxPct ?? 18),
+        yoactivBranchId:
+          b.yoactivBranchId === undefined ||
+          b.yoactivBranchId === null ||
+          b.yoactivBranchId === ""
+            ? null
+            : Number(b.yoactivBranchId),
       })
       .returning();
     res.status(201).json(created);
@@ -1089,6 +1096,12 @@ router.patch(
     if (b.videoUrl !== undefined) {
       patch.videoUrl =
         b.videoUrl === null || b.videoUrl === "" ? null : String(b.videoUrl);
+    }
+    if (b.yoactivBranchId !== undefined) {
+      patch.yoactivBranchId =
+        b.yoactivBranchId === null || b.yoactivBranchId === ""
+          ? null
+          : Number(b.yoactivBranchId);
     }
     const [updated] = await db
       .update(gymsTable)
@@ -2100,6 +2113,33 @@ router.delete(
     const id = Number(req.params.id);
     await db.delete(staffTable).where(eq(staffTable.id, id));
     res.json({ ok: true });
+  },
+);
+
+// Paid personal-training session bookings across all branches.
+router.get(
+  "/admin/trainer-bookings",
+  requireAdmin,
+  async (_req: Request, res: Response): Promise<void> => {
+    const rows = await db
+      .select({
+        id: trainerBookingsTable.id,
+        gymId: trainerBookingsTable.gymId,
+        gymName: trainerBookingsTable.gymName,
+        trainerName: trainerBookingsTable.trainerName,
+        memberName: trainerBookingsTable.memberName,
+        mobile: trainerBookingsTable.mobile,
+        packageName: trainerBookingsTable.packageName,
+        serviceName: trainerBookingsTable.serviceName,
+        amountInr: trainerBookingsTable.amountInr,
+        preferredDate: trainerBookingsTable.preferredDate,
+        status: trainerBookingsTable.status,
+        createdAt: trainerBookingsTable.createdAt,
+      })
+      .from(trainerBookingsTable)
+      .orderBy(desc(trainerBookingsTable.createdAt))
+      .limit(5000);
+    res.json(rows);
   },
 );
 

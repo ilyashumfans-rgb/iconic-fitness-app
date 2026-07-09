@@ -86,7 +86,16 @@ YoActiv (api.yoactiv.com) is the source of truth for member plans, payments, and
 - **Keys/branches:** secrets `YOACTIV_SANDBOX_API_KEY`/`YOACTIV_API_KEY_1`/`YOACTIV_API_KEY_2` + env `YOACTIV_BRANCH_IDS_1`/`_2` (16 prod branches each), sandbox branch 7820. **Slot names untrusted** (values pasted swapped) — client probes each key against each branch set once per process and auto-assigns (partial resolution retries after 60s). Sandbox in dev, live in prod (`YOACTIV_MODE` overrides). See `.agents/memory/yoactiv-integration.md`.
 - **Plan:** `GET /memberships/mine` prefers the YoActiv plan by mobile, local `userMembershipsTable` fallback; `source: local|yoactiv` on `MyMembership`.
 - **Payment history:** `GET /memberships/mine/payments` (`requireUser`) → `MembershipPayment[]` (billId, plan, invoice/start/expiry dates, `amountInr` from `upgradeDetails.total_due`, status), newest-first; `[]` when unlinked. Mobile Profile shows a "Payment history" card (top 10) when rows exist.
-- **Live trainer roster:** public `GET /trainers/live` (registered **before** `/trainers/:trainerId`) → `LiveTrainer[] {id,name}` via `Billing/GetStaff {PT:1}` per branch, deduped by normalized mobile (mobiles are PII, never exposed), 10-min/60s cache with stale-on-failure. Mobile `app/trainers.tsx` prefers it; tap → `app/book-trainer.tsx` modal → `kind="general"` lead (`source: "iconic-app-live-trainer"`).
+- **Live trainer roster:** public `GET /trainers/live` (registered **before** `/trainers/:trainerId`) → `LiveTrainer[] {id,name}` via `Billing/GetStaff {PT:1}` per branch, deduped by normalized mobile (mobiles are PII, never exposed), 10-min/60s cache with stale-on-failure. Accepts `?gymId=` → gym's `yoactivBranchId` (strict: unmapped gym → `[]`). Mobile `app/trainers.tsx` (branch picker → per-branch roster) prefers it; tap → `app/book-trainer.tsx`.
+
+### Paid trainer booking (YoActiv hosted Razorpay)
+
+Member picks branch → live trainer → PT package (live prices) → pays on YoActiv's hosted Razorpay page (`Billing/APIPayment` PaymentURL, ~5 min validity).
+
+- Gym↔branch mapping: `gymsTable.yoactivBranchId` (admin GymManagement form field, POST+PATCH). **Strict scoping — never a default-branch fallback** (money path): unmapped gym → no packages/roster, `POST /trainer-bookings` 409; mobile then falls back to the free enquiry lead flow. See `.agents/memory/yoactiv-branch-scoping.md`.
+- Server `routes/trainerBookings.ts`: `GET /trainer-packages?gymId` (from `Billing/GetServices` variations, PT-first, cached); `POST /trainer-bookings` (requireUser, server-side price re-verify, `ensureYoactivMemberId`, pending `trainerBookingsTable` row with 48-hex token, payment URL with success/failed redirects `/api/pay/trainer/:token/:outcome`); landing route flips pending→paid/failed (only from pending) with HTML page; `GET /trainer-bookings/:id` owner-only status poll (mobile polls 4s). **Caveat: `paid` set by redirect only — no webhook verification.**
+- Mobile `app/book-trainer.tsx`: paid flow when packages exist (sign-in required, prefill from `/me`, Pay ₹ → external browser, poll → paid/failed screen); enquiry fallback otherwise.
+- Dashboards: partner `/partner/gx-bookings`-style page at `/partner/trainer-bookings` ("PT Bookings", ownedGymIds-scoped) + admin `/admin/trainer-bookings`; shared `TrainerBookingsTable.tsx`.
 
 ### Member notifications & sound (mobile)
 

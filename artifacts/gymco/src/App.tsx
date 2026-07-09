@@ -36,6 +36,7 @@ import PartnerClasses from "@/pages/partner/Classes";
 import PartnerTrainers from "@/pages/partner/Trainers";
 import PartnerSchedule from "@/pages/partner/Schedule";
 import PartnerGxBookings from "@/pages/partner/GxBookings";
+import PartnerTrainerBookings from "@/pages/partner/TrainerBookings";
 import PartnerProducts from "@/pages/partner/PartnerProducts";
 import PartnerSettings from "@/pages/partner/Settings";
 import PartnerTeam from "@/pages/partner/Team";
@@ -78,6 +79,7 @@ import AdminSsoCallback from "@/pages/admin/SsoCallback";
 import AdminStaffManagement from "@/pages/admin/StaffManagement";
 import AdminTeam from "@/pages/admin/AdminUsers";
 import AdminAgencies from "@/pages/admin/Agencies";
+import AdminTrainerBookings from "@/pages/admin/TrainerBookings";
 import AdminHomeSlides from "@/pages/admin/HomeSlides";
 import AdminNotifications from "@/pages/admin/Notifications";
 import AdminLeads from "@/pages/admin/Leads";
@@ -311,6 +313,7 @@ function AppShell() {
         <Route path="/partner/trainers" component={PartnerTrainers} />
         <Route path="/partner/schedule" component={PartnerSchedule} />
         <Route path="/partner/gx-bookings" component={PartnerGxBookings} />
+        <Route path="/partner/trainer-bookings" component={PartnerTrainerBookings} />
         <Route path="/partner/products" component={PartnerProducts} />
         <Route path="/partner/staff" component={PartnerTeam} />
         <Route path="/partner/tickets" component={PartnerTickets} />
@@ -360,6 +363,7 @@ function AppShell() {
         <Route path="/admin/staff" component={AdminStaffManagement} />
         <Route path="/admin/admins" component={AdminTeam} />
         <Route path="/admin/agencies" component={AdminAgencies} />
+        <Route path="/admin/trainer-bookings" component={AdminTrainerBookings} />
         <Route path="/admin/notifications" component={AdminNotifications} />
         <Route path="/admin/leads" component={AdminLeads} />
         <Route path="/admin/home-slider" component={AdminHomeSlides} />

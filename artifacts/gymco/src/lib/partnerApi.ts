@@ -153,6 +153,21 @@ export type PartnerGxBooking = {
   createdAt: string;
 };
 
+export type TrainerBookingRow = {
+  id: number;
+  gymId: number;
+  gymName: string;
+  trainerName: string;
+  memberName: string;
+  mobile: string;
+  packageName: string;
+  serviceName: string;
+  amountInr: number;
+  preferredDate: string; // "YYYY-MM-DD"
+  status: "pending" | "paid" | "failed";
+  createdAt: string;
+};
+
 export type PartnerEarnings = {
   today: { visits: number; payoutInr: number };
   week: { visits: number; payoutInr: number };
@@ -319,6 +334,9 @@ export const partnerApi = {
   },
   gxBookings: {
     list: () => request<PartnerGxBooking[]>("/partner/gx-bookings"),
+  },
+  trainerBookings: {
+    list: () => request<TrainerBookingRow[]>("/partner/trainer-bookings"),
   },
   classes: {
     list: () => request<PartnerClass[]>("/partner/classes"),

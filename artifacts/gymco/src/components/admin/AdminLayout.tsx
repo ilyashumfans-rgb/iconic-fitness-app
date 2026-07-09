@@ -175,6 +175,11 @@ const SECTIONS: Section[] = [
         href: "/admin/tickets",
         icon: <LifeBuoy className="h-4 w-4" />,
       },
+      {
+        label: "PT Bookings",
+        href: "/admin/trainer-bookings",
+        icon: <CalendarClock className="h-4 w-4" />,
+      },
     ],
   },
   {

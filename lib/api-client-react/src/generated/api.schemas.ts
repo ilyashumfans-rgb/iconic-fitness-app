@@ -274,6 +274,65 @@ export interface LiveTrainer {
   name: string;
 }
 
+export interface TrainerPackage {
+  id: number;
+  serviceName: string;
+  name: string;
+  amountInr: number;
+  sessions?: number | null;
+  duration: string;
+  pt: boolean;
+}
+
+export interface CreateTrainerBookingRequest {
+  gymId: number;
+  packageId: number;
+  trainerId?: string;
+  trainerName?: string;
+  /** @minLength 2 */
+  name: string;
+  /** @minLength 10 */
+  mobile: string;
+  /** ISO date (YYYY-MM-DD) */
+  preferredDate: string;
+}
+
+export type TrainerBookingCreatedStatus = typeof TrainerBookingCreatedStatus[keyof typeof TrainerBookingCreatedStatus];
+
+
+export const TrainerBookingCreatedStatus = {
+  pending: 'pending',
+  paid: 'paid',
+  failed: 'failed',
+} as const;
+
+export interface TrainerBookingCreated {
+  id: number;
+  status: TrainerBookingCreatedStatus;
+  amountInr: number;
+  paymentUrl: string;
+}
+
+export type TrainerBookingStatus = typeof TrainerBookingStatus[keyof typeof TrainerBookingStatus];
+
+
+export const TrainerBookingStatus = {
+  pending: 'pending',
+  paid: 'paid',
+  failed: 'failed',
+} as const;
+
+export interface TrainerBooking {
+  id: number;
+  status: TrainerBookingStatus;
+  amountInr: number;
+  packageName: string;
+  trainerName: string;
+  gymName: string;
+  preferredDate: string;
+  createdAt: string;
+}
+
 export type MembershipPaymentStatus = typeof MembershipPaymentStatus[keyof typeof MembershipPaymentStatus];
 
 
@@ -728,6 +787,17 @@ export const ListMyBookingsStatus = {
   past: 'past',
   cancelled: 'cancelled',
 } as const;
+
+export type ListLiveTrainersParams = {
+/**
+ * Scope the roster to a branch (gym) when it is mapped to a YoActiv branch
+ */
+gymId?: number;
+};
+
+export type ListTrainerPackagesParams = {
+gymId: number;
+};
 
 export type ListTrainersParams = {
 specialty?: string;

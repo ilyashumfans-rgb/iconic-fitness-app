@@ -623,11 +623,80 @@ export const CancelBookingResponse = zod.object({
 /**
  * @summary Live personal-trainer roster from the gym-management system (empty if unavailable)
  */
+export const ListLiveTrainersQueryParams = zod.object({
+  "gymId": zod.coerce.number().optional().describe('Scope the roster to a branch (gym) when it is mapped to a YoActiv branch')
+})
+
 export const ListLiveTrainersResponseItem = zod.object({
   "id": zod.string(),
   "name": zod.string()
 })
 export const ListLiveTrainersResponse = zod.array(ListLiveTrainersResponseItem)
+
+
+/**
+ * @summary Purchasable session packages for a branch (live prices from the gym-management system)
+ */
+export const ListTrainerPackagesQueryParams = zod.object({
+  "gymId": zod.coerce.number()
+})
+
+export const ListTrainerPackagesResponseItem = zod.object({
+  "id": zod.number(),
+  "serviceName": zod.string(),
+  "name": zod.string(),
+  "amountInr": zod.number(),
+  "sessions": zod.number().nullish(),
+  "duration": zod.string(),
+  "pt": zod.boolean()
+})
+export const ListTrainerPackagesResponse = zod.array(ListTrainerPackagesResponseItem)
+
+
+/**
+ * @summary Start a paid trainer-session booking; returns the hosted payment link
+ */
+export const createTrainerBookingBodyNameMin = 2;
+
+export const createTrainerBookingBodyMobileMin = 10;
+
+
+
+export const CreateTrainerBookingBody = zod.object({
+  "gymId": zod.number(),
+  "packageId": zod.number(),
+  "trainerId": zod.string().optional(),
+  "trainerName": zod.string().optional(),
+  "name": zod.string().min(createTrainerBookingBodyNameMin),
+  "mobile": zod.string().min(createTrainerBookingBodyMobileMin),
+  "preferredDate": zod.string().describe('ISO date (YYYY-MM-DD)')
+})
+
+export const CreateTrainerBookingResponse = zod.object({
+  "id": zod.number(),
+  "status": zod.enum(['pending', 'paid', 'failed']),
+  "amountInr": zod.number(),
+  "paymentUrl": zod.string()
+})
+
+
+/**
+ * @summary Status of one of the caller's trainer bookings
+ */
+export const GetTrainerBookingParams = zod.object({
+  "bookingId": zod.coerce.number()
+})
+
+export const GetTrainerBookingResponse = zod.object({
+  "id": zod.number(),
+  "status": zod.enum(['pending', 'paid', 'failed']),
+  "amountInr": zod.number(),
+  "packageName": zod.string(),
+  "trainerName": zod.string(),
+  "gymName": zod.string(),
+  "preferredDate": zod.string(),
+  "createdAt": zod.coerce.date()
+})
 
 
 /**

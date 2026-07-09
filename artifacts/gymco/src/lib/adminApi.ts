@@ -350,6 +350,12 @@ export const adminApi = {
         method: "POST",
       }),
   },
+  trainerBookings: {
+    list: () =>
+      request<import("./partnerApi").TrainerBookingRow[]>(
+        "/admin/trainer-bookings",
+      ),
+  },
   agencies: {
     list: () =>
       request<AgencyAccount[]>("/admin/agencies"),

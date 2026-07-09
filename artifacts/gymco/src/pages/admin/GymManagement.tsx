@@ -42,6 +42,10 @@ function GymForm({
       initial?.ownerPartnerId === undefined || initial?.ownerPartnerId === null
         ? ""
         : String(initial.ownerPartnerId),
+    yoactivBranchId:
+      initial?.yoactivBranchId === undefined || initial?.yoactivBranchId === null
+        ? ""
+        : String(initial.yoactivBranchId),
   });
   const [busy, setBusy] = useState(false);
 
@@ -55,6 +59,8 @@ function GymForm({
         payoutPerVisitInr: Number(f.payoutPerVisitInr),
         payoutTaxPct: Number(f.payoutTaxPct),
         ownerPartnerId: f.ownerPartnerId === "" ? null : Number(f.ownerPartnerId),
+        yoactivBranchId:
+          f.yoactivBranchId.trim() === "" ? null : Number(f.yoactivBranchId),
         videoUrl: f.videoUrl.trim() === "" ? null : f.videoUrl.trim(),
         categories: String(f.categories)
           .split(",")
@@ -97,6 +103,18 @@ function GymForm({
           value={f.payoutTaxPct}
           onChange={(v) => setF({ ...f, payoutTaxPct: v as any })}
         />
+        <div className="sm:col-span-2">
+          <Input
+            label="YoActiv branch ID (for PT bookings & live trainers)"
+            value={f.yoactivBranchId}
+            onChange={(v) => setF({ ...f, yoactivBranchId: v })}
+          />
+          <div className="text-[11px] text-slate-500 mt-1">
+            The branch's ID in the YoActiv gym-management system. Needed so
+            members can see this branch's live trainer roster and pay for PT
+            packages online. Leave blank if not connected.
+          </div>
+        </div>
         <div className="sm:col-span-2">
           <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
             Owner partner

@@ -76,6 +76,34 @@ export const gymsTable = pgTable("gyms", {
   ownerPartnerId: integer("owner_partner_id"),
   payoutPerVisitInr: integer("payout_per_visit_inr").notNull().default(0),
   payoutTaxPct: integer("payout_tax_pct").notNull().default(18),
+  // Maps this branch to its YoActiv Branch_Id so branch-scoped trainer
+  // rosters and PT-package pricing can be pulled from the right branch.
+  yoactivBranchId: integer("yoactiv_branch_id"),
+});
+
+// Paid personal-training session bookings made from the mobile app.
+// Payment runs through YoActiv's hosted Razorpay page (Billing/APIPayment);
+// status moves pending → paid/failed via the redirect landing routes.
+export const trainerBookingsTable = pgTable("trainer_bookings", {
+  id: serial("id").primaryKey(),
+  token: text("token").notNull().unique(),
+  userId: integer("user_id"),
+  gymId: integer("gym_id").notNull(),
+  gymName: text("gym_name").notNull().default(""),
+  branchId: integer("branch_id").notNull().default(0),
+  trainerId: text("trainer_id").notNull().default(""),
+  trainerName: text("trainer_name").notNull().default(""),
+  memberName: text("member_name").notNull().default(""),
+  mobile: text("mobile").notNull().default(""),
+  packageName: text("package_name").notNull().default(""),
+  serviceName: text("service_name").notNull().default(""),
+  amountInr: integer("amount_inr").notNull().default(0),
+  preferredDate: text("preferred_date").notNull().default(""),
+  status: text("status").notNull().default("pending"), // pending | paid | failed
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  paidAt: timestamp("paid_at", { withTimezone: true }),
 });
 
 // Agency portal accounts. Each agency user is a read-only login scoped to a set

@@ -4,22 +4,39 @@ import { db, trainersTable } from "@workspace/db";
 import {
   ListTrainersQueryParams,
   ListTrainersResponse,
+  ListLiveTrainersQueryParams,
   ListLiveTrainersResponse,
   GetTrainerParams,
   GetTrainerResponse,
 } from "@workspace/api-zod";
+import { gymsTable } from "@workspace/db";
 import { fetchYoactivTrainers, yoactivConfigured } from "../lib/yoactiv";
 
 const router: IRouter = Router();
 
 // NOTE: must be registered before /trainers/:trainerId so "live" isn't
 // captured as a trainer id.
-router.get("/trainers/live", async (_req, res): Promise<void> => {
+router.get("/trainers/live", async (req, res): Promise<void> => {
   if (!yoactivConfigured()) {
     res.json(ListLiveTrainersResponse.parse([]));
     return;
   }
-  const trainers = await fetchYoactivTrainers();
+  const parsed = ListLiveTrainersQueryParams.safeParse(req.query);
+  let branchId: number | undefined;
+  if (parsed.success && parsed.data.gymId !== undefined) {
+    const [gym] = await db
+      .select({ yoactivBranchId: gymsTable.yoactivBranchId })
+      .from(gymsTable)
+      .where(eq(gymsTable.id, parsed.data.gymId));
+    // A gym without a branch mapping has no live roster — the app then shows
+    // the local trainer profiles instead of another branch's coaches.
+    if (!gym?.yoactivBranchId) {
+      res.json(ListLiveTrainersResponse.parse([]));
+      return;
+    }
+    branchId = gym.yoactivBranchId;
+  }
+  const trainers = await fetchYoactivTrainers(branchId);
   res.json(ListLiveTrainersResponse.parse(trainers));
 });
 

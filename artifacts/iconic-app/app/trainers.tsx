@@ -1,7 +1,11 @@
 import { Feather } from "@expo/vector-icons";
 import {
+  getListLiveTrainersQueryKey,
+  getListTrainersQueryKey,
+  useListGyms,
   useListLiveTrainers,
   useListTrainers,
+  type Gym,
   type LiveTrainer,
   type Trainer,
 } from "@workspace/api-client-react";
@@ -25,14 +29,32 @@ import { resolveImageUrl } from "@/lib/images";
 
 export default function TrainersScreen() {
   const router = useRouter();
-  const liveQuery = useListLiveTrainers();
-  const query = useListTrainers({});
+  const colors = useColors();
+  const gymsQuery = useListGyms({});
+  const [gymId, setGymId] = useState<number | null>(null);
+
+  const gyms = useMemo(() => gymsQuery.data ?? [], [gymsQuery.data]);
+  const selectedGym = gyms.find((g) => g.id === gymId) ?? null;
+
+  const liveParams = gymId !== null ? { gymId } : undefined;
+  const liveQuery = useListLiveTrainers(liveParams, {
+    query: {
+      enabled: gymId !== null,
+      queryKey: getListLiveTrainersQueryKey(liveParams),
+    },
+  });
+  const query = useListTrainers(
+    {},
+    {
+      query: {
+        enabled: gymId !== null,
+        queryKey: getListTrainersQueryKey({}),
+      },
+    },
+  );
   const [specialty, setSpecialty] = useState<string | null>(null);
 
-  const liveTrainers = useMemo(
-    () => liveQuery.data ?? [],
-    [liveQuery.data],
-  );
+  const liveTrainers = useMemo(() => liveQuery.data ?? [], [liveQuery.data]);
   // The gym-management system is the real roster; fall back to the in-app
   // trainer profiles only when it has nothing for us.
   const useLive = liveTrainers.length > 0;
@@ -48,6 +70,40 @@ export default function TrainersScreen() {
     [trainers, specialty],
   );
 
+  // Step 1 — pick a branch.
+  if (gymId === null) {
+    return (
+      <Screen
+        contentContainerStyle={{ paddingTop: 8 }}
+        refreshing={gymsQuery.isRefetching}
+        onRefresh={() => void gymsQuery.refetch()}
+      >
+        <ModalHeader title="Personal Trainers" />
+        <AppText muted size={14} style={{ marginBottom: 16 }}>
+          Pick your branch to see its coaches.
+        </AppText>
+        {gymsQuery.isLoading ? (
+          <LoadingView />
+        ) : gymsQuery.isError ? (
+          <ErrorView onRetry={() => void gymsQuery.refetch()} />
+        ) : gyms.length === 0 ? (
+          <EmptyState
+            icon="map-pin"
+            title="No branches yet"
+            message="Check back soon."
+          />
+        ) : (
+          <View style={{ gap: 12 }}>
+            {gyms.map((g) => (
+              <BranchCard key={g.id} gym={g} onPress={() => setGymId(g.id)} />
+            ))}
+          </View>
+        )}
+      </Screen>
+    );
+  }
+
+  // Step 2 — trainers at the chosen branch.
   return (
     <Screen
       contentContainerStyle={{ paddingTop: 8 }}
@@ -58,9 +114,23 @@ export default function TrainersScreen() {
       }}
     >
       <ModalHeader title="Personal Trainers" />
-      <AppText muted size={14} style={{ marginBottom: 16 }}>
-        Browse certified coaches and request a 1-on-1 session.
-      </AppText>
+      <Pressable
+        onPress={() => setGymId(null)}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 6,
+          marginBottom: 16,
+        }}
+      >
+        <Feather name="map-pin" size={14} color={colors.primary} />
+        <AppText weight="600" size={14} color={colors.primary}>
+          {selectedGym?.name ?? "Branch"}
+        </AppText>
+        <AppText muted size={13}>
+          · change
+        </AppText>
+      </Pressable>
 
       {liveQuery.isLoading || (!useLive && query.isLoading) ? (
         <LoadingView />
@@ -73,7 +143,12 @@ export default function TrainersScreen() {
               onPress={() =>
                 router.push({
                   pathname: "/book-trainer",
-                  params: { trainerName: t.name },
+                  params: {
+                    trainerName: t.name,
+                    trainerId: t.id,
+                    gymId: String(gymId),
+                    gymName: selectedGym?.name ?? "",
+                  },
                 })
               }
             />
@@ -121,6 +196,43 @@ export default function TrainersScreen() {
         </>
       )}
     </Screen>
+  );
+}
+
+function BranchCard({ gym, onPress }: { gym: Gym; onPress: () => void }) {
+  const colors = useColors();
+  return (
+    <Pressable onPress={onPress}>
+      <Card>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+          <View
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: colors.elevated,
+            }}
+          >
+            <Feather name="map-pin" size={18} color={colors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <AppText weight="700" size={15}>
+              {gym.name}
+            </AppText>
+            <AppText muted size={13} style={{ marginTop: 1 }}>
+              {[gym.area, gym.city].filter(Boolean).join(", ")}
+            </AppText>
+          </View>
+          <Feather
+            name="chevron-right"
+            size={20}
+            color={colors.mutedForeground}
+          />
+        </View>
+      </Card>
+    </Pressable>
   );
 }
 

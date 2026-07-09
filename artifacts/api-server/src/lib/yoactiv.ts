@@ -407,32 +407,58 @@ const TRAINERS_SUCCESS_TTL_MS = 10 * 60 * 1000;
 const TRAINERS_FAILURE_TTL_MS = 60 * 1000;
 const TRAINERS_BUDGET_MS = 10_000;
 
-let trainersCache: { at: number; ttlMs: number; value: YoactivTrainer[] } | null =
-  null;
+const trainersCacheByBranch = new Map<
+  string,
+  { at: number; ttlMs: number; value: YoactivTrainer[] }
+>();
 
 /**
- * Fetch the personal-trainer (PT staff) roster across every configured
- * branch, deduped by mobile number. Trainer mobile numbers are intentionally
- * NOT exposed on the returned shape — they are staff PII; booking goes
- * through the in-app leads flow instead.
+ * Fetch the personal-trainer (PT staff) roster, deduped by mobile number.
+ * Trainer mobile numbers are intentionally NOT exposed on the returned
+ * shape — they are staff PII.
+ *
+ * When `branchId` is provided (a gym's mapped YoActiv branch), only that
+ * branch's staff is returned; otherwise the roster spans every configured
+ * branch. Branch-scoped requests share the same cache keyed by branch.
  */
-export async function fetchYoactivTrainers(): Promise<YoactivTrainer[]> {
-  if (trainersCache && Date.now() - trainersCache.at < trainersCache.ttlMs) {
-    return trainersCache.value;
-  }
+export async function fetchYoactivTrainers(
+  branchId?: number,
+): Promise<YoactivTrainer[]> {
   const configs = await yoactivKeyConfigs();
   if (configs.length === 0) return [];
+  const scoped =
+    branchId !== undefined
+      ? configs
+          .filter((c) => c.branchIds.includes(branchId))
+          .map((c) => ({ apiKey: c.apiKey, branchIds: [branchId] }))
+      : configs;
+  // A branch id that no key covers (bad mapping) yields an empty roster —
+  // never show another branch's trainers as if they were this branch's.
+  if (branchId !== undefined && scoped.length === 0) return [];
+  const effective = scoped.length > 0 ? scoped : configs;
+  const cacheKey = branchId !== undefined ? `b:${branchId}` : "all";
+
+  const cached = trainersCacheByBranch.get(cacheKey);
+  if (cached && Date.now() - cached.at < cached.ttlMs) return cached.value;
   try {
     const value = await withDeadline(
-      fetchTrainersAcrossKeys(configs),
+      fetchTrainersAcrossKeys(effective),
       TRAINERS_BUDGET_MS,
     );
-    trainersCache = { at: Date.now(), ttlMs: TRAINERS_SUCCESS_TTL_MS, value };
+    trainersCacheByBranch.set(cacheKey, {
+      at: Date.now(),
+      ttlMs: TRAINERS_SUCCESS_TTL_MS,
+      value,
+    });
     return value;
   } catch (err) {
     logger.warn({ err }, "yoactiv trainer roster fetch failed");
-    const stale = trainersCache?.value ?? [];
-    trainersCache = { at: Date.now(), ttlMs: TRAINERS_FAILURE_TTL_MS, value: stale };
+    const stale = cached?.value ?? [];
+    trainersCacheByBranch.set(cacheKey, {
+      at: Date.now(),
+      ttlMs: TRAINERS_FAILURE_TTL_MS,
+      value: stale,
+    });
     return stale;
   }
 }
@@ -472,4 +498,227 @@ async function fetchTrainersAcrossKeys(
   }
   trainers.sort((a, b) => a.name.localeCompare(b.name));
   return trainers;
+}
+
+// ─── PT packages, member creation & hosted payment ──────────────────────────
+
+export type YoactivPackage = {
+  id: number; // serviceVariationid — the id APIPayment books against
+  serviceName: string;
+  name: string;
+  amountInr: number;
+  sessions: number | null;
+  duration: string;
+  pt: boolean;
+};
+
+type ServiceRow = { serviceId?: number; serviceName?: string };
+type VariationRow = {
+  ServiceName?: string;
+  ServiceVariation?: string;
+  duration?: string;
+  amount?: number;
+  serviceVariationid?: number;
+  Session?: string;
+  PT?: number;
+};
+
+const PACKAGES_SUCCESS_TTL_MS = 10 * 60 * 1000;
+const PACKAGES_FAILURE_TTL_MS = 60 * 1000;
+const PACKAGES_BUDGET_MS = 12_000;
+
+const packagesCache = new Map<
+  string,
+  { at: number; ttlMs: number; value: YoactivPackage[] }
+>();
+
+/** Pick the key config + concrete branch to use for a gym's mapped branch. */
+export async function resolveBranchTarget(
+  branchId: number | null | undefined,
+): Promise<{ apiKey: string; branchId: number } | null> {
+  const configs = await yoactivKeyConfigs();
+  if (configs.length === 0) return null;
+  // Strict mapping: an unmapped or mis-mapped gym must NOT silently use some
+  // other branch — money would land in the wrong branch's account. Callers
+  // treat null as "paid flow unavailable" and fall back to enquiry capture.
+  if (!branchId) return null;
+  const match = configs.find((c) => c.branchIds.includes(branchId));
+  if (!match) return null;
+  return { apiKey: match.apiKey, branchId };
+}
+
+/**
+ * Purchasable session packages for a branch: every paid service variation,
+ * PT-flagged ones first. Cached per branch.
+ */
+export async function fetchYoactivPackages(
+  branchId: number | null | undefined,
+): Promise<YoactivPackage[]> {
+  const target = await resolveBranchTarget(branchId);
+  if (!target) return [];
+  const cacheKey = `b:${target.branchId}`;
+  const cached = packagesCache.get(cacheKey);
+  if (cached && Date.now() - cached.at < cached.ttlMs) return cached.value;
+  try {
+    const value = await withDeadline(fetchPackagesForBranch(target), PACKAGES_BUDGET_MS);
+    packagesCache.set(cacheKey, { at: Date.now(), ttlMs: PACKAGES_SUCCESS_TTL_MS, value });
+    return value;
+  } catch (err) {
+    logger.warn({ err }, "yoactiv packages fetch failed");
+    const stale = cached?.value ?? [];
+    packagesCache.set(cacheKey, { at: Date.now(), ttlMs: PACKAGES_FAILURE_TTL_MS, value: stale });
+    return stale;
+  }
+}
+
+async function fetchPackagesForBranch(target: {
+  apiKey: string;
+  branchId: number;
+}): Promise<YoactivPackage[]> {
+  const services = await yoactivPost<{ Data?: { Services?: ServiceRow[] } }>(
+    "/Billing/GetServices",
+    target.apiKey,
+    target.branchId,
+    {},
+  );
+  const rows = (services.Data?.Services ?? []).filter(
+    (s) => typeof s.serviceId === "number",
+  );
+  const variationLists = await Promise.allSettled(
+    rows.map((s) =>
+      yoactivPost<{ Data?: { ServiceVariations?: VariationRow[] } }>(
+        "/Billing/GetServiceVariations",
+        target.apiKey,
+        target.branchId,
+        { ServiceId: s.serviceId },
+      ),
+    ),
+  );
+  const packages: YoactivPackage[] = [];
+  for (const settled of variationLists) {
+    if (settled.status !== "fulfilled") continue;
+    for (const v of settled.value.Data?.ServiceVariations ?? []) {
+      if (typeof v.serviceVariationid !== "number") continue;
+      const amount = typeof v.amount === "number" ? v.amount : 0;
+      if (amount <= 0) continue; // free/test variations aren't sellable
+      const sessions = Number.parseInt(v.Session ?? "", 10);
+      packages.push({
+        id: v.serviceVariationid,
+        serviceName: v.ServiceName ?? "",
+        name: v.ServiceVariation ?? "",
+        amountInr: amount,
+        sessions: Number.isFinite(sessions) ? sessions : null,
+        duration: v.duration ?? "",
+        pt: v.PT === 1,
+      });
+    }
+  }
+  // PT-flagged packages first, then cheapest first inside each group.
+  packages.sort((a, b) =>
+    a.pt !== b.pt ? (a.pt ? -1 : 1) : a.amountInr - b.amountInr,
+  );
+  return packages;
+}
+
+/**
+ * Find (or create) the YoActiv member id for a mobile number on a branch.
+ * APIPayment needs a memberId; new customers are registered via AddMember.
+ */
+export async function ensureYoactivMemberId(
+  target: { apiKey: string; branchId: number },
+  mobile: string,
+  name: string,
+  email: string | null,
+): Promise<number | null> {
+  try {
+    const res = await yoactivPost<{ MemberId?: number; Error?: string }>(
+      "/Users/Fetch",
+      target.apiKey,
+      target.branchId,
+      { Mobile_No: mobile },
+    );
+    if (typeof res.MemberId === "number" && res.MemberId > 0) return res.MemberId;
+  } catch {
+    // fall through to AddMember
+  }
+  try {
+    const created = await yoactivPost<{
+      Data?: { Member_Id?: number };
+      Error?: string | null;
+    }>("/Billing/AddMember", target.apiKey, target.branchId, {
+      Name: name,
+      Mail: email ?? "",
+      Ccode: "+91",
+      Mobile: mobile,
+    });
+    const id = created.Data?.Member_Id;
+    if (typeof id === "number" && id > 0) return id;
+    // "already exists" without an id → re-fetch once.
+    const refetch = await yoactivPost<{ MemberId?: number }>(
+      "/Users/Fetch",
+      target.apiKey,
+      target.branchId,
+      { Mobile_No: mobile },
+    );
+    return typeof refetch.MemberId === "number" && refetch.MemberId > 0
+      ? refetch.MemberId
+      : null;
+  } catch (err) {
+    logger.warn({ err }, "yoactiv member ensure failed");
+    return null;
+  }
+}
+
+/** Format a Date as YoActiv's DD-MM-YYYY in IST. */
+export function toYoactivDate(isoDate: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate);
+  if (!m) throw new Error(`invalid ISO date: ${isoDate}`);
+  return `${m[3]}-${m[2]}-${m[1]}`;
+}
+
+/**
+ * Create a hosted Razorpay payment link for a service booking via YoActiv's
+ * Billing/APIPayment. The link is valid for ~5 minutes.
+ */
+export async function createYoactivPaymentUrl(args: {
+  target: { apiKey: string; branchId: number };
+  memberId: number;
+  variationId: number;
+  amountInr: number;
+  startDateIso: string;
+  successUrl: string;
+  failedUrl: string;
+}): Promise<string | null> {
+  try {
+    const res = await yoactivPost<{ PaymentURL?: string; Error?: string }>(
+      "/Billing/APIPayment",
+      args.target.apiKey,
+      args.target.branchId,
+      {
+        memberId: String(args.memberId),
+        Busid: "1",
+        Booktype: 0,
+        ServiceDetails: [
+          {
+            Fee: args.amountInr,
+            ServiceVariationID: args.variationId,
+            TotAmt: args.amountInr,
+            discount: 0,
+            disctype: 0,
+            Qty: 1,
+            StartDate: toYoactivDate(args.startDateIso),
+          },
+        ],
+        Amount: args.amountInr,
+        SuccessURL: args.successUrl,
+        FailedURL: args.failedUrl,
+      },
+    );
+    return typeof res.PaymentURL === "string" && res.PaymentURL.length > 0
+      ? res.PaymentURL
+      : null;
+  } catch (err) {
+    logger.warn({ err }, "yoactiv APIPayment failed");
+    return null;
+  }
 }

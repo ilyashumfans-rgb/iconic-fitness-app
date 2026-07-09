@@ -456,6 +456,11 @@ paths:
       operationId: listLiveTrainers
       tags: [trainers]
       summary: Live personal-trainer roster from the gym-management system (empty if unavailable)
+      parameters:
+        - in: query
+          name: gymId
+          schema: { type: integer }
+          description: Scope the roster to a branch (gym) when it is mapped to a YoActiv branch
       responses:
         "200":
           description: OK
@@ -464,6 +469,58 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/LiveTrainer" }
+
+  /trainer-packages:
+    get:
+      operationId: listTrainerPackages
+      tags: [trainers]
+      summary: Purchasable session packages for a branch (live prices from the gym-management system)
+      parameters:
+        - in: query
+          name: gymId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/TrainerPackage" }
+
+  /trainer-bookings:
+    post:
+      operationId: createTrainerBooking
+      tags: [trainers]
+      summary: Start a paid trainer-session booking; returns the hosted payment link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateTrainerBookingRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TrainerBookingCreated" }
+  /trainer-bookings/{bookingId}:
+    get:
+      operationId: getTrainerBooking
+      tags: [trainers]
+      summary: Status of one of the caller's trainer bookings
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TrainerBooking" }
 
   /trainers:
     get:
@@ -1051,6 +1108,48 @@ components:
       properties:
         id: { type: string }
         name: { type: string }
+    TrainerPackage:
+      type: object
+      required: [id, serviceName, name, amountInr, duration, pt]
+      properties:
+        id: { type: integer }
+        serviceName: { type: string }
+        name: { type: string }
+        amountInr: { type: number }
+        sessions: { type: integer, nullable: true }
+        duration: { type: string }
+        pt: { type: boolean }
+    CreateTrainerBookingRequest:
+      type: object
+      required: [gymId, packageId, name, mobile, preferredDate]
+      properties:
+        gymId: { type: integer }
+        packageId: { type: integer }
+        trainerId: { type: string }
+        trainerName: { type: string }
+        name: { type: string, minLength: 2 }
+        mobile: { type: string, minLength: 10 }
+        preferredDate: { type: string, description: "ISO date (YYYY-MM-DD)" }
+    TrainerBookingCreated:
+      type: object
+      required: [id, status, amountInr, paymentUrl]
+      properties:
+        id: { type: integer }
+        status: { type: string, enum: [pending, paid, failed] }
+        amountInr: { type: number }
+        paymentUrl: { type: string }
+    TrainerBooking:
+      type: object
+      required: [id, status, amountInr, packageName, trainerName, gymName, preferredDate, createdAt]
+      properties:
+        id: { type: integer }
+        status: { type: string, enum: [pending, paid, failed] }
+        amountInr: { type: number }
+        packageName: { type: string }
+        trainerName: { type: string }
+        gymName: { type: string }
+        preferredDate: { type: string }
+        createdAt: { type: string, format: date-time }
     MembershipPayment:
       type: object
       required: [billId, planName, serviceName, branchName, status]

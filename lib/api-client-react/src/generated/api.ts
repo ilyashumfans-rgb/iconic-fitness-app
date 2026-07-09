@@ -31,6 +31,7 @@ import type {
   CheckinInput,
   ClassSession,
   ClassSessionDetail,
+  CreateTrainerBookingRequest,
   DailySummary,
   DashboardSummary,
   GetMealDayParams,
@@ -46,8 +47,10 @@ import type {
   HomeSlide,
   ListClassesParams,
   ListGymsParams,
+  ListLiveTrainersParams,
   ListMyBookingsParams,
   ListStoreProductsParams,
+  ListTrainerPackagesParams,
   ListTrainersParams,
   LiveTrainer,
   MealDay,
@@ -61,6 +64,9 @@ import type {
   StoreCategory,
   StoreProduct,
   Trainer,
+  TrainerBooking,
+  TrainerBookingCreated,
+  TrainerPackage,
   UserProfile,
   UserProfileUpdate,
   Wallet,
@@ -2067,20 +2073,27 @@ export const useCancelBooking = <TError = ErrorType<unknown>,
       return useMutation(getCancelBookingMutationOptions(options));
     }
 
-export const getListLiveTrainersUrl = () => {
+export const getListLiveTrainersUrl = (params?: ListLiveTrainersParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/trainers/live`
+  return stringifiedParams.length > 0 ? `/api/trainers/live?${stringifiedParams}` : `/api/trainers/live`
 }
 
 /**
  * @summary Live personal-trainer roster from the gym-management system (empty if unavailable)
  */
-export const listLiveTrainers = async ( options?: RequestInit): Promise<LiveTrainer[]> => {
+export const listLiveTrainers = async (params?: ListLiveTrainersParams, options?: RequestInit): Promise<LiveTrainer[]> => {
 
-  return customFetch<LiveTrainer[]>(getListLiveTrainersUrl(),
+  return customFetch<LiveTrainer[]>(getListLiveTrainersUrl(params),
   {
     ...options,
     method: 'GET'
@@ -2093,23 +2106,23 @@ export const listLiveTrainers = async ( options?: RequestInit): Promise<LiveTrai
 
 
 
-export const getListLiveTrainersQueryKey = () => {
+export const getListLiveTrainersQueryKey = (params?: ListLiveTrainersParams,) => {
     return [
-    `/api/trainers/live`
+    `/api/trainers/live`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getListLiveTrainersQueryOptions = <TData = Awaited<ReturnType<typeof listLiveTrainers>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listLiveTrainers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getListLiveTrainersQueryOptions = <TData = Awaited<ReturnType<typeof listLiveTrainers>>, TError = ErrorType<unknown>>(params?: ListLiveTrainersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listLiveTrainers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListLiveTrainersQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getListLiveTrainersQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listLiveTrainers>>> = ({ signal }) => listLiveTrainers({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listLiveTrainers>>> = ({ signal }) => listLiveTrainers(params, { signal, ...requestOptions });
 
 
 
@@ -2127,11 +2140,243 @@ export type ListLiveTrainersQueryError = ErrorType<unknown>
  */
 
 export function useListLiveTrainers<TData = Awaited<ReturnType<typeof listLiveTrainers>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listLiveTrainers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ params?: ListLiveTrainersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listLiveTrainers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getListLiveTrainersQueryOptions(options)
+  const queryOptions = getListLiveTrainersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListTrainerPackagesUrl = (params: ListTrainerPackagesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/trainer-packages?${stringifiedParams}` : `/api/trainer-packages`
+}
+
+/**
+ * @summary Purchasable session packages for a branch (live prices from the gym-management system)
+ */
+export const listTrainerPackages = async (params: ListTrainerPackagesParams, options?: RequestInit): Promise<TrainerPackage[]> => {
+
+  return customFetch<TrainerPackage[]>(getListTrainerPackagesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTrainerPackagesQueryKey = (params?: ListTrainerPackagesParams,) => {
+    return [
+    `/api/trainer-packages`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListTrainerPackagesQueryOptions = <TData = Awaited<ReturnType<typeof listTrainerPackages>>, TError = ErrorType<unknown>>(params: ListTrainerPackagesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrainerPackages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTrainerPackagesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTrainerPackages>>> = ({ signal }) => listTrainerPackages(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTrainerPackages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTrainerPackagesQueryResult = NonNullable<Awaited<ReturnType<typeof listTrainerPackages>>>
+export type ListTrainerPackagesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Purchasable session packages for a branch (live prices from the gym-management system)
+ */
+
+export function useListTrainerPackages<TData = Awaited<ReturnType<typeof listTrainerPackages>>, TError = ErrorType<unknown>>(
+ params: ListTrainerPackagesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrainerPackages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTrainerPackagesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateTrainerBookingUrl = () => {
+
+
+
+
+  return `/api/trainer-bookings`
+}
+
+/**
+ * @summary Start a paid trainer-session booking; returns the hosted payment link
+ */
+export const createTrainerBooking = async (createTrainerBookingRequest: CreateTrainerBookingRequest, options?: RequestInit): Promise<TrainerBookingCreated> => {
+
+  return customFetch<TrainerBookingCreated>(getCreateTrainerBookingUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createTrainerBookingRequest,)
+  }
+);}
+
+
+
+
+export const getCreateTrainerBookingMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTrainerBooking>>, TError,{data: BodyType<CreateTrainerBookingRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTrainerBooking>>, TError,{data: BodyType<CreateTrainerBookingRequest>}, TContext> => {
+
+const mutationKey = ['createTrainerBooking'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTrainerBooking>>, {data: BodyType<CreateTrainerBookingRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createTrainerBooking(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateTrainerBookingMutationResult = NonNullable<Awaited<ReturnType<typeof createTrainerBooking>>>
+    export type CreateTrainerBookingMutationBody = BodyType<CreateTrainerBookingRequest>
+    export type CreateTrainerBookingMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Start a paid trainer-session booking; returns the hosted payment link
+ */
+export const useCreateTrainerBooking = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTrainerBooking>>, TError,{data: BodyType<CreateTrainerBookingRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createTrainerBooking>>,
+        TError,
+        {data: BodyType<CreateTrainerBookingRequest>},
+        TContext
+      > => {
+      return useMutation(getCreateTrainerBookingMutationOptions(options));
+    }
+
+export const getGetTrainerBookingUrl = (bookingId: number,) => {
+
+
+
+
+  return `/api/trainer-bookings/${bookingId}`
+}
+
+/**
+ * @summary Status of one of the caller's trainer bookings
+ */
+export const getTrainerBooking = async (bookingId: number, options?: RequestInit): Promise<TrainerBooking> => {
+
+  return customFetch<TrainerBooking>(getGetTrainerBookingUrl(bookingId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTrainerBookingQueryKey = (bookingId: number,) => {
+    return [
+    `/api/trainer-bookings/${bookingId}`
+    ] as const;
+    }
+
+
+export const getGetTrainerBookingQueryOptions = <TData = Awaited<ReturnType<typeof getTrainerBooking>>, TError = ErrorType<unknown>>(bookingId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTrainerBooking>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTrainerBookingQueryKey(bookingId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTrainerBooking>>> = ({ signal }) => getTrainerBooking(bookingId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(bookingId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTrainerBooking>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetTrainerBookingQueryResult = NonNullable<Awaited<ReturnType<typeof getTrainerBooking>>>
+export type GetTrainerBookingQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Status of one of the caller's trainer bookings
+ */
+
+export function useGetTrainerBooking<TData = Awaited<ReturnType<typeof getTrainerBooking>>, TError = ErrorType<unknown>>(
+ bookingId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTrainerBooking>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetTrainerBookingQueryOptions(bookingId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

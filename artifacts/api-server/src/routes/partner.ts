@@ -24,6 +24,7 @@ import {
   groupClassScheduleTable,
   partnerStaffTable,
   leadsTable,
+  trainerBookingsTable,
 } from "@workspace/db";
 import {
   hashPassword,
@@ -1523,6 +1524,39 @@ router.get(
       )
       .orderBy(desc(leadsTable.preferredDate), asc(leadsTable.preferredTime))
       .limit(5000);
+    res.json(rows);
+  },
+);
+
+// Paid personal-training session bookings for the partner's branches.
+router.get(
+  "/partner/trainer-bookings",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const gymIds = await ownedGymIds(req.session.partnerId!);
+    if (gymIds.length === 0) {
+      res.json([]);
+      return;
+    }
+    const rows = await db
+      .select({
+        id: trainerBookingsTable.id,
+        gymId: trainerBookingsTable.gymId,
+        gymName: trainerBookingsTable.gymName,
+        trainerName: trainerBookingsTable.trainerName,
+        memberName: trainerBookingsTable.memberName,
+        mobile: trainerBookingsTable.mobile,
+        packageName: trainerBookingsTable.packageName,
+        serviceName: trainerBookingsTable.serviceName,
+        amountInr: trainerBookingsTable.amountInr,
+        preferredDate: trainerBookingsTable.preferredDate,
+        status: trainerBookingsTable.status,
+        createdAt: trainerBookingsTable.createdAt,
+      })
+      .from(trainerBookingsTable)
+      .where(inArray(trainerBookingsTable.gymId, gymIds))
+      .orderBy(desc(trainerBookingsTable.createdAt))
+      .limit(2000);
     res.json(rows);
   },
 );
