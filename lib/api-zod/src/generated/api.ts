@@ -514,6 +514,24 @@ export const GetMyMembershipResponse = zod.union([zod.object({
 
 
 /**
+ * @summary List the user's plan purchase/renewal history (from YoActiv; empty if not linked)
+ */
+export const ListMyMembershipPaymentsResponseItem = zod.object({
+  "billId": zod.string(),
+  "planName": zod.string(),
+  "serviceName": zod.string(),
+  "branchName": zod.string(),
+  "status": zod.enum(['active', 'paused', 'expired']),
+  "invoiceDate": zod.string().nullish(),
+  "startDate": zod.string().nullish(),
+  "expiryDate": zod.string().nullish(),
+  "amountInr": zod.number().nullish(),
+  "discountInr": zod.number().nullish()
+})
+export const ListMyMembershipPaymentsResponse = zod.array(ListMyMembershipPaymentsResponseItem)
+
+
+/**
  * @summary List the member's notifications (newest first)
  */
 export const ListMyNotificationsResponseItem = zod.object({

@@ -346,6 +346,19 @@ paths:
                 oneOf:
                   - $ref: "#/components/schemas/MyMembership"
                   - type: "null"
+  /memberships/mine/payments:
+    get:
+      operationId: listMyMembershipPayments
+      tags: [memberships]
+      summary: List the user's plan purchase/renewal history (from YoActiv; empty if not linked)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/MembershipPayment" }
 
   /notifications/mine:
     get:
@@ -1018,6 +1031,20 @@ components:
         gymsAccessed: { type: integer }
         status: { type: string, enum: [active, paused, expired] }
         source: { type: string, enum: [local, yoactiv] }
+    MembershipPayment:
+      type: object
+      required: [billId, planName, serviceName, branchName, status]
+      properties:
+        billId: { type: string }
+        planName: { type: string }
+        serviceName: { type: string }
+        branchName: { type: string }
+        status: { type: string, enum: [active, paused, expired] }
+        invoiceDate: { type: string, nullable: true }
+        startDate: { type: string, nullable: true }
+        expiryDate: { type: string, nullable: true }
+        amountInr: { type: number, nullable: true }
+        discountInr: { type: number, nullable: true }
 
     Booking:
       type: object

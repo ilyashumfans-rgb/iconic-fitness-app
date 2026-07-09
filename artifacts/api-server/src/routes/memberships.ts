@@ -9,6 +9,7 @@ import {
 import {
   ListMembershipsResponse,
   GetMyMembershipResponse,
+  ListMyMembershipPaymentsResponse,
 } from "@workspace/api-zod";
 import { requireUser } from "../lib/currentUser";
 import {
@@ -79,5 +80,44 @@ router.get("/memberships/mine", requireUser, async (req, res): Promise<void> => 
     }),
   );
 });
+
+router.get(
+  "/memberships/mine/payments",
+  requireUser,
+  async (req, res): Promise<void> => {
+    if (!yoactivConfigured()) {
+      res.json([]);
+      return;
+    }
+    const [user] = await db
+      .select({ mobile: usersTable.mobile })
+      .from(usersTable)
+      .where(eq(usersTable.id, req.userId!));
+    const profile = await fetchYoactivMemberByMobile(user?.mobile);
+    if (!profile) {
+      res.json([]);
+      return;
+    }
+    const payments = [...profile.memberships]
+      .sort((a, b) =>
+        (b.invoiceDate ?? b.startDate ?? "").localeCompare(
+          a.invoiceDate ?? a.startDate ?? "",
+        ),
+      )
+      .map((m) => ({
+        billId: m.billId,
+        planName: m.planName,
+        serviceName: m.serviceName,
+        branchName: m.branchName,
+        status: m.status,
+        invoiceDate: m.invoiceDate,
+        startDate: m.startDate,
+        expiryDate: m.expiryDate,
+        amountInr: m.amountInr,
+        discountInr: m.discountInr,
+      }));
+    res.json(ListMyMembershipPaymentsResponse.parse(payments));
+  },
+);
 
 export default router;

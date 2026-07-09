@@ -7,6 +7,8 @@ import {
   useGetGoals,
   useGetMe,
   useGetMyMembership,
+  useListMyMembershipPayments,
+  getListMyMembershipPaymentsQueryKey,
   useUpdateGoals,
   useUpdateMe,
 } from "@workspace/api-client-react";
@@ -63,6 +65,12 @@ export default function ProfileScreen() {
   const updateGoals = useUpdateGoals();
   const membershipQuery = useGetMyMembership({
     query: { queryKey: getGetMyMembershipQueryKey(), enabled: !isGuest },
+  });
+  const paymentsQuery = useListMyMembershipPayments({
+    query: {
+      queryKey: getListMyMembershipPaymentsQueryKey(),
+      enabled: !isGuest,
+    },
   });
   const updateMe = useUpdateMe();
 
@@ -332,6 +340,62 @@ export default function ProfileScreen() {
             )}
           </Card>
 
+          {/* Payment / renewal history (from the gym-management system) */}
+          {paymentsQuery.data && paymentsQuery.data.length > 0 ? (
+            <>
+              <SectionHeader title="Payment history" />
+              <Card style={{ gap: 0 }}>
+                {paymentsQuery.data.slice(0, 10).map((p, i) => (
+                  <View
+                    key={`${p.billId}-${i}`}
+                    style={[
+                      styles.paymentRow,
+                      i > 0 && {
+                        borderTopWidth: StyleSheet.hairlineWidth,
+                        borderTopColor: colors.border,
+                      },
+                    ]}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <AppText weight="600" size={14}>
+                        {p.planName}
+                      </AppText>
+                      <AppText muted size={12} style={{ marginTop: 2 }}>
+                        {p.invoiceDate
+                          ? istDateLabel(p.invoiceDate)
+                          : p.startDate
+                            ? istDateLabel(p.startDate)
+                            : p.branchName}
+                        {p.expiryDate
+                          ? ` · till ${istDateLabel(p.expiryDate)}`
+                          : ""}
+                      </AppText>
+                    </View>
+                    <View style={{ alignItems: "flex-end" }}>
+                      {typeof p.amountInr === "number" && p.amountInr > 0 ? (
+                        <AppText weight="700" size={14}>
+                          ₹{p.amountInr.toLocaleString("en-IN")}
+                        </AppText>
+                      ) : null}
+                      <AppText
+                        size={11}
+                        weight="700"
+                        color={
+                          p.status === "active"
+                            ? colors.primary
+                            : colors.mutedForeground
+                        }
+                        style={{ textTransform: "capitalize", marginTop: 2 }}
+                      >
+                        {p.status}
+                      </AppText>
+                    </View>
+                  </View>
+                ))}
+              </Card>
+            </>
+          ) : null}
+
           {/* Personal details (manage profile) */}
           <SectionHeader title="Personal details" />
           <Card style={{ gap: 14 }}>
@@ -542,6 +606,12 @@ const styles = StyleSheet.create({
   },
   row2: { flexDirection: "row", gap: 12 },
   half: { flex: 1 },
+  paymentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 12,
+  },
   switchRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   statusPill: {
     paddingHorizontal: 10,

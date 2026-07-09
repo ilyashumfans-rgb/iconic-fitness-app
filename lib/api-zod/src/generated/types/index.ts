@@ -55,6 +55,8 @@ export * from './mealEntry';
 export * from './mealEntryMealType';
 export * from './mealInput';
 export * from './mealInputMealType';
+export * from './membershipPayment';
+export * from './membershipPaymentStatus';
 export * from './membershipPlan';
 export * from './membershipPlanBillingPeriod';
 export * from './myMembership';

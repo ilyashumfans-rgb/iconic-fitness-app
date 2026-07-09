@@ -269,6 +269,28 @@ export interface MyMembership {
   source?: MyMembershipSource;
 }
 
+export type MembershipPaymentStatus = typeof MembershipPaymentStatus[keyof typeof MembershipPaymentStatus];
+
+
+export const MembershipPaymentStatus = {
+  active: 'active',
+  paused: 'paused',
+  expired: 'expired',
+} as const;
+
+export interface MembershipPayment {
+  billId: string;
+  planName: string;
+  serviceName: string;
+  branchName: string;
+  status: MembershipPaymentStatus;
+  invoiceDate?: string | null;
+  startDate?: string | null;
+  expiryDate?: string | null;
+  amountInr?: number | null;
+  discountInr?: number | null;
+}
+
 export type BookingStatus = typeof BookingStatus[keyof typeof BookingStatus];
 
 

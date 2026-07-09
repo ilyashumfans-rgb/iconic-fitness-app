@@ -51,6 +51,7 @@ import type {
   ListTrainersParams,
   MealDay,
   MealInput,
+  MembershipPayment,
   MembershipPlan,
   MyMembership,
   Notification,
@@ -1534,6 +1535,83 @@ export function useGetMyMembership<TData = Awaited<ReturnType<typeof getMyMember
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetMyMembershipQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListMyMembershipPaymentsUrl = () => {
+
+
+
+
+  return `/api/memberships/mine/payments`
+}
+
+/**
+ * @summary List the user's plan purchase/renewal history (from YoActiv; empty if not linked)
+ */
+export const listMyMembershipPayments = async ( options?: RequestInit): Promise<MembershipPayment[]> => {
+
+  return customFetch<MembershipPayment[]>(getListMyMembershipPaymentsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyMembershipPaymentsQueryKey = () => {
+    return [
+    `/api/memberships/mine/payments`
+    ] as const;
+    }
+
+
+export const getListMyMembershipPaymentsQueryOptions = <TData = Awaited<ReturnType<typeof listMyMembershipPayments>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyMembershipPayments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyMembershipPaymentsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyMembershipPayments>>> = ({ signal }) => listMyMembershipPayments({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyMembershipPayments>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMyMembershipPaymentsQueryResult = NonNullable<Awaited<ReturnType<typeof listMyMembershipPayments>>>
+export type ListMyMembershipPaymentsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List the user's plan purchase/renewal history (from YoActiv; empty if not linked)
+ */
+
+export function useListMyMembershipPayments<TData = Awaited<ReturnType<typeof listMyMembershipPayments>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyMembershipPayments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMyMembershipPaymentsQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

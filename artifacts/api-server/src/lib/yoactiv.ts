@@ -172,6 +172,10 @@ export type YoactivMembership = {
   expiryDate: string | null; // ISO date
   sessionsTotal: number | null;
   sessionsUsed: number | null;
+  billId: string;
+  invoiceDate: string | null; // ISO date
+  amountInr: number | null;
+  discountInr: number | null;
 };
 
 export type YoactivMemberProfile = {
@@ -197,6 +201,12 @@ type FetchResult = {
     Expiry_date?: string;
     Total_Sessions?: string;
     Used_Sessions?: string;
+    Bill_ID?: string;
+    upgradeDetails?: {
+      total_due?: number;
+      discount_value?: number;
+      invoice_date?: string;
+    };
   }>;
 };
 
@@ -349,6 +359,16 @@ async function lookupForKey(
         expiryDate: toIsoDate(row.Expiry_date),
         sessionsTotal: toCount(row.Total_Sessions),
         sessionsUsed: toCount(row.Used_Sessions),
+        billId: row.Bill_ID ?? "",
+        invoiceDate: toIsoDate(row.upgradeDetails?.invoice_date),
+        amountInr:
+          typeof row.upgradeDetails?.total_due === "number"
+            ? row.upgradeDetails.total_due
+            : null,
+        discountInr:
+          typeof row.upgradeDetails?.discount_value === "number"
+            ? row.upgradeDetails.discount_value
+            : null,
       });
     }
   }

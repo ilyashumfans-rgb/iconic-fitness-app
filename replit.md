@@ -110,7 +110,8 @@ The real gym-management software (YoActiv, api.yoactiv.com) is the source of tru
 
 - **Client:** `artifacts/api-server/src/lib/yoactiv.ts` — all POST JSON with `API_Key`+`Branch_Id` headers; member lookup body field is `Mobile_No`; dates DD-MM-YYYY; freeze/hold statuses map to `paused`. `Users/Branches` finds the member's branches, `Users/Fetch` per branch (parallel), 6s global deadline, 5-min success / 60s failure cache, 8s per-request timeout.
 - **Keys/branches:** secrets `YOACTIV_SANDBOX_API_KEY`/`YOACTIV_API_KEY_1`/`YOACTIV_API_KEY_2` + env `YOACTIV_BRANCH_IDS_1`/`_2` (16 prod branches each), sandbox branch `YOACTIV_SANDBOX_BRANCH_ID` (7820). **Slot names are not trusted** — the values were pasted swapped, so the client probes each key against each branch set once per process and auto-assigns (partial resolution retries after 60s). Mode: sandbox in dev, live keys in production (`YOACTIV_MODE` overrides).
-- Next phases planned: payments/renewal history, trainers.
+- **Payment history:** `GET /memberships/mine/payments` (`requireUser`) returns the member's purchase/renewal rows from YoActiv (`MembershipPayment` DTO: billId, plan, invoice/start/expiry dates, `amountInr` from `upgradeDetails.total_due`, status), sorted newest-first; `[]` when unlinked/unconfigured. Mobile Profile shows a "Payment history" card (top 10) only when rows exist.
+- Next phase planned: trainers.
 
 ### Member notifications & sound (mobile)
 
