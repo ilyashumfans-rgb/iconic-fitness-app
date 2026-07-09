@@ -1,6 +1,6 @@
-# [Project name]
+# GYMCO / Iconic Fitness
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Multi-role gym marketplace: members discover/join gyms (web + Iconic Fitness mobile app), partners manage their gyms, staff support partners, admins run the platform, and read-only agency accounts monitor GX bookings.
 
 ## Run & Operate
 
@@ -8,170 +8,122 @@ _Replace the heading above with the project's name, and this line with one sente
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string
+- **Never run `db push`** (it wants to DROP populated tables). Schema changes are additive raw SQL (`CREATE TABLE` / `ALTER TABLE … IF NOT EXISTS`) on dev + Drizzle schema update; prod gets them via the Replit Publish schema diff.
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
-
-## Where things live
-
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- API: Express 5; DB: PostgreSQL + Drizzle ORM
+- Validation: Zod (`zod/v4`), `drizzle-zod`; API codegen: Orval (from `lib/api-spec/openapi.yaml`)
+- Mobile: Expo (React Native, expo-router) in `artifacts/iconic-app`; web: React+Vite in `artifacts/gymco`
+- All dates are `Asia/Kolkata` (IST) throughout.
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- **Contract-first:** OpenAPI → codegen → generated hooks (`@workspace/api-client-react`) + Zod (`@workspace/api-zod`). Server validates with the Zod schemas.
+- **Code-default + lazy materialization pattern** (GX timetable, challenges): defaults live in server code, DB rows are created only when an owner first customizes/joins — features reach prod with no data-import step.
+- **Image uploads go to the DB, not object storage** (broken forked secrets): `POST /api/storage/uploads/inline` → `uploaded_images` → served at `/api/storage/db-images/:id`. Compress images client-side (prod edge 403s large bodies).
+- Tables use plain int cross-references, no FKs (repo convention).
+- No `console.log` in server code — `req.log` / `logger`.
 
-## Product
-
-GYMCO is a multi-role gym marketplace: members discover/join gyms, partners manage their gyms, staff support partners, and admins run the platform.
+## Product features
 
 ### Membership plans, Annual Plans & Offers
 
-All plans are rows in `membershipsTable` with a `billingPeriod` (`monthly`/`quarterly`/`annual`) — no separate table. The single discriminator `billingPeriod === "annual"` splits "membership" from "annual/offers" everywhere; reuse existing `useListMemberships` + `MembershipPlan` (no DB/OpenAPI change needed).
+All plans are rows in `membershipsTable`; discriminator `billingPeriod === "annual"` splits regular plans from annual "packages/offers" everywhere (no separate table).
 
-- **Admin:** `pages/admin/Memberships.tsx` = all plans; `pages/admin/AnnualPlans.tsx` = annual-only CRUD (forces `billingPeriod="annual"` on create). Both use `adminApi.memberships.*`. Form components must be keyed by `editing?.id ?? "new"` so switching records remounts (otherwise stale form state saves to the wrong plan).
-- **Website:** Pricing (`pages/Memberships.tsx`) shows non-annual; **Offers** (`pages/Offers.tsx`, route `/offers`, nav "Offers", in `PUBLIC_ROUTES`) shows annual. Both render the shared `components/MembershipPlanGrid.tsx` (ordering + empty state).
-- **Mobile:** `app/plans.tsx` (non-annual, monthly/quarterly toggle, modal from the More hub) renders shared `components/PlanCard.tsx` (price suffix derived from `billingPeriod`). Annual plans render the **cultpass-style `components/PackageCard.tsx`** (horizontal: image-left with `resolveImageUrl` fallback icon, name + tagline + divider + "₹X / year onwards" + chevron; tap → `membershipsUrl` or `router.push("/packages")`) on both `app/(tabs)/packages.tsx` and a Home "Explore packages" section (`app/(tabs)/index.tsx`, annual-only, popular-first then price, top 4). **Packages is a bottom tab** (`Feather "package"` icon, in `(tabs)/_layout.tsx` before More) — the old `app/offers.tsx` modal + its More-hub entry were removed. CTAs open `membershipsUrl` externally.
-- **Package images:** `membershipsTable.imageUrl` (`text NOT NULL DEFAULT ''`, added additively via `ALTER TABLE ... IF NOT EXISTS`, never `db push`; reaches prod via Publish schema diff) + `imageUrl` on OpenAPI `MembershipPlan`. Admins upload per-plan images in `pages/admin/AnnualPlans.tsx` ("Packages" tab, canvas-compress + `POST /api/storage/uploads/inline`, preview/replace/remove). Empty string → mobile card shows gradient+icon fallback.
+- Admin: `pages/admin/Memberships.tsx` (all) + `pages/admin/AnnualPlans.tsx` (annual-only CRUD, forces `billingPeriod="annual"`, per-plan image upload on its "Packages" tab). Form components must be keyed by `editing?.id ?? "new"` to remount on record switch.
+- Website: `pages/Memberships.tsx` (non-annual) + `pages/Offers.tsx` (`/offers`, annual); both render shared `MembershipPlanGrid.tsx`.
+- Mobile: `app/plans.tsx` (non-annual, `PlanCard.tsx`); annual plans render cultpass-style `PackageCard.tsx` on the **Packages bottom tab** (`app/(tabs)/packages.tsx`) and a Home "Explore packages" section (annual-only, popular-first, top 4). CTAs open `membershipsUrl` externally.
+- `membershipsTable.imageUrl` (`text NOT NULL DEFAULT ''`); empty → gradient+icon fallback on mobile.
 
 ### Trainers
 
-Partners manage their own trainers from `/partner/trainers` (CRUD scoped to gyms they own via `ensureOwnsGym`; manual `partnerApi.trainers.{list,create,update,remove}`, no OpenAPI). Admins still have global trainer CRUD. Trainers are attached to a gym and selectable when scheduling classes.
-
-- **Mobile discovery:** members browse trainers on `app/trainers.tsx` (list + specialty filter, `useListTrainers`) → `app/trainer/[id].tsx` detail; booking a 1-on-1 posts a `kind="general"` lead. Home entry point is the `PersonalTrainersCard` in `app/(tabs)/index.tsx` (shown to everyone, below the AI Coach card) → `router.push("/trainers")`.
+- Partners: CRUD from `/partner/trainers` (scoped via `ensureOwnsGym`, manual `partnerApi.trainers.*`). Admins have global CRUD. Trainers attach to a gym and are selectable when scheduling classes. No trainer login exists — records only.
+- Mobile: `app/trainers.tsx` prefers the **live YoActiv roster** (see YoActiv section), falling back to local DB profiles (`useListTrainers` → `app/trainer/[id].tsx`); booking posts a `kind="general"` lead. Home entry: `PersonalTrainersCard`.
 
 ### Class visibility & booking window
 
-Classes are hidden from members and not bookable until 1 day (24h) before start. Single source of truth: `artifacts/api-server/src/lib/classVisibility.ts` (`CLASS_VISIBLE_BEFORE_MS`, `isClassVisibleToMembers`). Applied to all member-facing class listings (`classes.ts` `buildSessionDtos`; `gyms.ts` gym-detail + `/gyms/:id/classes`) and the `POST /bookings` gate (started → 400, >24h away → 403). Partner/admin views are unaffected.
+Classes hidden/not bookable until 24h before start. Source of truth: `api-server/src/lib/classVisibility.ts`; applied to member class listings + `POST /bookings` gate (started → 400, >24h → 403). Partner/admin views unaffected.
 
-GX class enquiries via `LeadEnquiryDialog` (`kind="class"`) are further restricted: Mon–Fri only, two fixed one-hour slots (`07:00` = 7–8 AM, `19:00` = 7–8 PM), prebookable only 1 day ahead (today + tomorrow, today's passed slots hidden). The dialog renders dependent day→slot `<select>`s; `POST /api/leads` enforces the same via `validateGxBooking` (window computed in `Asia/Kolkata`). Other dialog kinds (`gym`, `membership`, `general`) keep free date/time pickers.
+### Group class (GX) timetable & bookings
 
-### Ticket & task system
+Fixed weekly timetable per branch (Mon–Sat, 7–8 AM & 7–8 PM slots, class names prefixed "iconic ").
 
-Unified support tickets across all roles. Members raise/view tickets on `/support`; partners on `/partner/tickets`; staff on `/staff/tickets` (raised + assigned-to-me); admins triage on `/admin/tickets` (filters: status/priority/assignee, change status/priority, assign/reassign to staff/partner/admin). In-app notifications fire on create (→ all admins), assign (→ assignee), status-change and comment (→ participants).
+- Default in code: `api-server/src/lib/groupClassSchedule.ts`; per-gym rows in `groupClassScheduleTable` are lazily materialized when a partner first opens `/partner/schedule` (advisory-lock guarded). Partner CRUD in `partner.ts` (`ensureOwnsGym`; staff permission `classes`); member display via `GET /gyms/:id/schedule` + `GymDetail.tsx`.
+- GX bookings are `leadsTable` rows with `kind="class"`. `POST /api/leads` (`leads.ts` `validateGxBooking`) accepts a slot if it's in the branch timetable (`lib/resolveGymSchedule.ts`) OR matches legacy fixed 07:00/19:00 weekday slots (keeps old `LeadEnquiryDialog kind="class"` flow working). 1-day prebook window (today+tomorrow, passed slots hidden), computed in IST.
+- Member page `/book-gx` (`pages/BookGxClass.tsx`): pick branch → available slots → contact details → lead (`source: "book-gx-page"`).
+- Partner view `/partner/gx-bookings` (`GxBookings.tsx`): per-slot booking counts + booker contacts (no seat caps). API `GET /partner/gx-bookings`.
 
-- DB: `ticketsTable` + `ticketCommentsTable` (`lib/db/src/schema/index.ts`), polymorphic `requesterRole/requesterId` + `assigneeRole/assigneeId`.
-- API: `artifacts/api-server/src/routes/tickets.ts` (role-scoped); staff notification feed in `notifications.ts`.
-- Frontend: shared types/badges in `src/lib/tickets.ts`; components in `src/components/tickets/`; ticket methods on adminApi/staffApi/partnerApi and member `ticketsApi.ts`.
+### Agency portal (read-only, branch-scoped)
 
-### Group class (GX) timetable
+Admin-managed view-only accounts for agencies to monitor GX bookings, limited to assigned branches.
 
-Every gym/branch shows a fixed weekly group-class timetable (Mon–Sat, two slots: 7–8 AM & 7–8 PM; class names prefixed "iconic "). Partners can edit their own gyms' timings from `/partner/schedule` ("Timetable" nav).
-
-- **Default lives in code:** `artifacts/api-server/src/lib/groupClassSchedule.ts` (`DEFAULT_GROUP_CLASS_SCHEDULE`, `GROUP_CLASS_DAY_NAMES`). No seeding / "Import workspace data" needed — every branch displays the default until a partner customizes it.
-- **DB:** `groupClassScheduleTable` (`lib/db/src/schema/index.ts`): per-gym rows (`gymId, dayOfWeek 1-7, startTime, endTime, className, sortOrder`). Reaches prod automatically via Replit Publish schema diff.
-- **Lazy materialization:** members see the code default until a partner first opens their timetable; the partner `GET /partner/schedule` inserts the default rows for that gym (advisory-lock guarded against concurrent double-insert), after which all edits are real row CRUD.
-- **API:** member `GET /gyms/:id/schedule` (public, `gyms.ts`) returns gym rows or the default. Partner CRUD `GET/POST/PATCH/DELETE /partner/schedule` + `POST /partner/schedule/reset` (`partner.ts`), scoped via `ensureOwnsGym`; `/partner/schedule` → `classes` permission for staff.
-- **Frontend:** member display in `GymDetail.tsx`; partner editor `pages/partner/Schedule.tsx`; client methods in `partnerApi.ts`.
-- **Book a GX Class page** (`/book-gx`, nav link "Book a GX Class", `pages/BookGxClass.tsx`): members pick a branch → the page fetches that branch's timetable and shows the **available** day+slot options inside the 1-day prebook window (today + tomorrow, today's passed slots hidden) → fill contact details → submits a `kind="class"` lead (`source: "book-gx-page"`). Window/slot logic is computed in `Asia/Kolkata` so the UI matches server validation regardless of the visitor's timezone.
-- **Schedule-aware lead validation:** `POST /api/leads` (`leads.ts` `validateGxBooking`) accepts a class slot if it exists in the branch's timetable (via shared `lib/resolveGymSchedule.ts`, also used by `GET /gyms/:id/schedule`) **OR** matches the legacy fixed 07:00/19:00 weekday slots. The legacy fallback keeps the older `LeadEnquiryDialog kind="class"` flow (still hard-coded 07:00/19:00 Mon–Fri, not wired to per-gym schedules) working even after a partner customizes a branch.
-- **Partner GX Bookings view** (`/partner/gx-bookings`, nav link "GX Bookings", `pages/partner/GxBookings.tsx`): partners see who booked each GX slot at their branches. GX bookings are `leadsTable` rows with `kind="class"` (previously admin-only). There is **no seat cap** on GX slots — the page just surfaces per-slot booking counts plus each booker's contact details. API: `GET /partner/gx-bookings` (`partner.ts`), scoped via `ownedGymIds` + `inArray(leadsTable.gymId, …)` + `kind='class'`, staff-mapped to the `classes` permission in `STAFF_PERMISSION_PREFIXES`. Frontend groups by branch → `preferredDate`+`preferredTime`+`className`; client method `partnerApi.gxBookings.list`. No trainer login exists — trainers are records only, so this is partner-dashboard-only.
-
-### Agency portal (read-only, admin-managed accounts, branch-scoped)
-
-A standalone, view-only role for agencies to monitor GX class bookings. Admins create **multiple** agency accounts and assign each one a set of branches; an agency only sees bookings for its assigned branches.
-
-- **DB:** `agencyUsersTable` (`agency_users`): `username` (unique), `passwordHash` (bcrypt), `name`, `gymIds` (`integer[]` of assigned branch ids), `createdAt`. Branch assignment is a plain int array, not a join table (simple, low volume). Reaches prod automatically via Replit Publish schema diff.
-- **Auth:** session-based, reuses admin session infra (express-session, `user_sessions`, `gymco.admin.sid`). `SessionData.agencyUserId` holds the row id. `POST /agency/login` looks up by username + `verifyPassword` (bcrypt from `adminAuth.ts`), regenerates the session; logout destroys it. `requireAgency` (`lib/agencyAuth.ts`) guards reads.
-- **Scoping is re-read per request:** `GET /agency/gx-bookings` re-loads the account's `gymIds` every call and filters `leadsTable` (`kind='class'`) via `inArray`, so branch grants/revokes and account deletion take effect immediately (deleted account → session destroyed, 401). No write paths exist for this role.
-- **API:** `artifacts/api-server/src/routes/agency.ts` — `POST /agency/login`, `POST /agency/logout`, `GET /agency/me` (returns assigned branches), `GET /agency/gx-bookings`. Mounted in `routes/index.ts`.
-- **Admin CRUD:** `admin.ts` — `GET/POST /admin/agencies`, `PATCH /admin/agencies/:id`, `POST /admin/agencies/:id/reset-password`, `DELETE /admin/agencies/:id`, all under `requireAdmin`. Client methods `adminApi.agencies.*`; admin UI `pages/admin/Agencies.tsx` (nav "Agency Accounts" under Admin Team) — create account + assign branches via checkboxes, edit branches, reset password, delete.
-- **Frontend (agency):** standalone routes outside every member/partner/admin shell — `App.tsx` `if (location.startsWith("/agency"))` → `/agency/login` (`pages/agency/Login.tsx`) + `/agency` dashboard (`pages/agency/Dashboard.tsx`). Client: `lib/agencyApi.ts`. Dashboard shows totals + breakdown **by branch** + **by class category** (`className`) + **per-slot detail** (branch+date+time+class with each booker's contact info), all limited to assigned branches.
-- **Note:** the old single-login env secrets `AGENCY_USERNAME` / `AGENCY_PASSWORD` are no longer used (dead config) — login is fully DB-backed now.
+- DB: `agencyUsersTable` (`username` unique, bcrypt `passwordHash`, `gymIds` int array — no join table).
+- Auth: session-based (reuses admin session infra, `SessionData.agencyUserId`); `requireAgency` in `lib/agencyAuth.ts`. `gymIds` are **re-read per request**, so grants/revokes/deletion apply immediately. No write paths.
+- API: `routes/agency.ts` (`/agency/login|logout|me|gx-bookings`). Admin CRUD: `adminApi.agencies.*` + `pages/admin/Agencies.tsx` ("Agency Accounts" nav).
+- Frontend: standalone routes outside all shells (`App.tsx` `location.startsWith("/agency")`) → `pages/agency/Login.tsx` + `Dashboard.tsx` (totals, by-branch, by-class, per-slot detail). `lib/agencyApi.ts`.
+- Old env secrets `AGENCY_USERNAME`/`AGENCY_PASSWORD` are dead config — login is DB-backed.
 
 ### Home banner slider (admin-managed)
 
-The mobile Home screen opens with a full-bleed banner slider at the very top (the old greeting/logo/streak header was removed). Admins manage the slides from the web admin.
+Full-bleed slider at the top of mobile Home; slides managed in web admin (`pages/admin/HomeSlides.tsx`, "Home Slider" nav).
 
-- **DB:** `homeSlidesTable` (`home_slides`, `lib/db/src/schema/index.ts`): `kind` (image|gif|youtube), `mediaUrl`, `title`, `subtitle`, `ctaLabel`, `ctaUrl`, `audience` (all|members|customers, default 'all'), `sortOrder`, `isActive`, `createdAt`. Added additively (`CREATE TABLE`/`ALTER TABLE … ADD COLUMN IF NOT EXISTS`, never `db push`); reaches prod via Replit Publish schema diff.
-- **Audience targeting:** each slide has an `audience` — `all` (everyone), `members` (viewers with an active plan), or `customers` (viewers without one, incl. guests). It's in the public DTO + OpenAPI `HomeSlide` (required enum); admin picks it via a select in `HomeSlides.tsx` (badge in the list). Mobile `HeroSlider` filters by it against membership status from `useGetMyMembership`: guests/no-plan = customers, non-null plan = members. **Tri-state:** for signed-in viewers, status is "unsettled" until `/memberships/mine` resolves (or on error) — while unsettled only `audience='all'` slides show so a member is never briefly shown customer content. If no slides are visible after filtering, the code-default brand/gym slides show (never empty).
-- **API:** `artifacts/api-server/src/routes/homeSlides.ts` — public `GET /home-slides` (active rows, ordered) + admin CRUD `GET/POST/PATCH/DELETE /admin/home-slides` under `requireAdmin`. Server validates kind↔mediaUrl consistency (`validateMedia`): YouTube kind needs a valid YouTube link/ID; image/gif needs an http(s) or `/api/...` URL and rejects YouTube links. OpenAPI: `HomeSlide` + `listHomeSlides` → generated `useListHomeSlides` hook.
-- **Admin UI:** `pages/admin/HomeSlides.tsx` (nav "Home Slider" under Content). Upload jpg/png/webp (canvas-compressed client-side) or **GIF (uploaded raw to preserve animation)** via `POST /api/storage/uploads/inline`, or paste a YouTube link; reorder (up/down swap `sortOrder`), show/hide, edit, delete. Client methods `adminApi.homeSlides.*`.
-- **Mobile:** `HeroSlider` in `app/(tabs)/index.tsx` uses `useListHomeSlides`. Full-bleed via negative horizontal margin on `sliderWrap`; **top respects the safe area** — `Screen`'s `SafeAreaView(edges:["top"])` clears the notch on native, and the slider adds `paddingTop` only when `useSafeAreaInsets().top === 0` (web/mockup has no insets) so the banner never sits under the status bar. image/gif render inline via RN `<Image>` (Expo animates GIFs); **youtube slides autoplay inline (muted + looping)** via `components/YouTubeInline` — a **platform-split** component (`.tsx` → `react-native-webview`, `.web.tsx` → raw `<iframe>`), rendered `pointerEvents="none"` so taps still open the full video via `openExternal` and horizontal swipes still page the carousel (a small maximize badge hints tap-for-full). `youtubeId()`/`youtubeThumb()` parse the id. **Code-default fallback**: when no admin slides exist, the slider shows a brand intro + top gyms so it's never empty on fresh installs/prod.
+- DB: `homeSlidesTable` — `kind` (image|gif|youtube), `mediaUrl`, title/subtitle/CTA, `audience` (all|members|customers), `sortOrder`, `isActive`. GIFs upload raw (preserve animation); other images canvas-compressed.
+- API: public `GET /home-slides` + admin CRUD in `routes/homeSlides.ts`; server validates kind↔mediaUrl (`validateMedia`).
+- Audience gating on mobile (`HeroSlider` in `app/(tabs)/index.tsx`): members = active plan via `useGetMyMembership`, customers = no plan/guests. **Tri-state:** while membership is unsettled only `audience='all'` slides show. Code-default brand/gym slides render when nothing is visible (never empty).
+- YouTube slides autoplay inline muted+looping via platform-split `components/YouTubeInline` (`.tsx` webview / `.web.tsx` iframe), `pointerEvents="none"` so swipe/tap still work. Slider clears the notch: safe-area top on native, `paddingTop` only when `insets.top === 0` (web).
 
 ### Home plan card & member-focused Home (mobile)
 
-For a signed-in **active member** (`useGetMyMembership` → status `active`), the Home tab (`app/(tabs)/index.tsx`) becomes plan-focused: the `MembershipStatusCard` is pinned at the very top (right under the hero slider) and the two discovery sections — **Explore packages** and **Top rated gyms** — are hidden. Guests and non-active members (paused/expired) keep seeing discovery.
+Active members see `MembershipStatusCard` pinned under the hero; discovery sections (Explore packages, Top rated gyms) hidden. Two different gates: card renders for any membership row (paused/expired get renew nudge); sections hide only for `hasActivePlan`. `showDiscovery = membershipSettled && !hasActivePlan` prevents flash while `/memberships/mine` loads. Expiry warning via IST day-diff: ≤7 days → amber "Expiring…", past → red "Expired on …"; CTA "Renew plan"/"Manage plan" opens `membershipsUrl`.
 
-- **Card visibility vs. section hiding are different gates.** The card renders whenever a membership row exists at any status (`membership ?`), so paused/expired members still get a renew nudge. The discovery sections hide only for `hasActivePlan` (`isMember && status === "active"`).
-- **`showDiscovery = membershipSettled && !hasActivePlan`** guards the two sections so a signed-in active member never briefly flashes them while `/memberships/mine` loads (same `membershipSettled` tri-state used by `HeroSlider`).
-- **Expiry warning (IST):** `daysUntilIst(renewsOn)` diffs IST calendar days (`istDateStr`). Within `EXPIRY_SOON_DAYS` (7) → amber "Expiring in N day(s)" / "Expires today"; expired (or past date) → red "Expired on …"; otherwise "Renews …". The CTA reads "Renew plan" when alerting, else "Manage plan", opening `membershipsUrl` externally. No DB/OpenAPI change — reuses the existing `MyMembership` DTO.
+### YoActiv integration (live gym-management data)
 
-### YoActiv integration (live membership data)
+YoActiv (api.yoactiv.com) is the source of truth for member plans, payments, and the trainer roster. Client: `api-server/src/lib/yoactiv.ts` — all POST JSON with `API_Key`+`Branch_Id` headers; lookup field `Mobile_No`; dates DD-MM-YYYY; freeze/hold → `paused`; per-request 8s timeout, member lookup 6s global deadline, 5-min success / 60s failure cache.
 
-The real gym-management software (YoActiv, api.yoactiv.com) is the source of truth for member plans. `GET /memberships/mine` first looks the signed-in user up in YoActiv by mobile number and, if found, returns their real plan (name, active/paused/expired, expiry as `renewsOn`, sessions, branch count) — falling back to the local `userMembershipsTable` row when unmatched/unreachable. Optional `source: local|yoactiv` on the `MyMembership` DTO tells which path served it. No client changes needed — Home plan card, Profile, hero-slider gating all pick it up.
-
-- **Client:** `artifacts/api-server/src/lib/yoactiv.ts` — all POST JSON with `API_Key`+`Branch_Id` headers; member lookup body field is `Mobile_No`; dates DD-MM-YYYY; freeze/hold statuses map to `paused`. `Users/Branches` finds the member's branches, `Users/Fetch` per branch (parallel), 6s global deadline, 5-min success / 60s failure cache, 8s per-request timeout.
-- **Keys/branches:** secrets `YOACTIV_SANDBOX_API_KEY`/`YOACTIV_API_KEY_1`/`YOACTIV_API_KEY_2` + env `YOACTIV_BRANCH_IDS_1`/`_2` (16 prod branches each), sandbox branch `YOACTIV_SANDBOX_BRANCH_ID` (7820). **Slot names are not trusted** — the values were pasted swapped, so the client probes each key against each branch set once per process and auto-assigns (partial resolution retries after 60s). Mode: sandbox in dev, live keys in production (`YOACTIV_MODE` overrides).
-- **Payment history:** `GET /memberships/mine/payments` (`requireUser`) returns the member's purchase/renewal rows from YoActiv (`MembershipPayment` DTO: billId, plan, invoice/start/expiry dates, `amountInr` from `upgradeDetails.total_due`, status), sorted newest-first; `[]` when unlinked/unconfigured. Mobile Profile shows a "Payment history" card (top 10) only when rows exist.
-- **Live trainer roster:** public `GET /trainers/live` (`trainers.ts`, registered **before** `/trainers/:trainerId`) returns `LiveTrainer[] {id,name}` from `fetchYoactivTrainers()` — `Billing/GetStaff {PT:1}` per configured branch, deduped by normalized mobile (mobiles are PII, never exposed), name-sorted, 10-min success / 60s failure cache with stale-on-failure. Mobile `app/trainers.tsx` prefers the live roster (simple initials cards) and falls back to local DB trainer profiles when it's empty; tapping opens `app/book-trainer.tsx` (modal, in `_layout.tsx`) which posts a `kind="general"` lead (`source: "iconic-app-live-trainer"`).
+- **Keys/branches:** secrets `YOACTIV_SANDBOX_API_KEY`/`YOACTIV_API_KEY_1`/`YOACTIV_API_KEY_2` + env `YOACTIV_BRANCH_IDS_1`/`_2` (16 prod branches each), sandbox branch 7820. **Slot names untrusted** (values pasted swapped) — client probes each key against each branch set once per process and auto-assigns (partial resolution retries after 60s). Sandbox in dev, live in prod (`YOACTIV_MODE` overrides). See `.agents/memory/yoactiv-integration.md`.
+- **Plan:** `GET /memberships/mine` prefers the YoActiv plan by mobile, local `userMembershipsTable` fallback; `source: local|yoactiv` on `MyMembership`.
+- **Payment history:** `GET /memberships/mine/payments` (`requireUser`) → `MembershipPayment[]` (billId, plan, invoice/start/expiry dates, `amountInr` from `upgradeDetails.total_due`, status), newest-first; `[]` when unlinked. Mobile Profile shows a "Payment history" card (top 10) when rows exist.
+- **Live trainer roster:** public `GET /trainers/live` (registered **before** `/trainers/:trainerId`) → `LiveTrainer[] {id,name}` via `Billing/GetStaff {PT:1}` per branch, deduped by normalized mobile (mobiles are PII, never exposed), 10-min/60s cache with stale-on-failure. Mobile `app/trainers.tsx` prefers it; tap → `app/book-trainer.tsx` modal → `kind="general"` lead (`source: "iconic-app-live-trainer"`).
 
 ### Member notifications & sound (mobile)
 
-Members get an in-app notification bell + audible alerts. Admins create member notifications via the existing `POST /notifications` (`requireAdmin`, `recipientType="user"`); the member-facing feed endpoints already existed and are now in OpenAPI.
-
-- **API/spec:** `GET /notifications/mine`, `POST /notifications/mine/{id}/read`, `POST /notifications/mine/read-all` (all `requireUser`, scoped by `recipientId=req.userId`) in `artifacts/api-server/src/routes/notifications.ts` — added to `lib/api-spec/openapi.yaml` (+ `Notification` schema) → generated `useListMyNotifications`/`useMarkNotificationRead`/`useMarkAllNotificationsRead`.
-- **Bell:** `components/NotificationBell.tsx` — floating bell overlaid top-right on the Home hero (`app/(tabs)/index.tsx`, wrapped in a `flex:1` View so it stays fixed), members-only, unread badge, polls every 60s, opens `app/notifications.tsx` (modal, marks all read on open, resets the once-guard on error). Also a "Notifications" row in the More hub.
-- **Sound (no push infra — Expo Go):** delivery is client-side. The bell detects new rows by a **per-user id high-water mark** (`iconic.lastSeenNotificationId.<userId>`, first load only records it, advanced+persisted before awaiting, in-flight guarded) and fires a **local** notification via `presentLocalNotification` (`lib/notifications.ts`) which plays the sound. Global `setNotificationHandler` now `shouldPlaySound:true`; Android sound requires the HIGH-importance `reminders` channel (`ensureAndroidChannel`, `sound:"default"`) + `channelId` on every trigger (daily reminders too). Web-guarded throughout. See `.agents/memory/expo-notification-sound-delivery.md`.
+Admins send member notifications via `POST /notifications` (`recipientType="user"`); member feed endpoints (`/notifications/mine…`) are in OpenAPI. `components/NotificationBell.tsx` floats on the Home hero (members-only, unread badge, 60s poll) → `app/notifications.tsx` modal (marks all read). No push infra (Expo Go): the bell detects new rows via a per-user id high-water mark and fires a **local** notification for sound; Android needs the HIGH-importance `reminders` channel + `channelId` on every trigger. See `.agents/memory/expo-notification-sound-delivery.md`.
 
 ### Member mobile app (Iconic Fitness)
 
-Member-facing Expo (React Native, expo-router) app in `artifacts/iconic-app` (slug `iconic-app`, previewPath `/iconic-app/`). It talks to the existing GYMCO API over `https://$EXPO_PUBLIC_DOMAIN/api` via the generated `@workspace/api-client-react` hooks.
+Expo app in `artifacts/iconic-app` (previewPath `/iconic-app/`), talks to the GYMCO API via generated hooks over `https://$EXPO_PUBLIC_DOMAIN/api`.
 
-- **Auth:** Clerk (Replit-managed) via `@clerk/expo` v3 **Future signals API** (`signIn.password`/`finalize`, `signUp.verifications.*`, `useSSO` Google). The Clerk session token is supplied to every API call by `setAuthTokenGetter` wired in `app/_layout.tsx` (root-level `ApiAuthBridge`, so root modal routes get tokens too, not just tabs). Tabs + root authed modals redirect to `/(auth)/sign-in` when signed out.
-- **Backend:** tracking endpoints live in `artifacts/api-server/src/routes/tracking.ts` (`/tracking/summary|goals|water|meals|workouts`, `/checkins`), guarded by `requireUser` (Clerk bearer via `clerkMiddleware`+`getAuth`). Bookings DTO carries `gymId` (`bookings.ts` `toBookingDto`) so members can check in from My Bookings.
-- **Features:** dashboard rings, water/diet(macros)/workout+steps logging (root modal screens), class browse+book+check-in, progress charts & streaks, editable goals, daily reminder via `expo-notifications` (web-guarded). Theme: dark `#0A0C08` + lime `#C7F000`; all dates in `Asia/Kolkata` (`lib/dates.ts`).
-- **Bottom tabs:** Home, Sports & Fitness, Store, More (`app/(tabs)/_layout.tsx`). Sports & Fitness (`sports.tsx`) and Store (`store.tsx`) are external website links — their `Tabs.Screen` uses a `tabPress` listener that `e.preventDefault()`s and calls `openExternal(exploreUrl|storeUrl)`, so tapping opens the in-app browser instead of navigating (the placeholder screens, with a fallback `useEffect`/Open button, are never reached). `train`/`classes`/`progress`/`profile` are `(tabs)` routes hidden from the bar via `options={{ href: null }}` and surfaced through the More hub (`app/(tabs)/more.tsx`, internal `router.push`).
-- **Profile tab:** beyond goals/reminders/theme, the Profile screen (`app/(tabs)/profile.tsx`, reached via More) shows two signed-in-only sections: **Membership** (current plan via `useGetMyMembership` → `GET /memberships/mine`; planName, status pill, IST renew date, classes used/included, gyms accessed; "Manage plan"/"View plans" opens `membershipsUrl` externally; `null` → no-active-plan state) and **Personal details** (editable name/mobile/city/gender/age/height/weight/fitness-goal saved via `useUpdateMe` → `PATCH /me`, then invalidates `getGetMeQueryKey()`). Both hidden for guests.
-- **Login screen:** `app/(auth)/sign-in.tsx` is a cinematic full-bleed landing — a bespoke generated hero photo (`assets/images/auth-hero.png`, moody dark gym athlete with lime rim light) fills the screen behind a multi-stop `LinearGradient` scrim that fades to the solid dark background at the bottom. The full transparent logo (`assets/images/iconic-full-logo.png`, small, `maxWidth 116`) is pinned at the top; the auth form is anchored to the bottom. **Layout is `KeyboardAvoidingView` → `ScrollView` with `contentContainerStyle={{flexGrow:1}}` and the form wrapper using `marginTop:"auto"`** — this bottom-anchors the form when there's room and scrolls only when the viewport/keyboard leaves too little space. Do NOT use a `flex:1` spacer *child* inside the ScrollView (it expands unbounded on web → logo drifts + form pushed off-screen; see `.agents/memory/rn-login-scroll-anchor.md`). Login **forces the dark palette** regardless of system mode via `<ThemeContext.Provider value={FORCE_DARK}>` (exported from `hooks/useTheme.tsx`) wrapping the inner content, so `Field`/`Button`/`AppText`/`useColors` render dark. Controls: eyebrow ("WELCOME BACK"), email/password → Clerk `signIn.password`/`finalize`, gradient "Log in", "Continue with Google" SSO, "Create account" link, "Continue without login" guest; PRIVACY/TERMS footer opens `websiteUrl`. `AppText` weight caps at "700".
-- **Launch splash:** `components/AnimatedSplash.tsx` is a premium branded launch overlay — the real Iconic mark (`assets/images/iconic-logo.png`, background-removed transparent PNG of the green dotted "C") springs in over a soft pulsing lime halo + expanding ring, then the ICONIC/FITNESS wordmark rises and the overlay fades to reveal the app. It hardcodes the brand palette (`#0A0C08` bg, `#C7F000` lime, ink wordmark) so it always renders dark regardless of system light/dark mode. Wired in `_layout.tsx` with fail-safe timeouts.
-- **Gotcha:** `GestureHandlerRootView` must have `style={{ flex: 1 }}` or the whole app renders blank white.
+- **Auth:** Clerk (Replit-managed) via `@clerk/expo` v3 Future signals API; token wired by `setAuthTokenGetter` in root `ApiAuthBridge` (`app/_layout.tsx`). Guest mode via "Continue without login". Tabs + authed modals redirect to `/(auth)/sign-in` when signed out.
+- **Backend:** tracking endpoints in `routes/tracking.ts` (`/tracking/*`, `/checkins`), `requireUser` (Clerk bearer).
+- **Features:** dashboard rings, water/diet/workout+steps logging (modals), class browse+book+check-in, progress charts/streaks, goals, daily reminders. Theme: dark `#0A0C08` + lime `#C7F000`.
+- **Bottom tabs:** Home, Sports & Fitness, Store, Packages, More. Sports & Fitness and Store tabs are external links (`tabPress` preventDefault → `openExternal`). `train`/`classes`/`progress`/`profile` are hidden routes (`href: null`) reached via the More hub.
+- **Profile:** Membership section (plan, status, IST renew date, payment history) + editable Personal details (`PATCH /me`); both hidden for guests.
+- **Login screen** (`app/(auth)/sign-in.tsx`): full-bleed hero photo + gradient scrim, logo pinned top, form bottom-anchored (`flexGrow:1` + `marginTop:"auto"` — never a `flex:1` spacer child; see `.agents/memory/rn-login-scroll-anchor.md`); forces dark palette via `<ThemeContext.Provider value={FORCE_DARK}>`. Email/password + Google SSO + guest.
+- **Launch splash:** `components/AnimatedSplash.tsx` (brand mark + halo animation, hardcoded dark palette, fail-safe timeouts).
+- **Gotchas:** `GestureHandlerRootView` needs `style={{ flex: 1 }}` or the app renders blank. `AppText` weight caps at "700".
 
 ### Challenges & leaderboards
 
-Member-facing challenges with live leaderboards, following the **code-default** pattern (no challenge rows in DB; only opt-in participants are persisted). Each challenge runs on a rolling/evergreen IST window (current week Mon–Sun or current month) and its leaderboard is computed live from existing tracking logs — so it reaches production with no data-import step (the one new table arrives via Replit Publish schema diff).
-
-- **Definitions in code:** `artifacts/api-server/src/lib/challenges.ts` (`DEFAULT_CHALLENGES`, metrics `workouts`/`steps`/`water`/`active_days`, periods `weekly`/`monthly`, IST `challengeWindow`). `active_days` = union-distinct of `logged_date` across water + meal + workout logs (any tracking activity counts), computed in JS — **not** workout-days only.
-- **DB:** `challengeParticipantsTable` (`challenge_participants`): plain int `challengeId`+`userId`, composite unique index, no FK (repo convention). Added additively via raw SQL, never `db push`.
-- **API:** `artifacts/api-server/src/routes/challenges.ts` (`requireUser`): `GET /challenges` (list + joined flag + my progress + participant count), `GET /challenges/:id` (detail + leaderboard), `POST /challenges/:id/{join,leave}` (scoped to `req.userId`). Leaderboard payload intentionally **omits** raw `userId` (privacy) — `isMe` flags the current user; `rank` is the stable client key.
-- **Mobile:** `app/challenges.tsx` (list, modal) + `app/challenge/[id].tsx` (detail + leaderboard + join/leave), registered in `_layout.tsx`, entry card on the Progress tab, auth-gated via `Redirect` for guests. Display formatters in `lib/challenges.ts`.
+Code-default pattern: challenge definitions in `api-server/src/lib/challenges.ts` (metrics workouts/steps/water/active_days; rolling IST weekly/monthly windows); only opt-in participants persisted (`challengeParticipantsTable`). Leaderboards computed live from tracking logs; payload omits raw `userId` (privacy) — `isMe` + `rank`. `active_days` = distinct days with ANY tracking activity. Mobile: `app/challenges.tsx` + `app/challenge/[id].tsx`, entry on Progress tab, auth-gated.
 
 ### AI Fitness Coach (mobile)
 
-Personalized AI chat for members that grounds every answer in the member's **own** live tracking data **and can take actions on their behalf** — following the existing OpenAI integration pattern (no API key; uses Replit AI Integrations, billed to the user's credits).
+`POST /ai/coach` (`routes/ai.ts`, `requireUser`) — OpenAI via Replit AI Integrations (no API key). `buildCoachContext(userId)` grounds the chat in the member's profile, goals, today's totals, weekly workouts, and IST activity streak.
 
-- **API:** `POST /ai/coach` in `artifacts/api-server/src/routes/ai.ts`, guarded by `requireUser`. `buildCoachContext(userId)` assembles a context block from the member's profile + goals (`usersTable`) and today's totals + weekly workouts + a consecutive-day activity streak (`waterLogsTable`/`mealLogsTable`/`workoutLogsTable`, all scoped to `req.userId`, IST dates). It injects that into `COACH_SYSTEM_PROMPT` and calls `openai` `gpt-5.4` (mirrors `/ai/chat`). Streak = consecutive IST days with any tracking activity (today-miss doesn't reset), 90-day bounded — same semantics as `tracking.ts`.
-- **Action / tool-calling:** the coach can WRITE the member's tracker via OpenAI function calling. `COACH_TOOLS` = `log_water`, `log_meal`, `log_workout`, `update_goals`; `runCoachTool(userId, name, args)` executes scoped DB writes (same tables/enums/IST-today convention as `tracking.ts`), clamping every numeric input via `clampInt` and validating meal/workout enums. The route runs a **bounded tool loop (max 5 turns)**: it appends the assistant's `tool_calls` + each `role:"tool"` result and re-calls until the model returns a final text reply. Tool failures are returned to the model as `{ ok:false, message }` (never crash the request). The prompt instructs the model to estimate calories/macros for foods and only log on clear intent. `messages` is typed `any[]` (OpenAI request/response message shapes differ; simplest to keep loose).
-- **Spec/codegen:** OpenAPI `/ai/coach` (`operationId: aiCoach`, reuses `AiChatInput`/`AiChatOutput`) → generated `useAiCoach` hook + `AiCoachBody`/`AiCoachResponse` zod. (Tool calls are server-internal — the response contract is unchanged, so no schema/codegen change was needed.)
-- **Mobile:** chat screen `app/coach.tsx` (modal, registered in `_layout.tsx`), reuses the `AiChatMessage` type + `useAiCoach` mutation. Starter prompts when empty; user/assistant bubbles; `KeyboardAvoidingView`. Auth-gated via `Redirect`. **On mutation success it invalidates every react-query key whose `queryKey[0]` starts with `/api/tracking`, plus `/api/me` and `/api/goals`** so the dashboard rings/logs/goals refresh after the coach saves. Entry points: prominent card on the Home tab (under the hero, members only) + a row on the Progress tab. Theme: dark `#0A0C08` + lime `#C7F000`.
-
-#### Onboarding assessment & daily guidance
-
-The coach runs a conversational onboarding assessment (asks **new vs experienced**, collects personal/health/goal/lifestyle details), computes health metrics, sets goals, then switches to daily guidance.
-
-- **DB (additive only, never `db push`):** six nullable columns on `usersTable` added via `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` on dev + Drizzle schema (prod gets them via Replit Publish schema diff): `experienceLevel` text, `targetWeightKg` real, `activityLevel` text, `foodPreference` text, `assessment` jsonb (lifestyle/health blob: occupation, sleepHours, stressLevel, workoutLocation, availableWorkoutMin, healthConditions[], medications, smoking, alcohol, updatedAt), `assessmentCompletedAt` timestamptz.
-- **Metrics helper:** `artifacts/api-server/src/lib/healthMetrics.ts` — `computeHealthMetrics` (BMI + category, body fat via Deurenberg, BMR via Mifflin-St Jeor, TDEE via `ACTIVITY_FACTORS`, ideal-weight range), `classifyGoal`, `deriveGoals` (calorie/protein/water/step/weekly targets from profile+goal+activity+experience), `weightPlan` (turns height + weight + optional target into a concrete lose/gain/maintain recommendation with kg delta, safe weekly pace 0.5 lose / 0.25 gain, and est. weeks; anchors on the healthy BMI range when no target set). Used by both the coach save path and `/me` so values stay consistent.
-- **Weight-aware guidance:** `buildCoachContext` adds a "Weight plan (from height & weight)" line via `weightPlan`, and `COACH_SYSTEM_PROMPT` instructs the coach to use height+weight to tell the member concretely whether to lose/gain/maintain (how many kg, realistic timeframe, safe pace) and to match the starter plan + daily nudges to that direction.
-- **Tool:** `save_assessment` in `COACH_TOOLS` (alongside `log_water`/`log_meal`/`log_workout`/`update_goals`). Handler in `runCoachTool` validates/clamps inputs (`clampInt`/`clampFloat`/`oneOf`/`strOrNull`), **falls back to the user's existing column values for any field omitted**, **merges the jsonb blob with the existing one (only overwrites keys actually provided)** so a later partial save never wipes earlier answers, derives goals via `deriveGoals`, and **only stamps `assessmentCompletedAt` once the core profile is captured** (experience + age + gender + height + weight + main goal); once stamped it keeps the original time. If core fields are still missing it returns `{ok:true}` with a "still missing …" message and does NOT present final metrics. Enums: `experienceLevel`[new,experienced], `activityLevel`[sedentary,light,moderate,active,very_active], `stressLevel`[low,medium,high], `foodPreference`[veg,non-veg,vegan,eggetarian], `workoutLocation`[gym,home].
-- **Context/prompt:** `buildCoachContext` selects the six new cols and adds an ASSESSMENT STATUS + computed-metrics block; `COACH_SYSTEM_PROMPT` has an ONBOARDING ASSESSMENT section (ask new/experienced → collect → save → present metrics+plan) and a DAILY GUIDANCE section.
-- **`/me` additions:** OpenAPI `UserProfile` gained `assessmentComplete`/`bmr`/`tdee`/`bodyFatPct` (required) + `experienceLevel`/`targetWeightKg` (nullable); `profile.ts` `loadProfile` computes them via `computeHealthMetrics`. Mobile `coach.tsx` + Home card (`app/(tabs)/index.tsx`) switch greeting/starters/banner copy on `assessmentComplete` (defaults to assessed while `/me` loads).
-- **Per-action daily reminders (mobile):** `artifacts/iconic-app/lib/notifications.ts` — `ACTION_REMINDERS` (8 daily nudges: water ×3, meals ×3, workout, steps/sleep) with `scheduleActionReminders`/`cancelActionReminders`/`areRemindersOn`/`ensureNotificationPermission`, web-guarded, DAILY triggers. Profile screen has a master "Daily reminders" toggle + the reminder list (replaced the old single hour-picker).
+- **Tool-calling (bounded loop, max 5 turns):** `COACH_TOOLS` = `log_water`, `log_meal`, `log_workout`, `update_goals`, `save_assessment`; `runCoachTool` does scoped DB writes with clamped/validated inputs; tool failures return `{ok:false}` to the model, never crash.
+- **Onboarding assessment:** conversational; six nullable `usersTable` columns (`experienceLevel`, `targetWeightKg`, `activityLevel`, `foodPreference`, `assessment` jsonb, `assessmentCompletedAt`). `save_assessment` **merges** the jsonb blob and falls back to existing column values (partial saves never wipe earlier answers); completion stamp only once core fields (experience+age+gender+height+weight+goal) are captured, then idempotent. See `.agents/memory/ai-assessment-tool-writes.md`.
+- **Health metrics:** `lib/healthMetrics.ts` (BMI, body fat, BMR/TDEE, `deriveGoals`, `weightPlan` lose/gain/maintain recommendation) — used by both the coach save path and `/me` (`UserProfile` has `assessmentComplete`/`bmr`/`tdee`/`bodyFatPct`).
+- **Mobile:** `app/coach.tsx` modal; on success invalidates all `/api/tracking*` + `/api/me` + `/api/goals` query keys. Entry: Home card (members) + Progress row.
+- **Reminders:** `lib/notifications.ts` `ACTION_REMINDERS` (8 daily nudges) with master toggle on Profile.
 
 ## User preferences
 
-- **Pushing data to production:** dev and prod are separate databases. To get dev catalog data (gyms, partners, etc.) onto the live site, use the admin Dashboard "Import workspace data" button — this is the standard workflow. Each time the user wants new/changed dev data live, the agent must: (1) regenerate `artifacts/api-server/src/lib/seed-snapshot.json` from the current dev DB, (2) redeploy, then (3) user clicks "Import workspace data" on the live admin Dashboard. See `.agents/memory/prod-data-import.md`.
-
-## Gotchas
-
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- **Pushing data to production:** dev and prod are separate databases. To get dev catalog data (gyms, partners, etc.) live: (1) regenerate `artifacts/api-server/src/lib/seed-snapshot.json` from the dev DB, (2) publish, (3) user clicks "Import workspace data" on the live admin Dashboard. See `.agents/memory/prod-data-import.md`.
 
 ## Pointers
 
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+- Sharp edges and durable lessons live in `.agents/memory/` (see `MEMORY.md` index).
