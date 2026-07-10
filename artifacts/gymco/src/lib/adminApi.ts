@@ -23,6 +23,36 @@ export type HomeSlide = {
   createdAt: string;
 };
 
+export type YoactivBranchOption = {
+  branchId: number;
+  gymLabel: string | null;
+};
+
+export type YoactivMemberRow = {
+  memberId: number;
+  name: string;
+  mobile: string;
+  email: string;
+  status: string;
+};
+
+export type YoactivMemberDetail = {
+  memberId: number | null;
+  name: string;
+  memberships: {
+    branchId: number;
+    branchName: string;
+    planName: string;
+    serviceName: string;
+    status: string;
+    startDate: string | null;
+    expiryDate: string | null;
+    sessionsTotal: number | null;
+    sessionsUsed: number | null;
+    amountInr: number | null;
+  }[];
+};
+
 export type AgencyAccount = {
   id: number;
   username: string;
@@ -354,6 +384,16 @@ export const adminApi = {
     list: () =>
       request<import("./partnerApi").TrainerBookingRow[]>(
         "/admin/trainer-bookings",
+      ),
+  },
+  yoactiv: {
+    branches: () =>
+      request<YoactivBranchOption[]>("/admin/yoactiv/branches"),
+    members: (branchId: number) =>
+      request<YoactivMemberRow[]>(`/admin/yoactiv/members?branchId=${branchId}`),
+    memberDetail: (mobile: string) =>
+      request<YoactivMemberDetail>(
+        `/admin/yoactiv/members/detail?mobile=${encodeURIComponent(mobile)}`,
       ),
   },
   agencies: {

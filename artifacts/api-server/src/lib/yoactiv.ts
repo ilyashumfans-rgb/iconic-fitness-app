@@ -500,6 +500,103 @@ async function fetchTrainersAcrossKeys(
   return trainers;
 }
 
+// ─── Branch member directory (admin) ────────────────────────────────────────
+
+export type YoactivMemberRow = {
+  memberId: number;
+  name: string;
+  mobile: string;
+  email: string;
+  status: string; // "Active" | "Inactive" (as reported by YoActiv)
+};
+
+type UserListRow = {
+  MemberId?: number;
+  Name?: string;
+  Mail?: string;
+  Mobile?: string;
+  Member_Status?: string;
+};
+
+const MEMBER_LIST_SUCCESS_TTL_MS = 5 * 60 * 1000;
+const MEMBER_LIST_FAILURE_TTL_MS = 60 * 1000;
+const MEMBER_LIST_BUDGET_MS = 20_000;
+const MEMBER_LIST_MAX_PAGES = 200;
+
+const memberListCache = new Map<
+  number,
+  { at: number; ttlMs: number; value: YoactivMemberRow[] }
+>();
+
+/**
+ * Full member directory for a branch via paginated `Users/GetUserList`.
+ * Pages are fetched until a page adds no new member ids (the API keeps
+ * returning the last page for out-of-range page numbers). Cached per branch.
+ */
+export async function fetchYoactivMemberList(
+  branchId: number,
+): Promise<YoactivMemberRow[]> {
+  const target = await resolveBranchTarget(branchId);
+  if (!target) return [];
+  const cached = memberListCache.get(branchId);
+  if (cached && Date.now() - cached.at < cached.ttlMs) return cached.value;
+  try {
+    const value = await withDeadline(
+      fetchMemberListAllPages(target),
+      MEMBER_LIST_BUDGET_MS,
+    );
+    memberListCache.set(branchId, {
+      at: Date.now(),
+      ttlMs: MEMBER_LIST_SUCCESS_TTL_MS,
+      value,
+    });
+    return value;
+  } catch (err) {
+    logger.warn({ err, branchId }, "yoactiv member list fetch failed");
+    const stale = cached?.value ?? [];
+    memberListCache.set(branchId, {
+      at: Date.now(),
+      ttlMs: MEMBER_LIST_FAILURE_TTL_MS,
+      value: stale,
+    });
+    return stale;
+  }
+}
+
+async function fetchMemberListAllPages(target: {
+  apiKey: string;
+  branchId: number;
+}): Promise<YoactivMemberRow[]> {
+  const byId = new Map<number, YoactivMemberRow>();
+  for (let page = 1; page <= MEMBER_LIST_MAX_PAGES; page++) {
+    const res = await yoactivPost<{ Results?: UserListRow[] }>(
+      "/Users/GetUserList",
+      target.apiKey,
+      target.branchId,
+      { Page_No: String(page) },
+    );
+    const rows = res.Results ?? [];
+    if (rows.length === 0) break;
+    let added = 0;
+    for (const row of rows) {
+      const memberId = Number(row.MemberId ?? 0);
+      if (!memberId || byId.has(memberId)) continue;
+      added += 1;
+      byId.set(memberId, {
+        memberId,
+        name: String(row.Name ?? "").trim(),
+        mobile: String(row.Mobile ?? "").trim(),
+        email: String(row.Mail ?? "").trim(),
+        status: String(row.Member_Status ?? "").trim() || "Unknown",
+      });
+    }
+    if (added === 0) break;
+  }
+  const members = [...byId.values()];
+  members.sort((a, b) => a.name.localeCompare(b.name));
+  return members;
+}
+
 // ─── PT packages, member creation & hosted payment ──────────────────────────
 
 export type YoactivPackage = {

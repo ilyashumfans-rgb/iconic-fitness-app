@@ -32,6 +32,12 @@ import {
 } from "../lib/adminAuth";
 import { STAFF_PERMISSIONS } from "../lib/staffAuth";
 import { forceReseedFromSnapshot } from "../lib/seedFromSnapshot";
+import {
+  fetchYoactivMemberByMobile,
+  fetchYoactivMemberList,
+  yoactivConfigured,
+  yoactivKeyConfigs,
+} from "../lib/yoactiv";
 import { DEFAULT_PRODUCT_CATEGORIES } from "../lib/productCategories.js";
 
 const loadAdminRole = async (id: number): Promise<string | undefined> => {
@@ -2140,6 +2146,98 @@ router.get(
       .orderBy(desc(trainerBookingsTable.createdAt))
       .limit(5000);
     res.json(rows);
+  },
+);
+
+// ─── YoActiv member directory (read-only) ───────────────────────────────────
+
+// Branches available for the member directory: every configured YoActiv
+// branch id, labelled with the mapped gym name when one exists.
+router.get(
+  "/admin/yoactiv/branches",
+  requireAdmin,
+  async (_req: Request, res: Response): Promise<void> => {
+    if (!yoactivConfigured()) {
+      res.json([]);
+      return;
+    }
+    const configs = await yoactivKeyConfigs();
+    const branchIds = [...new Set(configs.flatMap((c) => c.branchIds))];
+    const gyms = branchIds.length
+      ? await db
+          .select({
+            name: gymsTable.name,
+            area: gymsTable.area,
+            yoactivBranchId: gymsTable.yoactivBranchId,
+          })
+          .from(gymsTable)
+          .where(inArray(gymsTable.yoactivBranchId, branchIds))
+      : [];
+    const labelByBranch = new Map<number, string>();
+    for (const g of gyms) {
+      if (g.yoactivBranchId && !labelByBranch.has(g.yoactivBranchId)) {
+        labelByBranch.set(g.yoactivBranchId, `${g.name} (${g.area})`);
+      }
+    }
+    res.json(
+      branchIds.map((branchId) => ({
+        branchId,
+        gymLabel: labelByBranch.get(branchId) ?? null,
+      })),
+    );
+  },
+);
+
+// Full member list for one branch (name, mobile, active/inactive status).
+router.get(
+  "/admin/yoactiv/members",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const branchId = Number(req.query.branchId);
+    if (!Number.isFinite(branchId) || branchId <= 0) {
+      res.status(400).json({ error: "branchId required" });
+      return;
+    }
+    if (!yoactivConfigured()) {
+      res.json([]);
+      return;
+    }
+    const members = await fetchYoactivMemberList(branchId);
+    res.json(members);
+  },
+);
+
+// Plan details (plan name, status, start/expiry dates) for one member.
+router.get(
+  "/admin/yoactiv/members/detail",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const mobile = String(req.query.mobile ?? "").trim();
+    if (!mobile) {
+      res.status(400).json({ error: "mobile required" });
+      return;
+    }
+    const profile = await fetchYoactivMemberByMobile(mobile);
+    if (!profile) {
+      res.json({ memberId: null, name: "", memberships: [] });
+      return;
+    }
+    res.json({
+      memberId: profile.memberId,
+      name: profile.name,
+      memberships: profile.memberships.map((m) => ({
+        branchId: m.branchId,
+        branchName: m.branchName,
+        planName: m.planName,
+        serviceName: m.serviceName,
+        status: m.status,
+        startDate: m.startDate,
+        expiryDate: m.expiryDate,
+        sessionsTotal: m.sessionsTotal,
+        sessionsUsed: m.sessionsUsed,
+        amountInr: m.amountInr,
+      })),
+    });
   },
 );
 

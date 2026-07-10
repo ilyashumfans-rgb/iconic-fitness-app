@@ -140,6 +140,11 @@ const SECTIONS: Section[] = [
         href: "/admin/membership-management",
         icon: <Settings2 className="h-4 w-4" />,
       },
+      {
+        label: "Gym Members (YoActiv)",
+        href: "/admin/yoactiv-members",
+        icon: <UserCog className="h-4 w-4" />,
+      },
     ],
   },
   {
