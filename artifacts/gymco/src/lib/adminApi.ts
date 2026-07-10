@@ -29,6 +29,12 @@ export type YoactivBranchOption = {
   gymLabel: string | null;
 };
 
+export type YoactivStaffTrainer = {
+  id: string;
+  name: string;
+  mobile: string;
+};
+
 export type YoactivMemberRow = {
   memberId: number;
   name: string;
@@ -395,6 +401,10 @@ export const adminApi = {
     memberDetail: (mobile: string) =>
       request<YoactivMemberDetail>(
         `/admin/yoactiv/members/detail?mobile=${encodeURIComponent(mobile)}`,
+      ),
+    trainers: (branchId: number) =>
+      request<YoactivStaffTrainer[]>(
+        `/admin/yoactiv/trainers?branchId=${branchId}`,
       ),
   },
   agencies: {

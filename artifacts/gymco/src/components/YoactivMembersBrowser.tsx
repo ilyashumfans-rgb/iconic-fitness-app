@@ -1,17 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   YoactivBranchOption,
   YoactivMemberDetail,
   YoactivMemberRow,
+  YoactivStaffTrainer,
 } from "@/lib/adminApi";
 import { ChevronDown, ChevronRight, RefreshCw, Search } from "lucide-react";
 
 type StatusFilter = "all" | "active" | "inactive";
+type View = "members" | "trainers";
 
 export type YoactivMembersApi = {
   branches: () => Promise<YoactivBranchOption[]>;
   members: (branchId: number) => Promise<YoactivMemberRow[]>;
   memberDetail: (mobile: string) => Promise<YoactivMemberDetail>;
+  trainers: (branchId: number) => Promise<YoactivStaffTrainer[]>;
 };
 
 function statusBadge(status: string) {
@@ -125,13 +128,18 @@ export function YoactivMembersBrowser({
 }) {
   const [branches, setBranches] = useState<YoactivBranchOption[]>([]);
   const [branchId, setBranchId] = useState<number | null>(null);
+  const [view, setView] = useState<View>("members");
   const [members, setMembers] = useState<YoactivMemberRow[]>([]);
+  const [trainers, setTrainers] = useState<YoactivStaffTrainer[]>([]);
   const [loadingBranches, setLoadingBranches] = useState(true);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [expanded, setExpanded] = useState<number | null>(null);
+  // Monotonic request token: only the latest branch/view request may update
+  // state, so out-of-order responses never render another branch's data.
+  const loadSeq = useRef(0);
 
   useEffect(() => {
     api
@@ -144,21 +152,33 @@ export function YoactivMembersBrowser({
       .finally(() => setLoadingBranches(false));
   }, [api]);
 
-  const loadMembers = (id: number) => {
+  const loadMembers = (id: number, which: View) => {
+    const seq = ++loadSeq.current;
     setLoadingMembers(true);
     setErr(null);
     setExpanded(null);
-    api
-      .members(id)
-      .then(setMembers)
-      .catch((e) => setErr(e instanceof Error ? e.message : String(e)))
-      .finally(() => setLoadingMembers(false));
+    const load =
+      which === "members"
+        ? api.members(id).then((rows) => {
+            if (loadSeq.current === seq) setMembers(rows);
+          })
+        : api.trainers(id).then((rows) => {
+            if (loadSeq.current === seq) setTrainers(rows);
+          });
+    load
+      .catch((e) => {
+        if (loadSeq.current === seq)
+          setErr(e instanceof Error ? e.message : String(e));
+      })
+      .finally(() => {
+        if (loadSeq.current === seq) setLoadingMembers(false);
+      });
   };
 
   useEffect(() => {
-    if (branchId !== null) loadMembers(branchId);
+    if (branchId !== null) loadMembers(branchId, view);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [branchId]);
+  }, [branchId, view]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -176,6 +196,14 @@ export function YoactivMembersBrowser({
       );
     });
   }, [members, search, statusFilter]);
+
+  const filteredTrainers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return trainers;
+    return trainers.filter(
+      (t) => t.name.toLowerCase().includes(q) || t.mobile.includes(q),
+    );
+  }, [trainers, search]);
 
   const activeCount = members.filter(
     (m) => m.status.toLowerCase() === "active",
@@ -197,32 +225,53 @@ export function YoactivMembersBrowser({
             </option>
           ))}
         </select>
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
-          <input
-            className="w-64 rounded-lg border border-slate-700 bg-slate-900 py-2 pl-9 pr-3 text-sm text-slate-200 placeholder:text-slate-500"
-            placeholder="Search name, mobile, email…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
         <div className="flex overflow-hidden rounded-lg border border-slate-700 text-sm">
-          {(["all", "active", "inactive"] as const).map((f) => (
+          {(["members", "trainers"] as const).map((v) => (
             <button
-              key={f}
-              onClick={() => setStatusFilter(f)}
+              key={v}
+              onClick={() => setView(v)}
               className={`px-3 py-2 capitalize ${
-                statusFilter === f
+                view === v
                   ? "bg-slate-700 text-white"
                   : "bg-slate-900 text-slate-400 hover:text-slate-200"
               }`}
             >
-              {f}
+              {v}
             </button>
           ))}
         </div>
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+          <input
+            className="w-64 rounded-lg border border-slate-700 bg-slate-900 py-2 pl-9 pr-3 text-sm text-slate-200 placeholder:text-slate-500"
+            placeholder={
+              view === "members"
+                ? "Search name, mobile, email…"
+                : "Search name, mobile…"
+            }
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        {view === "members" && (
+          <div className="flex overflow-hidden rounded-lg border border-slate-700 text-sm">
+            {(["all", "active", "inactive"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setStatusFilter(f)}
+                className={`px-3 py-2 capitalize ${
+                  statusFilter === f
+                    ? "bg-slate-700 text-white"
+                    : "bg-slate-900 text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        )}
         <button
-          onClick={() => branchId !== null && loadMembers(branchId)}
+          onClick={() => branchId !== null && loadMembers(branchId, view)}
           className="ml-auto inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-300 hover:text-white"
           disabled={loadingMembers}
         >
@@ -238,7 +287,44 @@ export function YoactivMembersBrowser({
       ) : err ? (
         <p className="text-sm text-red-400">{err}</p>
       ) : loadingMembers ? (
-        <p className="text-sm text-slate-400">Loading members…</p>
+        <p className="text-sm text-slate-400">
+          {view === "members" ? "Loading members…" : "Loading trainers…"}
+        </p>
+      ) : view === "trainers" ? (
+        <>
+          <p className="mb-3 text-sm text-slate-400">
+            {trainers.length} personal trainers
+            {filteredTrainers.length !== trainers.length &&
+              ` · showing ${filteredTrainers.length}`}
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="text-xs uppercase tracking-wide text-slate-500">
+                  <th className="pb-2 pr-4">Name</th>
+                  <th className="pb-2 pr-4">Mobile</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredTrainers.map((t) => (
+                  <tr key={t.id} className="border-t border-slate-800">
+                    <td className="py-2 pr-4 font-medium text-slate-200">
+                      {t.name || "—"}
+                    </td>
+                    <td className="py-2 pr-4 text-slate-300">{t.mobile || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {filteredTrainers.length === 0 && (
+              <p className="py-6 text-center text-sm text-slate-400">
+                {trainers.length === 0
+                  ? "No personal trainers found for this branch."
+                  : "No trainers match the current search."}
+              </p>
+            )}
+          </div>
+        </>
       ) : (
         <>
           <p className="mb-3 text-sm text-slate-400">

@@ -351,6 +351,10 @@ export const partnerApi = {
       request<import("./adminApi").YoactivMemberDetail>(
         `/partner/yoactiv/members/detail?mobile=${encodeURIComponent(mobile)}`,
       ),
+    trainers: (branchId: number) =>
+      request<import("./adminApi").YoactivStaffTrainer[]>(
+        `/partner/yoactiv/trainers?branchId=${branchId}`,
+      ),
   },
   classes: {
     list: () => request<PartnerClass[]>("/partner/classes"),

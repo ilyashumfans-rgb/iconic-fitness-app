@@ -500,6 +500,72 @@ async function fetchTrainersAcrossKeys(
   return trainers;
 }
 
+// ─── Branch trainer directory (admin/partner) ───────────────────────────────
+
+export type YoactivStaffTrainer = {
+  id: string;
+  name: string;
+  mobile: string;
+};
+
+const staffTrainersCache = new Map<
+  number,
+  { at: number; ttlMs: number; value: YoactivStaffTrainer[] }
+>();
+
+/**
+ * PT staff roster for a single branch, INCLUDING mobile numbers — for the
+ * admin/partner trainer directory only (both are staff-facing, access is
+ * gated at the route level). The public member-facing roster must keep
+ * using `fetchYoactivTrainers`, which strips mobiles.
+ */
+export async function fetchYoactivBranchTrainers(
+  branchId: number,
+): Promise<YoactivStaffTrainer[]> {
+  const target = await resolveBranchTarget(branchId);
+  if (!target) return [];
+  const cached = staffTrainersCache.get(branchId);
+  if (cached && Date.now() - cached.at < cached.ttlMs) return cached.value;
+  try {
+    const res = await withDeadline(
+      yoactivPost<GetStaffResponse>("/Billing/GetStaff", target.apiKey, target.branchId, {
+        PT: 1,
+      }),
+      TRAINERS_BUDGET_MS,
+    );
+    const rows = res.Data?.PTStaffs ?? [];
+    const trainers: YoactivStaffTrainer[] = [];
+    const seen = new Set<string>();
+    for (const row of rows) {
+      const id = String(row.ID ?? "").trim();
+      const name = String(row.Staff ?? "").trim();
+      if (!id || !name || seen.has(id)) continue;
+      seen.add(id);
+      trainers.push({
+        id,
+        name,
+        mobile: typeof row.Mobile === "string" ? row.Mobile.trim() : "",
+      });
+    }
+    trainers.sort((a, b) => a.name.localeCompare(b.name));
+    staffTrainersCache.set(branchId, {
+      at: Date.now(),
+      ttlMs: TRAINERS_SUCCESS_TTL_MS,
+      value: trainers,
+    });
+    return trainers;
+  } catch (err) {
+    logger.warn({ err, branchId }, "yoactiv branch trainer roster fetch failed");
+    const stale = cached?.value ?? [];
+    staffTrainersCache.set(branchId, {
+      at: Date.now(),
+      ttlMs: TRAINERS_FAILURE_TTL_MS,
+      value: stale,
+    });
+    return stale;
+  }
+}
+
 // ─── Branch member directory (admin) ────────────────────────────────────────
 
 export type YoactivMemberRow = {

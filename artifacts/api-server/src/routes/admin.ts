@@ -35,6 +35,7 @@ import { forceReseedFromSnapshot } from "../lib/seedFromSnapshot";
 import {
   fetchYoactivMemberByMobile,
   fetchYoactivMemberList,
+  fetchYoactivBranchTrainers,
   yoactivConfigured,
   yoactivKeyConfigs,
 } from "../lib/yoactiv";
@@ -2206,6 +2207,25 @@ router.get(
     }
     const members = await fetchYoactivMemberList(branchId);
     res.json(members);
+  },
+);
+
+// PT trainer roster for one branch (name + mobile, staff-facing only).
+router.get(
+  "/admin/yoactiv/trainers",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const branchId = Number(req.query.branchId);
+    if (!Number.isFinite(branchId) || branchId <= 0) {
+      res.status(400).json({ error: "branchId required" });
+      return;
+    }
+    if (!yoactivConfigured()) {
+      res.json([]);
+      return;
+    }
+    const trainers = await fetchYoactivBranchTrainers(branchId);
+    res.json(trainers);
   },
 );
 

@@ -9,6 +9,7 @@ const api: YoactivMembersApi = {
   branches: adminApi.yoactiv.branches,
   members: adminApi.yoactiv.members,
   memberDetail: adminApi.yoactiv.memberDetail,
+  trainers: adminApi.yoactiv.trainers,
 };
 
 export default function AdminYoactivMembers() {

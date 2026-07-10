@@ -41,6 +41,7 @@ import { DEFAULT_GROUP_CLASS_SCHEDULE } from "../lib/groupClassSchedule";
 import {
   fetchYoactivMemberByMobile,
   fetchYoactivMemberList,
+  fetchYoactivBranchTrainers,
   yoactivConfigured,
 } from "../lib/yoactiv";
 import { yoactivBranchName } from "../lib/yoactivBranchNames";
@@ -2568,6 +2569,31 @@ router.get(
     }
     const members = await fetchYoactivMemberList(branchId);
     res.json(members);
+  },
+);
+
+// PT trainer roster for one owned branch (name + mobile — the partner's own
+// staff). Unowned branches are refused, same as the member list.
+router.get(
+  "/partner/yoactiv/trainers",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const branchId = Number(req.query.branchId);
+    if (!Number.isFinite(branchId) || branchId <= 0) {
+      res.status(400).json({ error: "branchId required" });
+      return;
+    }
+    const branches = await ownedYoactivBranches(req.session.partnerId!);
+    if (!branches.some((b) => b.branchId === branchId)) {
+      res.status(403).json({ error: "Not allowed" });
+      return;
+    }
+    if (!yoactivConfigured()) {
+      res.json([]);
+      return;
+    }
+    const trainers = await fetchYoactivBranchTrainers(branchId);
+    res.json(trainers);
   },
 );
 
