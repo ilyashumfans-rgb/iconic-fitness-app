@@ -176,7 +176,8 @@ export default function AdminYoactivMembers() {
           >
             {branches.map((b) => (
               <option key={b.branchId} value={b.branchId}>
-                {b.gymLabel ?? `Branch ${b.branchId}`}
+                {b.branchId} — {b.branchName ?? b.gymLabel ?? "Unnamed branch"}
+                {b.branchName && b.gymLabel ? ` · ${b.gymLabel}` : ""}
               </option>
             ))}
           </select>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
-import { adminApi } from "@/lib/adminApi";
+import { adminApi, type YoactivBranchOption } from "@/lib/adminApi";
 import { locationsApi, type City, type Area } from "@/lib/locationsApi";
 import { Plus, Trash2, X, Users, ChevronDown, ChevronUp, Check } from "lucide-react";
 
@@ -48,6 +48,14 @@ function GymForm({
         : String(initial.yoactivBranchId),
   });
   const [busy, setBusy] = useState(false);
+  const [yoactivBranches, setYoactivBranches] = useState<YoactivBranchOption[]>([]);
+
+  useEffect(() => {
+    adminApi.yoactiv
+      .branches()
+      .then(setYoactivBranches)
+      .catch(() => setYoactivBranches([]));
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,15 +112,44 @@ function GymForm({
           onChange={(v) => setF({ ...f, payoutTaxPct: v as any })}
         />
         <div className="sm:col-span-2">
-          <Input
-            label="YoActiv branch ID (for PT bookings & live trainers)"
-            value={f.yoactivBranchId}
-            onChange={(v) => setF({ ...f, yoactivBranchId: v })}
-          />
+          {yoactivBranches.length > 0 ? (
+            <>
+              <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+                YoActiv branch (for PT bookings & live trainers)
+              </label>
+              <select
+                value={f.yoactivBranchId}
+                onChange={(e) => setF({ ...f, yoactivBranchId: e.target.value })}
+                className={inputCls}
+              >
+                <option value="">— Not connected —</option>
+                {f.yoactivBranchId !== "" &&
+                  !yoactivBranches.some(
+                    (b) => String(b.branchId) === f.yoactivBranchId,
+                  ) && (
+                    <option value={f.yoactivBranchId}>
+                      {f.yoactivBranchId} — (not in configured branch list)
+                    </option>
+                  )}
+                {yoactivBranches.map((b) => (
+                  <option key={b.branchId} value={String(b.branchId)}>
+                    {b.branchId} — {b.branchName ?? "Unnamed branch"}
+                    {b.gymLabel ? ` · mapped to ${b.gymLabel}` : ""}
+                  </option>
+                ))}
+              </select>
+            </>
+          ) : (
+            <Input
+              label="YoActiv branch ID (for PT bookings & live trainers)"
+              value={f.yoactivBranchId}
+              onChange={(v) => setF({ ...f, yoactivBranchId: v })}
+            />
+          )}
           <div className="text-[11px] text-slate-500 mt-1">
-            The branch's ID in the YoActiv gym-management system. Needed so
-            members can see this branch's live trainer roster and pay for PT
-            packages online. Leave blank if not connected.
+            The branch in the YoActiv gym-management system this gym maps to.
+            Needed so members can see this branch's live trainer roster and pay
+            for PT packages online. Leave as "Not connected" if not on YoActiv.
           </div>
         </div>
         <div className="sm:col-span-2">

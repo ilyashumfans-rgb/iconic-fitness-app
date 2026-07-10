@@ -38,6 +38,7 @@ import {
   yoactivConfigured,
   yoactivKeyConfigs,
 } from "../lib/yoactiv";
+import { yoactivBranchName } from "../lib/yoactivBranchNames";
 import { DEFAULT_PRODUCT_CATEGORIES } from "../lib/productCategories.js";
 
 const loadAdminRole = async (id: number): Promise<string | undefined> => {
@@ -2182,6 +2183,7 @@ router.get(
     res.json(
       branchIds.map((branchId) => ({
         branchId,
+        branchName: yoactivBranchName(branchId),
         gymLabel: labelByBranch.get(branchId) ?? null,
       })),
     );

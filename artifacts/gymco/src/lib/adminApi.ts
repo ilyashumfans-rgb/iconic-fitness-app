@@ -25,6 +25,7 @@ export type HomeSlide = {
 
 export type YoactivBranchOption = {
   branchId: number;
+  branchName: string | null;
   gymLabel: string | null;
 };
 
