@@ -11,6 +11,7 @@ import {
   GetTrainerBookingResponse,
 } from "@workspace/api-zod";
 import { requireUser } from "../lib/currentUser";
+import { hiddenPackageIds } from "../lib/yoactivPackagePrefs";
 import {
   createYoactivPaymentUrl,
   ensureYoactivMemberId,
@@ -50,8 +51,13 @@ router.get("/trainer-packages", async (req, res): Promise<void> => {
     res.json(ListTrainerPackagesResponse.parse([]));
     return;
   }
-  const packages = await fetchYoactivPackages(gym.yoactivBranchId);
-  res.json(ListTrainerPackagesResponse.parse(packages));
+  const [packages, hidden] = await Promise.all([
+    fetchYoactivPackages(gym.yoactivBranchId),
+    hiddenPackageIds(gym.yoactivBranchId),
+  ]);
+  res.json(
+    ListTrainerPackagesResponse.parse(packages.filter((p) => !hidden.has(p.id))),
+  );
 });
 
 // Start a paid booking: verify the package server-side, register the member in
@@ -100,8 +106,14 @@ router.post(
       return;
     }
     // Never trust the client's price — re-read the package from YoActiv.
-    const packages = await fetchYoactivPackages(gym.yoactivBranchId);
-    const pkg = packages.find((p) => p.id === body.packageId);
+    // Admin-hidden packages are not purchasable either.
+    const [packages, hidden] = await Promise.all([
+      fetchYoactivPackages(gym.yoactivBranchId),
+      hiddenPackageIds(target.branchId),
+    ]);
+    const pkg = packages.find(
+      (p) => p.id === body.packageId && !hidden.has(p.id),
+    );
     if (!pkg) {
       res.status(400).json({ error: "That package is no longer available" });
       return;

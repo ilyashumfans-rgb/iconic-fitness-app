@@ -697,6 +697,24 @@ export const ticketCommentsTable = pgTable("ticket_comments", {
     .defaultNow(),
 });
 
+// Admin curation of YoActiv packages: which live plans are visible in the
+// member-facing purchase flows. YoActiv stays the source of truth for names
+// and prices — we only store a hidden flag per (branch, package variation).
+// Plain cross-references, no FKs (repo convention).
+export const yoactivPackagePrefsTable = pgTable(
+  "yoactiv_package_prefs",
+  {
+    id: serial("id").primaryKey(),
+    branchId: integer("branch_id").notNull(),
+    packageId: integer("package_id").notNull(),
+    hidden: boolean("hidden").notNull().default(false),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [uniqueIndex("yoactiv_package_prefs_branch_pkg_uq").on(t.branchId, t.packageId)],
+);
+
 // Photos for YoActiv trainers (the YoActiv API has no photo field). Keyed by
 // the YoActiv staff id (text), uploaded by admins/partners via the trainer
 // directory. Plain cross-reference, no FK (repo convention).

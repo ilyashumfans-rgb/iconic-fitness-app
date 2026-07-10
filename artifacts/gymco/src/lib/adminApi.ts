@@ -29,6 +29,17 @@ export type YoactivBranchOption = {
   gymLabel: string | null;
 };
 
+export type YoactivAdminPackage = {
+  id: number;
+  serviceName: string;
+  name: string;
+  amountInr: number;
+  sessions: number | null;
+  duration: string;
+  pt: boolean;
+  hidden: boolean;
+};
+
 export type YoactivStaffTrainer = {
   id: string;
   name: string;
@@ -413,6 +424,15 @@ export const adminApi = {
     trainers: (branchId: number) =>
       request<YoactivStaffTrainer[]>(
         `/admin/yoactiv/trainers?branchId=${branchId}`,
+      ),
+    packages: (branchId: number) =>
+      request<YoactivAdminPackage[]>(
+        `/admin/yoactiv/packages?branchId=${branchId}`,
+      ),
+    setPackageVisibility: (packageId: number, branchId: number, hidden: boolean) =>
+      request<{ ok: boolean }>(
+        `/admin/yoactiv/packages/${packageId}/visibility`,
+        { method: "PUT", body: JSON.stringify({ branchId, hidden }) },
       ),
     setTrainerPhoto: (trainerId: string, imageUrl: string, _branchId: number) =>
       request<{ ok: boolean }>(

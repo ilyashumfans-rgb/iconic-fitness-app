@@ -84,6 +84,7 @@ import AdminAgencies from "@/pages/admin/Agencies";
 import AdminTrainerBookings from "@/pages/admin/TrainerBookings";
 import AdminPackageBookings from "@/pages/admin/PackageBookings";
 import AdminYoactivMembers from "@/pages/admin/YoactivMembers";
+import AdminYoactivPlans from "@/pages/admin/YoactivPlans";
 import AdminHomeSlides from "@/pages/admin/HomeSlides";
 import AdminNotifications from "@/pages/admin/Notifications";
 import AdminLeads from "@/pages/admin/Leads";
@@ -372,6 +373,7 @@ function AppShell() {
         <Route path="/admin/trainer-bookings" component={AdminTrainerBookings} />
         <Route path="/admin/package-bookings" component={AdminPackageBookings} />
         <Route path="/admin/yoactiv-members" component={AdminYoactivMembers} />
+        <Route path="/admin/yoactiv-plans" component={AdminYoactivPlans} />
         <Route path="/admin/notifications" component={AdminNotifications} />
         <Route path="/admin/leads" component={AdminLeads} />
         <Route path="/admin/home-slider" component={AdminHomeSlides} />

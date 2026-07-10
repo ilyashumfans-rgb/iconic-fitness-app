@@ -37,9 +37,14 @@ import {
   fetchYoactivMemberByMobile,
   fetchYoactivMemberList,
   fetchYoactivBranchTrainers,
+  fetchYoactivPackages,
   yoactivConfigured,
   yoactivKeyConfigs,
 } from "../lib/yoactiv";
+import {
+  hiddenPackageIds,
+  setPackageHidden,
+} from "../lib/yoactivPackagePrefs";
 import { yoactivBranchName } from "../lib/yoactivBranchNames";
 import {
   trainerPhotoMap,
@@ -2220,6 +2225,64 @@ router.get(
         gymLabel: labelByBranch.get(branchId) ?? null,
       })),
     );
+  },
+);
+
+// Live YoActiv plan catalog for one branch, with the admin-managed visibility
+// flag. YoActiv owns names/prices; admins only control what members can buy.
+router.get(
+  "/admin/yoactiv/packages",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const branchId = Number(req.query.branchId);
+    if (!Number.isFinite(branchId) || branchId <= 0) {
+      res.status(400).json({ error: "branchId required" });
+      return;
+    }
+    if (!yoactivConfigured()) {
+      res.json([]);
+      return;
+    }
+    const configs = await yoactivKeyConfigs();
+    if (!configs.some((c) => c.branchIds.includes(branchId))) {
+      res.status(400).json({ error: "Unknown YoActiv branch" });
+      return;
+    }
+    const [packages, hidden] = await Promise.all([
+      fetchYoactivPackages(branchId),
+      hiddenPackageIds(branchId),
+    ]);
+    res.json(packages.map((p) => ({ ...p, hidden: hidden.has(p.id) })));
+  },
+);
+
+// Show/hide one plan in the member-facing purchase flows.
+router.put(
+  "/admin/yoactiv/packages/:packageId/visibility",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const packageId = Number(req.params.packageId);
+    const branchId = Number(req.body?.branchId);
+    const hidden = req.body?.hidden;
+    if (!Number.isFinite(packageId) || packageId <= 0) {
+      res.status(400).json({ error: "packageId required" });
+      return;
+    }
+    if (!Number.isFinite(branchId) || branchId <= 0) {
+      res.status(400).json({ error: "branchId required" });
+      return;
+    }
+    if (typeof hidden !== "boolean") {
+      res.status(400).json({ error: "hidden must be a boolean" });
+      return;
+    }
+    const configs = await yoactivKeyConfigs();
+    if (!configs.some((c) => c.branchIds.includes(branchId))) {
+      res.status(400).json({ error: "Unknown YoActiv branch" });
+      return;
+    }
+    await setPackageHidden(branchId, packageId, hidden);
+    res.json({ ok: true });
   },
 );
 
