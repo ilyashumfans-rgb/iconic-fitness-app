@@ -38,6 +38,9 @@ export type YoactivAdminPackage = {
   duration: string;
   pt: boolean;
   hidden: boolean;
+  displayName: string;
+  description: string;
+  imageUrl: string;
 };
 
 export type YoactivStaffTrainer = {
@@ -433,6 +436,15 @@ export const adminApi = {
       request<{ ok: boolean }>(
         `/admin/yoactiv/packages/${packageId}/visibility`,
         { method: "PUT", body: JSON.stringify({ branchId, hidden }) },
+      ),
+    setPackageContent: (
+      packageId: number,
+      branchId: number,
+      content: { displayName: string; description: string; imageUrl: string },
+    ) =>
+      request<{ ok: boolean }>(
+        `/admin/yoactiv/packages/${packageId}/content`,
+        { method: "PUT", body: JSON.stringify({ branchId, ...content }) },
       ),
     setTrainerPhoto: (trainerId: string, imageUrl: string, _branchId: number) =>
       request<{ ok: boolean }>(

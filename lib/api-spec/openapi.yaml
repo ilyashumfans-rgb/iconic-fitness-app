@@ -1198,6 +1198,8 @@ components:
         sessions: { type: integer, nullable: true }
         duration: { type: string }
         pt: { type: boolean }
+        description: { type: string, description: "Admin-set display description (empty when unset)" }
+        imageUrl: { type: string, description: "Admin-set display image URL (empty when unset)" }
     CreateTrainerBookingRequest:
       type: object
       required: [gymId, packageId, name, mobile, preferredDate]

@@ -654,7 +654,9 @@ export const ListTrainerPackagesResponseItem = zod.object({
   "amountInr": zod.number(),
   "sessions": zod.number().nullish(),
   "duration": zod.string(),
-  "pt": zod.boolean()
+  "pt": zod.boolean(),
+  "description": zod.string().optional().describe('Admin-set display description (empty when unset)'),
+  "imageUrl": zod.string().optional().describe('Admin-set display image URL (empty when unset)')
 })
 export const ListTrainerPackagesResponse = zod.array(ListTrainerPackagesResponseItem)
 
@@ -719,7 +721,9 @@ export const ListMembershipPackagesResponseItem = zod.object({
   "amountInr": zod.number(),
   "sessions": zod.number().nullish(),
   "duration": zod.string(),
-  "pt": zod.boolean()
+  "pt": zod.boolean(),
+  "description": zod.string().optional().describe('Admin-set display description (empty when unset)'),
+  "imageUrl": zod.string().optional().describe('Admin-set display image URL (empty when unset)')
 })
 export const ListMembershipPackagesResponse = zod.array(ListMembershipPackagesResponseItem)
 

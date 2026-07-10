@@ -42,7 +42,8 @@ import {
   yoactivKeyConfigs,
 } from "../lib/yoactiv";
 import {
-  hiddenPackageIds,
+  packagePrefs,
+  setPackageContent,
   setPackageHidden,
 } from "../lib/yoactivPackagePrefs";
 import { yoactivBranchName } from "../lib/yoactivBranchNames";
@@ -2229,7 +2230,8 @@ router.get(
 );
 
 // Live YoActiv plan catalog for one branch, with the admin-managed visibility
-// flag. YoActiv owns names/prices; admins only control what members can buy.
+// flag and display-content overrides. YoActiv owns prices; admins control
+// what members can buy plus optional display name/description/image.
 router.get(
   "/admin/yoactiv/packages",
   requireAdmin,
@@ -2248,11 +2250,22 @@ router.get(
       res.status(400).json({ error: "Unknown YoActiv branch" });
       return;
     }
-    const [packages, hidden] = await Promise.all([
+    const [packages, prefs] = await Promise.all([
       fetchYoactivPackages(branchId),
-      hiddenPackageIds(branchId),
+      packagePrefs(branchId),
     ]);
-    res.json(packages.map((p) => ({ ...p, hidden: hidden.has(p.id) })));
+    res.json(
+      packages.map((p) => {
+        const pref = prefs.get(p.id);
+        return {
+          ...p,
+          hidden: pref?.hidden ?? false,
+          displayName: pref?.displayName ?? "",
+          description: pref?.description ?? "",
+          imageUrl: pref?.imageUrl ?? "",
+        };
+      }),
+    );
   },
 );
 
@@ -2282,6 +2295,48 @@ router.put(
       return;
     }
     await setPackageHidden(branchId, packageId, hidden);
+    res.json({ ok: true });
+  },
+);
+
+// Display-content overrides for one plan (name, description, image). Empty
+// string clears an override back to the live YoActiv value. Prices are never
+// editable here — payment happens on YoActiv's hosted page with its price.
+router.put(
+  "/admin/yoactiv/packages/:packageId/content",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const packageId = Number(req.params.packageId);
+    const branchId = Number(req.body?.branchId);
+    if (!Number.isFinite(packageId) || packageId <= 0) {
+      res.status(400).json({ error: "packageId required" });
+      return;
+    }
+    if (!Number.isFinite(branchId) || branchId <= 0) {
+      res.status(400).json({ error: "branchId required" });
+      return;
+    }
+    const displayName = typeof req.body?.displayName === "string" ? req.body.displayName.trim() : null;
+    const description = typeof req.body?.description === "string" ? req.body.description.trim() : null;
+    const imageUrl = typeof req.body?.imageUrl === "string" ? req.body.imageUrl.trim() : null;
+    if (displayName === null || description === null || imageUrl === null) {
+      res.status(400).json({ error: "displayName, description and imageUrl must be strings" });
+      return;
+    }
+    if (displayName.length > 120 || description.length > 2000 || imageUrl.length > 2000) {
+      res.status(400).json({ error: "Content too long" });
+      return;
+    }
+    if (imageUrl && !/^(\/api\/storage\/db-images\/\d+|https?:\/\/)/.test(imageUrl)) {
+      res.status(400).json({ error: "Invalid image URL" });
+      return;
+    }
+    const configs = await yoactivKeyConfigs();
+    if (!configs.some((c) => c.branchIds.includes(branchId))) {
+      res.status(400).json({ error: "Unknown YoActiv branch" });
+      return;
+    }
+    await setPackageContent(branchId, packageId, { displayName, description, imageUrl });
     res.json({ ok: true });
   },
 );

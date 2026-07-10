@@ -708,6 +708,11 @@ export const yoactivPackagePrefsTable = pgTable(
     branchId: integer("branch_id").notNull(),
     packageId: integer("package_id").notNull(),
     hidden: boolean("hidden").notNull().default(false),
+    // Display-only overrides; empty string = use the live YoActiv value.
+    // Prices are never overridden — payment happens on YoActiv's side.
+    displayName: text("display_name").notNull().default(""),
+    description: text("description").notNull().default(""),
+    imageUrl: text("image_url").notNull().default(""),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

@@ -11,7 +11,10 @@ import {
   GetTrainerBookingResponse,
 } from "@workspace/api-zod";
 import { requireUser } from "../lib/currentUser";
-import { hiddenPackageIds } from "../lib/yoactivPackagePrefs";
+import {
+  applyPackagePref,
+  packagePrefs,
+} from "../lib/yoactivPackagePrefs";
 import {
   createYoactivPaymentUrl,
   ensureYoactivMemberId,
@@ -51,12 +54,16 @@ router.get("/trainer-packages", async (req, res): Promise<void> => {
     res.json(ListTrainerPackagesResponse.parse([]));
     return;
   }
-  const [packages, hidden] = await Promise.all([
+  const [packages, prefs] = await Promise.all([
     fetchYoactivPackages(gym.yoactivBranchId),
-    hiddenPackageIds(gym.yoactivBranchId),
+    packagePrefs(gym.yoactivBranchId),
   ]);
   res.json(
-    ListTrainerPackagesResponse.parse(packages.filter((p) => !hidden.has(p.id))),
+    ListTrainerPackagesResponse.parse(
+      packages
+        .filter((p) => !prefs.get(p.id)?.hidden)
+        .map((p) => applyPackagePref(p, prefs)),
+    ),
   );
 });
 
@@ -107,17 +114,20 @@ router.post(
     }
     // Never trust the client's price — re-read the package from YoActiv.
     // Admin-hidden packages are not purchasable either.
-    const [packages, hidden] = await Promise.all([
+    const [packages, prefs] = await Promise.all([
       fetchYoactivPackages(gym.yoactivBranchId),
-      hiddenPackageIds(target.branchId),
+      packagePrefs(target.branchId),
     ]);
-    const pkg = packages.find(
-      (p) => p.id === body.packageId && !hidden.has(p.id),
+    const rawPkg = packages.find(
+      (p) => p.id === body.packageId && !prefs.get(p.id)?.hidden,
     );
-    if (!pkg) {
+    if (!rawPkg) {
       res.status(400).json({ error: "That package is no longer available" });
       return;
     }
+    // Snapshot the curated display name so purchase history matches what
+    // the member saw when buying; price always comes from live YoActiv data.
+    const pkg = applyPackagePref(rawPkg, prefs);
     const [user] = await db
       .select({ email: usersTable.email })
       .from(usersTable)

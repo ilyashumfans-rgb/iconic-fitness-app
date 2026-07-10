@@ -287,6 +287,10 @@ export interface TrainerPackage {
   sessions?: number | null;
   duration: string;
   pt: boolean;
+  /** Admin-set display description (empty when unset) */
+  description?: string;
+  /** Admin-set display image URL (empty when unset) */
+  imageUrl?: string;
 }
 
 export interface CreateTrainerBookingRequest {

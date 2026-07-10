@@ -12,7 +12,7 @@ import {
 } from "@workspace/api-client-react";
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, View } from "react-native";
+import { Alert, Image, Pressable, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
@@ -23,6 +23,7 @@ import { Screen } from "@/components/Screen";
 import { Chip, EmptyState, LoadingView } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
 import { istDateInNDays, istDateLabel, istToday } from "@/lib/dates";
+import { resolveImageUrl } from "@/lib/images";
 import { submitLead } from "@/lib/leads";
 import { openExternal } from "@/lib/links";
 
@@ -364,6 +365,7 @@ function PackageOption({
   onPress: () => void;
 }) {
   const colors = useColors();
+  const imageUrl = resolveImageUrl(pkg.imageUrl);
   return (
     <Pressable onPress={onPress}>
       <View
@@ -378,6 +380,13 @@ function PackageOption({
           gap: 12,
         }}
       >
+        {imageUrl ? (
+          <Image
+            source={{ uri: imageUrl }}
+            style={{ width: 52, height: 52, borderRadius: 10 }}
+            resizeMode="cover"
+          />
+        ) : null}
         <View style={{ flex: 1 }}>
           <AppText weight="700" size={14}>
             {pkg.serviceName} — {pkg.name}
@@ -385,6 +394,11 @@ function PackageOption({
           <AppText muted size={12} style={{ marginTop: 2 }}>
             {pkg.duration}
           </AppText>
+          {pkg.description ? (
+            <AppText muted size={12} style={{ marginTop: 4 }} numberOfLines={3}>
+              {pkg.description}
+            </AppText>
+          ) : null}
         </View>
         <AppText weight="700" size={15} color={selected ? colors.primary : undefined}>
           ₹{pkg.amountInr.toLocaleString("en-IN")}
