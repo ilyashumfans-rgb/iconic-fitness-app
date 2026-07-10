@@ -38,6 +38,12 @@ import {
   PARTNER_STAFF_PERMISSIONS,
 } from "../lib/partnerAuth";
 import { DEFAULT_GROUP_CLASS_SCHEDULE } from "../lib/groupClassSchedule";
+import {
+  fetchYoactivMemberByMobile,
+  fetchYoactivMemberList,
+  yoactivConfigured,
+} from "../lib/yoactiv";
+import { yoactivBranchName } from "../lib/yoactivBranchNames";
 
 const router: IRouter = Router();
 
@@ -693,6 +699,8 @@ const STAFF_PERMISSION_PREFIXES: ReadonlyArray<[string, string]> = [
   ["/partner/workouts", "gyms"],
   ["/partner/bookings", "bookings"],
   ["/partner/gx-bookings", "classes"],
+  ["/partner/trainer-bookings", "classes"],
+  ["/partner/yoactiv", "bookings"],
   ["/partner/classes", "classes"],
   ["/partner/trainers", "classes"],
   ["/partner/schedule", "classes"],
@@ -2489,6 +2497,125 @@ router.delete(
         ),
       );
     res.json({ ok: true });
+  },
+);
+
+// ─── YoActiv member directory (partner's own branches only) ─────────────────
+
+// YoActiv branch IDs mapped to gyms this partner owns. Every route below is
+// scoped to this set, so a partner can never read another brand's members.
+async function ownedYoactivBranches(
+  partnerId: number,
+): Promise<{ branchId: number; gymLabel: string }[]> {
+  const rows = await db
+    .select({
+      name: gymsTable.name,
+      area: gymsTable.area,
+      yoactivBranchId: gymsTable.yoactivBranchId,
+    })
+    .from(gymsTable)
+    .where(eq(gymsTable.ownerPartnerId, partnerId));
+  const seen = new Set<number>();
+  const out: { branchId: number; gymLabel: string }[] = [];
+  for (const r of rows) {
+    if (r.yoactivBranchId && !seen.has(r.yoactivBranchId)) {
+      seen.add(r.yoactivBranchId);
+      out.push({
+        branchId: r.yoactivBranchId,
+        gymLabel: `${r.name} (${r.area})`,
+      });
+    }
+  }
+  return out;
+}
+
+router.get(
+  "/partner/yoactiv/branches",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    if (!yoactivConfigured()) {
+      res.json([]);
+      return;
+    }
+    const branches = await ownedYoactivBranches(req.session.partnerId!);
+    res.json(
+      branches.map((b) => ({
+        branchId: b.branchId,
+        branchName: yoactivBranchName(b.branchId),
+        gymLabel: b.gymLabel,
+      })),
+    );
+  },
+);
+
+router.get(
+  "/partner/yoactiv/members",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const branchId = Number(req.query.branchId);
+    if (!Number.isFinite(branchId) || branchId <= 0) {
+      res.status(400).json({ error: "branchId required" });
+      return;
+    }
+    const branches = await ownedYoactivBranches(req.session.partnerId!);
+    if (!branches.some((b) => b.branchId === branchId)) {
+      res.status(403).json({ error: "Not allowed" });
+      return;
+    }
+    if (!yoactivConfigured()) {
+      res.json([]);
+      return;
+    }
+    const members = await fetchYoactivMemberList(branchId);
+    res.json(members);
+  },
+);
+
+// Plan details for one member — memberships are filtered down to the
+// partner's own branches so cross-brand plan history is never exposed.
+router.get(
+  "/partner/yoactiv/members/detail",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const mobile = String(req.query.mobile ?? "").trim();
+    if (!mobile) {
+      res.status(400).json({ error: "mobile required" });
+      return;
+    }
+    const branches = await ownedYoactivBranches(req.session.partnerId!);
+    const ownedBranchIds = new Set(branches.map((b) => b.branchId));
+    if (ownedBranchIds.size === 0) {
+      res.json({ memberId: null, name: "", memberships: [] });
+      return;
+    }
+    const profile = await fetchYoactivMemberByMobile(mobile);
+    if (!profile) {
+      res.json({ memberId: null, name: "", memberships: [] });
+      return;
+    }
+    const memberships = profile.memberships.filter(
+      (m) => m.branchId !== null && ownedBranchIds.has(m.branchId),
+    );
+    if (memberships.length === 0) {
+      res.json({ memberId: null, name: "", memberships: [] });
+      return;
+    }
+    res.json({
+      memberId: profile.memberId,
+      name: profile.name,
+      memberships: memberships.map((m) => ({
+        branchId: m.branchId,
+        branchName: m.branchName,
+        planName: m.planName,
+        serviceName: m.serviceName,
+        status: m.status,
+        startDate: m.startDate,
+        expiryDate: m.expiryDate,
+        sessionsTotal: m.sessionsTotal,
+        sessionsUsed: m.sessionsUsed,
+        amountInr: m.amountInr,
+      })),
+    });
   },
 );
 

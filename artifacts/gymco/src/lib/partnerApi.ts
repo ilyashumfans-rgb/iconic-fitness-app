@@ -338,6 +338,20 @@ export const partnerApi = {
   trainerBookings: {
     list: () => request<TrainerBookingRow[]>("/partner/trainer-bookings"),
   },
+  yoactiv: {
+    branches: () =>
+      request<import("./adminApi").YoactivBranchOption[]>(
+        "/partner/yoactiv/branches",
+      ),
+    members: (branchId: number) =>
+      request<import("./adminApi").YoactivMemberRow[]>(
+        `/partner/yoactiv/members?branchId=${branchId}`,
+      ),
+    memberDetail: (mobile: string) =>
+      request<import("./adminApi").YoactivMemberDetail>(
+        `/partner/yoactiv/members/detail?mobile=${encodeURIComponent(mobile)}`,
+      ),
+  },
   classes: {
     list: () => request<PartnerClass[]>("/partner/classes"),
     create: (body: PartnerClassInput) =>
