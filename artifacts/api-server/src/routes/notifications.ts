@@ -12,6 +12,7 @@ import { requireAdmin } from "../lib/adminAuth";
 import { requirePartner } from "../lib/partnerAuth";
 import { requireStaff } from "../lib/staffAuth";
 import { requireUser } from "../lib/currentUser";
+import { ensureRenewalReminders } from "../lib/renewalReminders";
 
 const router: IRouter = Router();
 
@@ -243,6 +244,12 @@ router.get(
   "/notifications/mine",
   requireUser,
   async (req: Request, res: Response): Promise<void> => {
+    // Lazily generate plan-renewal reminders (7/3/1/0 days before the member's
+    // YoActiv plan expiry) as the app polls the feed. Fire-and-forget so the
+    // feed response never waits on the external YoActiv lookup — any new
+    // reminder row is picked up by the next poll (bell polls every 60s).
+    // ensureRenewalReminders never throws.
+    void ensureRenewalReminders(req.userId!);
     const rows = await db
       .select()
       .from(notificationsTable)

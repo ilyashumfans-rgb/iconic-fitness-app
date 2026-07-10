@@ -23,6 +23,7 @@ import {
   staffTable,
   partnerDocumentsTable,
   trainerBookingsTable,
+  packageBookingsTable,
 } from "@workspace/db";
 import {
   hashPassword,
@@ -44,9 +45,6 @@ import {
   trainerPhotoMap,
   setTrainerPhoto,
   removeTrainerPhoto,
-  memberPhotoMap,
-  setMemberPhoto,
-  removeMemberPhoto,
 } from "../lib/trainerPhotos";
 import { DEFAULT_PRODUCT_CATEGORIES } from "../lib/productCategories.js";
 
@@ -2159,6 +2157,32 @@ router.get(
   },
 );
 
+// Paid membership-package purchases across all branches.
+router.get(
+  "/admin/package-bookings",
+  requireAdmin,
+  async (_req: Request, res: Response): Promise<void> => {
+    const rows = await db
+      .select({
+        id: packageBookingsTable.id,
+        gymId: packageBookingsTable.gymId,
+        gymName: packageBookingsTable.gymName,
+        memberName: packageBookingsTable.memberName,
+        mobile: packageBookingsTable.mobile,
+        packageName: packageBookingsTable.packageName,
+        serviceName: packageBookingsTable.serviceName,
+        amountInr: packageBookingsTable.amountInr,
+        startDate: packageBookingsTable.startDate,
+        status: packageBookingsTable.status,
+        createdAt: packageBookingsTable.createdAt,
+      })
+      .from(packageBookingsTable)
+      .orderBy(desc(packageBookingsTable.createdAt))
+      .limit(5000);
+    res.json(rows);
+  },
+);
+
 // ─── YoActiv member directory (read-only) ───────────────────────────────────
 
 // Branches available for the member directory: every configured YoActiv
@@ -2214,53 +2238,8 @@ router.get(
       return;
     }
     const members = await fetchYoactivMemberList(branchId);
-    const photos = await memberPhotoMap(members.map((m) => String(m.memberId)));
-    // YoActiv-hosted photo wins when present; otherwise the staff upload.
-    res.json(
-      members.map((m) => {
-        const uploaded = photos.get(String(m.memberId)) ?? null;
-        return {
-          ...m,
-          photoUrl: m.photoUrl ?? uploaded,
-          photoSource: m.photoUrl ? "yoactiv" : uploaded ? "upload" : null,
-        };
-      }),
-    );
-  },
-);
-
-// Attach/replace an uploaded photo for a YoActiv member (YoActiv has no photo
-// field — the photo lives in our DB, shown in the staff member directory).
-router.put(
-  "/admin/yoactiv/members/:memberId/photo",
-  requireAdmin,
-  async (req: Request, res: Response): Promise<void> => {
-    const memberId = String(req.params.memberId ?? "").trim();
-    const imageUrl = String(req.body?.imageUrl ?? "").trim();
-    if (!memberId) {
-      res.status(400).json({ error: "memberId required" });
-      return;
-    }
-    if (!/^(https?:\/\/|\/)/.test(imageUrl)) {
-      res.status(400).json({ error: "Upload an image or provide a valid image URL" });
-      return;
-    }
-    await setMemberPhoto(memberId, imageUrl);
-    res.json({ ok: true });
-  },
-);
-
-router.delete(
-  "/admin/yoactiv/members/:memberId/photo",
-  requireAdmin,
-  async (req: Request, res: Response): Promise<void> => {
-    const memberId = String(req.params.memberId ?? "").trim();
-    if (!memberId) {
-      res.status(400).json({ error: "memberId required" });
-      return;
-    }
-    await removeMemberPhoto(memberId);
-    res.json({ ok: true });
+    // Member photos come straight from YoActiv (display-only, no uploads).
+    res.json(members);
   },
 );
 

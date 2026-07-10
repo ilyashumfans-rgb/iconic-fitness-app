@@ -25,15 +25,6 @@ export type YoactivMembersApi = {
     trainerId: string,
     branchId: number,
   ) => Promise<{ ok: boolean }>;
-  setMemberPhoto: (
-    memberId: number,
-    imageUrl: string,
-    branchId: number,
-  ) => Promise<{ ok: boolean }>;
-  removeMemberPhoto: (
-    memberId: number,
-    branchId: number,
-  ) => Promise<{ ok: boolean }>;
 };
 
 function statusBadge(status: string) {
@@ -370,7 +361,6 @@ export function YoactivMembersBrowser({
                   <th className="pb-2 pr-4">Mobile</th>
                   <th className="pb-2 pr-4">Email</th>
                   <th className="pb-2 pr-4">Status</th>
-                  <th className="pb-2 pr-4" />
                 </tr>
               </thead>
               <tbody>
@@ -378,21 +368,11 @@ export function YoactivMembersBrowser({
                   <MemberRows
                     key={m.memberId}
                     member={m}
-                    branchId={branchId!}
                     api={api}
                     expanded={expanded === m.memberId}
                     onToggle={() =>
                       setExpanded((cur) =>
                         cur === m.memberId ? null : m.memberId,
-                      )
-                    }
-                    onPhotoChange={(url) =>
-                      setMembers((cur) =>
-                        cur.map((x) =>
-                          x.memberId === m.memberId
-                            ? { ...x, photoUrl: url }
-                            : x,
-                        ),
                       )
                     }
                   />
@@ -498,48 +478,15 @@ function TrainerRow({
 
 function MemberRows({
   member,
-  branchId,
   api,
   expanded,
   onToggle,
-  onPhotoChange,
 }: {
   member: YoactivMemberRow;
-  branchId: number;
   api: YoactivMembersApi;
   expanded: boolean;
   onToggle: () => void;
-  onPhotoChange: (url: string | null) => void;
 }) {
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-
-  const save = async (url: string) => {
-    setErr(null);
-    setBusy(true);
-    try {
-      await api.setMemberPhoto(member.memberId, url, branchId);
-      onPhotoChange(url);
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "Could not save photo");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const remove = async () => {
-    setErr(null);
-    setBusy(true);
-    try {
-      await api.removeMemberPhoto(member.memberId, branchId);
-      onPhotoChange(null);
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "Could not remove photo");
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
     <>
       <tr
@@ -570,36 +517,10 @@ function MemberRows({
         <td className="py-2 pr-4 text-slate-300">{member.mobile || "—"}</td>
         <td className="py-2 pr-4 text-slate-400">{member.email || "—"}</td>
         <td className="py-2 pr-4">{statusBadge(member.status)}</td>
-        <td className="py-2 pr-4" onClick={(e) => e.stopPropagation()}>
-          {member.photoSource === "yoactiv" ? (
-            <span className="text-xs text-slate-500">From YoActiv</span>
-          ) : (
-            <div className="flex items-center gap-2">
-              <FileUpload
-                label={member.photoUrl ? "Change photo" : "Add photo"}
-                accept="image/*"
-                onUploaded={(urls) => {
-                  if (urls[0]) void save(urls[0]);
-                }}
-              />
-              {member.photoUrl && (
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void remove()}
-                  className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:text-white disabled:opacity-60"
-                >
-                  Remove
-                </button>
-              )}
-            </div>
-          )}
-          {err && <div className="mt-1 text-[11px] text-rose-400">{err}</div>}
-        </td>
       </tr>
       {expanded && (
         <tr className="border-t border-slate-800 bg-slate-900/60">
-          <td colSpan={7}>
+          <td colSpan={6}>
             {member.mobile.trim() ? (
               <MemberDetailRow mobile={member.mobile} api={api} />
             ) : (

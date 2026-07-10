@@ -9,13 +9,15 @@ import {
   useGetMyMembership,
   useListMyMembershipPayments,
   getListMyMembershipPaymentsQueryKey,
+  useListMyPackageBookings,
+  getListMyPackageBookingsQueryKey,
   useUpdateGoals,
   useUpdateMe,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, Platform, StyleSheet, Switch, View } from "react-native";
+import { Alert, Image, Platform, StyleSheet, Switch, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
@@ -69,6 +71,12 @@ export default function ProfileScreen() {
   const paymentsQuery = useListMyMembershipPayments({
     query: {
       queryKey: getListMyMembershipPaymentsQueryKey(),
+      enabled: !isGuest,
+    },
+  });
+  const purchasesQuery = useListMyPackageBookings({
+    query: {
+      queryKey: getListMyPackageBookingsQueryKey(),
       enabled: !isGuest,
     },
   });
@@ -241,13 +249,21 @@ export default function ProfileScreen() {
 
   return (
     <Screen contentContainerStyle={{ paddingTop: 8 }}>
-      {/* Profile header */}
+      {/* Profile header — photo comes from the gym's YoActiv record when
+          available (display-only; members can't upload their own). */}
       <View style={styles.profileHead}>
-        <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-          <AppText weight="700" size={28} color={colors.primaryForeground}>
-            {name.charAt(0).toUpperCase()}
-          </AppText>
-        </View>
+        {membershipQuery.data?.photoUrl ? (
+          <Image
+            source={{ uri: membershipQuery.data.photoUrl }}
+            style={styles.avatarImage}
+          />
+        ) : (
+          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+            <AppText weight="700" size={28} color={colors.primaryForeground}>
+              {name.charAt(0).toUpperCase()}
+            </AppText>
+          </View>
+        )}
         <AppText weight="700" size={22} style={{ marginTop: 12 }}>
           {name}
         </AppText>
@@ -388,6 +404,56 @@ export default function ProfileScreen() {
                         style={{ textTransform: "capitalize", marginTop: 2 }}
                       >
                         {p.status}
+                      </AppText>
+                    </View>
+                  </View>
+                ))}
+              </Card>
+            </>
+          ) : null}
+
+          {/* Package purchases made in the app (online payments) */}
+          {purchasesQuery.data && purchasesQuery.data.length > 0 ? (
+            <>
+              <SectionHeader title="Package purchases" />
+              <Card style={{ gap: 0 }}>
+                {purchasesQuery.data.slice(0, 10).map((b, i) => (
+                  <View
+                    key={b.id}
+                    style={[
+                      styles.paymentRow,
+                      i > 0 && {
+                        borderTopWidth: StyleSheet.hairlineWidth,
+                        borderTopColor: colors.border,
+                      },
+                    ]}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <AppText weight="600" size={14}>
+                        {b.serviceName ? `${b.serviceName} — ${b.packageName}` : b.packageName}
+                      </AppText>
+                      <AppText muted size={12} style={{ marginTop: 2 }}>
+                        {b.gymName}
+                        {b.startDate ? ` · from ${istDateLabel(b.startDate)}` : ""}
+                      </AppText>
+                    </View>
+                    <View style={{ alignItems: "flex-end" }}>
+                      <AppText weight="700" size={14}>
+                        ₹{b.amountInr.toLocaleString("en-IN")}
+                      </AppText>
+                      <AppText
+                        size={11}
+                        weight="700"
+                        color={
+                          b.status === "paid"
+                            ? colors.primary
+                            : b.status === "failed"
+                              ? "#ff6b6b"
+                              : colors.mutedForeground
+                        }
+                        style={{ textTransform: "capitalize", marginTop: 2 }}
+                      >
+                        {b.status}
                       </AppText>
                     </View>
                   </View>
@@ -603,6 +669,11 @@ const styles = StyleSheet.create({
     borderRadius: 38,
     alignItems: "center",
     justifyContent: "center",
+  },
+  avatarImage: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
   },
   row2: { flexDirection: "row", gap: 12 },
   half: { flex: 1 },

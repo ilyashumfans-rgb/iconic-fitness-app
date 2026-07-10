@@ -195,6 +195,25 @@ export default function PackageDetailScreen() {
         </View>
       </Card>
 
+      <Card style={{ marginTop: 12 }}>
+        <AppText weight="700" size={16} style={{ marginBottom: 4 }}>
+          Buy online
+        </AppText>
+        <AppText muted size={13} style={{ marginBottom: 14 }}>
+          Pick your branch, pay securely and start training right away.
+        </AppText>
+        <Button
+          label="Buy this package"
+          icon="credit-card"
+          onPress={() =>
+            router.push({
+              pathname: "/book-package",
+              params: { planName: plan.name },
+            })
+          }
+        />
+      </Card>
+
       {plan.perks.length > 0 ? (
         <Card style={{ marginTop: 12 }}>
           <AppText weight="700" size={15} style={{ marginBottom: 12 }}>

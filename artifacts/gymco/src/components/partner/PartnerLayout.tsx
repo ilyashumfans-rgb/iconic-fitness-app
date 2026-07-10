@@ -41,6 +41,7 @@ const NAV: Item[] = [
   { label: "Timetable", href: "/partner/schedule", icon: <CalendarClock className="h-4 w-4" />, perm: "classes" },
   { label: "GX Bookings", href: "/partner/gx-bookings", icon: <ClipboardList className="h-4 w-4" />, perm: "classes" },
   { label: "PT Bookings", href: "/partner/trainer-bookings", icon: <UserCog className="h-4 w-4" />, perm: "classes" },
+  { label: "Package Purchases", href: "/partner/package-bookings", icon: <ClipboardList className="h-4 w-4" />, perm: "bookings" },
   { label: "Products", href: "/partner/products", icon: <Package className="h-4 w-4" />, perm: "products" },
   { label: "Tickets", href: "/partner/tickets", icon: <LifeBuoy className="h-4 w-4" /> },
   { label: "Team", href: "/partner/staff", icon: <Users className="h-4 w-4" />, ownerOnly: true },

@@ -3,7 +3,6 @@ import { randomUUID } from "crypto";
 import { Readable } from "stream";
 import { db, uploadedImagesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { getAuth } from "@clerk/express";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
 
 const router: IRouter = Router();
@@ -12,16 +11,10 @@ const svc = new ObjectStorageService();
 const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
 const ALLOWED_PREFIXES = ["image/", "application/pdf"];
 
-// Staff sessions (admin/partner/staff) OR a Clerk-authenticated member (the
-// mobile app uploads profile photos with a bearer token, no session cookie).
+// Uploads are for signed-in staff (admin/partner/staff sessions) only.
 function isSignedIn(req: Request): boolean {
   const s = req.session as { adminId?: number; partnerId?: number; staffId?: number };
-  if (s.adminId || s.partnerId || s.staffId) return true;
-  try {
-    return Boolean(getAuth(req)?.userId);
-  } catch {
-    return false;
-  }
+  return Boolean(s.adminId || s.partnerId || s.staffId);
 }
 
 // Detect the real file type from magic bytes instead of trusting the

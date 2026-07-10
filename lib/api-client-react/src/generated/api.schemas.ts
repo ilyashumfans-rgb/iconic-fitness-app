@@ -74,7 +74,6 @@ export interface UserProfileUpdate {
   heightCm?: number;
   weightKg?: number;
   fitnessGoal?: string;
-  avatarUrl?: string;
   city?: string;
   weeklyGoal?: number;
 }
@@ -334,6 +333,53 @@ export interface TrainerBooking {
   trainerName: string;
   gymName: string;
   preferredDate: string;
+  createdAt: string;
+}
+
+export interface CreatePackageBookingRequest {
+  gymId: number;
+  packageId: number;
+  /** @minLength 2 */
+  name: string;
+  /** @minLength 10 */
+  mobile: string;
+  /** ISO date (YYYY-MM-DD) */
+  startDate: string;
+}
+
+export type PackageBookingCreatedStatus = typeof PackageBookingCreatedStatus[keyof typeof PackageBookingCreatedStatus];
+
+
+export const PackageBookingCreatedStatus = {
+  pending: 'pending',
+  paid: 'paid',
+  failed: 'failed',
+} as const;
+
+export interface PackageBookingCreated {
+  id: number;
+  status: PackageBookingCreatedStatus;
+  amountInr: number;
+  paymentUrl: string;
+}
+
+export type PackageBookingStatus = typeof PackageBookingStatus[keyof typeof PackageBookingStatus];
+
+
+export const PackageBookingStatus = {
+  pending: 'pending',
+  paid: 'paid',
+  failed: 'failed',
+} as const;
+
+export interface PackageBooking {
+  id: number;
+  status: PackageBookingStatus;
+  amountInr: number;
+  packageName: string;
+  serviceName: string;
+  gymName: string;
+  startDate: string;
   createdAt: string;
 }
 
@@ -800,6 +846,10 @@ gymId?: number;
 };
 
 export type ListTrainerPackagesParams = {
+gymId: number;
+};
+
+export type ListMembershipPackagesParams = {
 gymId: number;
 };
 

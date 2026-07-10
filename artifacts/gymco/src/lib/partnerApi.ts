@@ -153,6 +153,20 @@ export type PartnerGxBooking = {
   createdAt: string;
 };
 
+export type PackageBookingRow = {
+  id: number;
+  gymId: number;
+  gymName: string;
+  memberName: string;
+  mobile: string;
+  packageName: string;
+  serviceName: string;
+  amountInr: number;
+  startDate: string; // "YYYY-MM-DD"
+  status: "pending" | "paid" | "failed";
+  createdAt: string;
+};
+
 export type TrainerBookingRow = {
   id: number;
   gymId: number;
@@ -338,6 +352,9 @@ export const partnerApi = {
   trainerBookings: {
     list: () => request<TrainerBookingRow[]>("/partner/trainer-bookings"),
   },
+  packageBookings: {
+    list: () => request<PackageBookingRow[]>("/partner/package-bookings"),
+  },
   yoactiv: {
     branches: () =>
       request<import("./adminApi").YoactivBranchOption[]>(
@@ -363,16 +380,6 @@ export const partnerApi = {
     removeTrainerPhoto: (trainerId: string, branchId: number) =>
       request<{ ok: boolean }>(
         `/partner/yoactiv/trainers/${encodeURIComponent(trainerId)}/photo?branchId=${branchId}`,
-        { method: "DELETE" },
-      ),
-    setMemberPhoto: (memberId: number, imageUrl: string, branchId: number) =>
-      request<{ ok: boolean }>(
-        `/partner/yoactiv/members/${memberId}/photo`,
-        { method: "PUT", body: JSON.stringify({ imageUrl, branchId }) },
-      ),
-    removeMemberPhoto: (memberId: number, branchId: number) =>
-      request<{ ok: boolean }>(
-        `/partner/yoactiv/members/${memberId}/photo?branchId=${branchId}`,
         { method: "DELETE" },
       ),
   },

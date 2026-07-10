@@ -185,6 +185,11 @@ const SECTIONS: Section[] = [
         href: "/admin/trainer-bookings",
         icon: <CalendarClock className="h-4 w-4" />,
       },
+      {
+        label: "Package Purchases",
+        href: "/admin/package-bookings",
+        icon: <CalendarClock className="h-4 w-4" />,
+      },
     ],
   },
   {

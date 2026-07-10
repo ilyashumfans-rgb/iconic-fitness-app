@@ -31,6 +31,7 @@ import type {
   CheckinInput,
   ClassSession,
   ClassSessionDetail,
+  CreatePackageBookingRequest,
   CreateTrainerBookingRequest,
   DailySummary,
   DashboardSummary,
@@ -48,6 +49,7 @@ import type {
   ListClassesParams,
   ListGymsParams,
   ListLiveTrainersParams,
+  ListMembershipPackagesParams,
   ListMyBookingsParams,
   ListStoreProductsParams,
   ListTrainerPackagesParams,
@@ -60,6 +62,8 @@ import type {
   MyMembership,
   Notification,
   OkResponse,
+  PackageBooking,
+  PackageBookingCreated,
   ProgressReport,
   StoreCategory,
   StoreProduct,
@@ -2377,6 +2381,315 @@ export function useGetTrainerBooking<TData = Awaited<ReturnType<typeof getTraine
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetTrainerBookingQueryOptions(bookingId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListMembershipPackagesUrl = (params: ListMembershipPackagesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/membership-packages?${stringifiedParams}` : `/api/membership-packages`
+}
+
+/**
+ * @summary Purchasable membership packages for a branch (live prices from the gym-management system)
+ */
+export const listMembershipPackages = async (params: ListMembershipPackagesParams, options?: RequestInit): Promise<TrainerPackage[]> => {
+
+  return customFetch<TrainerPackage[]>(getListMembershipPackagesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMembershipPackagesQueryKey = (params?: ListMembershipPackagesParams,) => {
+    return [
+    `/api/membership-packages`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListMembershipPackagesQueryOptions = <TData = Awaited<ReturnType<typeof listMembershipPackages>>, TError = ErrorType<unknown>>(params: ListMembershipPackagesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMembershipPackages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMembershipPackagesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMembershipPackages>>> = ({ signal }) => listMembershipPackages(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMembershipPackages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMembershipPackagesQueryResult = NonNullable<Awaited<ReturnType<typeof listMembershipPackages>>>
+export type ListMembershipPackagesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Purchasable membership packages for a branch (live prices from the gym-management system)
+ */
+
+export function useListMembershipPackages<TData = Awaited<ReturnType<typeof listMembershipPackages>>, TError = ErrorType<unknown>>(
+ params: ListMembershipPackagesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMembershipPackages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMembershipPackagesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreatePackageBookingUrl = () => {
+
+
+
+
+  return `/api/package-bookings`
+}
+
+/**
+ * @summary Start a paid membership-package purchase; returns the hosted payment link
+ */
+export const createPackageBooking = async (createPackageBookingRequest: CreatePackageBookingRequest, options?: RequestInit): Promise<PackageBookingCreated> => {
+
+  return customFetch<PackageBookingCreated>(getCreatePackageBookingUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createPackageBookingRequest,)
+  }
+);}
+
+
+
+
+export const getCreatePackageBookingMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPackageBooking>>, TError,{data: BodyType<CreatePackageBookingRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPackageBooking>>, TError,{data: BodyType<CreatePackageBookingRequest>}, TContext> => {
+
+const mutationKey = ['createPackageBooking'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPackageBooking>>, {data: BodyType<CreatePackageBookingRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPackageBooking(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePackageBookingMutationResult = NonNullable<Awaited<ReturnType<typeof createPackageBooking>>>
+    export type CreatePackageBookingMutationBody = BodyType<CreatePackageBookingRequest>
+    export type CreatePackageBookingMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Start a paid membership-package purchase; returns the hosted payment link
+ */
+export const useCreatePackageBooking = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPackageBooking>>, TError,{data: BodyType<CreatePackageBookingRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createPackageBooking>>,
+        TError,
+        {data: BodyType<CreatePackageBookingRequest>},
+        TContext
+      > => {
+      return useMutation(getCreatePackageBookingMutationOptions(options));
+    }
+
+export const getListMyPackageBookingsUrl = () => {
+
+
+
+
+  return `/api/package-bookings/mine`
+}
+
+/**
+ * @summary The caller's membership-package purchases, newest first
+ */
+export const listMyPackageBookings = async ( options?: RequestInit): Promise<PackageBooking[]> => {
+
+  return customFetch<PackageBooking[]>(getListMyPackageBookingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyPackageBookingsQueryKey = () => {
+    return [
+    `/api/package-bookings/mine`
+    ] as const;
+    }
+
+
+export const getListMyPackageBookingsQueryOptions = <TData = Awaited<ReturnType<typeof listMyPackageBookings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyPackageBookings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyPackageBookingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyPackageBookings>>> = ({ signal }) => listMyPackageBookings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyPackageBookings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMyPackageBookingsQueryResult = NonNullable<Awaited<ReturnType<typeof listMyPackageBookings>>>
+export type ListMyPackageBookingsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary The caller's membership-package purchases, newest first
+ */
+
+export function useListMyPackageBookings<TData = Awaited<ReturnType<typeof listMyPackageBookings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyPackageBookings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMyPackageBookingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetPackageBookingUrl = (bookingId: number,) => {
+
+
+
+
+  return `/api/package-bookings/${bookingId}`
+}
+
+/**
+ * @summary Status of one of the caller's package purchases
+ */
+export const getPackageBooking = async (bookingId: number, options?: RequestInit): Promise<PackageBooking> => {
+
+  return customFetch<PackageBooking>(getGetPackageBookingUrl(bookingId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPackageBookingQueryKey = (bookingId: number,) => {
+    return [
+    `/api/package-bookings/${bookingId}`
+    ] as const;
+    }
+
+
+export const getGetPackageBookingQueryOptions = <TData = Awaited<ReturnType<typeof getPackageBooking>>, TError = ErrorType<unknown>>(bookingId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPackageBooking>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPackageBookingQueryKey(bookingId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPackageBooking>>> = ({ signal }) => getPackageBooking(bookingId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(bookingId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPackageBooking>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPackageBookingQueryResult = NonNullable<Awaited<ReturnType<typeof getPackageBooking>>>
+export type GetPackageBookingQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Status of one of the caller's package purchases
+ */
+
+export function useGetPackageBooking<TData = Awaited<ReturnType<typeof getPackageBooking>>, TError = ErrorType<unknown>>(
+ bookingId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPackageBooking>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPackageBookingQueryOptions(bookingId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

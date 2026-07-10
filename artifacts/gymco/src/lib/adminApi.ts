@@ -43,8 +43,6 @@ export type YoactivMemberRow = {
   email: string;
   status: string;
   photoUrl: string | null;
-  /** "yoactiv" = photo comes from YoActiv (read-only here); "upload" = staff upload. */
-  photoSource: "yoactiv" | "upload" | null;
 };
 
 export type YoactivMemberDetail = {
@@ -397,6 +395,12 @@ export const adminApi = {
         "/admin/trainer-bookings",
       ),
   },
+  packageBookings: {
+    list: () =>
+      request<import("./partnerApi").PackageBookingRow[]>(
+        "/admin/package-bookings",
+      ),
+  },
   yoactiv: {
     branches: () =>
       request<YoactivBranchOption[]>("/admin/yoactiv/branches"),
@@ -418,16 +422,6 @@ export const adminApi = {
     removeTrainerPhoto: (trainerId: string, _branchId: number) =>
       request<{ ok: boolean }>(
         `/admin/yoactiv/trainers/${encodeURIComponent(trainerId)}/photo`,
-        { method: "DELETE" },
-      ),
-    setMemberPhoto: (memberId: number, imageUrl: string, _branchId: number) =>
-      request<{ ok: boolean }>(
-        `/admin/yoactiv/members/${memberId}/photo`,
-        { method: "PUT", body: JSON.stringify({ imageUrl }) },
-      ),
-    removeMemberPhoto: (memberId: number, _branchId: number) =>
-      request<{ ok: boolean }>(
-        `/admin/yoactiv/members/${memberId}/photo`,
         { method: "DELETE" },
       ),
   },

@@ -91,7 +91,6 @@ export const UpdateMeBody = zod.object({
   "heightCm": zod.number().optional(),
   "weightKg": zod.number().optional(),
   "fitnessGoal": zod.string().optional(),
-  "avatarUrl": zod.string().optional(),
   "city": zod.string().optional(),
   "weeklyGoal": zod.number().optional()
 })
@@ -698,6 +697,85 @@ export const GetTrainerBookingResponse = zod.object({
   "trainerName": zod.string(),
   "gymName": zod.string(),
   "preferredDate": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Purchasable membership packages for a branch (live prices from the gym-management system)
+ */
+export const ListMembershipPackagesQueryParams = zod.object({
+  "gymId": zod.coerce.number()
+})
+
+export const ListMembershipPackagesResponseItem = zod.object({
+  "id": zod.number(),
+  "serviceName": zod.string(),
+  "name": zod.string(),
+  "amountInr": zod.number(),
+  "sessions": zod.number().nullish(),
+  "duration": zod.string(),
+  "pt": zod.boolean()
+})
+export const ListMembershipPackagesResponse = zod.array(ListMembershipPackagesResponseItem)
+
+
+/**
+ * @summary Start a paid membership-package purchase; returns the hosted payment link
+ */
+export const createPackageBookingBodyNameMin = 2;
+
+export const createPackageBookingBodyMobileMin = 10;
+
+
+
+export const CreatePackageBookingBody = zod.object({
+  "gymId": zod.number(),
+  "packageId": zod.number(),
+  "name": zod.string().min(createPackageBookingBodyNameMin),
+  "mobile": zod.string().min(createPackageBookingBodyMobileMin),
+  "startDate": zod.string().describe('ISO date (YYYY-MM-DD)')
+})
+
+export const CreatePackageBookingResponse = zod.object({
+  "id": zod.number(),
+  "status": zod.enum(['pending', 'paid', 'failed']),
+  "amountInr": zod.number(),
+  "paymentUrl": zod.string()
+})
+
+
+/**
+ * @summary The caller's membership-package purchases, newest first
+ */
+export const ListMyPackageBookingsResponseItem = zod.object({
+  "id": zod.number(),
+  "status": zod.enum(['pending', 'paid', 'failed']),
+  "amountInr": zod.number(),
+  "packageName": zod.string(),
+  "serviceName": zod.string(),
+  "gymName": zod.string(),
+  "startDate": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const ListMyPackageBookingsResponse = zod.array(ListMyPackageBookingsResponseItem)
+
+
+/**
+ * @summary Status of one of the caller's package purchases
+ */
+export const GetPackageBookingParams = zod.object({
+  "bookingId": zod.coerce.number()
+})
+
+export const GetPackageBookingResponse = zod.object({
+  "id": zod.number(),
+  "status": zod.enum(['pending', 'paid', 'failed']),
+  "amountInr": zod.number(),
+  "packageName": zod.string(),
+  "serviceName": zod.string(),
+  "gymName": zod.string(),
+  "startDate": zod.string(),
   "createdAt": zod.coerce.date()
 })
 

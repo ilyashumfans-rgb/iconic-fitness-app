@@ -25,6 +25,7 @@ import {
   partnerStaffTable,
   leadsTable,
   trainerBookingsTable,
+  packageBookingsTable,
 } from "@workspace/db";
 import {
   hashPassword,
@@ -49,9 +50,6 @@ import {
   trainerPhotoMap,
   setTrainerPhoto,
   removeTrainerPhoto,
-  memberPhotoMap,
-  setMemberPhoto,
-  removeMemberPhoto,
 } from "../lib/trainerPhotos";
 
 const router: IRouter = Router();
@@ -709,6 +707,7 @@ const STAFF_PERMISSION_PREFIXES: ReadonlyArray<[string, string]> = [
   ["/partner/bookings", "bookings"],
   ["/partner/gx-bookings", "classes"],
   ["/partner/trainer-bookings", "classes"],
+  ["/partner/package-bookings", "bookings"],
   ["/partner/yoactiv", "bookings"],
   ["/partner/classes", "classes"],
   ["/partner/trainers", "classes"],
@@ -1573,6 +1572,38 @@ router.get(
       .from(trainerBookingsTable)
       .where(inArray(trainerBookingsTable.gymId, gymIds))
       .orderBy(desc(trainerBookingsTable.createdAt))
+      .limit(2000);
+    res.json(rows);
+  },
+);
+
+// Paid membership-package purchases for the partner's branches.
+router.get(
+  "/partner/package-bookings",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const gymIds = await ownedGymIds(req.session.partnerId!);
+    if (gymIds.length === 0) {
+      res.json([]);
+      return;
+    }
+    const rows = await db
+      .select({
+        id: packageBookingsTable.id,
+        gymId: packageBookingsTable.gymId,
+        gymName: packageBookingsTable.gymName,
+        memberName: packageBookingsTable.memberName,
+        mobile: packageBookingsTable.mobile,
+        packageName: packageBookingsTable.packageName,
+        serviceName: packageBookingsTable.serviceName,
+        amountInr: packageBookingsTable.amountInr,
+        startDate: packageBookingsTable.startDate,
+        status: packageBookingsTable.status,
+        createdAt: packageBookingsTable.createdAt,
+      })
+      .from(packageBookingsTable)
+      .where(inArray(packageBookingsTable.gymId, gymIds))
+      .orderBy(desc(packageBookingsTable.createdAt))
       .limit(2000);
     res.json(rows);
   },
@@ -2576,74 +2607,8 @@ router.get(
       return;
     }
     const members = await fetchYoactivMemberList(branchId);
-    const photos = await memberPhotoMap(members.map((m) => String(m.memberId)));
-    // YoActiv-hosted photo wins when present; otherwise the staff upload.
-    res.json(
-      members.map((m) => {
-        const uploaded = photos.get(String(m.memberId)) ?? null;
-        return {
-          ...m,
-          photoUrl: m.photoUrl ?? uploaded,
-          photoSource: m.photoUrl ? "yoactiv" : uploaded ? "upload" : null,
-        };
-      }),
-    );
-  },
-);
-
-// A partner may only set/remove a photo for a member that appears in the
-// member list of one of their OWN branches.
-async function partnerOwnsMember(
-  partnerId: number,
-  branchId: number,
-  memberId: string,
-): Promise<boolean> {
-  const branches = await ownedYoactivBranches(partnerId);
-  if (!branches.some((b) => b.branchId === branchId)) return false;
-  const members = await fetchYoactivMemberList(branchId);
-  return members.some((m) => String(m.memberId) === memberId);
-}
-
-router.put(
-  "/partner/yoactiv/members/:memberId/photo",
-  requirePartner,
-  async (req: Request, res: Response): Promise<void> => {
-    const memberId = String(req.params.memberId ?? "").trim();
-    const branchId = Number(req.body?.branchId);
-    const imageUrl = String(req.body?.imageUrl ?? "").trim();
-    if (!memberId || !Number.isFinite(branchId) || branchId <= 0) {
-      res.status(400).json({ error: "memberId and branchId required" });
-      return;
-    }
-    if (!/^(https?:\/\/|\/)/.test(imageUrl)) {
-      res.status(400).json({ error: "Upload an image or provide a valid image URL" });
-      return;
-    }
-    if (!(await partnerOwnsMember(req.session.partnerId!, branchId, memberId))) {
-      res.status(403).json({ error: "Not allowed" });
-      return;
-    }
-    await setMemberPhoto(memberId, imageUrl);
-    res.json({ ok: true });
-  },
-);
-
-router.delete(
-  "/partner/yoactiv/members/:memberId/photo",
-  requirePartner,
-  async (req: Request, res: Response): Promise<void> => {
-    const memberId = String(req.params.memberId ?? "").trim();
-    const branchId = Number(req.query.branchId);
-    if (!memberId || !Number.isFinite(branchId) || branchId <= 0) {
-      res.status(400).json({ error: "memberId and branchId required" });
-      return;
-    }
-    if (!(await partnerOwnsMember(req.session.partnerId!, branchId, memberId))) {
-      res.status(403).json({ error: "Not allowed" });
-      return;
-    }
-    await removeMemberPhoto(memberId);
-    res.json({ ok: true });
+    // Member photos come straight from YoActiv (display-only, no uploads).
+    res.json(members);
   },
 );
 

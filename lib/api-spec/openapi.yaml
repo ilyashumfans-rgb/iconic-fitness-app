@@ -522,6 +522,73 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/TrainerBooking" }
 
+  /membership-packages:
+    get:
+      operationId: listMembershipPackages
+      tags: [memberships]
+      summary: Purchasable membership packages for a branch (live prices from the gym-management system)
+      parameters:
+        - in: query
+          name: gymId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/TrainerPackage" }
+
+  /package-bookings:
+    post:
+      operationId: createPackageBooking
+      tags: [memberships]
+      summary: Start a paid membership-package purchase; returns the hosted payment link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreatePackageBookingRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PackageBookingCreated" }
+
+  /package-bookings/mine:
+    get:
+      operationId: listMyPackageBookings
+      tags: [memberships]
+      summary: The caller's membership-package purchases, newest first
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PackageBooking" }
+
+  /package-bookings/{bookingId}:
+    get:
+      operationId: getPackageBooking
+      tags: [memberships]
+      summary: Status of one of the caller's package purchases
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PackageBooking" }
+
   /trainers:
     get:
       operationId: listTrainers
@@ -935,7 +1002,6 @@ components:
         heightCm: { type: number }
         weightKg: { type: number }
         fitnessGoal: { type: string }
-        avatarUrl: { type: string }
         city: { type: string }
         weeklyGoal: { type: integer }
 
@@ -1157,6 +1223,35 @@ components:
         trainerName: { type: string }
         gymName: { type: string }
         preferredDate: { type: string }
+        createdAt: { type: string, format: date-time }
+    CreatePackageBookingRequest:
+      type: object
+      required: [gymId, packageId, name, mobile, startDate]
+      properties:
+        gymId: { type: integer }
+        packageId: { type: integer }
+        name: { type: string, minLength: 2 }
+        mobile: { type: string, minLength: 10 }
+        startDate: { type: string, description: "ISO date (YYYY-MM-DD)" }
+    PackageBookingCreated:
+      type: object
+      required: [id, status, amountInr, paymentUrl]
+      properties:
+        id: { type: integer }
+        status: { type: string, enum: [pending, paid, failed] }
+        amountInr: { type: number }
+        paymentUrl: { type: string }
+    PackageBooking:
+      type: object
+      required: [id, status, amountInr, packageName, serviceName, gymName, startDate, createdAt]
+      properties:
+        id: { type: integer }
+        status: { type: string, enum: [pending, paid, failed] }
+        amountInr: { type: number }
+        packageName: { type: string }
+        serviceName: { type: string }
+        gymName: { type: string }
+        startDate: { type: string }
         createdAt: { type: string, format: date-time }
     MembershipPayment:
       type: object

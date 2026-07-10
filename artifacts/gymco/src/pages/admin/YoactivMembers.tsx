@@ -12,8 +12,6 @@ const api: YoactivMembersApi = {
   trainers: adminApi.yoactiv.trainers,
   setTrainerPhoto: adminApi.yoactiv.setTrainerPhoto,
   removeTrainerPhoto: adminApi.yoactiv.removeTrainerPhoto,
-  setMemberPhoto: adminApi.yoactiv.setMemberPhoto,
-  removeMemberPhoto: adminApi.yoactiv.removeMemberPhoto,
 };
 
 export default function AdminYoactivMembers() {

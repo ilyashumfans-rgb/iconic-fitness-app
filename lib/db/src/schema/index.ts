@@ -106,6 +106,28 @@ export const trainerBookingsTable = pgTable("trainer_bookings", {
   paidAt: timestamp("paid_at", { withTimezone: true }),
 });
 
+// Paid membership-package purchases (YoActiv hosted Razorpay), mirroring
+// trainer_bookings: pending row + token, redirect landing flips the status.
+export const packageBookingsTable = pgTable("package_bookings", {
+  id: serial("id").primaryKey(),
+  token: text("token").notNull().unique(),
+  userId: integer("user_id"),
+  gymId: integer("gym_id").notNull(),
+  gymName: text("gym_name").notNull().default(""),
+  branchId: integer("branch_id").notNull().default(0),
+  memberName: text("member_name").notNull().default(""),
+  mobile: text("mobile").notNull().default(""),
+  packageName: text("package_name").notNull().default(""),
+  serviceName: text("service_name").notNull().default(""),
+  amountInr: integer("amount_inr").notNull().default(0),
+  startDate: text("start_date").notNull().default(""),
+  status: text("status").notNull().default("pending"), // pending | paid | failed
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  paidAt: timestamp("paid_at", { withTimezone: true }),
+});
+
 // Agency portal accounts. Each agency user is a read-only login scoped to a set
 // of branches (gymIds) that an admin assigns. They can only view GX class
 // bookings for their assigned branches.
@@ -687,16 +709,6 @@ export const trainerPhotosTable = pgTable("trainer_photos", {
     .defaultNow(),
 });
 
-// Photos for YoActiv members (same story as trainer_photos — YoActiv has no
-// photo field). Keyed by the YoActiv member id, stored as text.
-export const memberPhotosTable = pgTable("member_photos", {
-  id: serial("id").primaryKey(),
-  yoactivMemberId: text("yoactiv_member_id").notNull().unique(),
-  imageUrl: text("image_url").notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
 
 export const uploadedImagesTable = pgTable("uploaded_images", {
   id: text("id").primaryKey(),
