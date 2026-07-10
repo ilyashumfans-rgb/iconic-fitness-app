@@ -1074,6 +1074,11 @@ components:
         distanceKm: { type: number }
         isPremium: { type: boolean }
         openNow: { type: boolean }
+        onlinePurchase:
+          {
+            type: boolean,
+            description: "True when this branch supports paid online package purchase (mapped to a YoActiv branch)",
+          }
     GymDetail:
       allOf:
         - $ref: "#/components/schemas/Gym"

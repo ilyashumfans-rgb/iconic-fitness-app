@@ -84,7 +84,11 @@ router.get("/gyms", async (req, res): Promise<void> => {
   if (sort === "rating") rows.sort((a, b) => b.rating - a.rating);
   else if (sort === "price") rows.sort((a, b) => a.priceFrom - b.priceFrom);
   else rows.sort((a, b) => a.distanceKm - b.distanceKm);
-  res.json(ListGymsResponse.parse(rows));
+  res.json(
+    ListGymsResponse.parse(
+      rows.map((g) => ({ ...g, onlinePurchase: g.yoactivBranchId != null })),
+    ),
+  );
 });
 
 router.get("/gyms/featured", async (_req, res): Promise<void> => {
@@ -92,7 +96,11 @@ router.get("/gyms/featured", async (_req, res): Promise<void> => {
     .select()
     .from(gymsTable)
     .where(and(eq(gymsTable.featured, true), eq(gymsTable.isVerified, true)));
-  res.json(ListFeaturedGymsResponse.parse(rows));
+  res.json(
+    ListFeaturedGymsResponse.parse(
+      rows.map((g) => ({ ...g, onlinePurchase: g.yoactivBranchId != null })),
+    ),
+  );
 });
 
 router.get("/gyms/categories", async (_req, res): Promise<void> => {

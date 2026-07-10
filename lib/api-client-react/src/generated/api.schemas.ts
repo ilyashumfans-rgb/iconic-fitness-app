@@ -152,6 +152,8 @@ export interface Gym {
   distanceKm: number;
   isPremium: boolean;
   openNow: boolean;
+  /** True when this branch supports paid online package purchase (mapped to a YoActiv branch) */
+  onlinePurchase?: boolean;
 }
 
 export interface Trainer {

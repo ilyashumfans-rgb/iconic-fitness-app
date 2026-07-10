@@ -10,3 +10,5 @@ When UI is shown/hidden based on a viewer attribute that comes from an async que
 **Why:** the home-slide `audience` targeting (all|members|customers) first shipped as `isMember = isSignedIn && !!data`, which flashed customer-only slides to members during load. Code review flagged it.
 
 **How to apply:** any per-viewer gating (audience targeting, role-gated sections, feature flags) fed by react-query. Also degrade to the neutral bucket on error rather than silently classifying as the default side.
+
+**Money-path corollary:** when the gated choice is paid-checkout vs a free fallback (e.g. package purchase vs enquiry lead), `isError` must NOT count as "settled into the fallback" — a transient fetch failure would divert paying users to the free flow. Use four explicit states: loading → spinner, error → retry UI, success+items → paid flow, success+empty → fallback. The fallback is only for confirmed-empty.

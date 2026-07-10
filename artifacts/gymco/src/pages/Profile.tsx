@@ -1,4 +1,12 @@
-import { useGetMe, useUpdateMe, getGetMeQueryKey } from "@workspace/api-client-react";
+import {
+  useGetMe,
+  useUpdateMe,
+  getGetMeQueryKey,
+  useGetMyMembership,
+  getGetMyMembershipQueryKey,
+  useListMyPackageBookings,
+  getListMyPackageBookingsQueryKey,
+} from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +17,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
-import { User, Target, Edit2, Check, LogOut } from "lucide-react";
+import { User, Target, Edit2, Check, LogOut, CreditCard, BadgeCheck } from "lucide-react";
 import { useSignOut } from "@/components/Layout";
 
 export default function Profile() {
@@ -18,6 +26,12 @@ export default function Profile() {
   const signOut = useSignOut();
   const { data: user, isLoading } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
   const updateMe = useUpdateMe();
+  const { data: membership } = useGetMyMembership({
+    query: { queryKey: getGetMyMembershipQueryKey() },
+  });
+  const { data: purchases } = useListMyPackageBookings({
+    query: { queryKey: getListMyPackageBookingsQueryKey() },
+  });
   
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -130,6 +144,109 @@ export default function Profile() {
           )}
         </CardContent>
       </Card>
+
+      {/* Membership (YoActiv-backed) */}
+      {membership ? (
+        <Card className="bg-card border-none shadow-sm">
+          <CardContent className="p-6">
+            <h3 className="font-bold flex items-center mb-6 text-lg">
+              <BadgeCheck className="h-5 w-5 mr-2 text-primary" /> My membership
+            </h3>
+            <div className="flex flex-col sm:flex-row gap-6 items-start">
+              <div className="h-20 w-20 rounded-full bg-secondary overflow-hidden shrink-0">
+                {membership.photoUrl ? (
+                  <img
+                    src={membership.photoUrl}
+                    alt={user.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : user.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <User className="h-full w-full p-4 text-muted-foreground" />
+                )}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-4 flex-1">
+                <div>
+                  <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Plan</div>
+                  <div className="font-bold">{membership.planName}</div>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Status</div>
+                  <div
+                    className={`font-bold capitalize ${
+                      membership.status === "active"
+                        ? "text-lime-500"
+                        : membership.status === "expired"
+                          ? "text-red-500"
+                          : "text-amber-500"
+                    }`}
+                  >
+                    {membership.status}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Valid till</div>
+                  <div className="font-bold">
+                    {new Date(membership.renewsOn).toLocaleDateString("en-IN", {
+                      timeZone: "UTC",
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {/* Online package purchases */}
+      {purchases && purchases.length > 0 ? (
+        <Card className="bg-card border-none shadow-sm">
+          <CardContent className="p-6">
+            <h3 className="font-bold flex items-center mb-4 text-lg">
+              <CreditCard className="h-5 w-5 mr-2 text-primary" /> Package purchases
+            </h3>
+            <div className="divide-y divide-border">
+              {purchases.slice(0, 10).map((b) => (
+                <div key={b.id} className="flex items-center justify-between py-3 gap-4">
+                  <div className="min-w-0">
+                    <div className="font-bold truncate">
+                      {b.serviceName ? `${b.serviceName} — ${b.packageName}` : b.packageName}
+                    </div>
+                    <div className="text-sm text-muted-foreground truncate">
+                      {b.gymName}
+                      {b.startDate
+                        ? ` · from ${new Date(`${b.startDate}T00:00:00`).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
+                        : ""}
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="font-bold">₹{b.amountInr.toLocaleString("en-IN")}</div>
+                    <div
+                      className={`text-xs font-bold capitalize ${
+                        b.status === "paid"
+                          ? "text-lime-500"
+                          : b.status === "failed"
+                            ? "text-red-500"
+                            : "text-amber-500"
+                      }`}
+                    >
+                      {b.status}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       {/* Stats & Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

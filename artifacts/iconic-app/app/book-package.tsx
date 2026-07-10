@@ -36,7 +36,14 @@ export default function BookPackageScreen() {
   const interestedIn = (params.planName ?? "").trim();
 
   const gymsQuery = useListGyms({});
-  const gyms = useMemo(() => gymsQuery.data ?? [], [gymsQuery.data]);
+  // Branches with online purchase first so the paid path is front and center.
+  const gyms = useMemo(() => {
+    const list = [...(gymsQuery.data ?? [])];
+    list.sort(
+      (a, b) => Number(b.onlinePurchase ?? false) - Number(a.onlinePurchase ?? false),
+    );
+    return list;
+  }, [gymsQuery.data]);
   const [gymId, setGymId] = useState<number | null>(null);
   const selectedGym = gyms.find((g) => g.id === gymId) ?? null;
 
@@ -51,9 +58,13 @@ export default function BookPackageScreen() {
     () => packagesQuery.data ?? [],
     [packagesQuery.data],
   );
-  // Paid checkout only works when the branch is connected to the gym-billing
-  // system and has purchasable packages; otherwise fall back to an enquiry.
-  const paidFlow = gymId !== null && packages.length > 0;
+  // Explicit state gating (never show the enquiry fallback while the package
+  // list is still loading or after a fetch error, or paying members get
+  // misrouted away from checkout): loading → spinner; error → retry; success
+  // with packages → paid checkout; success and confirmed empty → enquiry.
+  const packagesSettled = gymId !== null && packagesQuery.isSuccess;
+  const packagesFailed = gymId !== null && packagesQuery.isError;
+  const paidFlow = packagesSettled && packages.length > 0;
 
   const meQuery = useGetMe({
     query: {
@@ -255,6 +266,31 @@ export default function BookPackageScreen() {
         </View>
       </Pressable>
 
+      {packagesFailed ? (
+        <Card>
+          <AppText weight="700" size={16} style={{ marginBottom: 4 }}>
+            Couldn't load plans
+          </AppText>
+          <AppText muted size={13} style={{ marginBottom: 16 }}>
+            We couldn't fetch the plans for{" "}
+            {selectedGym?.name ?? "this branch"} right now. Please check your
+            connection and try again.
+          </AppText>
+          <Button
+            label="Try again"
+            onPress={() => packagesQuery.refetch()}
+            loading={packagesQuery.isFetching}
+            icon="refresh-cw"
+          />
+        </Card>
+      ) : !packagesSettled ? (
+        <Card>
+          <LoadingView />
+          <AppText muted size={13} style={{ textAlign: "center", marginTop: 8 }}>
+            Loading plans for {selectedGym?.name ?? "this branch"}…
+          </AppText>
+        </Card>
+      ) : (
       <Card>
         <AppText weight="700" size={16} style={{ marginBottom: 4 }}>
           {paidFlow ? "Choose your plan" : "Request a callback"}
@@ -264,8 +300,6 @@ export default function BookPackageScreen() {
             ? "Pick a plan and pay securely online — your membership starts instantly."
             : "Online purchase isn't available for this branch yet. Share your details and the team will help you join."}
         </AppText>
-
-        {packagesQuery.isLoading ? <LoadingView /> : null}
 
         {paidFlow ? (
           <View style={{ gap: 10, marginBottom: 16 }}>
@@ -342,6 +376,7 @@ export default function BookPackageScreen() {
           </AppText>
         ) : null}
       </Card>
+      )}
     </Screen>
   );
 }
@@ -374,6 +409,22 @@ function BranchRow({ gym, onPress }: { gym: Gym; onPress: () => void }) {
               </AppText>
             ) : null}
           </View>
+          {gym.onlinePurchase ? (
+            <View
+              style={{
+                paddingHorizontal: 8,
+                paddingVertical: 3,
+                borderRadius: 999,
+                backgroundColor: colors.elevated,
+                borderWidth: 1,
+                borderColor: colors.primary,
+              }}
+            >
+              <AppText weight="700" size={10} color={colors.primary}>
+                BUY ONLINE
+              </AppText>
+            </View>
+          ) : null}
           <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
         </View>
       </Card>

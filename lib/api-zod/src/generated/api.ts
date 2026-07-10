@@ -184,7 +184,8 @@ export const GetDashboardResponse = zod.object({
   "amenities": zod.array(zod.string()),
   "distanceKm": zod.number(),
   "isPremium": zod.boolean(),
-  "openNow": zod.boolean()
+  "openNow": zod.boolean(),
+  "onlinePurchase": zod.boolean().optional().describe('True when this branch supports paid online package purchase (mapped to a YoActiv branch)')
 })),
   "weeklyActivity": zod.array(zod.object({
   "day": zod.string().describe('Mon..Sun'),
@@ -275,7 +276,8 @@ export const ListGymsResponseItem = zod.object({
   "amenities": zod.array(zod.string()),
   "distanceKm": zod.number(),
   "isPremium": zod.boolean(),
-  "openNow": zod.boolean()
+  "openNow": zod.boolean(),
+  "onlinePurchase": zod.boolean().optional().describe('True when this branch supports paid online package purchase (mapped to a YoActiv branch)')
 })
 export const ListGymsResponse = zod.array(ListGymsResponseItem)
 
@@ -300,7 +302,8 @@ export const ListFeaturedGymsResponseItem = zod.object({
   "amenities": zod.array(zod.string()),
   "distanceKm": zod.number(),
   "isPremium": zod.boolean(),
-  "openNow": zod.boolean()
+  "openNow": zod.boolean(),
+  "onlinePurchase": zod.boolean().optional().describe('True when this branch supports paid online package purchase (mapped to a YoActiv branch)')
 })
 export const ListFeaturedGymsResponse = zod.array(ListFeaturedGymsResponseItem)
 
@@ -340,7 +343,8 @@ export const GetGymResponse = zod.object({
   "amenities": zod.array(zod.string()),
   "distanceKm": zod.number(),
   "isPremium": zod.boolean(),
-  "openNow": zod.boolean()
+  "openNow": zod.boolean(),
+  "onlinePurchase": zod.boolean().optional().describe('True when this branch supports paid online package purchase (mapped to a YoActiv branch)')
 }).and(zod.object({
   "about": zod.string(),
   "gallery": zod.array(zod.string()),
