@@ -74,6 +74,7 @@ export interface UserProfileUpdate {
   heightCm?: number;
   weightKg?: number;
   fitnessGoal?: string;
+  avatarUrl?: string;
   city?: string;
   weeklyGoal?: number;
 }
@@ -267,11 +268,14 @@ export interface MyMembership {
   gymsAccessed: number;
   status: MyMembershipStatus;
   source?: MyMembershipSource;
+  /** Member photo hosted by YoActiv, when one exists there */
+  photoUrl?: string | null;
 }
 
 export interface LiveTrainer {
   id: string;
   name: string;
+  photoUrl?: string | null;
 }
 
 export interface TrainerPackage {

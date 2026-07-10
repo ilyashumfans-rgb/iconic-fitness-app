@@ -45,6 +45,14 @@ import {
   yoactivConfigured,
 } from "../lib/yoactiv";
 import { yoactivBranchName } from "../lib/yoactivBranchNames";
+import {
+  trainerPhotoMap,
+  setTrainerPhoto,
+  removeTrainerPhoto,
+  memberPhotoMap,
+  setMemberPhoto,
+  removeMemberPhoto,
+} from "../lib/trainerPhotos";
 
 const router: IRouter = Router();
 
@@ -2568,7 +2576,74 @@ router.get(
       return;
     }
     const members = await fetchYoactivMemberList(branchId);
-    res.json(members);
+    const photos = await memberPhotoMap(members.map((m) => String(m.memberId)));
+    // YoActiv-hosted photo wins when present; otherwise the staff upload.
+    res.json(
+      members.map((m) => {
+        const uploaded = photos.get(String(m.memberId)) ?? null;
+        return {
+          ...m,
+          photoUrl: m.photoUrl ?? uploaded,
+          photoSource: m.photoUrl ? "yoactiv" : uploaded ? "upload" : null,
+        };
+      }),
+    );
+  },
+);
+
+// A partner may only set/remove a photo for a member that appears in the
+// member list of one of their OWN branches.
+async function partnerOwnsMember(
+  partnerId: number,
+  branchId: number,
+  memberId: string,
+): Promise<boolean> {
+  const branches = await ownedYoactivBranches(partnerId);
+  if (!branches.some((b) => b.branchId === branchId)) return false;
+  const members = await fetchYoactivMemberList(branchId);
+  return members.some((m) => String(m.memberId) === memberId);
+}
+
+router.put(
+  "/partner/yoactiv/members/:memberId/photo",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const memberId = String(req.params.memberId ?? "").trim();
+    const branchId = Number(req.body?.branchId);
+    const imageUrl = String(req.body?.imageUrl ?? "").trim();
+    if (!memberId || !Number.isFinite(branchId) || branchId <= 0) {
+      res.status(400).json({ error: "memberId and branchId required" });
+      return;
+    }
+    if (!/^(https?:\/\/|\/)/.test(imageUrl)) {
+      res.status(400).json({ error: "Upload an image or provide a valid image URL" });
+      return;
+    }
+    if (!(await partnerOwnsMember(req.session.partnerId!, branchId, memberId))) {
+      res.status(403).json({ error: "Not allowed" });
+      return;
+    }
+    await setMemberPhoto(memberId, imageUrl);
+    res.json({ ok: true });
+  },
+);
+
+router.delete(
+  "/partner/yoactiv/members/:memberId/photo",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const memberId = String(req.params.memberId ?? "").trim();
+    const branchId = Number(req.query.branchId);
+    if (!memberId || !Number.isFinite(branchId) || branchId <= 0) {
+      res.status(400).json({ error: "memberId and branchId required" });
+      return;
+    }
+    if (!(await partnerOwnsMember(req.session.partnerId!, branchId, memberId))) {
+      res.status(403).json({ error: "Not allowed" });
+      return;
+    }
+    await removeMemberPhoto(memberId);
+    res.json({ ok: true });
   },
 );
 
@@ -2593,7 +2668,66 @@ router.get(
       return;
     }
     const trainers = await fetchYoactivBranchTrainers(branchId);
-    res.json(trainers);
+    const photos = await trainerPhotoMap(trainers.map((t) => t.id));
+    res.json(
+      trainers.map((t) => ({ ...t, photoUrl: photos.get(t.id) ?? null })),
+    );
+  },
+);
+
+// A partner may only set/remove a photo for a trainer that appears in the
+// roster of one of their OWN branches — never another brand's staff.
+async function partnerOwnsTrainer(
+  partnerId: number,
+  branchId: number,
+  trainerId: string,
+): Promise<boolean> {
+  const branches = await ownedYoactivBranches(partnerId);
+  if (!branches.some((b) => b.branchId === branchId)) return false;
+  const roster = await fetchYoactivBranchTrainers(branchId);
+  return roster.some((t) => t.id === trainerId);
+}
+
+router.put(
+  "/partner/yoactiv/trainers/:trainerId/photo",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const trainerId = String(req.params.trainerId ?? "").trim();
+    const branchId = Number(req.body?.branchId);
+    const imageUrl = String(req.body?.imageUrl ?? "").trim();
+    if (!trainerId || !Number.isFinite(branchId) || branchId <= 0) {
+      res.status(400).json({ error: "trainerId and branchId required" });
+      return;
+    }
+    if (!/^(https?:\/\/|\/)/.test(imageUrl)) {
+      res.status(400).json({ error: "Upload an image or provide a valid image URL" });
+      return;
+    }
+    if (!(await partnerOwnsTrainer(req.session.partnerId!, branchId, trainerId))) {
+      res.status(403).json({ error: "Not allowed" });
+      return;
+    }
+    await setTrainerPhoto(trainerId, imageUrl);
+    res.json({ ok: true });
+  },
+);
+
+router.delete(
+  "/partner/yoactiv/trainers/:trainerId/photo",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const trainerId = String(req.params.trainerId ?? "").trim();
+    const branchId = Number(req.query.branchId);
+    if (!trainerId || !Number.isFinite(branchId) || branchId <= 0) {
+      res.status(400).json({ error: "trainerId and branchId required" });
+      return;
+    }
+    if (!(await partnerOwnsTrainer(req.session.partnerId!, branchId, trainerId))) {
+      res.status(403).json({ error: "Not allowed" });
+      return;
+    }
+    await removeTrainerPhoto(trainerId);
+    res.json({ ok: true });
   },
 );
 

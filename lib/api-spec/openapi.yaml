@@ -935,6 +935,7 @@ components:
         heightCm: { type: number }
         weightKg: { type: number }
         fitnessGoal: { type: string }
+        avatarUrl: { type: string }
         city: { type: string }
         weeklyGoal: { type: integer }
 
@@ -1102,12 +1103,19 @@ components:
         gymsAccessed: { type: integer }
         status: { type: string, enum: [active, paused, expired] }
         source: { type: string, enum: [local, yoactiv] }
+        photoUrl:
+          {
+            type: string,
+            nullable: true,
+            description: "Member photo hosted by YoActiv, when one exists there",
+          }
     LiveTrainer:
       type: object
       required: [id, name]
       properties:
         id: { type: string }
         name: { type: string }
+        photoUrl: { type: string, nullable: true }
     TrainerPackage:
       type: object
       required: [id, serviceName, name, amountInr, duration, pt]

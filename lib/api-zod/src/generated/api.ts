@@ -91,6 +91,7 @@ export const UpdateMeBody = zod.object({
   "heightCm": zod.number().optional(),
   "weightKg": zod.number().optional(),
   "fitnessGoal": zod.string().optional(),
+  "avatarUrl": zod.string().optional(),
   "city": zod.string().optional(),
   "weeklyGoal": zod.number().optional()
 })
@@ -509,7 +510,8 @@ export const GetMyMembershipResponse = zod.union([zod.object({
   "classesIncluded": zod.number(),
   "gymsAccessed": zod.number(),
   "status": zod.enum(['active', 'paused', 'expired']),
-  "source": zod.enum(['local', 'yoactiv']).optional()
+  "source": zod.enum(['local', 'yoactiv']).optional(),
+  "photoUrl": zod.string().nullish().describe('Member photo hosted by YoActiv, when one exists there')
 }),zod.null()])
 
 
@@ -629,7 +631,8 @@ export const ListLiveTrainersQueryParams = zod.object({
 
 export const ListLiveTrainersResponseItem = zod.object({
   "id": zod.string(),
-  "name": zod.string()
+  "name": zod.string(),
+  "photoUrl": zod.string().nullish()
 })
 export const ListLiveTrainersResponse = zod.array(ListLiveTrainersResponseItem)
 

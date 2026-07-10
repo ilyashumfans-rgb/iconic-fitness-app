@@ -11,6 +11,7 @@ import {
 } from "@workspace/api-zod";
 import { gymsTable } from "@workspace/db";
 import { fetchYoactivTrainers, yoactivConfigured } from "../lib/yoactiv";
+import { trainerPhotoMap } from "../lib/trainerPhotos";
 
 const router: IRouter = Router();
 
@@ -37,7 +38,12 @@ router.get("/trainers/live", async (req, res): Promise<void> => {
     branchId = gym.yoactivBranchId;
   }
   const trainers = await fetchYoactivTrainers(branchId);
-  res.json(ListLiveTrainersResponse.parse(trainers));
+  const photos = await trainerPhotoMap(trainers.map((t) => t.id));
+  res.json(
+    ListLiveTrainersResponse.parse(
+      trainers.map((t) => ({ ...t, photoUrl: photos.get(t.id) ?? null })),
+    ),
+  );
 });
 
 router.get("/trainers", async (req, res): Promise<void> => {

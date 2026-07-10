@@ -33,6 +33,7 @@ export type YoactivStaffTrainer = {
   id: string;
   name: string;
   mobile: string;
+  photoUrl: string | null;
 };
 
 export type YoactivMemberRow = {
@@ -41,6 +42,9 @@ export type YoactivMemberRow = {
   mobile: string;
   email: string;
   status: string;
+  photoUrl: string | null;
+  /** "yoactiv" = photo comes from YoActiv (read-only here); "upload" = staff upload. */
+  photoSource: "yoactiv" | "upload" | null;
 };
 
 export type YoactivMemberDetail = {
@@ -405,6 +409,26 @@ export const adminApi = {
     trainers: (branchId: number) =>
       request<YoactivStaffTrainer[]>(
         `/admin/yoactiv/trainers?branchId=${branchId}`,
+      ),
+    setTrainerPhoto: (trainerId: string, imageUrl: string, _branchId: number) =>
+      request<{ ok: boolean }>(
+        `/admin/yoactiv/trainers/${encodeURIComponent(trainerId)}/photo`,
+        { method: "PUT", body: JSON.stringify({ imageUrl }) },
+      ),
+    removeTrainerPhoto: (trainerId: string, _branchId: number) =>
+      request<{ ok: boolean }>(
+        `/admin/yoactiv/trainers/${encodeURIComponent(trainerId)}/photo`,
+        { method: "DELETE" },
+      ),
+    setMemberPhoto: (memberId: number, imageUrl: string, _branchId: number) =>
+      request<{ ok: boolean }>(
+        `/admin/yoactiv/members/${memberId}/photo`,
+        { method: "PUT", body: JSON.stringify({ imageUrl }) },
+      ),
+    removeMemberPhoto: (memberId: number, _branchId: number) =>
+      request<{ ok: boolean }>(
+        `/admin/yoactiv/members/${memberId}/photo`,
+        { method: "DELETE" },
       ),
   },
   agencies: {

@@ -160,6 +160,19 @@ export function normalizeMobile(raw: string | null | undefined): string | null {
   return digits.slice(-10);
 }
 
+/**
+ * YoActiv returns an `Image` URL for members, but uses a generic
+ * "noimg" placeholder when no real photo was uploaded there. Treat the
+ * placeholder (and anything that isn't an http(s) URL) as "no photo".
+ */
+export function normalizeYoactivImage(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const url = raw.trim();
+  if (!/^https?:\/\//i.test(url)) return null;
+  if (/noimg/i.test(url)) return null;
+  return url;
+}
+
 // ─── Member membership lookup ────────────────────────────────────────────────
 
 export type YoactivMembership = {
@@ -182,6 +195,8 @@ export type YoactivMemberProfile = {
   memberId: number;
   name: string;
   mobile: string;
+  /** Real member photo hosted by YoActiv, or null (placeholder filtered out). */
+  photoUrl: string | null;
   branchCount: number;
   memberships: YoactivMembership[];
 };
@@ -190,6 +205,7 @@ type FetchResult = {
   MemberId?: number;
   Name?: string;
   Mobile?: string;
+  Image?: string;
   Error?: string;
   Results?: Array<{
     Studio_ID?: string;
@@ -301,6 +317,7 @@ async function lookupAcrossKeys(
     memberId: found[0]!.memberId,
     name: found[0]!.name,
     mobile,
+    photoUrl: found.find((p) => p.photoUrl)?.photoUrl ?? null,
     branchCount: found.reduce((n, p) => n + p.branchCount, 0),
     memberships: found.flatMap((p) => p.memberships),
   };
@@ -339,6 +356,7 @@ async function lookupForKey(
   const memberships: YoactivMembership[] = [];
   let memberId = 0;
   let name = "";
+  let photoUrl: string | null = null;
   let branchCount = 0;
   for (const settled of fetches) {
     if (settled.status !== "fulfilled") continue;
@@ -346,6 +364,7 @@ async function lookupForKey(
     if (data.Error || !data.MemberId) continue;
     memberId = data.MemberId;
     name = data.Name ?? name;
+    photoUrl = normalizeYoactivImage(data.Image) ?? photoUrl;
     branchCount += 1;
     for (const row of data.Results ?? []) {
       memberships.push({
@@ -373,7 +392,7 @@ async function lookupForKey(
     }
   }
   if (!memberId) return null;
-  return { memberId, name, mobile, branchCount, memberships };
+  return { memberId, name, mobile, photoUrl, branchCount, memberships };
 }
 
 /**
@@ -574,6 +593,8 @@ export type YoactivMemberRow = {
   mobile: string;
   email: string;
   status: string; // "Active" | "Inactive" (as reported by YoActiv)
+  /** Real member photo hosted by YoActiv, or null (placeholder filtered out). */
+  photoUrl: string | null;
 };
 
 type UserListRow = {
@@ -582,6 +603,7 @@ type UserListRow = {
   Mail?: string;
   Mobile?: string;
   Member_Status?: string;
+  Image?: string;
 };
 
 const MEMBER_LIST_SUCCESS_TTL_MS = 5 * 60 * 1000;
@@ -654,6 +676,7 @@ async function fetchMemberListAllPages(target: {
         mobile: String(row.Mobile ?? "").trim(),
         email: String(row.Mail ?? "").trim(),
         status: String(row.Member_Status ?? "").trim() || "Unknown",
+        photoUrl: normalizeYoactivImage(row.Image),
       });
     }
     if (added === 0) break;

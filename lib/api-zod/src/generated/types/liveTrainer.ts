@@ -9,4 +9,5 @@
 export interface LiveTrainer {
   id: string;
   name: string;
+  photoUrl?: string | null;
 }

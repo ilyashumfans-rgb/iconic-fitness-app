@@ -355,6 +355,26 @@ export const partnerApi = {
       request<import("./adminApi").YoactivStaffTrainer[]>(
         `/partner/yoactiv/trainers?branchId=${branchId}`,
       ),
+    setTrainerPhoto: (trainerId: string, imageUrl: string, branchId: number) =>
+      request<{ ok: boolean }>(
+        `/partner/yoactiv/trainers/${encodeURIComponent(trainerId)}/photo`,
+        { method: "PUT", body: JSON.stringify({ imageUrl, branchId }) },
+      ),
+    removeTrainerPhoto: (trainerId: string, branchId: number) =>
+      request<{ ok: boolean }>(
+        `/partner/yoactiv/trainers/${encodeURIComponent(trainerId)}/photo?branchId=${branchId}`,
+        { method: "DELETE" },
+      ),
+    setMemberPhoto: (memberId: number, imageUrl: string, branchId: number) =>
+      request<{ ok: boolean }>(
+        `/partner/yoactiv/members/${memberId}/photo`,
+        { method: "PUT", body: JSON.stringify({ imageUrl, branchId }) },
+      ),
+    removeMemberPhoto: (memberId: number, branchId: number) =>
+      request<{ ok: boolean }>(
+        `/partner/yoactiv/members/${memberId}/photo?branchId=${branchId}`,
+        { method: "DELETE" },
+      ),
   },
   classes: {
     list: () => request<PartnerClass[]>("/partner/classes"),

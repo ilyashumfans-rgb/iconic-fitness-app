@@ -10,6 +10,10 @@ const api: YoactivMembersApi = {
   members: partnerApi.yoactiv.members,
   memberDetail: partnerApi.yoactiv.memberDetail,
   trainers: partnerApi.yoactiv.trainers,
+  setTrainerPhoto: partnerApi.yoactiv.setTrainerPhoto,
+  removeTrainerPhoto: partnerApi.yoactiv.removeTrainerPhoto,
+  setMemberPhoto: partnerApi.yoactiv.setMemberPhoto,
+  removeMemberPhoto: partnerApi.yoactiv.removeMemberPhoto,
 };
 
 export default function PartnerMembers() {

@@ -244,6 +244,7 @@ function LiveTrainerCard({
   onPress: () => void;
 }) {
   const colors = useColors();
+  const photo = resolveImageUrl(trainer.photoUrl ?? null);
   const initials = trainer.name
     .split(/\s+/)
     .filter(Boolean)
@@ -255,20 +256,27 @@ function LiveTrainerCard({
     <Pressable onPress={onPress}>
       <Card>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-          <View
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 14,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: colors.elevated,
-            }}
-          >
-            <AppText weight="700" size={16} color={colors.primary}>
-              {initials || "PT"}
-            </AppText>
-          </View>
+          {photo ? (
+            <Image
+              source={{ uri: photo }}
+              style={{ width: 52, height: 52, borderRadius: 14 }}
+            />
+          ) : (
+            <View
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: 14,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: colors.elevated,
+              }}
+            >
+              <AppText weight="700" size={16} color={colors.primary}>
+                {initials || "PT"}
+              </AppText>
+            </View>
+          )}
           <View style={{ flex: 1 }}>
             <AppText weight="700" size={16}>
               {trainer.name}

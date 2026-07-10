@@ -17,4 +17,6 @@ export interface MyMembership {
   gymsAccessed: number;
   status: MyMembershipStatus;
   source?: MyMembershipSource;
+  /** Member photo hosted by YoActiv, when one exists there */
+  photoUrl?: string | null;
 }

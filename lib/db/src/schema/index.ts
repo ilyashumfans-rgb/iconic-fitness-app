@@ -675,6 +675,29 @@ export const ticketCommentsTable = pgTable("ticket_comments", {
     .defaultNow(),
 });
 
+// Photos for YoActiv trainers (the YoActiv API has no photo field). Keyed by
+// the YoActiv staff id (text), uploaded by admins/partners via the trainer
+// directory. Plain cross-reference, no FK (repo convention).
+export const trainerPhotosTable = pgTable("trainer_photos", {
+  id: serial("id").primaryKey(),
+  yoactivTrainerId: text("yoactiv_trainer_id").notNull().unique(),
+  imageUrl: text("image_url").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// Photos for YoActiv members (same story as trainer_photos — YoActiv has no
+// photo field). Keyed by the YoActiv member id, stored as text.
+export const memberPhotosTable = pgTable("member_photos", {
+  id: serial("id").primaryKey(),
+  yoactivMemberId: text("yoactiv_member_id").notNull().unique(),
+  imageUrl: text("image_url").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const uploadedImagesTable = pgTable("uploaded_images", {
   id: text("id").primaryKey(),
   fileName: text("file_name").notNull(),

@@ -49,6 +49,7 @@ router.get("/memberships/mine", requireUser, async (req, res): Promise<void> => 
           gymsAccessed: profile!.branchCount,
           status: primary.status,
           source: "yoactiv",
+          photoUrl: profile!.photoUrl,
         }),
       );
       return;
@@ -77,6 +78,7 @@ router.get("/memberships/mine", requireUser, async (req, res): Promise<void> => 
       gymsAccessed: um.gymsAccessed,
       status: um.status,
       source: "local",
+      photoUrl: null,
     }),
   );
 });

@@ -5,7 +5,8 @@ import type {
   YoactivMemberRow,
   YoactivStaffTrainer,
 } from "@/lib/adminApi";
-import { ChevronDown, ChevronRight, RefreshCw, Search } from "lucide-react";
+import { ChevronDown, ChevronRight, RefreshCw, Search, User } from "lucide-react";
+import FileUpload from "@/components/FileUpload";
 
 type StatusFilter = "all" | "active" | "inactive";
 type View = "members" | "trainers";
@@ -15,6 +16,24 @@ export type YoactivMembersApi = {
   members: (branchId: number) => Promise<YoactivMemberRow[]>;
   memberDetail: (mobile: string) => Promise<YoactivMemberDetail>;
   trainers: (branchId: number) => Promise<YoactivStaffTrainer[]>;
+  setTrainerPhoto: (
+    trainerId: string,
+    imageUrl: string,
+    branchId: number,
+  ) => Promise<{ ok: boolean }>;
+  removeTrainerPhoto: (
+    trainerId: string,
+    branchId: number,
+  ) => Promise<{ ok: boolean }>;
+  setMemberPhoto: (
+    memberId: number,
+    imageUrl: string,
+    branchId: number,
+  ) => Promise<{ ok: boolean }>;
+  removeMemberPhoto: (
+    memberId: number,
+    branchId: number,
+  ) => Promise<{ ok: boolean }>;
 };
 
 function statusBadge(status: string) {
@@ -301,18 +320,27 @@ export function YoactivMembersBrowser({
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="text-xs uppercase tracking-wide text-slate-500">
+                  <th className="pb-2 pr-4">Photo</th>
                   <th className="pb-2 pr-4">Name</th>
                   <th className="pb-2 pr-4">Mobile</th>
+                  <th className="pb-2 pr-4" />
                 </tr>
               </thead>
               <tbody>
                 {filteredTrainers.map((t) => (
-                  <tr key={t.id} className="border-t border-slate-800">
-                    <td className="py-2 pr-4 font-medium text-slate-200">
-                      {t.name || "—"}
-                    </td>
-                    <td className="py-2 pr-4 text-slate-300">{t.mobile || "—"}</td>
-                  </tr>
+                  <TrainerRow
+                    key={t.id}
+                    trainer={t}
+                    branchId={branchId!}
+                    api={api}
+                    onPhotoChange={(url) =>
+                      setTrainers((cur) =>
+                        cur.map((x) =>
+                          x.id === t.id ? { ...x, photoUrl: url } : x,
+                        ),
+                      )
+                    }
+                  />
                 ))}
               </tbody>
             </table>
@@ -337,10 +365,12 @@ export function YoactivMembersBrowser({
               <thead>
                 <tr className="text-xs uppercase tracking-wide text-slate-500">
                   <th className="pb-2 pr-2" />
+                  <th className="pb-2 pr-4">Photo</th>
                   <th className="pb-2 pr-4">Name</th>
                   <th className="pb-2 pr-4">Mobile</th>
                   <th className="pb-2 pr-4">Email</th>
                   <th className="pb-2 pr-4">Status</th>
+                  <th className="pb-2 pr-4" />
                 </tr>
               </thead>
               <tbody>
@@ -348,11 +378,21 @@ export function YoactivMembersBrowser({
                   <MemberRows
                     key={m.memberId}
                     member={m}
+                    branchId={branchId!}
                     api={api}
                     expanded={expanded === m.memberId}
                     onToggle={() =>
                       setExpanded((cur) =>
                         cur === m.memberId ? null : m.memberId,
+                      )
+                    }
+                    onPhotoChange={(url) =>
+                      setMembers((cur) =>
+                        cur.map((x) =>
+                          x.memberId === m.memberId
+                            ? { ...x, photoUrl: url }
+                            : x,
+                        ),
                       )
                     }
                   />
@@ -371,17 +411,135 @@ export function YoactivMembersBrowser({
   );
 }
 
+function TrainerRow({
+  trainer,
+  branchId,
+  api,
+  onPhotoChange,
+}: {
+  trainer: YoactivStaffTrainer;
+  branchId: number;
+  api: YoactivMembersApi;
+  onPhotoChange: (url: string | null) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const save = async (url: string) => {
+    setErr(null);
+    setBusy(true);
+    try {
+      await api.setTrainerPhoto(trainer.id, url, branchId);
+      onPhotoChange(url);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not save photo");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async () => {
+    setErr(null);
+    setBusy(true);
+    try {
+      await api.removeTrainerPhoto(trainer.id, branchId);
+      onPhotoChange(null);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not remove photo");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <tr className="border-t border-slate-800">
+      <td className="py-2 pr-4">
+        {trainer.photoUrl ? (
+          <img
+            src={trainer.photoUrl}
+            alt={trainer.name || "Trainer"}
+            className="h-10 w-10 rounded-full object-cover"
+          />
+        ) : (
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-slate-500">
+            <User className="h-5 w-5" />
+          </span>
+        )}
+      </td>
+      <td className="py-2 pr-4 font-medium text-slate-200">
+        {trainer.name || "—"}
+      </td>
+      <td className="py-2 pr-4 text-slate-300">{trainer.mobile || "—"}</td>
+      <td className="py-2 pr-4">
+        <div className="flex items-center gap-2">
+          <FileUpload
+            label={trainer.photoUrl ? "Change photo" : "Add photo"}
+            accept="image/*"
+            onUploaded={(urls) => {
+              if (urls[0]) void save(urls[0]);
+            }}
+          />
+          {trainer.photoUrl && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void remove()}
+              className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:text-white disabled:opacity-60"
+            >
+              Remove
+            </button>
+          )}
+        </div>
+        {err && <div className="mt-1 text-[11px] text-rose-400">{err}</div>}
+      </td>
+    </tr>
+  );
+}
+
 function MemberRows({
   member,
+  branchId,
   api,
   expanded,
   onToggle,
+  onPhotoChange,
 }: {
   member: YoactivMemberRow;
+  branchId: number;
   api: YoactivMembersApi;
   expanded: boolean;
   onToggle: () => void;
+  onPhotoChange: (url: string | null) => void;
 }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const save = async (url: string) => {
+    setErr(null);
+    setBusy(true);
+    try {
+      await api.setMemberPhoto(member.memberId, url, branchId);
+      onPhotoChange(url);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not save photo");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async () => {
+    setErr(null);
+    setBusy(true);
+    try {
+      await api.removeMemberPhoto(member.memberId, branchId);
+      onPhotoChange(null);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not remove photo");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <>
       <tr
@@ -395,14 +553,53 @@ function MemberRows({
             <ChevronRight className="h-4 w-4" />
           )}
         </td>
+        <td className="py-2 pr-4">
+          {member.photoUrl ? (
+            <img
+              src={member.photoUrl}
+              alt={member.name || "Member"}
+              className="h-10 w-10 rounded-full object-cover"
+            />
+          ) : (
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-slate-500">
+              <User className="h-5 w-5" />
+            </span>
+          )}
+        </td>
         <td className="py-2 pr-4 font-medium text-slate-200">{member.name || "—"}</td>
         <td className="py-2 pr-4 text-slate-300">{member.mobile || "—"}</td>
         <td className="py-2 pr-4 text-slate-400">{member.email || "—"}</td>
         <td className="py-2 pr-4">{statusBadge(member.status)}</td>
+        <td className="py-2 pr-4" onClick={(e) => e.stopPropagation()}>
+          {member.photoSource === "yoactiv" ? (
+            <span className="text-xs text-slate-500">From YoActiv</span>
+          ) : (
+            <div className="flex items-center gap-2">
+              <FileUpload
+                label={member.photoUrl ? "Change photo" : "Add photo"}
+                accept="image/*"
+                onUploaded={(urls) => {
+                  if (urls[0]) void save(urls[0]);
+                }}
+              />
+              {member.photoUrl && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void remove()}
+                  className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:text-white disabled:opacity-60"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          )}
+          {err && <div className="mt-1 text-[11px] text-rose-400">{err}</div>}
+        </td>
       </tr>
       {expanded && (
         <tr className="border-t border-slate-800 bg-slate-900/60">
-          <td colSpan={5}>
+          <td colSpan={7}>
             {member.mobile.trim() ? (
               <MemberDetailRow mobile={member.mobile} api={api} />
             ) : (

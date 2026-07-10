@@ -40,6 +40,14 @@ import {
   yoactivKeyConfigs,
 } from "../lib/yoactiv";
 import { yoactivBranchName } from "../lib/yoactivBranchNames";
+import {
+  trainerPhotoMap,
+  setTrainerPhoto,
+  removeTrainerPhoto,
+  memberPhotoMap,
+  setMemberPhoto,
+  removeMemberPhoto,
+} from "../lib/trainerPhotos";
 import { DEFAULT_PRODUCT_CATEGORIES } from "../lib/productCategories.js";
 
 const loadAdminRole = async (id: number): Promise<string | undefined> => {
@@ -2206,7 +2214,53 @@ router.get(
       return;
     }
     const members = await fetchYoactivMemberList(branchId);
-    res.json(members);
+    const photos = await memberPhotoMap(members.map((m) => String(m.memberId)));
+    // YoActiv-hosted photo wins when present; otherwise the staff upload.
+    res.json(
+      members.map((m) => {
+        const uploaded = photos.get(String(m.memberId)) ?? null;
+        return {
+          ...m,
+          photoUrl: m.photoUrl ?? uploaded,
+          photoSource: m.photoUrl ? "yoactiv" : uploaded ? "upload" : null,
+        };
+      }),
+    );
+  },
+);
+
+// Attach/replace an uploaded photo for a YoActiv member (YoActiv has no photo
+// field — the photo lives in our DB, shown in the staff member directory).
+router.put(
+  "/admin/yoactiv/members/:memberId/photo",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const memberId = String(req.params.memberId ?? "").trim();
+    const imageUrl = String(req.body?.imageUrl ?? "").trim();
+    if (!memberId) {
+      res.status(400).json({ error: "memberId required" });
+      return;
+    }
+    if (!/^(https?:\/\/|\/)/.test(imageUrl)) {
+      res.status(400).json({ error: "Upload an image or provide a valid image URL" });
+      return;
+    }
+    await setMemberPhoto(memberId, imageUrl);
+    res.json({ ok: true });
+  },
+);
+
+router.delete(
+  "/admin/yoactiv/members/:memberId/photo",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const memberId = String(req.params.memberId ?? "").trim();
+    if (!memberId) {
+      res.status(400).json({ error: "memberId required" });
+      return;
+    }
+    await removeMemberPhoto(memberId);
+    res.json({ ok: true });
   },
 );
 
@@ -2225,7 +2279,45 @@ router.get(
       return;
     }
     const trainers = await fetchYoactivBranchTrainers(branchId);
-    res.json(trainers);
+    const photos = await trainerPhotoMap(trainers.map((t) => t.id));
+    res.json(
+      trainers.map((t) => ({ ...t, photoUrl: photos.get(t.id) ?? null })),
+    );
+  },
+);
+
+// Attach/replace an uploaded photo for a YoActiv trainer (YoActiv itself has
+// no photo field — the photo lives in our DB and shows in the mobile app).
+router.put(
+  "/admin/yoactiv/trainers/:trainerId/photo",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const trainerId = String(req.params.trainerId ?? "").trim();
+    const imageUrl = String(req.body?.imageUrl ?? "").trim();
+    if (!trainerId) {
+      res.status(400).json({ error: "trainerId required" });
+      return;
+    }
+    if (!/^(https?:\/\/|\/)/.test(imageUrl)) {
+      res.status(400).json({ error: "Upload an image or provide a valid image URL" });
+      return;
+    }
+    await setTrainerPhoto(trainerId, imageUrl);
+    res.json({ ok: true });
+  },
+);
+
+router.delete(
+  "/admin/yoactiv/trainers/:trainerId/photo",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const trainerId = String(req.params.trainerId ?? "").trim();
+    if (!trainerId) {
+      res.status(400).json({ error: "trainerId required" });
+      return;
+    }
+    await removeTrainerPhoto(trainerId);
+    res.json({ ok: true });
   },
 );
 
