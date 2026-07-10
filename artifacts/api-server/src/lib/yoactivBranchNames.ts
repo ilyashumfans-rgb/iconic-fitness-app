@@ -20,6 +20,23 @@ export const YOACTIV_BRANCH_NAMES: Record<number, string> = {
   7415: "Marathahalli",
   7697: "Corporate Koramangala",
   7727: "Brookefield",
+  // PT Sales branch set (second YoActiv account — same studios, PT billing).
+  6793: "1st Block Koramangala (PT Sales)",
+  6794: "HSR Layout (PT Sales)",
+  6795: "BTM Layout (PT Sales)",
+  6796: "4th Block Koramangala (PT Sales)",
+  6797: "5th Block Koramangala (PT Sales)",
+  6798: "BTM 1st Stage (PT Sales)",
+  6799: "7th Block Koramangala (PT Sales)",
+  6800: "HSR Layout Sector 7 (PT Sales)",
+  6801: "JP Nagar 7th Phase (PT Sales)",
+  6802: "Bellandur (PT Sales)",
+  6803: "Indiranagar (PT Sales)",
+  6804: "Bellandur Centro (PT Sales)",
+  6805: "Puttenahalli (PT Sales)",
+  7416: "Marathahalli (PT Sales)",
+  7443: "Seegehalli (PT Sales)",
+  7728: "Brookefield (PT Sales)",
   7820: "Sandbox (test branch)",
 };
 
