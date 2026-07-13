@@ -58,6 +58,12 @@ function SignInContent() {
   const [error, setError] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  // OTP (one-time email code) login mode
+  const [mode, setMode] = useState<"password" | "otp">("password");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [otpInfo, setOtpInfo] = useState<string | null>(null);
+
   useEffect(() => {
     if (Platform.OS !== "android") return;
     void WebBrowser.warmUpAsync();
@@ -87,6 +93,78 @@ function SignInContent() {
       setError(clerkError(err));
     }
   }, [signIn, email, password, router, exitGuest]);
+
+  const finalizeSignIn = useCallback(async () => {
+    exitGuest();
+    await signIn.finalize({ navigate: () => router.replace("/(tabs)") });
+  }, [signIn, router, exitGuest]);
+
+  const onSendOtp = useCallback(async () => {
+    setError(null);
+    setOtpInfo(null);
+    const address = email.trim();
+    if (!address.includes("@")) {
+      setError("Enter your email address to receive a login code.");
+      return;
+    }
+    try {
+      const { error: sendError } = await signIn.emailCode.sendCode({
+        emailAddress: address,
+      });
+      if (sendError) {
+        setError(clerkError(sendError));
+        return;
+      }
+      setOtpSent(true);
+      setOtpCode("");
+      setOtpInfo(`We emailed a 6-digit code to ${address}.`);
+    } catch (err: unknown) {
+      setError(clerkError(err));
+    }
+  }, [signIn, email]);
+
+  const onVerifyOtp = useCallback(async () => {
+    setError(null);
+    const code = otpCode.trim();
+    if (code.length < 4) {
+      setError("Enter the code from your email.");
+      return;
+    }
+    try {
+      const { error: verifyError } = await signIn.emailCode.verifyCode({
+        code,
+      });
+      if (verifyError) {
+        setError(clerkError(verifyError));
+        return;
+      }
+      if (signIn.status === "complete") {
+        await finalizeSignIn();
+      } else {
+        setError("Additional verification is required to sign in.");
+      }
+    } catch (err: unknown) {
+      setError(clerkError(err));
+    }
+  }, [signIn, otpCode, finalizeSignIn]);
+
+  const switchMode = useCallback(
+    async (next: "password" | "otp") => {
+      setMode(next);
+      setError(null);
+      setOtpInfo(null);
+      setOtpSent(false);
+      setOtpCode("");
+      if (signIn.status !== null) {
+        try {
+          await signIn.reset();
+        } catch {
+          // A stale attempt that can't reset shouldn't block the mode switch.
+        }
+      }
+    },
+    [signIn],
+  );
 
   const onGoogle = useCallback(async () => {
     if (googleLoading) return;
@@ -193,28 +271,89 @@ function SignInContent() {
               autoCapitalize="none"
               keyboardType="email-address"
               autoComplete="email"
-            />
-            <Field
-              label="Password"
-              value={password}
-              onChangeText={setPassword}
-              placeholder="••••••••"
-              secureTextEntry
-              autoComplete="password"
+              editable={!(mode === "otp" && otpSent)}
             />
 
+            {mode === "password" ? (
+              <Field
+                label="Password"
+                value={password}
+                onChangeText={setPassword}
+                placeholder="••••••••"
+                secureTextEntry
+                autoComplete="password"
+              />
+            ) : otpSent ? (
+              <Field
+                label="One-time code"
+                value={otpCode}
+                onChangeText={setOtpCode}
+                placeholder="6-digit code"
+                keyboardType="number-pad"
+                autoComplete="one-time-code"
+                maxLength={8}
+              />
+            ) : null}
+
+            {otpInfo && !error ? (
+              <AppText size={13} color={colors.primary}>
+                {otpInfo}
+              </AppText>
+            ) : null}
             {error ? (
               <AppText size={13} color={colors.destructive}>
                 {error}
               </AppText>
             ) : null}
 
-            <Button
-              label="Log in"
-              onPress={onSignIn}
-              loading={fetchStatus === "fetching"}
-              size="lg"
-            />
+            {mode === "password" ? (
+              <Button
+                label="Log in"
+                onPress={onSignIn}
+                loading={fetchStatus === "fetching"}
+                size="lg"
+              />
+            ) : !otpSent ? (
+              <Button
+                label="Email me a login code"
+                onPress={onSendOtp}
+                loading={fetchStatus === "fetching"}
+                size="lg"
+              />
+            ) : (
+              <>
+                <Button
+                  label="Verify code & log in"
+                  onPress={onVerifyOtp}
+                  loading={fetchStatus === "fetching"}
+                  size="lg"
+                />
+                <Pressable
+                  onPress={onSendOtp}
+                  disabled={fetchStatus === "fetching"}
+                  hitSlop={8}
+                  style={styles.modeSwitch}
+                >
+                  <AppText weight="600" size={13} color={colors.mutedForeground}>
+                    Didn&apos;t get it? Resend code
+                  </AppText>
+                </Pressable>
+              </>
+            )}
+
+            <Pressable
+              onPress={() =>
+                switchMode(mode === "password" ? "otp" : "password")
+              }
+              hitSlop={8}
+              style={styles.modeSwitch}
+            >
+              <AppText weight="700" size={13} color={colors.primary}>
+                {mode === "password"
+                  ? "Log in with OTP instead"
+                  : "Log in with password instead"}
+              </AppText>
+            </Pressable>
 
             <View style={styles.divider}>
               <View style={[styles.line, { backgroundColor: colors.border }]} />
@@ -329,6 +468,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
     paddingVertical: 4,
+  },
+  modeSwitch: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 2,
   },
   legal: {
     alignItems: "center",
