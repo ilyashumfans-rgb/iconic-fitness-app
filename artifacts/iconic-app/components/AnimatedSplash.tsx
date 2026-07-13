@@ -12,15 +12,12 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-import { AppText } from "@/components/AppText";
-
 const BRAND_BG = "#0A0C08";
 const BRAND_LIME = "#C7F000";
-const BRAND_INK = "#F4F7EC";
 
 /**
  * Premium launch animation: a glowing lime mark springs in, a halo pulses,
- * the ICONIC wordmark rises, then the whole overlay fades to reveal the app.
+ * then the whole overlay fades to reveal the app.
  * Always renders the dark, branded palette regardless of system light/dark mode.
  */
 export function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
@@ -29,9 +26,6 @@ export function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
   const markOpacity = useSharedValue(0);
   const glow = useSharedValue(0);
   const ring = useSharedValue(0.4);
-  const wordOpacity = useSharedValue(0);
-  const wordTranslate = useSharedValue(18);
-  const taglineOpacity = useSharedValue(0);
 
   useEffect(() => {
     markOpacity.value = withTiming(1, { duration: 360 });
@@ -58,29 +52,13 @@ export function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
       ),
     );
 
-    wordOpacity.value = withDelay(420, withTiming(1, { duration: 480 }));
-    wordTranslate.value = withDelay(
-      420,
-      withSpring(0, { damping: 14, stiffness: 120 }),
-    );
-    taglineOpacity.value = withDelay(720, withTiming(1, { duration: 480 }));
-
     container.value = withDelay(
       1850,
       withTiming(0, { duration: 480, easing: Easing.in(Easing.quad) }, (done) => {
         if (done) runOnJS(onFinish)();
       }),
     );
-  }, [
-    container,
-    glow,
-    markOpacity,
-    markScale,
-    ring,
-    taglineOpacity,
-    wordOpacity,
-    wordTranslate,
-  ]);
+  }, [container, glow, markOpacity, markScale, ring]);
 
   const containerStyle = useAnimatedStyle(() => ({ opacity: container.value }));
   const markStyle = useAnimatedStyle(() => ({
@@ -95,12 +73,6 @@ export function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
     opacity: Math.max(0, 0.5 - (ring.value - 0.4) * 0.5),
     transform: [{ scale: ring.value }],
   }));
-  const wordStyle = useAnimatedStyle(() => ({
-    opacity: wordOpacity.value,
-    transform: [{ translateY: wordTranslate.value }],
-  }));
-  const taglineStyle = useAnimatedStyle(() => ({ opacity: taglineOpacity.value }));
-
   return (
     <Animated.View
       style={[
@@ -135,21 +107,6 @@ export function AnimatedSplash({ onFinish }: { onFinish: () => void }) {
           </Animated.View>
         </View>
 
-        <Animated.View style={[styles.wordRow, wordStyle]}>
-          <AppText weight="700" size={38} color={BRAND_INK} style={styles.word}>
-            ICONIC
-          </AppText>
-        </Animated.View>
-        <Animated.View style={taglineStyle}>
-          <AppText
-            weight="600"
-            size={13}
-            color={BRAND_LIME}
-            style={styles.tagline}
-          >
-            FITNESS
-          </AppText>
-        </Animated.View>
       </View>
     </Animated.View>
   );
@@ -182,7 +139,4 @@ const styles = StyleSheet.create({
     width: 168,
     height: 168,
   },
-  wordRow: { flexDirection: "row" },
-  word: { letterSpacing: 8, marginLeft: 8 },
-  tagline: { letterSpacing: 10, marginTop: 6, marginLeft: 10 },
 });
