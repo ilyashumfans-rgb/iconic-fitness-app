@@ -388,6 +388,10 @@ export default function HomeScreen() {
   // plan-card fallback, so the section doesn't flash cards then swap to tiles.
   const packageCategoriesSettled =
     packageCategoriesQuery.isSuccess || packageCategoriesQuery.isError;
+  // One category card fills the visible width (screen minus the 20px screen
+  // padding on each side); the rest peek in via horizontal swipe.
+  const { width: screenW } = useWindowDimensions();
+  const catCardW = screenW - 40;
 
   const refetchAll = useCallback(() => {
     void gymsQuery.refetch();
@@ -482,7 +486,16 @@ export default function HomeScreen() {
             onAction={() => router.push("/packages")}
           />
           {packageCategories.length > 0 ? (
-            <View style={styles.catTileList}>
+            // Single column: one card visible at a time; swipe sideways to
+            // move between categories (snap paging).
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={catCardW + 12}
+              decelerationRate="fast"
+              contentContainerStyle={styles.catTileList}
+              style={{ marginBottom: 20 }}
+            >
               {packageCategories.map((c) => {
                 const count = annualAll.filter(
                   (p) => (p.categoryId ?? 0) === c.id,
@@ -492,6 +505,7 @@ export default function HomeScreen() {
                     key={c.id}
                     category={c}
                     count={count}
+                    width={catCardW}
                     onPress={() =>
                       count === 0
                         ? router.push("/book-package")
@@ -503,7 +517,7 @@ export default function HomeScreen() {
                   />
                 );
               })}
-            </View>
+            </ScrollView>
           ) : (
             <View style={{ gap: 12, marginBottom: 8 }}>
               {packages.map((plan) => (
@@ -1615,10 +1629,12 @@ function CategoryCard({
 function PackageCategoryTile({
   category,
   count,
+  width,
   onPress,
 }: {
   category: PackageCategory;
   count: number;
+  width: number;
   onPress: () => void;
 }) {
   const colors = useColors();
@@ -1630,6 +1646,7 @@ function PackageCategoryTile({
       style={({ pressed }) => [
         styles.pkgCatCard,
         {
+          width,
           backgroundColor: colors.card,
           borderColor: colors.border,
           transform: [{ scale: pressed ? 0.98 : 1 }],
@@ -2062,7 +2079,8 @@ const styles = StyleSheet.create({
   },
   catTileList: {
     gap: 12,
-    marginBottom: 20,
+    paddingRight: 20,
+    paddingVertical: 4,
   },
   pkgCatCard: {
     flexDirection: "row",
