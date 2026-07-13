@@ -22,7 +22,7 @@ export default function SportsScreen() {
         }}
       >
         <AppText weight="700" size={22}>
-          Sports & Fitness
+          Branches
         </AppText>
       </View>
       <SiteWebView url={exploreUrl} />

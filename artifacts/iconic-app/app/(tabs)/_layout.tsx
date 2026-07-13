@@ -72,7 +72,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="sports"
         options={{
-          title: "Sports & Fitness",
+          title: "Branches",
           tabBarIcon: ({ color, size }) => (
             <Feather name="award" size={size} color={color} />
           ),
