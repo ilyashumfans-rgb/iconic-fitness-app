@@ -483,6 +483,9 @@ export default function HomeScreen() {
         }
       />
 
+      {/* Watch our story (member testimonials) — right below the slider */}
+      <StorySection />
+
       {/* Current membership — pinned to the top for members with a plan */}
       {membership ? (
         <MembershipStatusCard
@@ -577,9 +580,6 @@ export default function HomeScreen() {
           )}
         </>
       ) : null}
-
-      {/* Watch our story (member testimonials) */}
-      <StorySection />
 
       {/* Book a class */}
       <SectionHeader
