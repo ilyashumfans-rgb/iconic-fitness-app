@@ -792,7 +792,9 @@ function HeroSlider({
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const SLIDE_W = width; // full-bleed, edge to edge
+  // Card-style slider sized like the AI Coach card: inset within the
+  // Screen's 20px horizontal padding instead of full-bleed.
+  const SLIDE_W = width - 40;
   const scrollRef = useRef<ScrollView>(null);
   const [active, setActive] = useState(0);
   const activeRef = useRef(0);
@@ -1884,23 +1886,21 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
 
-  // Slider — full-bleed banner pinned to the top of the screen. Negative
-  // margins cancel the Screen's horizontal padding and top padding so it sits
-  // edge-to-edge and flush with the top.
+  // Slider — rounded card matching the AI Coach card's footprint (inset
+  // within the Screen's horizontal padding, ~226 tall, 30px corners).
+  // Shadow lives on the wrapper, clipping on the inner slide (iOS clips a
+  // view's own shadow when it also has overflow:hidden).
   sliderWrap: {
-    marginHorizontal: -20,
-    marginTop: 0,
+    marginTop: 8,
     marginBottom: 24,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
+    borderRadius: 30,
     ...SOFT_SHADOW,
   },
   slide: {
-    height: 320,
+    height: 226,
     overflow: "hidden",
     justifyContent: "flex-end",
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
+    borderRadius: 30,
   },
   slideBadge: {
     position: "absolute",
