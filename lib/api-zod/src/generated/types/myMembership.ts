@@ -19,4 +19,10 @@ export interface MyMembership {
   source?: MyMembershipSource;
   /** Member photo hosted by YoActiv, when one exists there */
   photoUrl?: string | null;
+  /** ISO date the current plan started (YoActiv only) */
+  startedOn?: string | null;
+  /** Home branch of the current plan (empty when unknown) */
+  branchName?: string;
+  /** False when the upstream system reported no expiry date (renewsOn is then a placeholder) */
+  expiryKnown?: boolean;
 }

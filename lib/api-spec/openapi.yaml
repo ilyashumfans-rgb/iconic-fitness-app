@@ -359,6 +359,26 @@ paths:
                 oneOf:
                   - $ref: "#/components/schemas/MyMembership"
                   - type: "null"
+  /memberships/mine/renew:
+    post:
+      operationId: createMembershipRenewal
+      tags: [memberships]
+      summary: Start an online renewal payment for the member's current YoActiv plan
+      responses:
+        "200":
+          description: Pending renewal purchase created; pay via paymentUrl
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PackageBookingCreated" }
+        "409":
+          description: Online renewal isn't available (no linked plan or branch)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [error]
+                properties:
+                  error: { type: string }
   /memberships/mine/payments:
     get:
       operationId: listMyMembershipPayments
@@ -1210,6 +1230,22 @@ components:
             type: string,
             nullable: true,
             description: "Member photo hosted by YoActiv, when one exists there",
+          }
+        startedOn:
+          {
+            type: string,
+            nullable: true,
+            description: "ISO date the current plan started (YoActiv only)",
+          }
+        branchName:
+          {
+            type: string,
+            description: "Home branch of the current plan (empty when unknown)",
+          }
+        expiryKnown:
+          {
+            type: boolean,
+            description: "False when the upstream system reported no expiry date (renewsOn is then a placeholder)",
           }
     LiveTrainer:
       type: object

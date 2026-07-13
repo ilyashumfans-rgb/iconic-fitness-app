@@ -31,6 +31,7 @@ import type {
   CheckinInput,
   ClassSession,
   ClassSessionDetail,
+  CreateMembershipRenewal409,
   CreatePackageBookingRequest,
   CreateTrainerBookingRequest,
   DailySummary,
@@ -1636,6 +1637,76 @@ export function useGetMyMembership<TData = Awaited<ReturnType<typeof getMyMember
 
 
 
+
+export const getCreateMembershipRenewalUrl = () => {
+
+
+
+
+  return `/api/memberships/mine/renew`
+}
+
+/**
+ * @summary Start an online renewal payment for the member's current YoActiv plan
+ */
+export const createMembershipRenewal = async ( options?: RequestInit): Promise<PackageBookingCreated> => {
+
+  return customFetch<PackageBookingCreated>(getCreateMembershipRenewalUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getCreateMembershipRenewalMutationOptions = <TError = ErrorType<CreateMembershipRenewal409>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMembershipRenewal>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createMembershipRenewal>>, TError,void, TContext> => {
+
+const mutationKey = ['createMembershipRenewal'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMembershipRenewal>>, void> = () => {
+
+
+          return  createMembershipRenewal(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateMembershipRenewalMutationResult = NonNullable<Awaited<ReturnType<typeof createMembershipRenewal>>>
+
+    export type CreateMembershipRenewalMutationError = ErrorType<CreateMembershipRenewal409>
+
+    /**
+ * @summary Start an online renewal payment for the member's current YoActiv plan
+ */
+export const useCreateMembershipRenewal = <TError = ErrorType<CreateMembershipRenewal409>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMembershipRenewal>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createMembershipRenewal>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCreateMembershipRenewalMutationOptions(options));
+    }
 
 export const getListMyMembershipPaymentsUrl = () => {
 

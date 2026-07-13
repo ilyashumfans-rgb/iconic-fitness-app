@@ -26,6 +26,7 @@ export * from './checkinInputMethod';
 export * from './classSession';
 export * from './classSessionDetail';
 export * from './classSessionIntensity';
+export * from './createMembershipRenewal409';
 export * from './createPackageBookingRequest';
 export * from './createTrainerBookingRequest';
 export * from './dailySummary';

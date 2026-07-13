@@ -527,8 +527,23 @@ export const GetMyMembershipResponse = zod.union([zod.object({
   "gymsAccessed": zod.number(),
   "status": zod.enum(['active', 'paused', 'expired']),
   "source": zod.enum(['local', 'yoactiv']).optional(),
-  "photoUrl": zod.string().nullish().describe('Member photo hosted by YoActiv, when one exists there')
+  "photoUrl": zod.string().nullish().describe('Member photo hosted by YoActiv, when one exists there'),
+  "startedOn": zod.string().nullish().describe('ISO date the current plan started (YoActiv only)'),
+  "branchName": zod.string().optional().describe('Home branch of the current plan (empty when unknown)'),
+  "expiryKnown": zod.boolean().optional().describe('False when the upstream system reported no expiry date (renewsOn is then a placeholder)')
 }),zod.null()])
+
+
+/**
+ * @summary Start an online renewal payment for the member's current YoActiv plan
+ */
+export const CreateMembershipRenewalResponse = zod.object({
+  "id": zod.number(),
+  "status": zod.enum(['pending', 'paid', 'failed']),
+  "amountInr": zod.number(),
+  "paymentUrl": zod.string(),
+  "token": zod.string().optional().describe('Access token for guest status polling (only returned to the purchase creator)')
+})
 
 
 /**

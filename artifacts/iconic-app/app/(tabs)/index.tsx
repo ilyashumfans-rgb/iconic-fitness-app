@@ -7,10 +7,13 @@ import {
   getListGymsQueryKey,
   getListMembershipsQueryKey,
   getListMyBookingsQueryKey,
+  getGetPackageBookingQueryKey,
   useAddWater,
   useCreateBooking,
+  useCreateMembershipRenewal,
   useGetMe,
   useGetMyMembership,
+  useGetPackageBooking,
   useGetTrackingSummary,
   type MyMembership,
   useListClasses,
@@ -140,103 +143,342 @@ function daysUntilIst(dateIso: string): number {
 }
 
 /** Plan card pinned to the top of Home for members with a plan. */
+// Fixed premium palette — the card always renders as a dark "black card"
+// with gold accents regardless of app theme.
+const PREMIUM = {
+  bgTop: "#15130C",
+  bgBottom: "#0B0A06",
+  gold: "#E8C56A",
+  goldDeep: "#B8933B",
+  hairline: "rgba(232,197,106,0.35)",
+  text: "#F5EFDF",
+  faint: "rgba(245,239,223,0.55)",
+};
+
 function MembershipStatusCard({
   membership,
+  memberName,
   onManage,
 }: {
   membership: MyMembership;
+  memberName: string;
   onManage: () => void;
 }) {
-  const colors = useColors();
+  const queryClient = useQueryClient();
+  // When the gym system reported no expiry date, renewsOn is a placeholder —
+  // never show urgency or a renewal push off the back of it.
+  const expiryKnown = membership.expiryKnown !== false;
   const days = daysUntilIst(membership.renewsOn);
-  const isExpired = membership.status === "expired" || days < 0;
+  const isExpired =
+    membership.status === "expired" || (expiryKnown && days < 0);
   const expiringSoon =
+    expiryKnown &&
     !isExpired &&
     membership.status === "active" &&
     days <= EXPIRY_SOON_DAYS;
-  const alert = isExpired || expiringSoon;
-  const accent = isExpired ? "#FF6B6B" : expiringSoon ? "#FFB020" : colors.primary;
-  const dateLabel = istDateLabel(istDateStr(new Date(membership.renewsOn)));
+  const needsRenewal = isExpired || expiringSoon;
+  const alertColor = isExpired ? "#FF6B6B" : "#FFB020";
+  const expiryLabel = expiryKnown
+    ? istDateLabel(istDateStr(new Date(membership.renewsOn)))
+    : "—";
+  const sinceLabel = membership.startedOn
+    ? istDateLabel(membership.startedOn)
+    : null;
 
-  const renewText = isExpired
-    ? `Expired on ${dateLabel} — renew to keep access`
-    : expiringSoon
-      ? days <= 0
-        ? `Expires today (${dateLabel}) — renew now`
-        : `Expiring in ${days} day${days === 1 ? "" : "s"} · ${dateLabel}`
-      : `Renews ${dateLabel}`;
+  // ── One-tap renewal through the YoActiv payment gateway ──────────────────
+  const renew = useCreateMembershipRenewal();
+  const [bookingId, setBookingId] = useState<number | null>(null);
+  const [bookingToken, setBookingToken] = useState<string | null>(null);
+  const pollParams = bookingToken ? { token: bookingToken } : undefined;
+  const statusQuery = useGetPackageBooking(bookingId ?? 0, pollParams, {
+    query: {
+      enabled: bookingId !== null,
+      queryKey: getGetPackageBookingQueryKey(bookingId ?? 0, pollParams),
+      refetchInterval: (q) =>
+        q.state.data?.status === "pending" ? 4000 : false,
+    },
+  });
+  const payStatus = bookingId !== null ? statusQuery.data?.status : undefined;
+
+  useEffect(() => {
+    if (payStatus === "paid") {
+      // Plan changed upstream — refresh membership + payment history.
+      queryClient.invalidateQueries({ queryKey: getGetMyMembershipQueryKey() });
+    }
+  }, [payStatus, queryClient]);
+
+  const startRenewal = useCallback(async () => {
+    try {
+      const created = await renew.mutateAsync();
+      setBookingId(created.id);
+      setBookingToken(created.token ?? null);
+      await openExternal(created.paymentUrl);
+    } catch (err) {
+      // Online renewal unavailable (unlinked plan/branch) — offer the website.
+      Alert.alert(
+        "Online renewal unavailable",
+        err instanceof Error && err.message
+          ? err.message
+          : "Please try again or renew via our website.",
+        [
+          { text: "Open website", onPress: onManage },
+          { text: "Close", style: "cancel" },
+        ],
+      );
+    }
+  }, [renew, onManage]);
+
+  const initials = (memberName || "M")
+    .split(/\s+/)
+    .map((w) => w[0] ?? "")
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const renewLabel =
+    payStatus === "pending"
+      ? "Waiting for payment…"
+      : payStatus === "failed"
+        ? "Payment failed — try again"
+        : renew.isPending
+          ? "Starting payment…"
+          : isExpired
+            ? "Renew now"
+            : "Renew early";
 
   return (
-    <Card style={{ gap: 12, marginBottom: 16 }}>
-      <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-        <View style={{ flex: 1 }}>
-          <AppText muted size={11} style={{ letterSpacing: 1 }}>
-            YOUR MEMBERSHIP
+    <View style={[styles.premiumWrap, CARD_SHADOW]}>
+      <LinearGradient
+        colors={[PREMIUM.bgTop, PREMIUM.bgBottom]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0.6, y: 1 }}
+        style={styles.premiumCard}
+      >
+        {/* Gold sheen sweeping the top edge */}
+        <LinearGradient
+          colors={["transparent", PREMIUM.gold + "2E", "transparent"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0.4 }}
+          style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}
+        />
+
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <Feather name="award" size={14} color={PREMIUM.gold} />
+          <AppText
+            size={11}
+            weight="700"
+            color={PREMIUM.gold}
+            style={{ letterSpacing: 2.4 }}
+          >
+            PREMIUM MEMBER
           </AppText>
-          <AppText weight="700" size={20} style={{ marginTop: 2 }}>
-            {membership.planName}
-          </AppText>
+          <View style={{ flex: 1 }} />
+          <View
+            style={[
+              styles.premiumBadge,
+              {
+                borderColor: needsRenewal ? alertColor : PREMIUM.hairline,
+                backgroundColor: needsRenewal
+                  ? alertColor + "22"
+                  : "rgba(232,197,106,0.12)",
+              },
+            ]}
+          >
+            <AppText
+              size={11}
+              weight="700"
+              color={needsRenewal ? alertColor : PREMIUM.gold}
+              style={{ textTransform: "capitalize" }}
+            >
+              {membership.status}
+            </AppText>
+          </View>
         </View>
+
         <View
           style={{
-            paddingHorizontal: 10,
-            paddingVertical: 4,
-            borderRadius: 999,
-            backgroundColor: accent + "22",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 14,
+            marginTop: 16,
           }}
         >
-          <AppText
-            size={12}
-            weight="700"
-            color={accent}
-            style={{ textTransform: "capitalize" }}
+          <View style={styles.premiumAvatarRing}>
+            {membership.photoUrl ? (
+              <Image
+                source={{ uri: membership.photoUrl }}
+                style={styles.premiumAvatar}
+              />
+            ) : (
+              <View
+                style={[
+                  styles.premiumAvatar,
+                  {
+                    backgroundColor: "rgba(232,197,106,0.14)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  },
+                ]}
+              >
+                <AppText weight="700" size={20} color={PREMIUM.gold}>
+                  {initials}
+                </AppText>
+              </View>
+            )}
+          </View>
+          <View style={{ flex: 1 }}>
+            <AppText weight="700" size={18} color={PREMIUM.text}>
+              {memberName || "Iconic Member"}
+            </AppText>
+            <AppText size={13} color={PREMIUM.faint} style={{ marginTop: 2 }}>
+              {membership.planName}
+            </AppText>
+            {membership.branchName ? (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 5,
+                  marginTop: 3,
+                }}
+              >
+                <Feather name="map-pin" size={11} color={PREMIUM.faint} />
+                <AppText size={12} color={PREMIUM.faint}>
+                  {membership.branchName}
+                </AppText>
+              </View>
+            ) : null}
+          </View>
+        </View>
+
+        <View style={styles.premiumDivider} />
+
+        <View style={{ flexDirection: "row" }}>
+          <View style={{ flex: 1 }}>
+            <AppText size={11} color={PREMIUM.faint} style={{ letterSpacing: 1 }}>
+              VALID FROM
+            </AppText>
+            <AppText
+              weight="700"
+              size={15}
+              color={PREMIUM.text}
+              style={{ marginTop: 3 }}
+            >
+              {sinceLabel ?? "—"}
+            </AppText>
+          </View>
+          <View style={{ flex: 1 }}>
+            <AppText size={11} color={PREMIUM.faint} style={{ letterSpacing: 1 }}>
+              {isExpired ? "EXPIRED ON" : "VALID TILL"}
+            </AppText>
+            <AppText
+              weight="700"
+              size={15}
+              color={needsRenewal ? alertColor : PREMIUM.text}
+              style={{ marginTop: 3 }}
+            >
+              {expiryLabel}
+            </AppText>
+          </View>
+          {!isExpired && expiryKnown ? (
+            <View style={{ alignItems: "flex-end" }}>
+              <AppText size={11} color={PREMIUM.faint} style={{ letterSpacing: 1 }}>
+                DAYS LEFT
+              </AppText>
+              <AppText
+                weight="700"
+                size={15}
+                color={expiringSoon ? alertColor : PREMIUM.gold}
+                style={{ marginTop: 3 }}
+              >
+                {Math.max(days, 0)}
+              </AppText>
+            </View>
+          ) : null}
+        </View>
+
+        {payStatus === "paid" ? (
+          <View
+            style={[
+              styles.premiumRenewStrip,
+              { borderColor: "#3DDC84", backgroundColor: "#3DDC8422" },
+            ]}
           >
-            {membership.status}
-          </AppText>
-        </View>
-      </View>
-
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        <Feather
-          name={alert ? "alert-triangle" : "calendar"}
-          size={14}
-          color={alert ? accent : colors.mutedForeground}
-        />
-        <AppText
-          size={13}
-          weight={alert ? "700" : "400"}
-          color={alert ? accent : undefined}
-        >
-          {renewText}
-        </AppText>
-      </View>
-
-      <View style={{ flexDirection: "row", gap: 12 }}>
-        <View style={{ flex: 1 }}>
-          <AppText muted size={12}>
-            Classes this month
-          </AppText>
-          <AppText weight="700" size={16}>
-            {membership.classesUsed} / {membership.classesIncluded}
-          </AppText>
-        </View>
-        <View style={{ flex: 1 }}>
-          <AppText muted size={12}>
-            Gyms accessed
-          </AppText>
-          <AppText weight="700" size={16}>
-            {membership.gymsAccessed}
-          </AppText>
-        </View>
-      </View>
-
-      <Button
-        label={alert ? "Renew plan" : "Manage plan"}
-        variant="secondary"
-        icon="credit-card"
-        onPress={onManage}
-      />
-    </Card>
+            <Feather name="check-circle" size={16} color="#3DDC84" />
+            <AppText size={13} weight="700" color="#3DDC84" style={{ flex: 1 }}>
+              Payment received — your plan is being renewed
+            </AppText>
+          </View>
+        ) : needsRenewal ? (
+          <>
+            <View
+              style={[
+                styles.premiumRenewStrip,
+                { borderColor: alertColor, backgroundColor: alertColor + "1C" },
+              ]}
+            >
+              <Feather name="alert-triangle" size={16} color={alertColor} />
+              <AppText size={13} weight="700" color={alertColor} style={{ flex: 1 }}>
+                {isExpired
+                  ? `Expired on ${expiryLabel} — renew to keep access`
+                  : days <= 0
+                    ? `Expires today — renew to stay active`
+                    : `Expiring in ${days} day${days === 1 ? "" : "s"}`}
+              </AppText>
+            </View>
+            <Pressable
+              onPress={startRenewal}
+              disabled={renew.isPending || payStatus === "pending"}
+            >
+              {({ pressed }) => (
+                <LinearGradient
+                  colors={[PREMIUM.gold, PREMIUM.goldDeep]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[
+                    styles.premiumRenewBtn,
+                    {
+                      opacity:
+                        pressed || renew.isPending || payStatus === "pending"
+                          ? 0.75
+                          : 1,
+                    },
+                  ]}
+                >
+                  <Feather name="credit-card" size={16} color="#100E07" />
+                  <AppText weight="700" size={15} color="#100E07">
+                    {renewLabel}
+                  </AppText>
+                </LinearGradient>
+              )}
+            </Pressable>
+            <AppText
+              size={11}
+              color={PREMIUM.faint}
+              style={{ textAlign: "center", marginTop: 8 }}
+            >
+              Secure payment via our gym payment gateway
+            </AppText>
+          </>
+        ) : (
+          <Pressable onPress={onManage} style={{ marginTop: 16 }}>
+            {({ pressed }) => (
+              <View
+                style={[
+                  styles.premiumManageBtn,
+                  { opacity: pressed ? 0.8 : 1 },
+                ]}
+              >
+                <AppText weight="700" size={14} color={PREMIUM.gold}>
+                  Manage plan
+                </AppText>
+                <Feather name="chevron-right" size={16} color={PREMIUM.gold} />
+              </View>
+            )}
+          </Pressable>
+        )}
+      </LinearGradient>
+    </View>
   );
 }
 
@@ -653,10 +895,11 @@ export default function HomeScreen() {
         }
       />
 
-      {/* Current membership — for members with a plan */}
+      {/* Current membership — premium member card with one-tap renewal */}
       {membership ? (
         <MembershipStatusCard
           membership={membership}
+          memberName={meQuery.data?.name ?? ""}
           onManage={() => openExternal(membershipsUrl)}
         />
       ) : null}
@@ -2014,6 +2257,74 @@ const styles = StyleSheet.create({
 
   // Slider — rounded card matching the AI Coach card's footprint (inset
   // within the Screen's horizontal padding, ~226 tall, 30px corners).
+  // ── Premium member card ────────────────────────────────────────────────
+  // Shadow on the wrapper, clipping on the gradient (iOS clips a view's own
+  // shadow when it also has overflow:hidden).
+  premiumWrap: {
+    marginBottom: 16,
+    borderRadius: 24,
+  },
+  premiumCard: {
+    borderRadius: 24,
+    overflow: "hidden",
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "rgba(232,197,106,0.35)",
+  },
+  premiumBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  premiumAvatarRing: {
+    width: 66,
+    height: 66,
+    borderRadius: 33,
+    borderWidth: 2,
+    borderColor: "#E8C56A",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  premiumAvatar: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+  },
+  premiumDivider: {
+    height: 1,
+    backgroundColor: "rgba(232,197,106,0.18)",
+    marginVertical: 16,
+  },
+  premiumRenewStrip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 16,
+    marginBottom: 12,
+  },
+  premiumRenewBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderRadius: 16,
+    paddingVertical: 14,
+  },
+  premiumManageBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    borderRadius: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: "rgba(232,197,106,0.35)",
+  },
   // Shadow lives on the wrapper, clipping on the inner slide (iOS clips a
   // view's own shadow when it also has overflow:hidden).
   sliderWrap: {
