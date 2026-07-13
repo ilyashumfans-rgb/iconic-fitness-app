@@ -482,13 +482,8 @@ export default function HomeScreen() {
             onAction={() => router.push("/packages")}
           />
           {packageCategories.length > 0 ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.catTileRow}
-              style={{ marginBottom: 20 }}
-            >
-              {packageCategories.map((c, i) => {
+            <View style={styles.catTileList}>
+              {packageCategories.map((c) => {
                 const count = annualAll.filter(
                   (p) => (p.categoryId ?? 0) === c.id,
                 ).length;
@@ -497,7 +492,6 @@ export default function HomeScreen() {
                     key={c.id}
                     category={c}
                     count={count}
-                    index={i}
                     onPress={() =>
                       count === 0
                         ? router.push("/book-package")
@@ -509,7 +503,7 @@ export default function HomeScreen() {
                   />
                 );
               })}
-            </ScrollView>
+            </View>
           ) : (
             <View style={{ gap: 12, marginBottom: 8 }}>
               {packages.map((plan) => (
@@ -1613,79 +1607,71 @@ function CategoryCard({
 }
 
 /**
- * Compact package-category tile with a subtle 3D look: perspective tilt,
- * layered shadow (on an outer wrapper — iOS clips shadows under
- * overflow:hidden) and a glass highlight along the top edge.
+ * Package-category card: image on the left, content (name, package count,
+ * "View packages" link) on the right. Shadow lives on the Pressable wrapper;
+ * only the media block clips (iOS drops a view's own shadow under
+ * overflow:hidden).
  */
 function PackageCategoryTile({
   category,
   count,
-  index,
   onPress,
 }: {
   category: PackageCategory;
   count: number;
-  index: number;
   onPress: () => void;
 }) {
   const colors = useColors();
   const uri = resolveImageUrl(category.imageUrl ?? "");
-  // Alternate the tilt direction so the row reads like angled 3D panels.
-  const tilt = index % 2 === 0 ? "8deg" : "-8deg";
 
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
-        styles.catTileShadow,
-        { transform: [{ scale: pressed ? 0.95 : 1 }] },
+        styles.pkgCatCard,
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.border,
+          transform: [{ scale: pressed ? 0.98 : 1 }],
+        },
       ]}
     >
-      <View
-        style={[
-          styles.catTile,
-          {
-            backgroundColor: colors.card,
-            transform: [{ perspective: 620 }, { rotateY: tilt }],
-          },
-        ]}
-      >
+      <View style={styles.pkgCatMedia}>
         {uri ? (
-          <Image source={{ uri }} style={StyleSheet.absoluteFill} />
+          <Image
+            source={{ uri }}
+            style={StyleSheet.absoluteFill}
+            resizeMode="cover"
+          />
         ) : (
           <LinearGradient
             colors={colors.primaryGradient as [string, string]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-        )}
-        <LinearGradient
-          colors={["transparent", "rgba(10,12,8,0.92)"]}
-          start={{ x: 0.5, y: 0.25 }}
-          end={{ x: 0.5, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <LinearGradient
-          colors={["rgba(255,255,255,0.22)", "transparent"]}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={styles.catTileGloss}
-          pointerEvents="none"
-        />
-        <View style={{ padding: 12 }}>
-          <AppText weight="700" size={14} color="#FFFFFF" numberOfLines={1}>
-            {category.name}
-          </AppText>
-          <AppText
-            size={11}
-            color="#FFFFFF"
-            style={{ opacity: 0.85, marginTop: 2 }}
+            style={[
+              StyleSheet.absoluteFill,
+              { alignItems: "center", justifyContent: "center" },
+            ]}
           >
-            {count > 0
-              ? `${count} package${count === 1 ? "" : "s"}`
-              : "View packages"}
+            <Feather name="grid" size={24} color="#0A0C08" />
+          </LinearGradient>
+        )}
+      </View>
+
+      <View style={styles.pkgCatBody}>
+        <AppText weight="700" size={16} numberOfLines={1}>
+          {category.name}
+        </AppText>
+        <AppText muted size={12} numberOfLines={1} style={{ marginTop: 2 }}>
+          {count > 0
+            ? `${count} package${count === 1 ? "" : "s"}`
+            : "Live plans at your branch"}
+        </AppText>
+        <View style={styles.pkgCatFoot}>
+          <AppText weight="600" size={13} color={colors.primary}>
+            View packages
           </AppText>
+          <Feather name="chevron-right" size={16} color={colors.primary} />
         </View>
       </View>
     </Pressable>
@@ -2074,29 +2060,34 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     ...SOFT_SHADOW,
   },
-  catTileRow: {
-    gap: 14,
-    paddingRight: 20,
-    paddingVertical: 8,
-    paddingLeft: 4,
+  catTileList: {
+    gap: 12,
+    marginBottom: 20,
   },
-  catTileShadow: {
-    borderRadius: 20,
+  pkgCatCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 10,
+    gap: 12,
     ...CARD_SHADOW,
   },
-  catTile: {
-    width: 132,
-    height: 148,
-    borderRadius: 20,
+  pkgCatMedia: {
+    width: 92,
+    height: 84,
+    borderRadius: 12,
     overflow: "hidden",
-    justifyContent: "flex-end",
   },
-  catTileGloss: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 52,
+  pkgCatBody: {
+    flex: 1,
+    paddingRight: 4,
+  },
+  pkgCatFoot: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+    marginTop: 8,
   },
   slide: {
     height: 226,
