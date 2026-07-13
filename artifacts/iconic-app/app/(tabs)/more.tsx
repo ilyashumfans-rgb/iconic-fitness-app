@@ -1,8 +1,16 @@
 import { useClerk } from "@clerk/expo";
+import { Feather } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, Platform, StyleSheet, Switch, View } from "react-native";
+import {
+  Alert,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Switch,
+  View,
+} from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
@@ -18,6 +26,13 @@ import {
   cancelActionReminders,
   scheduleActionReminders,
 } from "@/lib/notifications";
+
+type MoreLink = {
+  title: string;
+  subtitle: string;
+  icon: keyof typeof Feather.glyphMap;
+  action: () => void;
+};
 
 const THEME_OPTIONS: { mode: ThemeMode; label: string }[] = [
   { mode: "light", label: "Light" },
@@ -46,6 +61,45 @@ export default function MoreScreen() {
   useEffect(() => {
     void areRemindersOn().then(setReminderOn);
   }, []);
+
+  const links: MoreLink[] = [
+    {
+      title: "Train",
+      subtitle: "Workouts, programs and guided sessions",
+      icon: "activity",
+      action: () => router.push("/train"),
+    },
+    {
+      title: "Classes",
+      subtitle: "Browse and book group classes",
+      icon: "calendar",
+      action: () => router.push("/classes"),
+    },
+    {
+      title: "Progress",
+      subtitle: "Track your stats, streaks and challenges",
+      icon: "bar-chart-2",
+      action: () => router.push("/progress"),
+    },
+    {
+      title: "Membership Plans",
+      subtitle: "One pass. Every gym. Pick your plan",
+      icon: "credit-card",
+      action: () => router.push("/plans"),
+    },
+    {
+      title: "Notifications",
+      subtitle: "Updates, offers and announcements",
+      icon: "bell",
+      action: () => router.push("/notifications"),
+    },
+    {
+      title: "Profile",
+      subtitle: "Goals, reminders, theme and account",
+      icon: "user",
+      action: () => router.push("/profile"),
+    },
+  ];
 
   const onToggleReminder = async (value: boolean) => {
     if (Platform.OS === "web") {
@@ -105,9 +159,51 @@ export default function MoreScreen() {
   return (
     <Screen>
       <SectionHeader title="More" />
+      <View style={{ gap: 12 }}>
+        {links.map((link) => (
+          <Pressable key={link.title} onPress={link.action}>
+            <Card
+              tone="elevated"
+              style={{ flexDirection: "row", alignItems: "center", gap: 14 }}
+            >
+              <View
+                style={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: 14,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: colors.primary,
+                }}
+              >
+                <Feather
+                  name={link.icon}
+                  size={22}
+                  color={colors.primaryForeground}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <AppText weight="700" size={16}>
+                  {link.title}
+                </AppText>
+                <AppText muted size={13} style={{ marginTop: 2 }}>
+                  {link.subtitle}
+                </AppText>
+              </View>
+              <Feather
+                name="chevron-right"
+                size={22}
+                color={colors.mutedForeground}
+              />
+            </Card>
+          </Pressable>
+        ))}
+      </View>
 
       {/* Daily reminders */}
-      <SectionHeader title="Daily reminders" />
+      <View style={{ marginTop: 28 }}>
+        <SectionHeader title="Daily reminders" />
+      </View>
       <Card style={{ gap: 14 }}>
         <View style={styles.switchRow}>
           <View style={{ flex: 1 }}>
@@ -143,7 +239,9 @@ export default function MoreScreen() {
       </Card>
 
       {/* Appearance */}
-      <SectionHeader title="Appearance" />
+      <View style={{ marginTop: 28 }}>
+        <SectionHeader title="Appearance" />
+      </View>
       <Card style={{ gap: 14 }}>
         <View style={styles.switchRow}>
           <View style={{ flex: 1 }}>
