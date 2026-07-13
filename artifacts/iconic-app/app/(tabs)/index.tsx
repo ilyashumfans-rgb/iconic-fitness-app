@@ -47,8 +47,6 @@ import {
   type ViewStyle,
 } from "react-native";
 
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 import { AICoachCard } from "@/components/AICoachCard";
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
@@ -517,6 +515,7 @@ export default function HomeScreen() {
               }
             : undefined
         }
+        nearSlide={{ onOpenGym: () => openExternal(exploreUrl) }}
       />
 
       {/* Current membership — for members with a plan */}
@@ -529,9 +528,6 @@ export default function HomeScreen() {
 
       {/* Watch our story (member testimonials) */}
       <StorySection />
-
-      {/* Gyms near me (location-aware) */}
-      <NearbyGyms onOpenGym={() => openExternal(exploreUrl)} />
 
       {/* Top rated gyms — hidden for active members */}
       {showDiscovery ? (
@@ -784,6 +780,7 @@ type RenderSlide =
   | { key: string; type: "brand" }
   | { key: string; type: "gym"; gym: Gym }
   | { key: string; type: "admin"; slide: HomeSlide }
+  | { key: string; type: "near" }
   | { key: string; type: "ai" };
 
 function youtubeId(url: string): string | undefined {
@@ -814,6 +811,7 @@ function HeroSlider({
   onExplore,
   onOpenUrl,
   aiSlide,
+  nearSlide,
 }: {
   gyms: Gym[];
   isMember: boolean;
@@ -822,9 +820,10 @@ function HeroSlider({
   onOpenUrl: (url: string, title?: string) => void;
   /** When set, an AI coach slide is appended to the carousel (signed-in users). */
   aiSlide?: { needsAssessment: boolean; onPress: () => void };
+  /** When set, a "Gyms near me" slide is appended to the carousel. */
+  nearSlide?: { onOpenGym: () => void };
 }) {
   const colors = useColors();
-  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   // Card-style slider sized like the AI Coach card: inset within the
   // Screen's 20px horizontal padding instead of full-bleed.
@@ -871,11 +870,14 @@ function HeroSlider({
               gym: g,
             })),
           ];
+    // "Gyms near me" rides in the same carousel — swipe to find the closest
+    // branches (or enable location if it's off).
+    if (nearSlide) base.push({ key: "near", type: "near" as const });
     // Signed-in users get the AI coach as the last slide of the same carousel
     // so the banner and AI share one row — swipe to reach the coach.
     if (aiSlide) base.push({ key: "ai", type: "ai" as const });
     return base;
-  }, [visibleAdminSlides, gyms, aiSlide]);
+  }, [visibleAdminSlides, gyms, aiSlide, nearSlide]);
 
   const total = slides.length;
 
@@ -937,6 +939,14 @@ function HeroSlider({
         onMomentumScrollEnd={onMomentumEnd}
       >
         {slides.map((item, index) => {
+          if (item.type === "near") {
+            return (
+              <View key={item.key} style={{ width: SLIDE_W }}>
+                <NearbyGymsSlide onOpenGym={() => nearSlide?.onOpenGym()} />
+              </View>
+            );
+          }
+
           if (item.type === "ai") {
             return (
               <View key={item.key} style={{ width: SLIDE_W }}>
@@ -1555,7 +1565,12 @@ function CategoryCard({
   );
 }
 
-function NearbyGyms({ onOpenGym }: { onOpenGym: () => void }) {
+/**
+ * "Gyms near me" as a carousel slide. Before location is granted it's a
+ * gradient call-to-action (tap → request permission); once granted it shows
+ * the closest branch with its photo and distance (tap → explore gyms).
+ */
+function NearbyGymsSlide({ onOpenGym }: { onOpenGym: () => void }) {
   const colors = useColors();
   const { coords, status, request } = useUserLocation();
 
@@ -1572,124 +1587,114 @@ function NearbyGyms({ onOpenGym }: { onOpenGym: () => void }) {
       },
     },
   );
-  const nearby = useMemo(
-    () => (nearbyQuery.data ?? []).slice(0, 8),
-    [nearbyQuery.data],
-  );
+  const nearby = nearbyQuery.data ?? [];
+  const nearest = nearby[0];
+  const moreCount = Math.max(0, nearby.length - 1);
 
-  // Before the user shares location: a premium call-to-action card.
-  if (status === "idle" || status === "denied" || status === "error") {
-    const denied = status === "denied" || status === "error";
-    return (
-      <Animated.View
-        entering={FadeInDown.springify().damping(16)}
-        style={[
-          CARD_SHADOW,
-          { marginBottom: 28, borderRadius: 26, backgroundColor: "#0A0C08" },
-        ]}
-      >
-        <Pressable onPress={request}>
-          <View style={styles.nearCta}>
-            <LinearGradient
-              colors={colors.primaryGradient as [string, string]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-            <View style={styles.nearGlow} pointerEvents="none" />
-            <View style={styles.nearCtaIcon}>
-              <Feather name="navigation" size={26} color={colors.primary} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <AppText
-                weight="700"
-                size={11}
-                color={colors.primaryForeground}
-                style={{ opacity: 0.85, letterSpacing: 1.2 }}
-              >
-                {denied ? "LOCATION OFF" : "DISCOVER"}
-              </AppText>
-              <AppText
-                weight="700"
-                size={20}
-                color={colors.primaryForeground}
-                style={{ marginTop: 4 }}
-              >
-                {denied ? "Turn on location" : "Gyms near me"}
-              </AppText>
-              <AppText
-                size={13}
-                color={colors.primaryForeground}
-                style={{ marginTop: 5, opacity: 0.9 }}
-              >
-                {denied
-                  ? "Allow location access to see the closest branches."
-                  : "Find the closest Iconic branches around you."}
-              </AppText>
-              <View style={styles.nearCtaPill}>
-                <AppText weight="700" size={13} color={colors.primary}>
-                  {denied ? "Retry" : "Find gyms"}
-                </AppText>
-                <Feather name="arrow-right" size={14} color={colors.primary} />
-              </View>
-            </View>
-          </View>
-        </Pressable>
-      </Animated.View>
-    );
-  }
+  const needsLocation =
+    status === "idle" || status === "denied" || status === "error";
+  const denied = status === "denied" || status === "error";
+  const loading =
+    !needsLocation && (status === "loading" || nearbyQuery.isLoading);
+  const img = nearest ? resolveImageUrl(nearest.heroImage) : undefined;
+
+  const title = needsLocation
+    ? denied
+      ? "Turn on location"
+      : "Find gyms near you"
+    : loading
+      ? "Finding gyms near you…"
+      : nearbyQuery.isError
+        ? "Couldn’t load nearby gyms"
+        : nearest
+          ? nearest.name
+          : "No branches nearby yet";
+  const subtitle = needsLocation
+    ? denied
+      ? "Allow location access to see the closest branches."
+      : "See the closest Iconic branches around you."
+    : loading
+      ? "Hang tight — locating the closest branches."
+      : nearbyQuery.isError
+        ? "Something went wrong — explore all gyms instead."
+        : nearest
+          ? [
+            Number.isFinite(nearest.distanceKm)
+              ? `${nearest.distanceKm.toFixed(1)} km away`
+              : null,
+            moreCount > 0 ? `+${moreCount} more nearby` : null,
+          ]
+            .filter(Boolean)
+            .join(" · ") ||
+          nearest.area ||
+          nearest.city
+        : "Explore all gyms instead.";
+  const pill = needsLocation
+    ? denied
+      ? "Retry"
+      : "Enable location"
+    : "Explore gyms";
 
   return (
-    <>
-      <SectionHeader title="Gyms near me" />
-      {status === "loading" || nearbyQuery.isLoading ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.gymRow}
-          style={{ marginBottom: 28 }}
-        >
-          {[0, 1, 2].map((k) => (
-            <GymCardSkeleton key={k} />
-          ))}
-        </ScrollView>
-      ) : nearbyQuery.isError ? (
-        <Card style={{ marginBottom: 28 }}>
-          <AppText weight="700" size={15}>
-            Couldn’t load nearby gyms
-          </AppText>
-          <AppText muted size={13} style={{ marginTop: 4 }}>
-            Something went wrong fetching branches near you. Pull to refresh and try again.
-          </AppText>
-        </Card>
-      ) : nearby.length === 0 ? (
-        <Card style={{ marginBottom: 28 }}>
-          <AppText weight="700" size={15}>
-            No gyms found nearby
-          </AppText>
-          <AppText muted size={13} style={{ marginTop: 4 }}>
-            We couldn’t find branches close to you yet — explore all gyms instead.
-          </AppText>
-        </Card>
-      ) : (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.gymRow}
-          style={{ marginBottom: 28 }}
-        >
-          {nearby.map((g, i) => (
-            <GymCard
-              key={g.id}
-              gym={g}
-              index={i}
-              showDistance
-              onPress={onOpenGym}
+    <Pressable onPress={needsLocation ? request : onOpenGym}>
+      <View style={[styles.slide, { backgroundColor: colors.card }]}>
+        {img ? (
+          <>
+            <Image source={{ uri: img }} style={StyleSheet.absoluteFill} />
+            <LinearGradient
+              colors={["transparent", "rgba(10,12,8,0.92)"]}
+              start={{ x: 0.5, y: 0 }}
+              end={{ x: 0.5, y: 1 }}
+              style={StyleSheet.absoluteFill}
             />
-          ))}
-        </ScrollView>
-      )}
-    </>
+          </>
+        ) : (
+          <LinearGradient
+            colors={colors.primaryGradient as [string, string]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+        )}
+        <View style={styles.slideContent}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <Feather
+              name="navigation"
+              size={12}
+              color={colors.primaryForeground}
+            />
+            <AppText weight="700" size={12} color={colors.primaryForeground}>
+              GYMS NEAR ME
+            </AppText>
+          </View>
+          <AppText
+            weight="700"
+            size={24}
+            color={colors.primaryForeground}
+            style={{ marginTop: 6 }}
+            numberOfLines={1}
+          >
+            {title}
+          </AppText>
+          <AppText
+            size={13}
+            color={colors.primaryForeground}
+            style={{ marginTop: 4, opacity: 0.9 }}
+            numberOfLines={2}
+          >
+            {subtitle}
+          </AppText>
+          {!loading ? (
+            <View style={styles.sliderCtaPill}>
+              <AppText weight="700" size={13} color={colors.primary}>
+                {pill}
+              </AppText>
+              <Feather name="arrow-right" size={14} color={colors.primary} />
+            </View>
+          ) : null}
+        </View>
+      </View>
+    </Pressable>
   );
 }
 
