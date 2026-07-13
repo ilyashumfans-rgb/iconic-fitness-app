@@ -345,6 +345,31 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/PackageCategory" }
+  /membership-lookup:
+    post:
+      operationId: lookupMembership
+      tags: [memberships]
+      summary: Check whether a mobile number belongs to a gym member (pre-signup verification)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MembershipLookupBody" }
+      responses:
+        "200":
+          description: Lookup result (found=false when no member matches)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipLookupResult" }
+        "429":
+          description: Too many lookups; try again later
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [error]
+                properties:
+                  error: { type: string }
   /memberships/mine:
     get:
       operationId: getMyMembership
@@ -1030,6 +1055,21 @@ components:
         bmr: { type: number, description: "Basal metabolic rate (kcal); 0 if unknown" }
         tdee: { type: number, description: "Maintenance calories (kcal); 0 if unknown" }
         bodyFatPct: { type: number, description: "Estimated body fat %; 0 if unknown" }
+    MembershipLookupBody:
+      type: object
+      required: [mobile]
+      properties:
+        mobile: { type: string, minLength: 10 }
+    MembershipLookupResult:
+      type: object
+      required: [found, memberName, branchName]
+      properties:
+        found: { type: boolean }
+        memberName:
+          { type: string, description: "Masked member name (e.g. \"Rah••• K.\"); empty when not found" }
+        branchName:
+          { type: string, description: "Branch of the member's primary plan; empty when not found" }
+
     UserProfileUpdate:
       type: object
       properties:

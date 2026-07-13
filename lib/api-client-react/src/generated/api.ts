@@ -57,8 +57,11 @@ import type {
   ListTrainerPackagesParams,
   ListTrainersParams,
   LiveTrainer,
+  LookupMembership429,
   MealDay,
   MealInput,
+  MembershipLookupBody,
+  MembershipLookupResult,
   MembershipPayment,
   MembershipPlan,
   MyMembership,
@@ -1560,6 +1563,77 @@ export function useListPackageCategories<TData = Awaited<ReturnType<typeof listP
 
 
 
+
+export const getLookupMembershipUrl = () => {
+
+
+
+
+  return `/api/membership-lookup`
+}
+
+/**
+ * @summary Check whether a mobile number belongs to a gym member (pre-signup verification)
+ */
+export const lookupMembership = async (membershipLookupBody: MembershipLookupBody, options?: RequestInit): Promise<MembershipLookupResult> => {
+
+  return customFetch<MembershipLookupResult>(getLookupMembershipUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      membershipLookupBody,)
+  }
+);}
+
+
+
+
+export const getLookupMembershipMutationOptions = <TError = ErrorType<LookupMembership429>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof lookupMembership>>, TError,{data: BodyType<MembershipLookupBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof lookupMembership>>, TError,{data: BodyType<MembershipLookupBody>}, TContext> => {
+
+const mutationKey = ['lookupMembership'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof lookupMembership>>, {data: BodyType<MembershipLookupBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  lookupMembership(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LookupMembershipMutationResult = NonNullable<Awaited<ReturnType<typeof lookupMembership>>>
+    export type LookupMembershipMutationBody = BodyType<MembershipLookupBody>
+    export type LookupMembershipMutationError = ErrorType<LookupMembership429>
+
+    /**
+ * @summary Check whether a mobile number belongs to a gym member (pre-signup verification)
+ */
+export const useLookupMembership = <TError = ErrorType<LookupMembership429>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof lookupMembership>>, TError,{data: BodyType<MembershipLookupBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof lookupMembership>>,
+        TError,
+        {data: BodyType<MembershipLookupBody>},
+        TContext
+      > => {
+      return useMutation(getLookupMembershipMutationOptions(options));
+    }
 
 export const getGetMyMembershipUrl = () => {
 

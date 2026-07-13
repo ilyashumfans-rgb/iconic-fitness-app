@@ -66,6 +66,19 @@ export interface UserProfile {
   bodyFatPct: number;
 }
 
+export interface MembershipLookupBody {
+  /** @minLength 10 */
+  mobile: string;
+}
+
+export interface MembershipLookupResult {
+  found: boolean;
+  /** Masked member name (e.g. "Rah••• K."); empty when not found */
+  memberName: string;
+  /** Branch of the member's primary plan; empty when not found */
+  branchName: string;
+}
+
 export interface UserProfileUpdate {
   name?: string;
   mobile?: string;
@@ -846,6 +859,10 @@ city?: string;
  * ISO date (YYYY-MM-DD)
  */
 date?: string;
+};
+
+export type LookupMembership429 = {
+  error: string;
 };
 
 export type CreateMembershipRenewal409 = {

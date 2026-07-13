@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
 import { Field } from "@/components/Field";
+import { MemberMobileVerify } from "@/components/MemberMobileVerify";
 import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/hooks/useGuest";
 import { ThemeContext } from "@/hooks/useTheme";
@@ -179,6 +180,10 @@ function SignInContent() {
             >
               WELCOME BACK
             </AppText>
+
+            {/* Gym members can pre-verify their registered mobile so their
+                YoActiv plan connects the moment they finish logging in. */}
+            <MemberMobileVerify />
 
             <Field
               label="Email"

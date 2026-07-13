@@ -516,6 +516,24 @@ export const ListPackageCategoriesResponse = zod.array(ListPackageCategoriesResp
 
 
 /**
+ * @summary Check whether a mobile number belongs to a gym member (pre-signup verification)
+ */
+export const lookupMembershipBodyMobileMin = 10;
+
+
+
+export const LookupMembershipBody = zod.object({
+  "mobile": zod.string().min(lookupMembershipBodyMobileMin)
+})
+
+export const LookupMembershipResponse = zod.object({
+  "found": zod.boolean(),
+  "memberName": zod.string().describe('Masked member name (e.g. \"Rah••• K.\"); empty when not found'),
+  "branchName": zod.string().describe('Branch of the member\'s primary plan; empty when not found')
+})
+
+
+/**
  * @summary Get the user's current active membership (null if none)
  */
 export const GetMyMembershipResponse = zod.union([zod.object({

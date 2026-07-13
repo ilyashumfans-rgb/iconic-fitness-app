@@ -16,6 +16,8 @@ import {
   GetMyMembershipResponse,
   ListMyMembershipPaymentsResponse,
   CreateMembershipRenewalResponse,
+  LookupMembershipBody,
+  LookupMembershipResponse,
 } from "@workspace/api-zod";
 import { requireUser } from "../lib/currentUser";
 import {
@@ -43,6 +45,78 @@ router.get("/package-categories", async (_req, res): Promise<void> => {
     .where(eq(packageCategoriesTable.isActive, true))
     .orderBy(packageCategoriesTable.sortOrder, packageCategoriesTable.id);
   res.json(ListPackageCategoriesResponse.parse(rows));
+});
+
+// ── Pre-signup membership lookup ─────────────────────────────────────────
+// Public: the sign-in/up screens let a member verify their registered mobile
+// against the gym system before creating an account. Response is deliberately
+// minimal (found flag + masked name + branch) so it can't be used to harvest
+// member details, and lookups are rate-limited per client.
+
+/** "Rahul Kumar" → "Rah••• K." — enough to reassure the member, useless to a stranger. */
+function maskMemberName(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "";
+  const first = words[0]!;
+  const head = first.slice(0, Math.min(3, first.length));
+  const masked = head + (first.length > head.length ? "•••" : "");
+  const rest = words
+    .slice(1)
+    .map((w) => `${w[0]!.toUpperCase()}.`)
+    .join(" ");
+  return rest ? `${masked} ${rest}` : masked;
+}
+
+const LOOKUP_WINDOW_MS = 5 * 60 * 1000;
+const LOOKUP_MAX_PER_WINDOW = 15;
+const lookupHits = new Map<string, { windowStart: number; count: number }>();
+
+function lookupRateLimited(clientKey: string): boolean {
+  const now = Date.now();
+  // Opportunistic sweep so the map can't grow unbounded.
+  if (lookupHits.size > 5000) {
+    for (const [k, v] of lookupHits) {
+      if (now - v.windowStart > LOOKUP_WINDOW_MS) lookupHits.delete(k);
+    }
+  }
+  const hit = lookupHits.get(clientKey);
+  if (!hit || now - hit.windowStart > LOOKUP_WINDOW_MS) {
+    lookupHits.set(clientKey, { windowStart: now, count: 1 });
+    return false;
+  }
+  hit.count += 1;
+  return hit.count > LOOKUP_MAX_PER_WINDOW;
+}
+
+router.post("/membership-lookup", async (req, res): Promise<void> => {
+  const parsed = LookupMembershipBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "A valid mobile number is required" });
+    return;
+  }
+  const clientKey = req.ip ?? "unknown";
+  if (lookupRateLimited(clientKey)) {
+    res.status(429).json({ error: "Too many attempts — please try again in a few minutes" });
+    return;
+  }
+  const notFound = { found: false, memberName: "", branchName: "" };
+  if (!yoactivConfigured()) {
+    res.json(LookupMembershipResponse.parse(notFound));
+    return;
+  }
+  const profile = await fetchYoactivMemberByMobile(parsed.data.mobile);
+  if (!profile) {
+    res.json(LookupMembershipResponse.parse(notFound));
+    return;
+  }
+  const primary = pickPrimaryMembership(profile);
+  res.json(
+    LookupMembershipResponse.parse({
+      found: true,
+      memberName: maskMemberName(profile.name),
+      branchName: primary?.branchName ?? "",
+    }),
+  );
 });
 
 router.get("/memberships/mine", requireUser, async (req, res): Promise<void> => {

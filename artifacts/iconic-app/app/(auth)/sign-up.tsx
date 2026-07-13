@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
 import { Field } from "@/components/Field";
+import { MemberMobileVerify } from "@/components/MemberMobileVerify";
 import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/hooks/useGuest";
 
@@ -138,6 +139,10 @@ export default function SignUpScreen() {
             </AppText>
 
             <View style={styles.form}>
+              {/* Gym members can pre-verify their registered mobile so their
+                  YoActiv plan connects the moment the account is created. */}
+              <MemberMobileVerify />
+
               <Field
                 label="Name"
                 value={name}

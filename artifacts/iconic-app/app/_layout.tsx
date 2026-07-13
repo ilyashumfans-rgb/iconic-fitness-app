@@ -21,6 +21,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AnimatedSplash } from "@/components/AnimatedSplash";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { PendingMobileLink } from "@/components/PendingMobileLink";
 import { useColors } from "@/hooks/useColors";
 import { GuestProvider } from "@/hooks/useGuest";
 import { ThemeProvider, useTheme } from "@/hooks/useTheme";
@@ -185,6 +186,7 @@ export default function RootLayout() {
           <ErrorBoundary>
             <QueryClientProvider client={queryClient}>
               <ApiAuthBridge />
+              <PendingMobileLink />
               <GuestProvider>
                 <GestureHandlerRootView style={{ flex: 1 }}>
                   <RootLayoutNav />
