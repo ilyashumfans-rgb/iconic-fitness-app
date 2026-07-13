@@ -8,63 +8,59 @@ import {
   type PackageCategory,
 } from "@workspace/api-client-react";
 import { useState } from "react";
-import { ArrowLeft, ArrowRight, Layers, Tag } from "lucide-react";
+import { ArrowLeft, ChevronRight, Tag } from "lucide-react";
 import { MembershipPlanGrid } from "@/components/MembershipPlanGrid";
 
+// Matches the plan-card family: gradient hairline border, media block left, details right.
 function CategoryCard({
   name,
   imageUrl,
   count,
-  allIcon,
   onClick,
 }: {
   name: string;
   imageUrl: string;
   count: number;
-  allIcon?: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="group relative w-full text-left rounded-3xl p-[1.5px] bg-gradient-to-br from-lime-500/60 via-border to-border shadow-lg shadow-lime-500/5 transition-all duration-300 [transform-style:preserve-3d] hover:[transform:perspective(900px)_rotateX(5deg)_translateY(-6px)] hover:shadow-2xl hover:shadow-lime-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-500"
+      className="group relative w-full text-left rounded-2xl p-[1px] bg-gradient-to-b from-border to-border/40 hover:from-lime-300/60 hover:to-lime-500/30 hover:-translate-y-1 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-500"
     >
-      <div className="relative flex items-center gap-5 rounded-[calc(1.5rem-1.5px)] bg-card px-6 py-6 overflow-hidden">
-        {/* Sheen highlight */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-white/10 to-transparent" />
-        {/* Glow blob */}
-        <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-lime-500/10 blur-2xl transition-opacity duration-300 group-hover:opacity-100 opacity-60" />
-
-        {/* Logo — raised circle on the left */}
-        <div className="relative shrink-0 h-16 w-16 rounded-full p-[2px] bg-gradient-to-br from-lime-500/60 to-transparent shadow-xl shadow-black/30 transition-transform duration-300 group-hover:scale-110 group-hover:[transform:translateZ(30px)_scale(1.1)]">
+      <div className="flex h-[138px] overflow-hidden rounded-[calc(1rem-1px)] bg-card">
+        {/* Media block on the left */}
+        <div className="w-[122px] shrink-0">
           {imageUrl ? (
             <img
               src={imageUrl}
               alt={name}
-              className="h-full w-full rounded-full object-cover"
+              className="h-full w-full object-cover"
             />
           ) : (
-            <div className="h-full w-full rounded-full bg-lime-500/10 flex items-center justify-center">
-              {allIcon ? (
-                <Layers className="h-6 w-6 text-lime-500" />
-              ) : (
-                <Tag className="h-6 w-6 text-lime-500" />
-              )}
+            <div className="h-full w-full bg-gradient-to-br from-lime-500/20 to-transparent flex items-center justify-center">
+              <Tag className="h-7 w-7 text-lime-500" />
             </div>
           )}
         </div>
 
-        {/* Name on the right */}
-        <div className="min-w-0 flex-1">
-          <div className="text-xl font-black tracking-tight truncate">{name}</div>
-          <div className="text-sm text-muted-foreground mt-0.5">
-            {count} {count === 1 ? "package" : "packages"}
+        {/* Details on the right */}
+        <div className="flex flex-1 flex-col px-5 py-4 min-w-0">
+          <div className="flex-1 min-w-0">
+            <div className="text-lg font-black tracking-tight truncate">{name}</div>
+            <div className="text-sm text-muted-foreground mt-0.5">
+              {count} {count === 1 ? "package" : "packages"}
+            </div>
           </div>
-        </div>
-
-        <div className="shrink-0 h-9 w-9 rounded-full bg-lime-500 text-black flex items-center justify-center transition-transform duration-300 group-hover:translate-x-1">
-          <ArrowRight className="h-4 w-4" />
+          <div className="h-px bg-border my-2.5" />
+          <div className="flex items-center">
+            <span className="text-sm font-semibold text-lime-600 group-hover:text-lime-500 transition-colors">
+              View packages
+            </span>
+            <span className="flex-1" />
+            <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-hover:translate-x-1" />
+          </div>
         </div>
       </div>
     </button>
@@ -80,7 +76,7 @@ export default function Offers() {
     isError: categoriesFailed,
   } = useListPackageCategories({ query: { queryKey: getListPackageCategoriesQueryKey() } });
 
-  // null = category picker; 0 = "All packages"; >0 = specific category
+  // null = category picker; >0 = specific category open
   const [categoryId, setCategoryId] = useState<number | null>(null);
 
   const categories = categoriesData ?? [];
@@ -97,10 +93,10 @@ export default function Offers() {
 
   // If the open category was hidden/deleted, fall back to the picker.
   const openCategory = categories.find((c) => c.id === categoryId);
-  const showPicker = hasCategories && (categoryId === null || (categoryId !== 0 && !openCategory));
+  const showPicker = hasCategories && (categoryId === null || !openCategory);
 
   const visiblePlans =
-    !hasCategories || categoryId === 0 || !openCategory
+    !hasCategories || !openCategory
       ? annualPlans
       : annualPlans.filter((p) => (p.categoryId ?? 0) === categoryId);
 
@@ -128,7 +124,7 @@ export default function Offers() {
             <p className="text-muted-foreground">Choose a category to see its yearly packages.</p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 max-w-3xl mx-auto [perspective:1200px]">
+          <div className="grid gap-5 sm:grid-cols-2 max-w-3xl mx-auto">
             {categories.map((c) => (
               <CategoryCard
                 key={c.id}
@@ -138,13 +134,6 @@ export default function Offers() {
                 onClick={() => setCategoryId(c.id)}
               />
             ))}
-            <CategoryCard
-              name="All packages"
-              imageUrl=""
-              allIcon
-              count={annualPlans.length}
-              onClick={() => setCategoryId(0)}
-            />
           </div>
         </section>
       ) : (
@@ -156,7 +145,7 @@ export default function Offers() {
               className="inline-flex items-center gap-2 mb-8 px-4 py-2 rounded-full border border-border bg-card text-sm font-semibold hover:border-lime-500/50 hover:text-lime-600 transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
-              {openCategory ? openCategory.name : "All packages"} — back to categories
+              {openCategory ? openCategory.name : "Packages"} — back to categories
             </button>
           ) : (
             <div className="text-center mb-10">
@@ -174,7 +163,7 @@ export default function Offers() {
             currentPlanId={myMembership?.planId}
             emptyTitle="No offers right now"
             emptyMessage={
-              !hasCategories || categoryId === 0
+              !hasCategories
                 ? "Annual offers are on the way. Check back soon."
                 : "No packages in this category yet. Try another one."
             }

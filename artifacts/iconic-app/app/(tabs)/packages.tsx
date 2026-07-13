@@ -7,14 +7,8 @@ import {
   type PackageCategory,
 } from "@workspace/api-client-react";
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Animated,
-  Image,
-  Pressable,
-  StyleSheet,
-  View,
-} from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { Image, Pressable, StyleSheet, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { PackageCard } from "@/components/PackageCard";
@@ -28,112 +22,74 @@ import {
   SectionHeader,
 } from "@/components/ui-bits";
 
+// Mirrors the PackageCard layout: media block on the left, details on the right.
 function CategoryCard({
   name,
   imageUrl,
   count,
-  icon,
   onPress,
 }: {
   name: string;
   imageUrl: string;
   count: number;
-  icon?: keyof typeof Feather.glyphMap;
   onPress: () => void;
 }) {
   const colors = useColors();
   const uri = resolveImageUrl(imageUrl);
-  const scale = useRef(new Animated.Value(1)).current;
-
-  const springTo = (v: number) =>
-    Animated.spring(scale, {
-      toValue: v,
-      useNativeDriver: true,
-      speed: 40,
-      bounciness: 6,
-    }).start();
 
   return (
-    <Animated.View
-      style={[
-        styles.catShadow,
-        { shadowColor: colors.primary, transform: [{ scale }] },
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.card,
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.border,
+          borderWidth: StyleSheet.hairlineWidth,
+          opacity: pressed ? 0.9 : 1,
+        },
       ]}
     >
-      <Pressable
-        onPressIn={() => springTo(0.97)}
-        onPressOut={() => springTo(1)}
-        onPress={onPress}
-      >
-        <LinearGradient
-          colors={[colors.primary + "66", colors.border]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.catBorder}
-        >
+      <View style={styles.media}>
+        {uri ? (
+          <Image source={{ uri }} style={styles.image} resizeMode="cover" />
+        ) : (
           <LinearGradient
-            colors={[colors.elevated, colors.card]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0.9, y: 1 }}
-            style={styles.catInner}
+            colors={[colors.primary + "33", colors.card]}
+            style={styles.image}
           >
-            {/* Sheen highlight for depth */}
-            <LinearGradient
-              colors={["#FFFFFF14", "#FFFFFF00"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={styles.catSheen}
-              pointerEvents="none"
-            />
-
-            {/* Logo — raised circular tile on the left */}
-            <View
-              style={[
-                styles.logoWrap,
-                { shadowColor: "#000", backgroundColor: colors.background },
-              ]}
-            >
-              <LinearGradient
-                colors={[colors.primary + "55", colors.card]}
-                style={styles.logoRing}
-              >
-                {uri ? (
-                  <Image source={{ uri }} style={styles.logoImg} />
-                ) : (
-                  <View style={styles.logoFallback}>
-                    <Feather
-                      name={icon ?? "grid"}
-                      size={24}
-                      color={colors.primary}
-                    />
-                  </View>
-                )}
-              </LinearGradient>
-            </View>
-
-            {/* Name on the right */}
-            <View style={{ flex: 1, marginLeft: 16 }}>
-              <AppText weight="700" size={18} numberOfLines={1}>
-                {name}
-              </AppText>
-              <AppText muted size={12.5} style={{ marginTop: 3 }}>
-                {count} {count === 1 ? "package" : "packages"}
-              </AppText>
-            </View>
-
-            <View
-              style={[styles.chevBubble, { backgroundColor: colors.primary }]}
-            >
-              <Feather
-                name="arrow-right"
-                size={16}
-                color={colors.primaryForeground}
-              />
+            <View style={styles.mediaFallback}>
+              <Feather name="grid" size={26} color={colors.primary} />
             </View>
           </LinearGradient>
-        </LinearGradient>
-      </Pressable>
-    </Animated.View>
+        )}
+      </View>
+
+      <View style={styles.body}>
+        <View style={{ flex: 1 }}>
+          <AppText weight="700" size={17} numberOfLines={1}>
+            {name}
+          </AppText>
+          <AppText muted size={13} numberOfLines={1} style={{ marginTop: 3 }}>
+            {count} {count === 1 ? "package" : "packages"}
+          </AppText>
+        </View>
+
+        <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+        <View style={styles.footRow}>
+          <AppText weight="600" size={14} color={colors.primary}>
+            View packages
+          </AppText>
+          <View style={{ flex: 1 }} />
+          <Feather
+            name="chevron-right"
+            size={20}
+            color={colors.mutedForeground}
+          />
+        </View>
+      </View>
+    </Pressable>
   );
 }
 
@@ -144,7 +100,7 @@ export default function PackagesScreen() {
   const categoriesQuery = useListPackageCategories({
     query: { queryKey: getListPackageCategoriesQueryKey() },
   });
-  // null = category picker; 0 = "All packages"; >0 = specific category
+  // null = category picker; >0 = specific category open
   const [categoryId, setCategoryId] = useState<number | null>(null);
 
   const categories = categoriesQuery.data ?? [];
@@ -153,7 +109,6 @@ export default function PackagesScreen() {
   useEffect(() => {
     if (
       categoryId !== null &&
-      categoryId !== 0 &&
       categoriesQuery.isSuccess &&
       !categories.some((c) => c.id === categoryId)
     ) {
@@ -187,7 +142,7 @@ export default function PackagesScreen() {
   const showPicker = hasCategories && categoryId === null;
 
   const visible = useMemo(() => {
-    if (!hasCategories || categoryId === 0 || categoryId === null) return annual;
+    if (!hasCategories || categoryId === null) return annual;
     return annual.filter((p) => (p.categoryId ?? 0) === categoryId);
   }, [annual, categoryId, hasCategories]);
 
@@ -224,20 +179,13 @@ export default function PackagesScreen() {
                 onPress={() => setCategoryId(c.id)}
               />
             ))}
-            <CategoryCard
-              name="All packages"
-              imageUrl=""
-              icon="layers"
-              count={annual.length}
-              onPress={() => setCategoryId(0)}
-            />
           </View>
         )
       ) : (
         <>
           {hasCategories ? (
             <BackRow
-              label={openCategory ? openCategory.name : "All packages"}
+              label={openCategory ? openCategory.name : "Packages"}
               onBack={() => setCategoryId(null)}
             />
           ) : null}
@@ -251,7 +199,7 @@ export default function PackagesScreen() {
               icon="package"
               title="No packages right now"
               message={
-                !hasCategories || categoryId === 0
+                !hasCategories
                   ? "Annual packages are on the way. Check back soon."
                   : "No packages in this category yet. Try another one."
               }
@@ -295,61 +243,39 @@ function BackRow({ label, onBack }: { label: string; onBack: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  // Shadow lives on the outer wrapper; clipping happens on inner views.
-  catShadow: {
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 14,
-    elevation: 8,
-    borderRadius: 22,
-  },
-  catBorder: {
-    borderRadius: 22,
-    padding: 1.5,
-  },
-  catInner: {
-    borderRadius: 20.5,
+  // Same shape as PackageCard so categories and packages feel like one family.
+  card: {
+    flexDirection: "row",
+    borderRadius: 20,
     overflow: "hidden",
+    height: 138,
+  },
+  media: {
+    width: 122,
+    height: "100%",
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  mediaFallback: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  body: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    marginVertical: 10,
+  },
+  footRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 18,
-    paddingHorizontal: 16,
-  },
-  catSheen: {
-    ...StyleSheet.absoluteFillObject,
-    height: 34,
-  },
-  logoWrap: {
-    borderRadius: 999,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-    elevation: 6,
-  },
-  logoRing: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  logoImg: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-  },
-  logoFallback: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  chevBubble: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 10,
   },
   backRow: {
     flexDirection: "row",
