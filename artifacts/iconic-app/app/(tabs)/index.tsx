@@ -809,7 +809,12 @@ export default function HomeScreen() {
               embedded
               membership={membership}
               memberName={meQuery.data?.name ?? ""}
-              onManage={() => openExternal(membershipsUrl)}
+              onManage={() =>
+                router.push({
+                  pathname: "/web",
+                  params: { url: membershipsUrl, title: "Manage plan" },
+                })
+              }
             />
           }
         />

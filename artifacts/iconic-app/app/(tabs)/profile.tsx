@@ -336,7 +336,12 @@ export default function ProfileScreen() {
                   label="Manage plan"
                   variant="secondary"
                   icon="credit-card"
-                  onPress={() => openExternal(membershipsUrl)}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/web",
+                      params: { url: membershipsUrl, title: "Manage plan" },
+                    })
+                  }
                 />
               </>
             ) : (

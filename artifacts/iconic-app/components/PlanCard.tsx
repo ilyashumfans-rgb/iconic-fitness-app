@@ -1,12 +1,13 @@
 import { Feather } from "@expo/vector-icons";
 import { type MembershipPlan } from "@workspace/api-client-react";
+import { useRouter } from "expo-router";
 import { View, StyleSheet } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { useColors } from "@/hooks/useColors";
-import { membershipsUrl, openExternal } from "@/lib/links";
+import { membershipsUrl } from "@/lib/links";
 
 const PERIOD_SUFFIX: Record<string, string> = {
   monthly: "/mo",
@@ -24,6 +25,7 @@ export function PlanCard({
   isCurrent: boolean;
 }) {
   const colors = useColors();
+  const router = useRouter();
   const savings =
     plan.originalPriceInr > plan.priceInr
       ? Math.round(
@@ -115,7 +117,14 @@ export function PlanCard({
         <Button
           label="Get this plan"
           icon="arrow-right"
-          onPress={() => openExternal(membershipsUrl)}
+          onPress={() =>
+            // Stay inside the app — open the memberships page in the
+            // in-app browser instead of bouncing out to an external browser.
+            router.push({
+              pathname: "/web",
+              params: { url: membershipsUrl, title: "Membership plans" },
+            })
+          }
         />
       )}
     </Card>
