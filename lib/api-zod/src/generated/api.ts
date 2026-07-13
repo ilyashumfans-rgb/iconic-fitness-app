@@ -762,7 +762,8 @@ export const CreatePackageBookingResponse = zod.object({
   "id": zod.number(),
   "status": zod.enum(['pending', 'paid', 'failed']),
   "amountInr": zod.number(),
-  "paymentUrl": zod.string()
+  "paymentUrl": zod.string(),
+  "token": zod.string().optional().describe('Access token for guest status polling (only returned to the purchase creator)')
 })
 
 
@@ -787,6 +788,10 @@ export const ListMyPackageBookingsResponse = zod.array(ListMyPackageBookingsResp
  */
 export const GetPackageBookingParams = zod.object({
   "bookingId": zod.coerce.number()
+})
+
+export const GetPackageBookingQueryParams = zod.object({
+  "token": zod.coerce.string().optional().describe('Purchase access token — lets a guest poll their own purchase without signing in')
 })
 
 export const GetPackageBookingResponse = zod.object({

@@ -36,6 +36,7 @@ import type {
   DailySummary,
   DashboardSummary,
   GetMealDayParams,
+  GetPackageBookingParams,
   GetProgressParams,
   GetTrackingSummaryParams,
   GetWaterDayParams,
@@ -2703,20 +2704,29 @@ export function useListMyPackageBookings<TData = Awaited<ReturnType<typeof listM
 
 
 
-export const getGetPackageBookingUrl = (bookingId: number,) => {
+export const getGetPackageBookingUrl = (bookingId: number,
+    params?: GetPackageBookingParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/package-bookings/${bookingId}`
+  return stringifiedParams.length > 0 ? `/api/package-bookings/${bookingId}?${stringifiedParams}` : `/api/package-bookings/${bookingId}`
 }
 
 /**
  * @summary Status of one of the caller's package purchases
  */
-export const getPackageBooking = async (bookingId: number, options?: RequestInit): Promise<PackageBooking> => {
+export const getPackageBooking = async (bookingId: number,
+    params?: GetPackageBookingParams, options?: RequestInit): Promise<PackageBooking> => {
 
-  return customFetch<PackageBooking>(getGetPackageBookingUrl(bookingId),
+  return customFetch<PackageBooking>(getGetPackageBookingUrl(bookingId,params),
   {
     ...options,
     method: 'GET'
@@ -2729,23 +2739,25 @@ export const getPackageBooking = async (bookingId: number, options?: RequestInit
 
 
 
-export const getGetPackageBookingQueryKey = (bookingId: number,) => {
+export const getGetPackageBookingQueryKey = (bookingId: number,
+    params?: GetPackageBookingParams,) => {
     return [
-    `/api/package-bookings/${bookingId}`
+    `/api/package-bookings/${bookingId}`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetPackageBookingQueryOptions = <TData = Awaited<ReturnType<typeof getPackageBooking>>, TError = ErrorType<unknown>>(bookingId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPackageBooking>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetPackageBookingQueryOptions = <TData = Awaited<ReturnType<typeof getPackageBooking>>, TError = ErrorType<unknown>>(bookingId: number,
+    params?: GetPackageBookingParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPackageBooking>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetPackageBookingQueryKey(bookingId);
+  const queryKey =  queryOptions?.queryKey ?? getGetPackageBookingQueryKey(bookingId,params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPackageBooking>>> = ({ signal }) => getPackageBooking(bookingId, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPackageBooking>>> = ({ signal }) => getPackageBooking(bookingId,params, { signal, ...requestOptions });
 
 
 
@@ -2763,11 +2775,12 @@ export type GetPackageBookingQueryError = ErrorType<unknown>
  */
 
 export function useGetPackageBooking<TData = Awaited<ReturnType<typeof getPackageBooking>>, TError = ErrorType<unknown>>(
- bookingId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPackageBooking>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ bookingId: number,
+    params?: GetPackageBookingParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPackageBooking>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetPackageBookingQueryOptions(bookingId,options)
+  const queryOptions = getGetPackageBookingQueryOptions(bookingId,params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

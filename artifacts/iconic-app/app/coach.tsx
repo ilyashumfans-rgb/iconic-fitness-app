@@ -1,13 +1,14 @@
 import { useAuth } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
 import {
+  getGetMeQueryKey,
+  useAiChat,
   useAiCoach,
   useGetMe,
   type AiChatMessage,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
-import { Redirect } from "expo-router";
 import { useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -45,36 +46,59 @@ const ONBOARDING_STARTERS = [
   "Start my fitness assessment",
 ];
 
+const GUEST_GREETING =
+  "Hi! I'm the Iconic Fitness assistant. Ask me about our branches, membership plans, classes, trainers — or how to join. You can even buy a plan right here in the app, no account needed.";
+
+const GUEST_STARTERS = [
+  "What membership plans do you have?",
+  "How do I enroll and pay online?",
+  "Which branches are near me?",
+  "What group classes do you offer?",
+];
+
 export default function CoachScreen() {
   const colors = useColors();
   const { isLoaded, isSignedIn } = useAuth();
   const queryClient = useQueryClient();
   const coach = useAiCoach();
-  const meQuery = useGetMe();
+  const chat = useAiChat();
+  // Guests (and signed-out viewers) talk to the public Iconic assistant; signed-in
+  // members get the personalized coach with their own tracking data.
+  const isMember = isLoaded && !!isSignedIn;
+  const active = isMember ? coach : chat;
+  const meQuery = useGetMe({
+    query: { enabled: isMember, queryKey: getGetMeQueryKey() },
+  });
   const [messages, setMessages] = useState<AiChatMessage[]>([]);
   const [input, setInput] = useState("");
   const scrollRef = useRef<ScrollView>(null);
-
-  if (isLoaded && !isSignedIn) return <Redirect href="/(auth)/sign-in" />;
 
   // Default to "assessed" until we know, so we never wrongly nudge an existing
   // member to redo their assessment while /me is loading.
   const assessmentComplete = meQuery.data?.assessmentComplete ?? true;
   const greeting: AiChatMessage = {
     role: "assistant",
-    content: assessmentComplete ? ASSESSED_GREETING : ONBOARDING_GREETING,
+    content: !isMember
+      ? GUEST_GREETING
+      : assessmentComplete
+        ? ASSESSED_GREETING
+        : ONBOARDING_GREETING,
   };
-  const starters = assessmentComplete ? ASSESSED_STARTERS : ONBOARDING_STARTERS;
+  const starters = !isMember
+    ? GUEST_STARTERS
+    : assessmentComplete
+      ? ASSESSED_STARTERS
+      : ONBOARDING_STARTERS;
 
   const send = (raw?: string) => {
     const text = (raw ?? input).trim();
-    if (!text || coach.isPending) return;
+    if (!text || active.isPending) return;
 
     const next: AiChatMessage[] = [...messages, { role: "user", content: text }];
     setMessages(next);
     setInput("");
 
-    coach.mutate(
+    active.mutate(
       { data: { messages: next } },
       {
         onSuccess: (res) => {
@@ -82,19 +106,21 @@ export default function CoachScreen() {
             ...prev,
             { role: "assistant", content: res.reply },
           ]);
-          // The coach may have logged data, saved the assessment, or changed
-          // goals — refresh the tracker and profile.
-          void queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey[0];
-              if (typeof key !== "string") return false;
-              return (
-                key.startsWith("/api/tracking") ||
-                key.startsWith("/api/me") ||
-                key.startsWith("/api/goals")
-              );
-            },
-          });
+          // The member coach may have logged data, saved the assessment, or
+          // changed goals — refresh the tracker and profile.
+          if (isMember) {
+            void queryClient.invalidateQueries({
+              predicate: (query) => {
+                const key = query.queryKey[0];
+                if (typeof key !== "string") return false;
+                return (
+                  key.startsWith("/api/tracking") ||
+                  key.startsWith("/api/me") ||
+                  key.startsWith("/api/goals")
+                );
+              },
+            });
+          }
         },
         onError: () => {
           setMessages((prev) => [
@@ -102,7 +128,7 @@ export default function CoachScreen() {
             {
               role: "assistant",
               content:
-                "Sorry, something went wrong reaching your coach. Please try again.",
+                "Sorry, something went wrong. Please try again.",
             },
           ]);
         },
@@ -148,7 +174,7 @@ export default function CoachScreen() {
             <Bubble key={i} message={m} />
           ))}
 
-          {coach.isPending ? <Typing /> : null}
+          {active.isPending ? <Typing /> : null}
 
           {messages.length === 0 ? (
             <View style={{ gap: 8, marginTop: 8 }}>
@@ -221,7 +247,7 @@ export default function CoachScreen() {
           />
           <Pressable
             onPress={() => send()}
-            disabled={!input.trim() || coach.isPending}
+            disabled={!input.trim() || active.isPending}
             style={{
               width: 44,
               height: 44,
@@ -229,7 +255,7 @@ export default function CoachScreen() {
               alignItems: "center",
               justifyContent: "center",
               overflow: "hidden",
-              opacity: !input.trim() || coach.isPending ? 0.5 : 1,
+              opacity: !input.trim() || active.isPending ? 0.5 : 1,
             }}
           >
             <LinearGradient

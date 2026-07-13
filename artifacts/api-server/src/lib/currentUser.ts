@@ -68,6 +68,33 @@ async function jitProvision(clerkUserId: string): Promise<number> {
   return row.id;
 }
 
+/**
+ * Resolve the caller's user id when they are signed in, but never reject the
+ * request. Guest callers continue with `req.userId` undefined. Used on
+ * endpoints that serve both members and guests (e.g. guest checkout).
+ */
+export const optionalUser: RequestHandler = async (
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+) => {
+  const auth = getAuth(req);
+  const clerkUserId = auth?.userId;
+  if (!clerkUserId) {
+    next();
+    return;
+  }
+  try {
+    req.clerkUserId = clerkUserId;
+    req.userId = await jitProvision(clerkUserId);
+  } catch (err) {
+    // A provisioning hiccup must not block a guest-capable endpoint — the
+    // request simply proceeds unauthenticated.
+    req.log?.error({ err }, "Optional user provisioning failed");
+  }
+  next();
+};
+
 export const requireUser: RequestHandler = async (
   req: Request,
   res: Response,

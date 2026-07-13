@@ -12,7 +12,7 @@ import {
   type Gym,
   type TrainerPackage,
 } from "@workspace/api-client-react";
-import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Image, Pressable, View } from "react-native";
 
@@ -82,6 +82,8 @@ export default function BookPackageScreen() {
   const [date, setDate] = useState(dateOptions[0]);
   const [busy, setBusy] = useState(false);
   const [bookingId, setBookingId] = useState<number | null>(null);
+  // Guest purchases poll status with the access token returned at creation.
+  const [bookingToken, setBookingToken] = useState<string | null>(null);
 
   useEffect(() => {
     const me = meQuery.data;
@@ -91,21 +93,17 @@ export default function BookPackageScreen() {
   }, [meQuery.data]);
 
   const createBooking = useCreatePackageBooking();
-  const statusQuery = useGetPackageBooking(bookingId ?? 0, {
+  const pollParams = bookingToken ? { token: bookingToken } : undefined;
+  const statusQuery = useGetPackageBooking(bookingId ?? 0, pollParams, {
     query: {
       enabled: bookingId !== null,
-      queryKey: getGetPackageBookingQueryKey(bookingId ?? 0),
+      queryKey: getGetPackageBookingQueryKey(bookingId ?? 0, pollParams),
       refetchInterval: (q) =>
         q.state.data?.status === "pending" ? 4000 : false,
     },
   });
   const status = bookingId !== null ? statusQuery.data?.status : undefined;
   const selectedPkg = packages.find((p) => p.id === pkgId) ?? null;
-
-  // Paid checkout requires a signed-in member (payment is tied to the account).
-  if (isLoaded && !isSignedIn) {
-    return <Redirect href="/(auth)/sign-in" />;
-  }
 
   function validateContact(): boolean {
     if (name.trim().length < 2) {
@@ -137,6 +135,7 @@ export default function BookPackageScreen() {
         },
       });
       setBookingId(created.id);
+      setBookingToken(created.token ?? null);
       await openExternal(created.paymentUrl);
     } catch (err) {
       Alert.alert(
@@ -211,6 +210,7 @@ export default function BookPackageScreen() {
                 label="Try again"
                 onPress={() => {
                   setBookingId(null);
+                  setBookingToken(null);
                 }}
               />
             ) : null}

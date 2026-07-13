@@ -376,6 +376,8 @@ export interface PackageBookingCreated {
   status: PackageBookingCreatedStatus;
   amountInr: number;
   paymentUrl: string;
+  /** Access token for guest status polling (only returned to the purchase creator) */
+  token?: string;
 }
 
 export type PackageBookingStatus = typeof PackageBookingStatus[keyof typeof PackageBookingStatus];
@@ -866,6 +868,13 @@ gymId: number;
 
 export type ListMembershipPackagesParams = {
 gymId: number;
+};
+
+export type GetPackageBookingParams = {
+/**
+ * Purchase access token — lets a guest poll their own purchase without signing in
+ */
+token?: string;
 };
 
 export type ListTrainersParams = {

@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { randomBytes, timingSafeEqual } from "node:crypto";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { and, desc, eq } from "drizzle-orm";
 import { db, gymsTable, packageBookingsTable, usersTable } from "@workspace/db";
@@ -11,7 +11,7 @@ import {
   GetPackageBookingResponse,
   ListMyPackageBookingsResponse,
 } from "@workspace/api-zod";
-import { requireUser } from "../lib/currentUser";
+import { optionalUser, requireUser } from "../lib/currentUser";
 import {
   applyPackagePref,
   packagePrefs,
@@ -70,9 +70,11 @@ router.get("/membership-packages", async (req, res): Promise<void> => {
 // Start a paid package purchase: verify the package server-side, register the
 // member in the gym-management system if needed, create a pending purchase row,
 // and hand back YoActiv's hosted Razorpay payment link (valid ~5 minutes).
+// Guests can buy too (name + mobile identify them in the gym system); signed-in
+// members get the purchase attached to their account.
 router.post(
   "/package-bookings",
-  requireUser,
+  optionalUser,
   async (req: Request, res: Response): Promise<void> => {
     const parsed = CreatePackageBookingBody.safeParse(req.body);
     if (!parsed.success) {
@@ -128,15 +130,19 @@ router.post(
     // Snapshot the curated display name so purchase history matches what
     // the member saw when buying; price always comes from live YoActiv data.
     const pkg = applyPackagePref(rawPkg, prefs);
-    const [user] = await db
-      .select({ email: usersTable.email })
-      .from(usersTable)
-      .where(eq(usersTable.id, req.userId!));
+    let email: string | null = null;
+    if (req.userId) {
+      const [user] = await db
+        .select({ email: usersTable.email })
+        .from(usersTable)
+        .where(eq(usersTable.id, req.userId));
+      email = user?.email ?? null;
+    }
     const memberId = await ensureYoactivMemberId(
       target,
       mobile,
       body.name.trim(),
-      user?.email ?? null,
+      email,
     );
     if (!memberId) {
       res.status(502).json({
@@ -150,7 +156,7 @@ router.post(
       .insert(packageBookingsTable)
       .values({
         token,
-        userId: req.userId!,
+        userId: req.userId ?? null,
         gymId: gym.id,
         gymName: gym.name,
         branchId: target.branchId,
@@ -190,6 +196,9 @@ router.post(
         status: "pending",
         amountInr: Math.round(pkg.amountInr),
         paymentUrl,
+        // Returned only here, to the purchase creator — lets a guest poll
+        // their purchase status without an account.
+        token,
       }),
     );
   },
@@ -223,10 +232,11 @@ router.get(
   },
 );
 
-// Status polling for the member who made the purchase.
+// Status polling for whoever made the purchase: a signed-in member (owner
+// check) or a guest presenting the purchase token they got at creation.
 router.get(
   "/package-bookings/:bookingId",
-  requireUser,
+  optionalUser,
   async (req: Request, res: Response): Promise<void> => {
     const params = GetPackageBookingParams.safeParse(req.params);
     if (!params.success) {
@@ -236,13 +246,19 @@ router.get(
     const [row] = await db
       .select()
       .from(packageBookingsTable)
-      .where(
-        and(
-          eq(packageBookingsTable.id, params.data.bookingId),
-          eq(packageBookingsTable.userId, req.userId!),
-        ),
-      );
+      .where(eq(packageBookingsTable.id, params.data.bookingId));
     if (!row) {
+      res.status(404).json({ error: "Purchase not found" });
+      return;
+    }
+    const token = typeof req.query.token === "string" ? req.query.token : "";
+    const isOwner = req.userId !== undefined && row.userId === req.userId;
+    // Money path: validate format first, then compare in constant time.
+    const hasToken =
+      /^[0-9a-f]{48}$/.test(token) &&
+      token.length === row.token.length &&
+      timingSafeEqual(Buffer.from(token), Buffer.from(row.token));
+    if (!isOwner && !hasToken) {
       res.status(404).json({ error: "Purchase not found" });
       return;
     }

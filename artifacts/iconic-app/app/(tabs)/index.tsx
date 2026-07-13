@@ -454,7 +454,24 @@ export default function HomeScreen() {
         gyms={heroGyms}
         isMember={isMember}
         membershipSettled={membershipSettled}
-        onExplore={() => openExternal(exploreUrl)}
+        onExplore={() =>
+          router.push({
+            pathname: "/web",
+            params: { url: exploreUrl, title: "Explore gyms" },
+          })
+        }
+        onOpenUrl={(url, title) => {
+          // Keep the viewer inside the app: internal paths navigate directly,
+          // external links open in the in-app browser screen.
+          if (url.startsWith("/")) {
+            router.push(url as never);
+            return;
+          }
+          router.push({
+            pathname: "/web",
+            params: { url, title: title ?? "Iconic Fitness" },
+          });
+        }}
       />
 
       {/* Current membership — pinned to the top for members with a plan */}
@@ -465,13 +482,14 @@ export default function HomeScreen() {
         />
       ) : null}
 
-      {/* AI Coach — members only */}
-      {isSignedIn ? (
-        <AICoachCard
-          needsAssessment={!!meQuery.data && !meQuery.data.assessmentComplete}
-          onPress={() => router.push("/coach")}
-        />
-      ) : null}
+      {/* AI Coach — members get their personal coach, guests get the Iconic
+          assistant (plans, branches, enrollment help). */}
+      <AICoachCard
+        needsAssessment={
+          !!isSignedIn && !!meQuery.data && !meQuery.data.assessmentComplete
+        }
+        onPress={() => router.push("/coach")}
+      />
 
       {/* Personal Trainers — find a coach & book a 1-on-1 session */}
       <PersonalTrainersCard onPress={() => router.push("/trainers")} />
@@ -783,11 +801,13 @@ function HeroSlider({
   isMember,
   membershipSettled,
   onExplore,
+  onOpenUrl,
 }: {
   gyms: Gym[];
   isMember: boolean;
   membershipSettled: boolean;
   onExplore: () => void;
+  onOpenUrl: (url: string, title?: string) => void;
 }) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -873,11 +893,11 @@ function HeroSlider({
 
   const onAdminPress = (s: HomeSlide) => {
     if (s.kind === "youtube") {
-      openExternal(s.mediaUrl);
+      onOpenUrl(s.mediaUrl, s.title || "Video");
       return;
     }
     if (s.ctaUrl) {
-      openExternal(s.ctaUrl);
+      onOpenUrl(s.ctaUrl, s.title || undefined);
       return;
     }
     onExplore();

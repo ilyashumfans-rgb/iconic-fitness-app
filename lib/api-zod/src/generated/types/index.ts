@@ -32,6 +32,7 @@ export * from './dailySummary';
 export * from './dashboardSummary';
 export * from './dayActivity';
 export * from './getMealDayParams';
+export * from './getPackageBookingParams';
 export * from './getProgressParams';
 export * from './getTrackingSummaryParams';
 export * from './getWaterDayParams';

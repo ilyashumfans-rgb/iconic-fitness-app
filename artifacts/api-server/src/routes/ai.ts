@@ -51,7 +51,10 @@ HYGIENE & SAFETY
 Regular sanitisation of equipment throughout the day, daily cleanliness checks for locker rooms and showers, first aid available at every branch, and daily fragrance and hygiene standards monitored by staff.
 
 PAYMENT OPTIONS
-We accept cash, cards, UPI, and online payments. For online payments, use the official payment link provided by staff at registration.
+We accept cash, cards, UPI, and online payments. You can buy a membership package directly in the Iconic Fitness app — open the Packages tab, pick your branch and plan, and pay securely online via Razorpay. No account or login is needed to enroll and pay in the app. Staff can also share an official payment link at registration.
+
+HOW TO ENROLL (IN THE APP)
+Open the Packages tab in the Iconic Fitness app, choose your branch, pick a plan, enter your name and mobile number, choose a start date, and pay online. Your membership starts from the chosen date. This works without creating an account.
 
 MOBILE APP
 Yes, there is an Iconic Fitness mobile app to browse classes, view schedules, book sessions, and manage membership. Search "Iconic Fitness" on the Google Play Store or App Store, or ask staff for the direct download link.

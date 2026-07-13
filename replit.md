@@ -78,6 +78,7 @@ Full-bleed slider at the top of mobile Home; slides managed in web admin (`pages
 - API: public `GET /home-slides` + admin CRUD in `routes/homeSlides.ts`; server validates kind↔mediaUrl (`validateMedia`).
 - Audience gating on mobile (`HeroSlider` in `app/(tabs)/index.tsx`): members = active plan via `useGetMyMembership`, customers = no plan/guests. **Tri-state:** while membership is unsettled only `audience='all'` slides show. Code-default brand/gym slides render when nothing is visible (never empty).
 - YouTube slides autoplay inline muted+looping via platform-split `components/YouTubeInline` (`.tsx` webview / `.web.tsx` iframe), `pointerEvents="none"` so swipe/tap still work. Slider clears the notch: safe-area top on native, `paddingTop` only when `insets.top === 0` (web).
+- **Slide taps stay in-app:** `ctaUrl` starting with `/` → `router.push`; external URLs (and YouTube slides / Explore) open the `app/web.tsx` in-app browser modal (native WebView / web iframe, header with close + open-externally).
 
 ### Home plan card & member-focused Home (mobile)
 
@@ -111,9 +112,9 @@ Member picks branch → live trainer → PT package (live prices) → pays on Yo
 
 Member buys a membership package online: branch picker → live non-PT YoActiv packages (cheapest-first) → pays on YoActiv's hosted Razorpay page. Mirrors the trainer-booking flow.
 
-- Server `routes/packageBookings.ts`: `GET /membership-packages?gymId` (non-PT variations from `Billing/GetServices`, reuses `TrainerPackage` schema); `POST /package-bookings` (requireUser, server-side price re-verify, `ensureYoactivMemberId`, pending `packageBookingsTable` row + 48-hex token, landing `/api/pay/package/:token/:outcome` flips only pending rows); `GET /package-bookings/:id` owner-only poll; `GET /package-bookings/mine`. Same caveat as trainer bookings: `paid` set by redirect only, no webhook. Strict branch scoping — unmapped gym → 409/[] → mobile falls back to a `kind="membership"` enquiry lead.
+- Server `routes/packageBookings.ts`: `GET /membership-packages?gymId` (non-PT variations from `Billing/GetServices`, reuses `TrainerPackage` schema); `POST /package-bookings` (**optionalUser — guests can buy without login**; nullable `userId`, server-side price re-verify, `ensureYoactivMemberId` only when signed in, pending `packageBookingsTable` row + 48-hex token returned in the response, landing `/api/pay/package/:token/:outcome` flips only pending rows); `GET /package-bookings/:id` poll allows owner OR `?token=` (format-validated + timing-safe compare, else 404); `GET /package-bookings/mine` stays requireUser. Same caveat as trainer bookings: `paid` set by redirect only, no webhook. Strict branch scoping — unmapped gym → 409/[] → mobile falls back to a `kind="membership"` enquiry lead.
 - `package_bookings` table mirrors `trainer_bookings` (minus trainer fields, plus `startDate`).
-- Mobile: `app/book-package.tsx` (branch → package → pay + 4s poll; sign-in required; enquiry fallback); "Buy this package" CTA on `app/package/[id].tsx`; "Package purchases" list on Profile tab (`useListMyPackageBookings`). Paid purchases also appear in YoActiv payment history.
+- Mobile: `app/book-package.tsx` (branch → package → pay + 4s poll; **no sign-in required** — guest polls pass the create-response `token` in the query params/queryKey; enquiry fallback); "Buy this package" CTA on `app/package/[id].tsx`; "Package purchases" list on Profile tab (`useListMyPackageBookings`). Paid purchases also appear in YoActiv payment history.
 - Web dashboards: admin `/admin/package-bookings` ("Package Purchases" nav) + partner `/partner/package-bookings` (ownedGymIds-scoped, staff perm `bookings`); shared `PackageBookingsTable.tsx`.
 
 ### Plan renewal reminders
@@ -148,7 +149,7 @@ Code-default pattern: challenge definitions in `api-server/src/lib/challenges.ts
 - **Tool-calling (bounded loop, max 5 turns):** `COACH_TOOLS` = `log_water`, `log_meal`, `log_workout`, `update_goals`, `save_assessment`; `runCoachTool` does scoped DB writes with clamped/validated inputs; tool failures return `{ok:false}` to the model, never crash.
 - **Onboarding assessment:** conversational; six nullable `usersTable` columns (`experienceLevel`, `targetWeightKg`, `activityLevel`, `foodPreference`, `assessment` jsonb, `assessmentCompletedAt`). `save_assessment` **merges** the jsonb blob and falls back to existing column values (partial saves never wipe earlier answers); completion stamp only once core fields (experience+age+gender+height+weight+goal) are captured, then idempotent. See `.agents/memory/ai-assessment-tool-writes.md`.
 - **Health metrics:** `lib/healthMetrics.ts` (BMI, body fat, BMR/TDEE, `deriveGoals`, `weightPlan` lose/gain/maintain recommendation) — used by both the coach save path and `/me` (`UserProfile` has `assessmentComplete`/`bmr`/`tdee`/`bodyFatPct`).
-- **Mobile:** `app/coach.tsx` modal; on success invalidates all `/api/tracking*` + `/api/me` + `/api/goals` query keys. Entry: Home card (members) + Progress row.
+- **Mobile:** `app/coach.tsx` modal; on success invalidates all `/api/tracking*` + `/api/me` + `/api/goals` query keys (members only). Entry: Home card (all viewers) + Progress row. **Guests get the public FAQ assistant** (`POST /ai/chat`, no auth, guest greeting/starters about plans/branches/enrollment); signed-in members get the personalized coach — same screen, mutation picked by auth state.
 - **Reminders:** `lib/notifications.ts` `ACTION_REMINDERS` (8 daily nudges) with master toggle on Profile.
 
 ## User preferences

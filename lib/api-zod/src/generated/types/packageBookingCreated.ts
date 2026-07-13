@@ -12,4 +12,6 @@ export interface PackageBookingCreated {
   status: PackageBookingCreatedStatus;
   amountInr: number;
   paymentUrl: string;
+  /** Access token for guest status polling (only returned to the purchase creator) */
+  token?: string;
 }

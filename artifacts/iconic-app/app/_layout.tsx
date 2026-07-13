@@ -84,6 +84,10 @@ function RootLayoutNav() {
         <Stack.Screen name="package/[id]" />
         <Stack.Screen name="challenge/[id]" />
         <Stack.Screen
+          name="web"
+          options={{ presentation: "modal", headerShown: false }}
+        />
+        <Stack.Screen
           name="notifications"
           options={{ presentation: "modal", headerShown: false }}
         />

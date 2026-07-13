@@ -595,6 +595,11 @@ paths:
           name: bookingId
           required: true
           schema: { type: integer }
+        - in: query
+          name: token
+          required: false
+          schema: { type: string }
+          description: "Purchase access token — lets a guest poll their own purchase without signing in"
       responses:
         "200":
           description: OK
@@ -1274,6 +1279,9 @@ components:
         status: { type: string, enum: [pending, paid, failed] }
         amountInr: { type: number }
         paymentUrl: { type: string }
+        token:
+          type: string
+          description: "Access token for guest status polling (only returned to the purchase creator)"
     PackageBooking:
       type: object
       required: [id, status, amountInr, packageName, serviceName, gymName, startDate, createdAt]
