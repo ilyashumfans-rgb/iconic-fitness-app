@@ -417,6 +417,15 @@ export default function HomeScreen() {
       onRefresh={refetchAll}
       contentContainerStyle={{ paddingTop: 8 }}
     >
+      {/* AI Coach — standalone card at the very top for everyone: guests get
+          the public Iconic assistant, members the personalized coach. */}
+      <AICoachCard
+        needsAssessment={
+          !!isSignedIn && !!meQuery.data && !meQuery.data.assessmentComplete
+        }
+        onPress={() => router.push("/coach")}
+      />
+
       {/* Personal tracking — pinned to the top for signed-in members */}
       {isSignedIn ? (
         <>
@@ -555,16 +564,6 @@ export default function HomeScreen() {
         </>
       ) : null}
 
-      {/* AI Coach — signed-in users reach it as the last slide of the hero
-          carousel below (one shared row); guests get the standalone card
-          for the public Iconic assistant. */}
-      {!isSignedIn ? (
-        <AICoachCard
-          needsAssessment={false}
-          onPress={() => router.push("/coach")}
-        />
-      ) : null}
-
       {/* Explore packages — swipeable category cards (falls back to plan
           cards when no categories are configured). Guests only. */}
       {showDiscovery &&
@@ -649,15 +648,6 @@ export default function HomeScreen() {
             params: { url, title: title ?? "Iconic Fitness" },
           });
         }}
-        aiSlide={
-          isSignedIn
-            ? {
-                needsAssessment:
-                  !!meQuery.data && !meQuery.data.assessmentComplete,
-                onPress: () => router.push("/coach"),
-              }
-            : undefined
-        }
         nearSlide={
           isSignedIn ? undefined : { onOpenGym: () => openExternal(exploreUrl) }
         }
