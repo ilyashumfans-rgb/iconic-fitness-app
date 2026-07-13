@@ -40,7 +40,7 @@ All plans are rows in `membershipsTable`; discriminator `billingPeriod === "annu
 
 ### Package categories (annual packages)
 
-Admin-managed grouping shown as filter chips on the app's Packages tab. `package_categories` table (name, sortOrder, isActive) + `membershipsTable.categoryId` (int, 0 = uncategorized, no FK). Public `GET /package-categories` (active only, sorted) in `memberships.ts`; admin CRUD `/admin/package-categories` in `admin.ts` (delete detaches plans to 0); membership POST/PATCH accept `categoryId`. Admin UI: Categories panel + plan-form select in `AnnualPlans.tsx` (`adminApi.packageCategories`). Mobile `app/(tabs)/packages.tsx`: All + category chips filter annual plans; unknown/0 shows only under All; selected chip resets to All if its category is hidden/deleted.
+Admin-managed grouping shown as filter chips on the app's Packages tab. `package_categories` table (name, sortOrder, isActive, imageUrl) + `membershipsTable.categoryId` (int, 0 = uncategorized, no FK). Category image uploads via inline DB upload in the admin Categories panel; chips with an image render a thumbnail (`CategoryChip` in `packages.tsx`). Public `GET /package-categories` (active only, sorted) in `memberships.ts`; admin CRUD `/admin/package-categories` in `admin.ts` (delete detaches plans to 0); membership POST/PATCH accept `categoryId`. Admin UI: Categories panel + plan-form select in `AnnualPlans.tsx` (`adminApi.packageCategories`). Mobile `app/(tabs)/packages.tsx`: All + category chips filter annual plans; unknown/0 shows only under All; selected chip resets to All if its category is hidden/deleted.
 
 ### Trainers
 

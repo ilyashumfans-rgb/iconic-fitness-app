@@ -249,6 +249,7 @@ export interface PackageCategory {
   id: number;
   name: string;
   sortOrder: number;
+  imageUrl?: string;
 }
 
 export type MyMembershipStatus = typeof MyMembershipStatus[keyof typeof MyMembershipStatus];

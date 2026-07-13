@@ -225,6 +225,7 @@ export const packageCategoriesTable = pgTable("package_categories", {
   name: text("name").notNull(),
   sortOrder: integer("sort_order").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
+  imageUrl: text("image_url").notNull().default(""),
 });
 
 export const userMembershipsTable = pgTable("user_memberships", {

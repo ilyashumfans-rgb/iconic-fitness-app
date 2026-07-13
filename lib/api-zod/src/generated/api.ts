@@ -509,7 +509,8 @@ export const ListMembershipsResponse = zod.array(ListMembershipsResponseItem)
 export const ListPackageCategoriesResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "sortOrder": zod.number()
+  "sortOrder": zod.number(),
+  "imageUrl": zod.string().optional()
 })
 export const ListPackageCategoriesResponse = zod.array(ListPackageCategoriesResponseItem)
 

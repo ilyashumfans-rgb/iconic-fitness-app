@@ -5,11 +5,12 @@ import {
   getListPackageCategoriesQueryKey,
 } from "@workspace/api-client-react";
 import { useEffect, useMemo, useState } from "react";
-import { View } from "react-native";
+import { Image, Pressable, StyleSheet, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { PackageCard } from "@/components/PackageCard";
 import { Screen } from "@/components/Screen";
+import { useColors } from "@/hooks/useColors";
 import {
   Chip,
   ChipRow,
@@ -18,6 +19,49 @@ import {
   LoadingView,
   SectionHeader,
 } from "@/components/ui-bits";
+
+function CategoryChip({
+  label,
+  imageUrl,
+  active,
+  onPress,
+}: {
+  label: string;
+  imageUrl: string;
+  active: boolean;
+  onPress: () => void;
+}) {
+  const colors = useColors();
+  return (
+    <Pressable
+      onPress={onPress}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        paddingLeft: 6,
+        paddingRight: 16,
+        paddingVertical: 6,
+        borderRadius: 999,
+        backgroundColor: active ? colors.primary : colors.elevated,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: active ? colors.primary : colors.border,
+      }}
+    >
+      <Image
+        source={{ uri: imageUrl }}
+        style={{ width: 26, height: 26, borderRadius: 13 }}
+      />
+      <AppText
+        weight="600"
+        size={13}
+        color={active ? colors.primaryForeground : colors.mutedForeground}
+      >
+        {label}
+      </AppText>
+    </Pressable>
+  );
+}
 
 export default function PackagesScreen() {
   const query = useListMemberships({
@@ -85,14 +129,24 @@ export default function PackagesScreen() {
               active={categoryId === 0}
               onPress={() => setCategoryId(0)}
             />
-            {categories.map((c) => (
-              <Chip
-                key={c.id}
-                label={c.name}
-                active={categoryId === c.id}
-                onPress={() => setCategoryId(c.id)}
-              />
-            ))}
+            {categories.map((c) =>
+              c.imageUrl ? (
+                <CategoryChip
+                  key={c.id}
+                  label={c.name}
+                  imageUrl={c.imageUrl}
+                  active={categoryId === c.id}
+                  onPress={() => setCategoryId(c.id)}
+                />
+              ) : (
+                <Chip
+                  key={c.id}
+                  label={c.name}
+                  active={categoryId === c.id}
+                  onPress={() => setCategoryId(c.id)}
+                />
+              ),
+            )}
           </ChipRow>
         </View>
       ) : null}

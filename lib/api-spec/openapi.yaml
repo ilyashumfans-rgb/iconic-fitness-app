@@ -1187,6 +1187,7 @@ components:
         id: { type: integer }
         name: { type: string }
         sortOrder: { type: integer }
+        imageUrl: { type: string }
     MyMembership:
       type: object
       required: [planId, planName, renewsOn, classesUsed, classesIncluded, gymsAccessed, status]

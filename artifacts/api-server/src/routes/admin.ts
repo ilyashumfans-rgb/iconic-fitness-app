@@ -1651,12 +1651,18 @@ router.post(
       res.status(400).json({ error: "Category name is too long" });
       return;
     }
+    const imageUrl = typeof b.imageUrl === "string" ? b.imageUrl.trim() : "";
+    if (imageUrl.length > 2000) {
+      res.status(400).json({ error: "Image URL is too long" });
+      return;
+    }
     const [created] = await db
       .insert(packageCategoriesTable)
       .values({
         name,
         sortOrder: Math.trunc(Number(b.sortOrder) || 0),
         isActive: b.isActive === undefined ? true : Boolean(b.isActive),
+        imageUrl,
       })
       .returning();
     res.status(201).json(created);
@@ -1682,6 +1688,14 @@ router.patch(
       patch.sortOrder = Math.trunc(Number(b.sortOrder) || 0);
     }
     if (b.isActive !== undefined) patch.isActive = Boolean(b.isActive);
+    if (b.imageUrl !== undefined) {
+      const imageUrl = String(b.imageUrl).trim();
+      if (imageUrl.length > 2000) {
+        res.status(400).json({ error: "Image URL is too long" });
+        return;
+      }
+      patch.imageUrl = imageUrl;
+    }
     if (Object.keys(patch).length === 0) {
       res.status(400).json({ error: "Nothing to update" });
       return;

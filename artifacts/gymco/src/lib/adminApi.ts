@@ -81,6 +81,7 @@ export type PackageCategoryRow = {
   name: string;
   sortOrder: number;
   isActive: boolean;
+  imageUrl: string;
 };
 
 export type AgencyAccount = {

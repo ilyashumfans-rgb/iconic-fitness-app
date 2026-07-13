@@ -10,4 +10,5 @@ export interface PackageCategory {
   id: number;
   name: string;
   sortOrder: number;
+  imageUrl?: string;
 }

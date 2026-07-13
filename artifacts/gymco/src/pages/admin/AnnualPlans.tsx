@@ -368,6 +368,39 @@ function CategoriesPanel({
   const [busy, setBusy] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
+  const [uploadingId, setUploadingId] = useState<number | null>(null);
+  const [imgErr, setImgErr] = useState<string | null>(null);
+  const imgFileRef = useRef<HTMLInputElement>(null);
+  const imgTargetRef = useRef<number | null>(null);
+
+  const pickImage = (id: number) => {
+    imgTargetRef.current = id;
+    imgFileRef.current?.click();
+  };
+
+  const handleImageFile = async (file: File) => {
+    const id = imgTargetRef.current;
+    if (id == null) return;
+    setImgErr(null);
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setImgErr("Image is too large. Please pick one under 15MB.");
+      return;
+    }
+    setUploadingId(id);
+    try {
+      const isGif = file.type === "image/gif";
+      const toUpload = isGif ? file : await compressImage(file);
+      const url = await uploadInline(toUpload);
+      await adminApi.packageCategories.update(id, { imageUrl: url });
+      onChanged();
+    } catch (e) {
+      setImgErr(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploadingId(null);
+      imgTargetRef.current = null;
+      if (imgFileRef.current) imgFileRef.current.value = "";
+    }
+  };
 
   const add = async () => {
     const name = newName.trim();
@@ -410,8 +443,22 @@ function CategoriesPanel({
       </div>
       <p className="text-xs text-slate-500 mb-4">
         Categories appear as filter chips on the app’s Packages tab. Hidden
-        categories (and their packages) stay under “All”.
+        categories (and their packages) stay under “All”. Add an image to show
+        it on the category chip in the app.
       </p>
+      <input
+        ref={imgFileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) void handleImageFile(file);
+        }}
+      />
+      {imgErr ? (
+        <div className="text-xs text-red-500 mb-3">{imgErr}</div>
+      ) : null}
       <div className="flex gap-2 mb-4">
         <input
           value={newName}
@@ -489,11 +536,42 @@ function CategoriesPanel({
                 </>
               ) : (
                 <>
+                  <button
+                    type="button"
+                    onClick={() => pickImage(c.id)}
+                    disabled={uploadingId === c.id}
+                    title={c.imageUrl ? "Replace image" : "Add image"}
+                    className="h-9 w-9 shrink-0 rounded-lg overflow-hidden bg-slate-200 border border-slate-300 flex items-center justify-center hover:ring-2 hover:ring-lime-500/60 disabled:opacity-60"
+                  >
+                    {uploadingId === c.id ? (
+                      <span className="text-[9px] text-slate-500">…</span>
+                    ) : c.imageUrl ? (
+                      <img
+                        src={c.imageUrl}
+                        alt={c.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <ImageIcon className="h-4 w-4 text-slate-400" />
+                    )}
+                  </button>
                   <span
                     className={`flex-1 text-sm font-medium ${c.isActive ? "text-slate-900" : "text-slate-400 line-through"}`}
                   >
                     {c.name}
                   </span>
+                  {c.imageUrl ? (
+                    <button
+                      onClick={() =>
+                        adminApi.packageCategories
+                          .update(c.id, { imageUrl: "" })
+                          .then(onChanged)
+                      }
+                      className="text-[11px] px-2 py-1 rounded text-slate-400 hover:text-red-500"
+                    >
+                      Remove image
+                    </button>
+                  ) : null}
                   <button
                     onClick={() =>
                       adminApi.packageCategories
