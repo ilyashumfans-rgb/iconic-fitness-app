@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import {
+  Platform,
   RefreshControl,
   ScrollView,
   type StyleProp,
@@ -14,6 +15,10 @@ import {
 } from "react-native-safe-area-context";
 
 import { useColors } from "@/hooks/useColors";
+
+// Top padding used on web when there is no real safe-area inset, sized to
+// clear the simulated notch drawn by the canvas phone frame.
+export const WEB_NOTCH_TOP = 52;
 
 type Props = {
   children: ReactNode;
@@ -38,11 +43,27 @@ export function Screen({
   const insets = useSafeAreaInsets();
   const padStyle = padded ? styles.padded : undefined;
   // On web/canvas previews there are no safe-area insets, so SafeAreaView adds
-  // no top padding and content hugs (and gets clipped by) the status bar/notch.
-  // Add a small fallback only when the top edge is requested and there's no inset.
-  const topFallback =
+  // no top padding and content hugs (and gets clipped by) the simulated
+  // notch/dynamic island of the phone frame — use a generous fallback there.
+  // On native an inset of 0 usually means an iOS sheet modal that already
+  // clears the notch, so only a small breathing-room pad is needed.
+  // The fallback must survive per-screen `contentContainerStyle.paddingTop`
+  // overrides, so it is applied LAST using the larger of the two values.
+  const fallbackTop =
     edges.includes("top") && insets.top === 0
-      ? { paddingTop: 16 }
+      ? Platform.OS === "web"
+        ? WEB_NOTCH_TOP
+        : 16
+      : 0;
+  const requestedTop = StyleSheet.flatten(contentContainerStyle)?.paddingTop;
+  const topFallback =
+    fallbackTop > 0
+      ? {
+          paddingTop: Math.max(
+            fallbackTop,
+            typeof requestedTop === "number" ? requestedTop : 0,
+          ),
+        }
       : undefined;
 
   return (
@@ -53,7 +74,7 @@ export function Screen({
       {scroll ? (
         <ScrollView
           style={styles.flex}
-          contentContainerStyle={[padStyle, topFallback, contentContainerStyle]}
+          contentContainerStyle={[padStyle, contentContainerStyle, topFallback]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           refreshControl={
@@ -70,7 +91,7 @@ export function Screen({
           {children}
         </ScrollView>
       ) : (
-        <View style={[styles.flex, padStyle, topFallback, contentContainerStyle]}>
+        <View style={[styles.flex, padStyle, contentContainerStyle, topFallback]}>
           {children}
         </View>
       )}

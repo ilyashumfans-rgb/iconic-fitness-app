@@ -7,6 +7,7 @@ import {
   type PackageCategory,
 } from "@workspace/api-client-react";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Image, Pressable, StyleSheet, View } from "react-native";
 
@@ -71,7 +72,9 @@ function CategoryCard({
             {name}
           </AppText>
           <AppText muted size={13} numberOfLines={1} style={{ marginTop: 3 }}>
-            {count} {count === 1 ? "package" : "packages"}
+            {count === 0
+              ? "Live plans at your branch"
+              : `${count} ${count === 1 ? "package" : "packages"}`}
           </AppText>
         </View>
 
@@ -79,7 +82,7 @@ function CategoryCard({
 
         <View style={styles.footRow}>
           <AppText weight="600" size={14} color={colors.primary}>
-            View packages
+            {count === 0 ? "View plans & prices" : "View packages"}
           </AppText>
           <View style={{ flex: 1 }} />
           <Feather
@@ -100,6 +103,7 @@ export default function PackagesScreen() {
   const categoriesQuery = useListPackageCategories({
     query: { queryKey: getListPackageCategoriesQueryKey() },
   });
+  const router = useRouter();
   // null = category picker; >0 = specific category open
   const [categoryId, setCategoryId] = useState<number | null>(null);
 
@@ -170,15 +174,24 @@ export default function PackagesScreen() {
           <ErrorView onRetry={() => void query.refetch()} />
         ) : (
           <View style={{ gap: 14 }}>
-            {categories.map((c) => (
-              <CategoryCard
-                key={c.id}
-                name={c.name}
-                imageUrl={c.imageUrl ?? ""}
-                count={countFor(c)}
-                onPress={() => setCategoryId(c.id)}
-              />
-            ))}
+            {categories.map((c) => {
+              const count = countFor(c);
+              return (
+                <CategoryCard
+                  key={c.id}
+                  name={c.name}
+                  imageUrl={c.imageUrl ?? ""}
+                  count={count}
+                  onPress={() =>
+                    // Categories without in-app packages lead straight to the
+                    // live branch list to buy a plan online (YoActiv-backed).
+                    count === 0
+                      ? router.push("/book-package")
+                      : setCategoryId(c.id)
+                  }
+                />
+              );
+            })}
           </View>
         )
       ) : (

@@ -1,11 +1,12 @@
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
+import { WEB_NOTCH_TOP } from "@/components/Screen";
 import { useColors } from "@/hooks/useColors";
 import {
   categoryLabel,
@@ -22,7 +23,15 @@ const DIFFICULTY_TINT: Record<string, "success" | "warning" | "destructive"> = {
 export default function ExerciseDetailScreen() {
   const colors = useColors();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
+  const rawInsets = useSafeAreaInsets();
+  // On web there are no real insets — pad enough to clear the simulated notch.
+  const topInset =
+    rawInsets.top > 0
+      ? rawInsets.top
+      : Platform.OS === "web"
+        ? WEB_NOTCH_TOP
+        : 0;
+  const insets = { ...rawInsets, top: topInset };
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const exercise = getExercise(String(slug));
 

@@ -23,6 +23,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/AppText";
 import { ModalHeader } from "@/components/ModalHeader";
+import { WEB_NOTCH_TOP } from "@/components/Screen";
 import { useColors } from "@/hooks/useColors";
 
 const ASSESSED_GREETING =
@@ -114,7 +115,12 @@ export default function CoachScreen() {
       edges={["top"]}
       style={{ flex: 1, backgroundColor: colors.background }}
     >
-      <View style={{ paddingHorizontal: 20, paddingTop: 8 }}>
+      <View
+        style={{
+          paddingHorizontal: 20,
+          paddingTop: Platform.OS === "web" ? WEB_NOTCH_TOP : 8,
+        }}
+      >
         <ModalHeader title="AI Coach" />
       </View>
 

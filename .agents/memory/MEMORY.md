@@ -25,4 +25,5 @@
 - [Expo notification sound + delivery](expo-notification-sound-delivery.md) — no push in Expo Go: poll /notifications/mine + fire LOCAL notif on per-user id delta; sound needs handler shouldPlaySound + Android channel.
 - [Async-derived UI gating](async-derived-ui-gating.md) — gate per-viewer content (audience/role/flags) on query-settled tri-state, not `!!data`, or members flash the wrong audience's content while loading.
 - [Deploy promote fails: probe & pg pool](deploy-healthcheck-and-pool.md) — build ok but "failed to initialize": mount /healthz before DB/session middleware; add pool.on('error') so idle-conn drops don't crash Node.
+- [Web notch top-padding fallback](web-notch-top-fallback.md) — Expo web insets are 0 under the canvas fake notch; pad WEB_NOTCH_TOP(52) on web only, merged after contentContainerStyle via max().
 - [Lazy milestone reminders](lazy-milestone-reminders.md) — countdown reminders: ascending thresholds + `find(t => t >= daysLeft)` (never fires early, catches up late); fire-and-forget from the feed endpoint.
