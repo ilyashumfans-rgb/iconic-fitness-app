@@ -718,7 +718,9 @@ export const yoactivPackagePrefsTable = pgTable(
     id: serial("id").primaryKey(),
     branchId: integer("branch_id").notNull(),
     packageId: integer("package_id").notNull(),
-    hidden: boolean("hidden").notNull().default(false),
+    // Default-hidden: plans only reach members once an admin explicitly
+    // switches them on (pref row with hidden=false).
+    hidden: boolean("hidden").notNull().default(true),
     // Display-only overrides; empty string = use the live YoActiv value.
     // Prices are never overridden — payment happens on YoActiv's side.
     displayName: text("display_name").notNull().default(""),

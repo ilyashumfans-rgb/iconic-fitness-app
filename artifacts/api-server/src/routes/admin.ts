@@ -2373,7 +2373,8 @@ router.get(
         const pref = prefs.get(p.id);
         return {
           ...p,
-          hidden: pref?.hidden ?? false,
+          // Default-hidden: no pref row means the plan is OFF for members.
+          hidden: pref?.hidden ?? true,
           displayName: pref?.displayName ?? "",
           description: pref?.description ?? "",
           imageUrl: pref?.imageUrl ?? "",

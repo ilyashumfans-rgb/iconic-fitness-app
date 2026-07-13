@@ -14,6 +14,7 @@ import {
 import { optionalUser, requireUser } from "../lib/currentUser";
 import {
   applyPackagePref,
+  isPackageVisible,
   packagePrefs,
 } from "../lib/yoactivPackagePrefs";
 import {
@@ -61,7 +62,7 @@ router.get("/membership-packages", async (req, res): Promise<void> => {
     packagePrefs(gym.yoactivBranchId),
   ]);
   const memberships = all
-    .filter((p) => !p.pt && !prefs.get(p.id)?.hidden)
+    .filter((p) => !p.pt && isPackageVisible(p.id, prefs))
     .map((p) => applyPackagePref(p, prefs))
     .sort((a, b) => a.amountInr - b.amountInr);
   res.json(ListMembershipPackagesResponse.parse(memberships));
@@ -115,13 +116,14 @@ router.post(
       return;
     }
     // Never trust the client's price — re-read the package from YoActiv.
-    // Admin-hidden packages are not purchasable either.
+    // Only admin-enabled (visible) packages are purchasable.
     const [packages, prefs] = await Promise.all([
       fetchYoactivPackages(gym.yoactivBranchId),
       packagePrefs(target.branchId),
     ]);
     const rawPkg = packages.find(
-      (p) => p.id === body.packageId && !p.pt && !prefs.get(p.id)?.hidden,
+      (p) =>
+        p.id === body.packageId && !p.pt && isPackageVisible(p.id, prefs),
     );
     if (!rawPkg) {
       res.status(400).json({ error: "That package is no longer available" });

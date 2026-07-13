@@ -1,12 +1,17 @@
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db, yoactivPackagePrefsTable } from "@workspace/db";
 
 /**
  * Admin curation layer over the live YoActiv package catalog: YoActiv stays
  * the source of truth for prices (payment happens on YoActiv's side), we
- * remember which package variations an admin hid from the member-facing
- * purchase flows plus optional display-only overrides (name, description,
- * image). Empty-string override = use the live YoActiv value.
+ * remember which package variations an admin explicitly made visible to the
+ * member-facing purchase flows plus optional display-only overrides (name,
+ * description, image). Empty-string override = use the live YoActiv value.
+ *
+ * DEFAULT-HIDDEN: a plan is only shown to members when a pref row exists
+ * with hidden=false. No row (or hidden=true) = hidden. Use
+ * `isPackageVisible` for all member-facing filtering so the default lives
+ * in one place.
  */
 
 export type PackagePref = {
@@ -43,18 +48,15 @@ export async function packagePrefs(
   );
 }
 
-/** Package variation ids hidden for a branch. */
-export async function hiddenPackageIds(branchId: number): Promise<Set<number>> {
-  const rows = await db
-    .select({ packageId: yoactivPackagePrefsTable.packageId })
-    .from(yoactivPackagePrefsTable)
-    .where(
-      and(
-        eq(yoactivPackagePrefsTable.branchId, branchId),
-        eq(yoactivPackagePrefsTable.hidden, true),
-      ),
-    );
-  return new Set(rows.map((r) => r.packageId));
+/**
+ * Whether a package variation is visible to members. Default-hidden: only
+ * an explicit pref row with hidden=false makes a plan visible.
+ */
+export function isPackageVisible(
+  packageId: number,
+  prefs: Map<number, PackagePref>,
+): boolean {
+  return prefs.get(packageId)?.hidden === false;
 }
 
 /**
@@ -102,6 +104,9 @@ export async function setPackageContent(
     .values({
       branchId,
       packageId,
+      // A fresh row created by a content edit must not flip visibility:
+      // plans stay hidden until the admin explicitly switches them on.
+      hidden: true,
       displayName: content.displayName,
       description: content.description,
       imageUrl: content.imageUrl,
