@@ -92,6 +92,9 @@ export default function TabsLayout() {
         name="packages"
         options={{
           title: "Packages",
+          // Members already have a plan — hide the tab for signed-in users
+          // (still reachable from the More tab); guests keep it.
+          href: isSignedIn ? null : undefined,
           tabBarIcon: ({ color, size }) => (
             <Feather name="package" size={size} color={color} />
           ),
