@@ -1,6 +1,6 @@
 import { useAuth } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
-import { Redirect, Tabs } from "expo-router";
+import { Redirect, Tabs, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 
@@ -9,6 +9,7 @@ import { useGuest } from "@/hooks/useGuest";
 
 export default function TabsLayout() {
   const colors = useColors();
+  const router = useRouter();
   const { isLoaded, isSignedIn } = useAuth();
   const { isGuest } = useGuest();
 
@@ -94,6 +95,23 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <Feather name="package" size={size} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="pt"
+        options={{
+          title: "Trainers",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="users" size={size} color={color} />
+          ),
+        }}
+        listeners={{
+          tabPress: (e) => {
+            // The tab is a shortcut: open the Personal Trainers screen
+            // instead of switching tabs.
+            e.preventDefault();
+            router.push("/trainers");
+          },
         }}
       />
       <Tabs.Screen
