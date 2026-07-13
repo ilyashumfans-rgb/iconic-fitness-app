@@ -54,12 +54,10 @@ function SignInContent() {
   const { enterGuest, exitGuest } = useGuest();
 
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  // OTP (one-time email code) login mode
-  const [mode, setMode] = useState<"password" | "otp">("password");
+  // OTP (one-time email code) login — the only email login flow
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [otpInfo, setOtpInfo] = useState<string | null>(null);
@@ -71,28 +69,6 @@ function SignInContent() {
       void WebBrowser.coolDownAsync();
     };
   }, []);
-
-  const onSignIn = useCallback(async () => {
-    setError(null);
-    try {
-      const { error: signInError } = await signIn.password({
-        identifier: email.trim(),
-        password,
-      });
-      if (signInError) {
-        setError(clerkError(signInError));
-        return;
-      }
-      if (signIn.status === "complete") {
-        exitGuest();
-        await signIn.finalize({ navigate: () => router.replace("/(tabs)") });
-      } else {
-        setError("Additional verification is required to sign in.");
-      }
-    } catch (err: unknown) {
-      setError(clerkError(err));
-    }
-  }, [signIn, email, password, router, exitGuest]);
 
   const finalizeSignIn = useCallback(async () => {
     exitGuest();
@@ -148,23 +124,19 @@ function SignInContent() {
     }
   }, [signIn, otpCode, finalizeSignIn]);
 
-  const switchMode = useCallback(
-    async (next: "password" | "otp") => {
-      setMode(next);
-      setError(null);
-      setOtpInfo(null);
-      setOtpSent(false);
-      setOtpCode("");
-      if (signIn.status !== null) {
-        try {
-          await signIn.reset();
-        } catch {
-          // A stale attempt that can't reset shouldn't block the mode switch.
-        }
+  const onChangeEmail = useCallback(async () => {
+    setError(null);
+    setOtpInfo(null);
+    setOtpSent(false);
+    setOtpCode("");
+    if (signIn.status !== null) {
+      try {
+        await signIn.reset();
+      } catch {
+        // A stale attempt that can't reset shouldn't block editing the email.
       }
-    },
-    [signIn],
-  );
+    }
+  }, [signIn]);
 
   const onGoogle = useCallback(async () => {
     if (googleLoading) return;
@@ -271,19 +243,10 @@ function SignInContent() {
               autoCapitalize="none"
               keyboardType="email-address"
               autoComplete="email"
-              editable={!(mode === "otp" && otpSent)}
+              editable={!otpSent}
             />
 
-            {mode === "password" ? (
-              <Field
-                label="Password"
-                value={password}
-                onChangeText={setPassword}
-                placeholder="••••••••"
-                secureTextEntry
-                autoComplete="password"
-              />
-            ) : otpSent ? (
+            {otpSent ? (
               <Field
                 label="One-time code"
                 value={otpCode}
@@ -306,14 +269,7 @@ function SignInContent() {
               </AppText>
             ) : null}
 
-            {mode === "password" ? (
-              <Button
-                label="Log in"
-                onPress={onSignIn}
-                loading={fetchStatus === "fetching"}
-                size="lg"
-              />
-            ) : !otpSent ? (
+            {!otpSent ? (
               <Button
                 label="Email me a login code"
                 onPress={onSendOtp}
@@ -338,22 +294,18 @@ function SignInContent() {
                     Didn&apos;t get it? Resend code
                   </AppText>
                 </Pressable>
+                <Pressable
+                  onPress={onChangeEmail}
+                  disabled={fetchStatus === "fetching"}
+                  hitSlop={8}
+                  style={styles.modeSwitch}
+                >
+                  <AppText weight="600" size={13} color={colors.mutedForeground}>
+                    Use a different email
+                  </AppText>
+                </Pressable>
               </>
             )}
-
-            <Pressable
-              onPress={() =>
-                switchMode(mode === "password" ? "otp" : "password")
-              }
-              hitSlop={8}
-              style={styles.modeSwitch}
-            >
-              <AppText weight="700" size={13} color={colors.primary}>
-                {mode === "password"
-                  ? "Log in with OTP instead"
-                  : "Log in with password instead"}
-              </AppText>
-            </Pressable>
 
             <View style={styles.divider}>
               <View style={[styles.line, { backgroundColor: colors.border }]} />
