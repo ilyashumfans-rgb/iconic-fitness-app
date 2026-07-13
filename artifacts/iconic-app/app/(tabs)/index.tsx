@@ -59,7 +59,6 @@ import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { NotificationBell } from "@/components/NotificationBell";
 import { PackageCard } from "@/components/PackageCard";
-import { ProgressRing } from "@/components/ProgressRing";
 import { Screen } from "@/components/Screen";
 import { YouTubeInline } from "@/components/YouTubeInline";
 import {
@@ -652,6 +651,24 @@ export default function HomeScreen() {
   const waterRatio = summary ? summary.waterMl / (summary.waterGoalMl || 1) : 0;
   const stepRatio = summary ? summary.steps / (summary.stepGoal || 1) : 0;
 
+  // Overall standing = average of the three goal completions (each capped at
+  // 100% so one over-achieved goal can't hide a neglected one).
+  const overallPct = Math.round(
+    ((Math.min(calRatio, 1) + Math.min(waterRatio, 1) + Math.min(stepRatio, 1)) /
+      3) *
+      100,
+  );
+  const standingMessage =
+    overallPct >= 100
+      ? "All goals hit — outstanding!"
+      : overallPct >= 75
+        ? "Almost there — strong day!"
+        : overallPct >= 40
+          ? "Good pace, keep pushing"
+          : overallPct > 0
+            ? "Time to get moving"
+            : "Log your first activity";
+
   return (
     <View style={{ flex: 1 }}>
     <Screen
@@ -680,55 +697,54 @@ export default function HomeScreen() {
               style={[styles.heroGlow, { pointerEvents: "none" }]}
             />
             <Card style={styles.hero} tone="elevated">
-              <View style={styles.ringWrap}>
-                <ProgressRing
-                  progress={calRatio}
-                  size={150}
-                  stroke={14}
-                  color={colors.calorie}
+              <View style={styles.standingHeader}>
+                <View style={{ flex: 1 }}>
+                  <AppText weight="700" size={16}>
+                    Today's standing
+                  </AppText>
+                  <AppText muted size={12}>
+                    {standingMessage}
+                  </AppText>
+                </View>
+                <View
+                  style={[
+                    styles.standingBadge,
+                    { borderColor: colors.primary + "55" },
+                  ]}
                 >
-                  <ProgressRing
-                    progress={waterRatio}
-                    size={116}
-                    stroke={12}
-                    color={colors.water}
-                  >
-                    <ProgressRing
-                      progress={stepRatio}
-                      size={84}
-                      stroke={11}
-                      color={colors.steps}
-                    >
-                      <Feather
-                        name="activity"
-                        size={26}
-                        color={colors.foreground}
-                      />
-                    </ProgressRing>
-                  </ProgressRing>
-                </ProgressRing>
+                  <AppText weight="700" size={18} color={colors.primary}>
+                    {overallPct}%
+                  </AppText>
+                  <AppText size={10} muted style={{ letterSpacing: 0.5 }}>
+                    OVERALL
+                  </AppText>
+                </View>
               </View>
 
-              <View style={styles.legend}>
-                <LegendRow
-                  color={colors.calorie}
-                  label="Calories"
-                  value={`${summary?.caloriesIn ?? 0}`}
-                  goal={`${summary?.calorieGoal ?? 0} kcal`}
-                />
-                <LegendRow
-                  color={colors.water}
-                  label="Water"
-                  value={`${((summary?.waterMl ?? 0) / 1000).toFixed(1)}L`}
-                  goal={`${((summary?.waterGoalMl ?? 0) / 1000).toFixed(1)}L`}
-                />
-                <LegendRow
-                  color={colors.steps}
-                  label="Steps"
-                  value={`${summary?.steps ?? 0}`}
-                  goal={`${summary?.stepGoal ?? 0}`}
-                />
-              </View>
+              <GoalBar
+                icon="zap"
+                color={colors.calorie}
+                label="Calories"
+                ratio={calRatio}
+                value={`${summary?.caloriesIn ?? 0}`}
+                goal={`${summary?.calorieGoal ?? 0} kcal`}
+              />
+              <GoalBar
+                icon="droplet"
+                color={colors.water}
+                label="Water"
+                ratio={waterRatio}
+                value={`${((summary?.waterMl ?? 0) / 1000).toFixed(1)}L`}
+                goal={`${((summary?.waterGoalMl ?? 0) / 1000).toFixed(1)}L`}
+              />
+              <GoalBar
+                icon="trending-up"
+                color={colors.steps}
+                label="Steps"
+                ratio={stepRatio}
+                value={`${summary?.steps ?? 0}`}
+                goal={`${summary?.stepGoal ?? 0}`}
+              />
             </Card>
           </View>
 
@@ -2131,30 +2147,58 @@ function intensityColor(
   return colors.success;
 }
 
-function LegendRow({
+function GoalBar({
+  icon,
   color,
   label,
+  ratio,
   value,
   goal,
 }: {
+  icon: keyof typeof Feather.glyphMap;
   color: string;
   label: string;
+  ratio: number;
   value: string;
   goal: string;
 }) {
+  const colors = useColors();
+  const pct = Math.round(Math.min(Math.max(ratio, 0), 1) * 100);
   return (
-    <View style={styles.legendRow}>
-      <View style={[styles.legendDot, { backgroundColor: color }]} />
-      <AppText size={13} muted style={{ flex: 1 }}>
-        {label}
-      </AppText>
-      <AppText weight="700" size={14}>
-        {value}
-      </AppText>
-      <AppText size={12} muted>
-        {" "}
-        / {goal}
-      </AppText>
+    <View style={styles.goalBar}>
+      <View style={styles.goalBarTop}>
+        <View style={[styles.goalBarIcon, { backgroundColor: color + "22" }]}>
+          <Feather name={icon} size={13} color={color} />
+        </View>
+        <AppText size={13} muted style={{ flex: 1 }}>
+          {label}
+        </AppText>
+        <AppText weight="700" size={13}>
+          {value}
+        </AppText>
+        <AppText size={12} muted>
+          {" "}
+          / {goal}
+        </AppText>
+        <AppText
+          weight="700"
+          size={12}
+          color={pct >= 100 ? color : colors.mutedForeground}
+          style={styles.goalBarPct}
+        >
+          {pct}%
+        </AppText>
+      </View>
+      <View style={[styles.goalBarTrack, { backgroundColor: colors.elevated }]}>
+        <View
+          style={{
+            width: `${Math.max(pct, 2)}%`,
+            height: "100%",
+            borderRadius: 6,
+            backgroundColor: color,
+          }}
+        />
+      </View>
     </View>
   );
 }
@@ -2618,11 +2662,35 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 80,
   },
-  hero: { alignItems: "center", gap: 22, paddingVertical: 24 },
-  ringWrap: { alignItems: "center", justifyContent: "center" },
-  legend: { alignSelf: "stretch", gap: 12 },
-  legendRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  legendDot: { width: 10, height: 10, borderRadius: 5 },
+  hero: { gap: 16, paddingVertical: 20 },
+  standingHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 2,
+  },
+  standingBadge: {
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+  },
+  goalBar: { gap: 7 },
+  goalBarTop: { flexDirection: "row", alignItems: "center", gap: 8 },
+  goalBarIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  goalBarPct: { marginLeft: 6, minWidth: 38, textAlign: "right" },
+  goalBarTrack: {
+    height: 10,
+    borderRadius: 6,
+    overflow: "hidden",
+  },
 
   classRow: { gap: 14, paddingRight: 8, paddingVertical: 2 },
   classCard: {
