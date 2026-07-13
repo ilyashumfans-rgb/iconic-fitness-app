@@ -483,17 +483,6 @@ export default function HomeScreen() {
         }
       />
 
-      {/* Watch our story (member testimonials) — right below the slider */}
-      <StorySection />
-
-      {/* Current membership — pinned to the top for members with a plan */}
-      {membership ? (
-        <MembershipStatusCard
-          membership={membership}
-          onManage={() => openExternal(membershipsUrl)}
-        />
-      ) : null}
-
       {/* AI Coach — signed-in users reach it as the last slide of the hero
           carousel above (one shared row); guests get the standalone card
           for the public Iconic assistant. */}
@@ -503,9 +492,6 @@ export default function HomeScreen() {
           onPress={() => router.push("/coach")}
         />
       ) : null}
-
-      {/* Personal Trainers — find a coach & book a 1-on-1 session */}
-      <PersonalTrainersCard onPress={() => router.push("/trainers")} />
 
       {/* Explore packages (annual plans) — hidden for active members */}
       {showDiscovery && packages.length > 0 ? (
@@ -527,8 +513,22 @@ export default function HomeScreen() {
         </>
       ) : null}
 
+      {/* Personal Trainers — find a coach & book a 1-on-1 session */}
+      <PersonalTrainersCard onPress={() => router.push("/trainers")} />
+
       {/* Shop by category */}
       <ShopByCategory />
+
+      {/* Current membership — for members with a plan */}
+      {membership ? (
+        <MembershipStatusCard
+          membership={membership}
+          onManage={() => openExternal(membershipsUrl)}
+        />
+      ) : null}
+
+      {/* Watch our story (member testimonials) */}
+      <StorySection />
 
       {/* Gyms near me (location-aware) */}
       <NearbyGyms onOpenGym={() => openExternal(exploreUrl)} />
