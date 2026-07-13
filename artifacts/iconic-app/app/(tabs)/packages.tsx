@@ -1,14 +1,18 @@
 import {
   useListMemberships,
   getListMembershipsQueryKey,
+  useListPackageCategories,
+  getListPackageCategoriesQueryKey,
 } from "@workspace/api-client-react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { PackageCard } from "@/components/PackageCard";
 import { Screen } from "@/components/Screen";
 import {
+  Chip,
+  ChipRow,
   EmptyState,
   ErrorView,
   LoadingView,
@@ -19,9 +23,26 @@ export default function PackagesScreen() {
   const query = useListMemberships({
     query: { queryKey: getListMembershipsQueryKey() },
   });
+  const categoriesQuery = useListPackageCategories({
+    query: { queryKey: getListPackageCategoriesQueryKey() },
+  });
+  const [categoryId, setCategoryId] = useState<number>(0);
+
+  const categories = categoriesQuery.data ?? [];
+
+  // If the selected category is hidden/deleted by an admin, fall back to All.
+  useEffect(() => {
+    if (
+      categoryId !== 0 &&
+      categoriesQuery.isSuccess &&
+      !categories.some((c) => c.id === categoryId)
+    ) {
+      setCategoryId(0);
+    }
+  }, [categoryId, categories, categoriesQuery.isSuccess]);
 
   // Packages = annual plans (created under the admin "Packages" tab).
-  const visible = useMemo(
+  const annual = useMemo(
     () =>
       (query.data ?? [])
         .filter((p) => p.billingPeriod === "annual")
@@ -34,15 +55,47 @@ export default function PackagesScreen() {
     [query.data],
   );
 
+  // 0 = "All". Plans with an unknown/removed category only show under "All".
+  const visible = useMemo(
+    () =>
+      categoryId === 0
+        ? annual
+        : annual.filter((p) => (p.categoryId ?? 0) === categoryId),
+    [annual, categoryId],
+  );
+
   return (
     <Screen
       refreshing={query.isRefetching}
-      onRefresh={() => void query.refetch()}
+      onRefresh={() => {
+        void query.refetch();
+        void categoriesQuery.refetch();
+      }}
     >
       <SectionHeader title="Packages" />
       <AppText muted size={14} style={{ marginBottom: 16 }}>
         Go annual and save the most across the year.
       </AppText>
+
+      {categories.length > 0 ? (
+        <View style={{ marginBottom: 16 }}>
+          <ChipRow>
+            <Chip
+              label="All"
+              active={categoryId === 0}
+              onPress={() => setCategoryId(0)}
+            />
+            {categories.map((c) => (
+              <Chip
+                key={c.id}
+                label={c.name}
+                active={categoryId === c.id}
+                onPress={() => setCategoryId(c.id)}
+              />
+            ))}
+          </ChipRow>
+        </View>
+      ) : null}
 
       {query.isLoading ? (
         <LoadingView />
@@ -52,7 +105,11 @@ export default function PackagesScreen() {
         <EmptyState
           icon="package"
           title="No packages right now"
-          message="Annual packages are on the way. Check back soon."
+          message={
+            categoryId === 0
+              ? "Annual packages are on the way. Check back soon."
+              : "No packages in this category yet. Try another one."
+          }
         />
       ) : (
         <View style={{ gap: 14 }}>

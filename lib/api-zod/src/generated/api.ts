@@ -497,9 +497,21 @@ export const ListMembershipsResponseItem = zod.object({
   "perks": zod.array(zod.string()),
   "badge": zod.string(),
   "popular": zod.boolean(),
-  "imageUrl": zod.string().optional()
+  "imageUrl": zod.string().optional(),
+  "categoryId": zod.number().optional().describe('package_categories id; 0 = uncategorized')
 })
 export const ListMembershipsResponse = zod.array(ListMembershipsResponseItem)
+
+
+/**
+ * @summary List active package categories (admin-managed, sorted)
+ */
+export const ListPackageCategoriesResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "sortOrder": zod.number()
+})
+export const ListPackageCategoriesResponse = zod.array(ListPackageCategoriesResponseItem)
 
 
 /**

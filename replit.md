@@ -38,6 +38,10 @@ All plans are rows in `membershipsTable`; discriminator `billingPeriod === "annu
 - Mobile: `app/plans.tsx` (non-annual, `PlanCard.tsx`); annual plans render cultpass-style `PackageCard.tsx` on the **Packages bottom tab** (`app/(tabs)/packages.tsx`) and a Home "Explore packages" section (annual-only, popular-first, top 4). CTAs open `membershipsUrl` externally.
 - `membershipsTable.imageUrl` (`text NOT NULL DEFAULT ''`); empty → gradient+icon fallback on mobile.
 
+### Package categories (annual packages)
+
+Admin-managed grouping shown as filter chips on the app's Packages tab. `package_categories` table (name, sortOrder, isActive) + `membershipsTable.categoryId` (int, 0 = uncategorized, no FK). Public `GET /package-categories` (active only, sorted) in `memberships.ts`; admin CRUD `/admin/package-categories` in `admin.ts` (delete detaches plans to 0); membership POST/PATCH accept `categoryId`. Admin UI: Categories panel + plan-form select in `AnnualPlans.tsx` (`adminApi.packageCategories`). Mobile `app/(tabs)/packages.tsx`: All + category chips filter annual plans; unknown/0 shows only under All; selected chip resets to All if its category is hidden/deleted.
+
 ### Trainers
 
 - Partners: CRUD from `/partner/trainers` (scoped via `ensureOwnsGym`, manual `partnerApi.trainers.*`). Admins have global CRUD. Trainers attach to a gym and are selectable when scheduling classes. No trainer login exists — records only.

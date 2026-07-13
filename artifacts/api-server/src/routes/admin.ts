@@ -24,6 +24,7 @@ import {
   partnerDocumentsTable,
   trainerBookingsTable,
   packageBookingsTable,
+  packageCategoriesTable,
 } from "@workspace/db";
 import {
   hashPassword,
@@ -1563,6 +1564,7 @@ router.post(
         badge: String(b.badge ?? ""),
         popular: Boolean(b.popular ?? false),
         imageUrl: String(b.imageUrl ?? ""),
+        categoryId: Math.max(0, Math.trunc(Number(b.categoryId) || 0)),
       })
       .returning();
     res.status(201).json(created);
@@ -1592,6 +1594,9 @@ router.patch(
       if (b[k] !== undefined) patch[k] = Number(b[k]);
     }
     if (b.popular !== undefined) patch.popular = Boolean(b.popular);
+    if (b.categoryId !== undefined) {
+      patch.categoryId = Math.max(0, Math.trunc(Number(b.categoryId) || 0));
+    }
     if (Array.isArray(b.perks)) patch.perks = b.perks as string[];
     const [updated] = await db
       .update(membershipsTable)
@@ -1612,6 +1617,101 @@ router.delete(
   async (req: Request, res: Response): Promise<void> => {
     const id = Number(req.params.id);
     await db.delete(membershipsTable).where(eq(membershipsTable.id, id));
+    res.json({ ok: true });
+  },
+);
+
+// ─────────────────────────── Package Categories ───────────────────────────
+// Admin-managed grouping for annual packages; shown on the app's Packages tab.
+
+router.get(
+  "/admin/package-categories",
+  requireAdmin,
+  async (_req: Request, res: Response): Promise<void> => {
+    res.json(
+      await db
+        .select()
+        .from(packageCategoriesTable)
+        .orderBy(packageCategoriesTable.sortOrder, packageCategoriesTable.id),
+    );
+  },
+);
+
+router.post(
+  "/admin/package-categories",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const name = typeof b.name === "string" ? b.name.trim() : "";
+    if (!name) {
+      res.status(400).json({ error: "name is required" });
+      return;
+    }
+    if (name.length > 60) {
+      res.status(400).json({ error: "Category name is too long" });
+      return;
+    }
+    const [created] = await db
+      .insert(packageCategoriesTable)
+      .values({
+        name,
+        sortOrder: Math.trunc(Number(b.sortOrder) || 0),
+        isActive: b.isActive === undefined ? true : Boolean(b.isActive),
+      })
+      .returning();
+    res.status(201).json(created);
+  },
+);
+
+router.patch(
+  "/admin/package-categories/:id",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const patch: Record<string, unknown> = {};
+    if (b.name !== undefined) {
+      const name = String(b.name).trim();
+      if (!name || name.length > 60) {
+        res.status(400).json({ error: "Invalid category name" });
+        return;
+      }
+      patch.name = name;
+    }
+    if (b.sortOrder !== undefined) {
+      patch.sortOrder = Math.trunc(Number(b.sortOrder) || 0);
+    }
+    if (b.isActive !== undefined) patch.isActive = Boolean(b.isActive);
+    if (Object.keys(patch).length === 0) {
+      res.status(400).json({ error: "Nothing to update" });
+      return;
+    }
+    const [updated] = await db
+      .update(packageCategoriesTable)
+      .set(patch)
+      .where(eq(packageCategoriesTable.id, id))
+      .returning();
+    if (!updated) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    res.json(updated);
+  },
+);
+
+router.delete(
+  "/admin/package-categories/:id",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    await db
+      .delete(packageCategoriesTable)
+      .where(eq(packageCategoriesTable.id, id));
+    // Detach plans that pointed at the deleted category (0 = uncategorized).
+    await db
+      .update(membershipsTable)
+      .set({ categoryId: 0 })
+      .where(eq(membershipsTable.categoryId, id));
     res.json({ ok: true });
   },
 );

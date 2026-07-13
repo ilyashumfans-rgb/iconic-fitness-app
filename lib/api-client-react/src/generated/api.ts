@@ -64,6 +64,7 @@ import type {
   OkResponse,
   PackageBooking,
   PackageBookingCreated,
+  PackageCategory,
   ProgressReport,
   StoreCategory,
   StoreProduct,
@@ -1469,6 +1470,83 @@ export function useListMemberships<TData = Awaited<ReturnType<typeof listMembers
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getListMembershipsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListPackageCategoriesUrl = () => {
+
+
+
+
+  return `/api/package-categories`
+}
+
+/**
+ * @summary List active package categories (admin-managed, sorted)
+ */
+export const listPackageCategories = async ( options?: RequestInit): Promise<PackageCategory[]> => {
+
+  return customFetch<PackageCategory[]>(getListPackageCategoriesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPackageCategoriesQueryKey = () => {
+    return [
+    `/api/package-categories`
+    ] as const;
+    }
+
+
+export const getListPackageCategoriesQueryOptions = <TData = Awaited<ReturnType<typeof listPackageCategories>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPackageCategories>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPackageCategoriesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPackageCategories>>> = ({ signal }) => listPackageCategories({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPackageCategories>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListPackageCategoriesQueryResult = NonNullable<Awaited<ReturnType<typeof listPackageCategories>>>
+export type ListPackageCategoriesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List active package categories (admin-managed, sorted)
+ */
+
+export function useListPackageCategories<TData = Awaited<ReturnType<typeof listPackageCategories>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPackageCategories>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListPackageCategoriesQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

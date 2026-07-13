@@ -3,11 +3,13 @@ import { eq } from "drizzle-orm";
 import {
   db,
   membershipsTable,
+  packageCategoriesTable,
   userMembershipsTable,
   usersTable,
 } from "@workspace/db";
 import {
   ListMembershipsResponse,
+  ListPackageCategoriesResponse,
   GetMyMembershipResponse,
   ListMyMembershipPaymentsResponse,
 } from "@workspace/api-zod";
@@ -23,6 +25,16 @@ const router: IRouter = Router();
 router.get("/memberships", async (_req, res): Promise<void> => {
   const rows = await db.select().from(membershipsTable);
   res.json(ListMembershipsResponse.parse(rows));
+});
+
+// Active admin-managed categories for the app's Packages tab, in admin order.
+router.get("/package-categories", async (_req, res): Promise<void> => {
+  const rows = await db
+    .select()
+    .from(packageCategoriesTable)
+    .where(eq(packageCategoriesTable.isActive, true))
+    .orderBy(packageCategoriesTable.sortOrder, packageCategoriesTable.id);
+  res.json(ListPackageCategoriesResponse.parse(rows));
 });
 
 router.get("/memberships/mine", requireUser, async (req, res): Promise<void> => {

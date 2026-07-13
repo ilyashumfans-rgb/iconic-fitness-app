@@ -241,6 +241,14 @@ export interface MembershipPlan {
   badge: string;
   popular: boolean;
   imageUrl?: string;
+  /** package_categories id; 0 = uncategorized */
+  categoryId?: number;
+}
+
+export interface PackageCategory {
+  id: number;
+  name: string;
+  sortOrder: number;
 }
 
 export type MyMembershipStatus = typeof MyMembershipStatus[keyof typeof MyMembershipStatus];

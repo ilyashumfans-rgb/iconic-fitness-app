@@ -74,6 +74,7 @@ export * from './packageBooking';
 export * from './packageBookingCreated';
 export * from './packageBookingCreatedStatus';
 export * from './packageBookingStatus';
+export * from './packageCategory';
 export * from './progressDay';
 export * from './progressReport';
 export * from './storeCategory';

@@ -215,6 +215,16 @@ export const membershipsTable = pgTable("memberships", {
   badge: text("badge").notNull(),
   popular: boolean("popular").notNull().default(false),
   imageUrl: text("image_url").notNull().default(""),
+  // 0 = uncategorized; references package_categories.id (plain int, no FK — repo convention)
+  categoryId: integer("category_id").notNull().default(0),
+});
+
+// Admin-managed grouping for annual packages shown on the app's Packages tab.
+export const packageCategoriesTable = pgTable("package_categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
 });
 
 export const userMembershipsTable = pgTable("user_memberships", {

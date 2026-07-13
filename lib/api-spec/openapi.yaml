@@ -332,6 +332,19 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/MembershipPlan" }
+  /package-categories:
+    get:
+      operationId: listPackageCategories
+      tags: [memberships]
+      summary: List active package categories (admin-managed, sorted)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PackageCategory" }
   /memberships/mine:
     get:
       operationId: getMyMembership
@@ -1162,6 +1175,18 @@ components:
         badge: { type: string }
         popular: { type: boolean }
         imageUrl: { type: string }
+        categoryId:
+          {
+            type: integer,
+            description: "package_categories id; 0 = uncategorized",
+          }
+    PackageCategory:
+      type: object
+      required: [id, name, sortOrder]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        sortOrder: { type: integer }
     MyMembership:
       type: object
       required: [planId, planName, renewsOn, classesUsed, classesIncluded, gymsAccessed, status]

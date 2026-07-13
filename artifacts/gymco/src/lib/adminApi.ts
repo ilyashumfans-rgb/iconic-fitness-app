@@ -76,6 +76,13 @@ export type YoactivMemberDetail = {
   }[];
 };
 
+export type PackageCategoryRow = {
+  id: number;
+  name: string;
+  sortOrder: number;
+  isActive: boolean;
+};
+
 export type AgencyAccount = {
   id: number;
   username: string;
@@ -259,6 +266,23 @@ export const adminApi = {
       }),
     remove: (id: number) =>
       request<{ ok: true }>(`/admin/memberships/${id}`, { method: "DELETE" }),
+  },
+  packageCategories: {
+    list: () => request<PackageCategoryRow[]>("/admin/package-categories"),
+    create: (body: Record<string, unknown>) =>
+      request<PackageCategoryRow>("/admin/package-categories", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: number, body: Record<string, unknown>) =>
+      request<PackageCategoryRow>(`/admin/package-categories/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: number) =>
+      request<{ ok: true }>(`/admin/package-categories/${id}`, {
+        method: "DELETE",
+      }),
   },
   users: {
     list: () => request<any[]>("/admin/users"),
