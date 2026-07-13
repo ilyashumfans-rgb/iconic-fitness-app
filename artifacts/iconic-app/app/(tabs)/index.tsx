@@ -158,10 +158,13 @@ function MembershipStatusCard({
   membership,
   memberName,
   onManage,
+  embedded = false,
 }: {
   membership: MyMembership;
   memberName: string;
   onManage: () => void;
+  /** Render as a slide inside the top card pager: outer margin handled by the pager. */
+  embedded?: boolean;
 }) {
   const queryClient = useQueryClient();
   // When the gym system reported no expiry date, renewsOn is a placeholder —
@@ -246,7 +249,13 @@ function MembershipStatusCard({
             : "Renew early";
 
   return (
-    <View style={[styles.premiumWrap, CARD_SHADOW]}>
+    <View
+      style={[
+        styles.premiumWrap,
+        CARD_SHADOW,
+        embedded ? { marginBottom: 0 } : null,
+      ]}
+    >
       <LinearGradient
         colors={[PREMIUM.bgTop, PREMIUM.bgBottom]}
         start={{ x: 0, y: 0 }}
@@ -481,6 +490,106 @@ function MembershipStatusCard({
   );
 }
 
+/**
+ * Swipeable pager merging the AI coach card and the premium member card into
+ * one top-of-Home row. The slide order flips so a plan needing renewal is the
+ * first thing a member sees.
+ */
+function TopCardPager({
+  aiCard,
+  memberCard,
+  membershipFirst,
+}: {
+  aiCard: React.ReactNode;
+  memberCard: React.ReactNode;
+  membershipFirst: boolean;
+}) {
+  const colors = useColors();
+  const { width } = useWindowDimensions();
+  // Screen applies 20px horizontal padding, so the pager (and each slide)
+  // spans width - 40.
+  const SLIDE_W = width - 40;
+  const scrollRef = useRef<ScrollView>(null);
+  const [active, setActive] = useState(0);
+  const activeRef = useRef(0);
+  useEffect(() => {
+    activeRef.current = active;
+  }, [active]);
+
+  // Keep the pager aligned when the slide width changes (rotation, resize):
+  // re-snap the current page to the new pixel offset.
+  useEffect(() => {
+    scrollRef.current?.scrollTo({
+      x: activeRef.current * SLIDE_W,
+      animated: false,
+    });
+  }, [SLIDE_W]);
+
+  // If renewal priority flips at runtime, reset to the first slide so the
+  // leading card matches the new priority (and dots stay in sync).
+  useEffect(() => {
+    setActive(0);
+    scrollRef.current?.scrollTo({ x: 0, animated: false });
+  }, [membershipFirst]);
+
+  const slides = membershipFirst
+    ? [
+        { key: "member", node: memberCard },
+        { key: "ai", node: aiCard },
+      ]
+    : [
+        { key: "ai", node: aiCard },
+        { key: "member", node: memberCard },
+      ];
+
+  return (
+    <View style={styles.topPagerWrap}>
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        decelerationRate="fast"
+        onMomentumScrollEnd={(e) =>
+          setActive(
+            Math.max(
+              0,
+              Math.min(
+                slides.length - 1,
+                Math.round(e.nativeEvent.contentOffset.x / SLIDE_W),
+              ),
+            ),
+          )
+        }
+      >
+        {slides.map((s) => (
+          <View
+            key={s.key}
+            style={{ width: SLIDE_W, justifyContent: "center" }}
+          >
+            {s.node}
+          </View>
+        ))}
+      </ScrollView>
+      <View style={styles.topPagerDots}>
+        {slides.map((s, i) => (
+          <View
+            key={s.key}
+            style={[
+              styles.topPagerDot,
+              {
+                backgroundColor:
+                  i === active ? colors.primary : colors.elevated,
+                width: i === active ? 18 : 7,
+              },
+            ]}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
 const SOFT_SHADOW = Platform.select({
   web: { boxShadow: "0 8px 22px rgba(0,0,0,0.20)" },
   default: {
@@ -676,14 +785,42 @@ export default function HomeScreen() {
       onRefresh={refetchAll}
       contentContainerStyle={{ paddingTop: 8 }}
     >
-      {/* AI Coach — standalone card at the very top for everyone: guests get
-          the public Iconic assistant, members the personalized coach. */}
-      <AICoachCard
-        needsAssessment={
-          !!isSignedIn && !!meQuery.data && !meQuery.data.assessmentComplete
-        }
-        onPress={() => router.push("/coach")}
-      />
+      {/* Top card — AI coach for everyone; members with a plan get a swipeable
+          pager that merges the AI coach and the premium member card. When the
+          plan needs renewal the member card leads so the warning is seen. */}
+      {membership ? (
+        <TopCardPager
+          membershipFirst={
+            membership.status === "expired" ||
+            (membership.expiryKnown !== false &&
+              daysUntilIst(membership.renewsOn) <= EXPIRY_SOON_DAYS)
+          }
+          aiCard={
+            <AICoachCard
+              embedded
+              needsAssessment={
+                !!isSignedIn && !!meQuery.data && !meQuery.data.assessmentComplete
+              }
+              onPress={() => router.push("/coach")}
+            />
+          }
+          memberCard={
+            <MembershipStatusCard
+              embedded
+              membership={membership}
+              memberName={meQuery.data?.name ?? ""}
+              onManage={() => openExternal(membershipsUrl)}
+            />
+          }
+        />
+      ) : (
+        <AICoachCard
+          needsAssessment={
+            !!isSignedIn && !!meQuery.data && !meQuery.data.assessmentComplete
+          }
+          onPress={() => router.push("/coach")}
+        />
+      )}
 
       {/* Personal tracking — pinned to the top for signed-in members */}
       {isSignedIn ? (
@@ -910,15 +1047,6 @@ export default function HomeScreen() {
           isSignedIn ? undefined : { onOpenGym: () => openExternal(exploreUrl) }
         }
       />
-
-      {/* Current membership — premium member card with one-tap renewal */}
-      {membership ? (
-        <MembershipStatusCard
-          membership={membership}
-          memberName={meQuery.data?.name ?? ""}
-          onManage={() => openExternal(membershipsUrl)}
-        />
-      ) : null}
 
       {/* Watch our story (member testimonials) */}
       <StorySection />
@@ -2308,6 +2436,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderRadius: 24,
   },
+  topPagerWrap: { marginTop: 20, marginBottom: 4 },
+  topPagerDots: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 10,
+  },
+  topPagerDot: { height: 7, borderRadius: 4 },
   premiumCard: {
     borderRadius: 24,
     overflow: "hidden",
