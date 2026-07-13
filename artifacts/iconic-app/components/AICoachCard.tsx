@@ -70,9 +70,12 @@ function FloatIcon({ name, style, delay, tint, border }: FloatIconProps) {
 export function AICoachCard({
   needsAssessment,
   onPress,
+  embedded = false,
 }: {
   needsAssessment: boolean;
   onPress: () => void;
+  /** Render as a slide inside the hero slider: no outer margins/shadow, fixed slide height. */
+  embedded?: boolean;
 }) {
   const colors = useColors();
 
@@ -118,8 +121,10 @@ export function AICoachCard({
   return (
     <Animated.View
       style={[
-        CARD_SHADOW,
-        { marginTop: 20, marginBottom: 4, borderRadius: 30, backgroundColor: "#0A0C08" },
+        embedded ? null : CARD_SHADOW,
+        embedded
+          ? { borderRadius: 30, backgroundColor: "#0A0C08" }
+          : { marginTop: 20, marginBottom: 4, borderRadius: 30, backgroundColor: "#0A0C08" },
       ]}
     >
       <Pressable onPress={onPress}>
@@ -127,6 +132,7 @@ export function AICoachCard({
           <View
             style={[
               styles.card,
+              embedded ? { height: 226 } : null,
               {
                 borderColor: "rgba(127,194,64,0.22)",
                 transform: [{ scale: pressed ? 0.985 : 1 }],

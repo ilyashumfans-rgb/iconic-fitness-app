@@ -472,6 +472,15 @@ export default function HomeScreen() {
             params: { url, title: title ?? "Iconic Fitness" },
           });
         }}
+        aiSlide={
+          isSignedIn
+            ? {
+                needsAssessment:
+                  !!meQuery.data && !meQuery.data.assessmentComplete,
+                onPress: () => router.push("/coach"),
+              }
+            : undefined
+        }
       />
 
       {/* Current membership — pinned to the top for members with a plan */}
@@ -482,14 +491,15 @@ export default function HomeScreen() {
         />
       ) : null}
 
-      {/* AI Coach — members get their personal coach, guests get the Iconic
-          assistant (plans, branches, enrollment help). */}
-      <AICoachCard
-        needsAssessment={
-          !!isSignedIn && !!meQuery.data && !meQuery.data.assessmentComplete
-        }
-        onPress={() => router.push("/coach")}
-      />
+      {/* AI Coach — signed-in users reach it as the last slide of the hero
+          carousel above (one shared row); guests get the standalone card
+          for the public Iconic assistant. */}
+      {!isSignedIn ? (
+        <AICoachCard
+          needsAssessment={false}
+          onPress={() => router.push("/coach")}
+        />
+      ) : null}
 
       {/* Personal Trainers — find a coach & book a 1-on-1 session */}
       <PersonalTrainersCard onPress={() => router.push("/trainers")} />
@@ -773,7 +783,8 @@ export default function HomeScreen() {
 type RenderSlide =
   | { key: string; type: "brand" }
   | { key: string; type: "gym"; gym: Gym }
-  | { key: string; type: "admin"; slide: HomeSlide };
+  | { key: string; type: "admin"; slide: HomeSlide }
+  | { key: string; type: "ai" };
 
 function youtubeId(url: string): string | undefined {
   const m = url.match(
@@ -802,12 +813,15 @@ function HeroSlider({
   membershipSettled,
   onExplore,
   onOpenUrl,
+  aiSlide,
 }: {
   gyms: Gym[];
   isMember: boolean;
   membershipSettled: boolean;
   onExplore: () => void;
   onOpenUrl: (url: string, title?: string) => void;
+  /** When set, an AI coach slide is appended to the carousel (signed-in users). */
+  aiSlide?: { needsAssessment: boolean; onPress: () => void };
 }) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -842,18 +856,26 @@ function HeroSlider({
   // targeted at the other audience) we fall back to a code default so the
   // banner is never empty: a brand intro followed by the top gyms.
   const slides: RenderSlide[] = useMemo(() => {
-    if (visibleAdminSlides.length > 0) {
-      return visibleAdminSlides.map((s) => ({
-        key: `a${s.id}`,
-        type: "admin" as const,
-        slide: s,
-      }));
-    }
-    return [
-      { key: "brand", type: "brand" as const },
-      ...gyms.map((g) => ({ key: `g${g.id}`, type: "gym" as const, gym: g })),
-    ];
-  }, [visibleAdminSlides, gyms]);
+    const base: RenderSlide[] =
+      visibleAdminSlides.length > 0
+        ? visibleAdminSlides.map((s) => ({
+            key: `a${s.id}`,
+            type: "admin" as const,
+            slide: s,
+          }))
+        : [
+            { key: "brand", type: "brand" as const },
+            ...gyms.map((g) => ({
+              key: `g${g.id}`,
+              type: "gym" as const,
+              gym: g,
+            })),
+          ];
+    // Signed-in users get the AI coach as the last slide of the same carousel
+    // so the banner and AI share one row — swipe to reach the coach.
+    if (aiSlide) base.push({ key: "ai", type: "ai" as const });
+    return base;
+  }, [visibleAdminSlides, gyms, aiSlide]);
 
   const total = slides.length;
 
@@ -923,6 +945,18 @@ function HeroSlider({
         onMomentumScrollEnd={onMomentumEnd}
       >
         {slides.map((item, index) => {
+          if (item.type === "ai") {
+            return (
+              <View key={item.key} style={{ width: SLIDE_W }}>
+                <AICoachCard
+                  embedded
+                  needsAssessment={aiSlide?.needsAssessment ?? false}
+                  onPress={() => aiSlide?.onPress()}
+                />
+              </View>
+            );
+          }
+
           if (item.type === "brand") {
             return (
               <Pressable
