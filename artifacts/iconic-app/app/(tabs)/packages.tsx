@@ -7,7 +7,7 @@ import {
   type PackageCategory,
 } from "@workspace/api-client-react";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Image, Pressable, StyleSheet, View } from "react-native";
 
@@ -104,8 +104,21 @@ export default function PackagesScreen() {
     query: { queryKey: getListPackageCategoriesQueryKey() },
   });
   const router = useRouter();
-  // null = category picker; >0 = specific category open
-  const [categoryId, setCategoryId] = useState<number | null>(null);
+
+  // The URL is the single source of truth for which category is open:
+  // /(tabs)/packages?categoryId=N (also the deep-link target from Home's
+  // category tiles). Absent/invalid param = category picker.
+  const params = useLocalSearchParams<{ categoryId?: string }>();
+  const paramCategoryId = Number(params.categoryId);
+  const categoryId =
+    params.categoryId && Number.isFinite(paramCategoryId) && paramCategoryId > 0
+      ? paramCategoryId
+      : null;
+  const setCategoryId = (id: number | null) => {
+    // "" (rather than removing the key) keeps setParams' types happy and
+    // parses back to null above.
+    router.setParams({ categoryId: id ? String(id) : "" });
+  };
 
   const categories = categoriesQuery.data ?? [];
 
@@ -118,6 +131,7 @@ export default function PackagesScreen() {
     ) {
       setCategoryId(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryId, categories, categoriesQuery.isSuccess]);
 
   // Packages = annual plans (created under the admin "Packages" tab).

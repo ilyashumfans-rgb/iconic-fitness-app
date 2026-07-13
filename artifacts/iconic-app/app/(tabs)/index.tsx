@@ -18,11 +18,14 @@ import {
   useListMemberships,
   useListMyBookings,
   useListHomeSlides,
+  useListPackageCategories,
+  getListPackageCategoriesQueryKey,
   useListStoreCategories,
   useListStoreProducts,
   type ClassSession,
   type Gym,
   type HomeSlide,
+  type PackageCategory,
   type StoreCategory,
   type StoreProduct,
 } from "@workspace/api-client-react";
@@ -363,7 +366,7 @@ export default function HomeScreen() {
     () => (classesQuery.data ?? []).slice(0, 6),
     [classesQuery.data],
   );
-  const packages = useMemo(
+  const annualAll = useMemo(
     () =>
       (membershipsQuery.data ?? [])
         .filter((p) => p.billingPeriod === "annual")
@@ -371,10 +374,20 @@ export default function HomeScreen() {
           if (a.popular && !b.popular) return -1;
           if (!a.popular && b.popular) return 1;
           return a.priceInr - b.priceInr;
-        })
-        .slice(0, 4),
+        }),
     [membershipsQuery.data],
   );
+  const packages = useMemo(() => annualAll.slice(0, 4), [annualAll]);
+
+  // Package categories — shown as a compact 3D tile row on Home.
+  const packageCategoriesQuery = useListPackageCategories({
+    query: { queryKey: getListPackageCategoriesQueryKey() },
+  });
+  const packageCategories = packageCategoriesQuery.data ?? [];
+  // Wait for the categories query to settle before choosing tiles vs the
+  // plan-card fallback, so the section doesn't flash cards then swap to tiles.
+  const packageCategoriesSettled =
+    packageCategoriesQuery.isSuccess || packageCategoriesQuery.isError;
 
   const refetchAll = useCallback(() => {
     void gymsQuery.refetch();
@@ -457,23 +470,57 @@ export default function HomeScreen() {
         />
       ) : null}
 
-      {/* Explore packages (annual plans) — hidden for active members */}
-      {showDiscovery && packages.length > 0 ? (
+      {/* Explore packages — compact 3D category tiles (falls back to plan
+          cards when no categories are configured). Hidden for active members. */}
+      {showDiscovery &&
+      packageCategoriesSettled &&
+      (packageCategories.length > 0 || packages.length > 0) ? (
         <>
           <SectionHeader
             title="Explore packages"
             action="View all"
             onAction={() => router.push("/packages")}
           />
-          <View style={{ gap: 12, marginBottom: 8 }}>
-            {packages.map((plan) => (
-              <PackageCard
-                key={plan.id}
-                plan={plan}
-                onPress={() => router.push(`/package/${plan.id}`)}
-              />
-            ))}
-          </View>
+          {packageCategories.length > 0 ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.catTileRow}
+              style={{ marginBottom: 20 }}
+            >
+              {packageCategories.map((c, i) => {
+                const count = annualAll.filter(
+                  (p) => (p.categoryId ?? 0) === c.id,
+                ).length;
+                return (
+                  <PackageCategoryTile
+                    key={c.id}
+                    category={c}
+                    count={count}
+                    index={i}
+                    onPress={() =>
+                      count === 0
+                        ? router.push("/book-package")
+                        : router.push({
+                            pathname: "/(tabs)/packages",
+                            params: { categoryId: String(c.id) },
+                          })
+                    }
+                  />
+                );
+              })}
+            </ScrollView>
+          ) : (
+            <View style={{ gap: 12, marginBottom: 8 }}>
+              {packages.map((plan) => (
+                <PackageCard
+                  key={plan.id}
+                  plan={plan}
+                  onPress={() => router.push(`/package/${plan.id}`)}
+                />
+              ))}
+            </View>
+          )}
         </>
       ) : null}
 
@@ -1566,6 +1613,86 @@ function CategoryCard({
 }
 
 /**
+ * Compact package-category tile with a subtle 3D look: perspective tilt,
+ * layered shadow (on an outer wrapper — iOS clips shadows under
+ * overflow:hidden) and a glass highlight along the top edge.
+ */
+function PackageCategoryTile({
+  category,
+  count,
+  index,
+  onPress,
+}: {
+  category: PackageCategory;
+  count: number;
+  index: number;
+  onPress: () => void;
+}) {
+  const colors = useColors();
+  const uri = resolveImageUrl(category.imageUrl ?? "");
+  // Alternate the tilt direction so the row reads like angled 3D panels.
+  const tilt = index % 2 === 0 ? "8deg" : "-8deg";
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.catTileShadow,
+        { transform: [{ scale: pressed ? 0.95 : 1 }] },
+      ]}
+    >
+      <View
+        style={[
+          styles.catTile,
+          {
+            backgroundColor: colors.card,
+            transform: [{ perspective: 620 }, { rotateY: tilt }],
+          },
+        ]}
+      >
+        {uri ? (
+          <Image source={{ uri }} style={StyleSheet.absoluteFill} />
+        ) : (
+          <LinearGradient
+            colors={colors.primaryGradient as [string, string]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+        )}
+        <LinearGradient
+          colors={["transparent", "rgba(10,12,8,0.92)"]}
+          start={{ x: 0.5, y: 0.25 }}
+          end={{ x: 0.5, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <LinearGradient
+          colors={["rgba(255,255,255,0.22)", "transparent"]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={styles.catTileGloss}
+          pointerEvents="none"
+        />
+        <View style={{ padding: 12 }}>
+          <AppText weight="700" size={14} color="#FFFFFF" numberOfLines={1}>
+            {category.name}
+          </AppText>
+          <AppText
+            size={11}
+            color="#FFFFFF"
+            style={{ opacity: 0.85, marginTop: 2 }}
+          >
+            {count > 0
+              ? `${count} package${count === 1 ? "" : "s"}`
+              : "View packages"}
+          </AppText>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+/**
  * "Gyms near me" as a carousel slide. Before location is granted it's a
  * gradient call-to-action (tap → request permission); once granted it shows
  * the closest branch with its photo and distance (tap → explore gyms).
@@ -1946,6 +2073,30 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     borderRadius: 30,
     ...SOFT_SHADOW,
+  },
+  catTileRow: {
+    gap: 14,
+    paddingRight: 20,
+    paddingVertical: 8,
+    paddingLeft: 4,
+  },
+  catTileShadow: {
+    borderRadius: 20,
+    ...CARD_SHADOW,
+  },
+  catTile: {
+    width: 132,
+    height: 148,
+    borderRadius: 20,
+    overflow: "hidden",
+    justifyContent: "flex-end",
+  },
+  catTileGloss: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 52,
   },
   slide: {
     height: 226,
