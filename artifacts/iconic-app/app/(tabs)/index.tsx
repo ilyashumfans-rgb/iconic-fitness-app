@@ -334,12 +334,9 @@ export default function HomeScreen() {
   const membershipSettled = !isSignedIn || myMembershipQuery.isSuccess;
   const isMember = !!isSignedIn && !!myMembershipQuery.data;
   const membership = myMembershipQuery.data ?? null;
-  // An "active member" gets a plan-focused Home: their plan pinned to the top,
-  // and the discovery sections (Explore packages / Top rated gyms) hidden.
-  const hasActivePlan = isMember && membership?.status === "active";
-  // Only reveal the discovery sections once membership status is settled, so a
-  // signed-in active member never briefly flashes them while the plan loads.
-  const showDiscovery = membershipSettled && !hasActivePlan;
+  // Signed-in users get a tracking-focused Home: the discovery sections
+  // (Explore packages / Gyms near me / Top rated gyms) are guest-only.
+  const showDiscovery = !isSignedIn;
   const bookingsQuery = useListMyBookings(
     { status: "upcoming" },
     {
@@ -464,214 +461,7 @@ export default function HomeScreen() {
       onRefresh={refetchAll}
       contentContainerStyle={{ paddingTop: 8 }}
     >
-      {/* AI Coach — signed-in users reach it as the last slide of the hero
-          carousel below (one shared row); guests get the standalone card
-          for the public Iconic assistant. */}
-      {!isSignedIn ? (
-        <AICoachCard
-          needsAssessment={false}
-          onPress={() => router.push("/coach")}
-        />
-      ) : null}
-
-      {/* Explore packages — compact 3D category tiles (falls back to plan
-          cards when no categories are configured). Hidden for active members. */}
-      {showDiscovery &&
-      packageCategoriesSettled &&
-      (packageCategories.length > 0 || packages.length > 0) ? (
-        <>
-          <SectionHeader
-            title="Explore packages"
-            action="View all"
-            onAction={() => router.push("/packages")}
-          />
-          {packageCategories.length > 0 ? (
-            // Single column: one card visible at a time; swipe sideways to
-            // move between categories (snap paging).
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              snapToInterval={catCardW + 12}
-              decelerationRate="fast"
-              contentContainerStyle={styles.catTileList}
-              style={{ marginBottom: 20 }}
-            >
-              {packageCategories.map((c) => {
-                const count = annualAll.filter(
-                  (p) => (p.categoryId ?? 0) === c.id,
-                ).length;
-                return (
-                  <PackageCategoryTile
-                    key={c.id}
-                    category={c}
-                    count={count}
-                    width={catCardW}
-                    onPress={() =>
-                      count === 0
-                        ? router.push("/book-package")
-                        : router.push({
-                            pathname: "/(tabs)/packages",
-                            params: { categoryId: String(c.id) },
-                          })
-                    }
-                  />
-                );
-              })}
-            </ScrollView>
-          ) : (
-            <View style={{ gap: 12, marginBottom: 8 }}>
-              {packages.map((plan) => (
-                <PackageCard
-                  key={plan.id}
-                  plan={plan}
-                  onPress={() => router.push(`/package/${plan.id}`)}
-                />
-              ))}
-            </View>
-          )}
-        </>
-      ) : null}
-
-      {/* Personal Trainers — find a coach & book a 1-on-1 session */}
-      <PersonalTrainersCard onPress={() => router.push("/trainers")} />
-
-      {/* Shop by category */}
-      <ShopByCategory />
-
-      {/* Home banner slider (admin-managed) */}
-      <HeroSlider
-        gyms={heroGyms}
-        isMember={isMember}
-        membershipSettled={membershipSettled}
-        onExplore={() =>
-          router.push({
-            pathname: "/web",
-            params: { url: exploreUrl, title: "Explore gyms" },
-          })
-        }
-        onOpenUrl={(url, title) => {
-          // Keep the viewer inside the app: internal paths navigate directly,
-          // external links open in the in-app browser screen.
-          if (url.startsWith("/")) {
-            router.push(url as never);
-            return;
-          }
-          router.push({
-            pathname: "/web",
-            params: { url, title: title ?? "Iconic Fitness" },
-          });
-        }}
-        aiSlide={
-          isSignedIn
-            ? {
-                needsAssessment:
-                  !!meQuery.data && !meQuery.data.assessmentComplete,
-                onPress: () => router.push("/coach"),
-              }
-            : undefined
-        }
-        nearSlide={{ onOpenGym: () => openExternal(exploreUrl) }}
-      />
-
-      {/* Current membership — for members with a plan */}
-      {membership ? (
-        <MembershipStatusCard
-          membership={membership}
-          onManage={() => openExternal(membershipsUrl)}
-        />
-      ) : null}
-
-      {/* Watch our story (member testimonials) */}
-      <StorySection />
-
-      {/* Top rated gyms — hidden for active members */}
-      {showDiscovery ? (
-        <>
-          <SectionHeader
-            title="Top rated gyms"
-            action="View all"
-            onAction={() => openExternal(exploreUrl)}
-          />
-          {gymsQuery.isLoading ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.gymRow}
-              style={{ marginBottom: 28 }}
-            >
-              {[0, 1, 2].map((k) => (
-                <GymCardSkeleton key={k} />
-              ))}
-            </ScrollView>
-          ) : gyms.length === 0 ? (
-            <Card style={{ marginBottom: 28 }}>
-              <AppText weight="700" size={15}>
-                No gyms to show yet
-              </AppText>
-              <AppText muted size={13} style={{ marginTop: 4 }}>
-                Pull to refresh or explore on our website.
-              </AppText>
-            </Card>
-          ) : (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.gymRow}
-              style={{ marginBottom: 28 }}
-            >
-              {gyms.slice(0, 8).map((g, i) => (
-                <GymCard
-                  key={g.id}
-                  gym={g}
-                  index={i}
-                  onPress={() => openExternal(exploreUrl)}
-                />
-              ))}
-            </ScrollView>
-          )}
-        </>
-      ) : null}
-
-      {/* Book a class */}
-      <SectionHeader
-        title="Book your next session"
-        action="See all"
-        onAction={() => router.push("/classes")}
-      />
-      {classesQuery.isLoading ? (
-        <View style={{ height: 150, justifyContent: "center" }}>
-          <LoadingView />
-        </View>
-      ) : featured.length === 0 ? (
-        <Card style={{ marginBottom: 28 }}>
-          <AppText weight="700" size={15}>
-            No classes scheduled
-          </AppText>
-          <AppText muted size={13} style={{ marginTop: 4 }}>
-            New sessions drop soon — pull to refresh.
-          </AppText>
-        </Card>
-      ) : (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.classRow}
-          style={{ marginBottom: 28 }}
-        >
-          {featured.map((s) => (
-            <ClassCard
-              key={s.id}
-              session={s}
-              booked={bookedClassIds.has(s.id)}
-              loading={bookingId === s.id}
-              onBook={() => onBook(s)}
-              onOpen={() => router.push("/classes")}
-            />
-          ))}
-        </ScrollView>
-      )}
-
-      {/* Personal tracking — members only */}
+      {/* Personal tracking — pinned to the top for signed-in members */}
       {isSignedIn ? (
         <>
           <SectionHeader title="Your progress today" />
@@ -807,7 +597,219 @@ export default function HomeScreen() {
             </Card>
           </Pressable>
         </>
+      ) : null}
+
+      {/* AI Coach — signed-in users reach it as the last slide of the hero
+          carousel below (one shared row); guests get the standalone card
+          for the public Iconic assistant. */}
+      {!isSignedIn ? (
+        <AICoachCard
+          needsAssessment={false}
+          onPress={() => router.push("/coach")}
+        />
+      ) : null}
+
+      {/* Explore packages — swipeable category cards (falls back to plan
+          cards when no categories are configured). Guests only. */}
+      {showDiscovery &&
+      packageCategoriesSettled &&
+      (packageCategories.length > 0 || packages.length > 0) ? (
+        <>
+          <SectionHeader
+            title="Explore packages"
+            action="View all"
+            onAction={() => router.push("/packages")}
+          />
+          {packageCategories.length > 0 ? (
+            // Single column: one card visible at a time; swipe sideways to
+            // move between categories (snap paging).
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={catCardW + 12}
+              decelerationRate="fast"
+              contentContainerStyle={styles.catTileList}
+              style={{ marginBottom: 20 }}
+            >
+              {packageCategories.map((c) => {
+                const count = annualAll.filter(
+                  (p) => (p.categoryId ?? 0) === c.id,
+                ).length;
+                return (
+                  <PackageCategoryTile
+                    key={c.id}
+                    category={c}
+                    count={count}
+                    width={catCardW}
+                    onPress={() =>
+                      count === 0
+                        ? router.push("/book-package")
+                        : router.push({
+                            pathname: "/(tabs)/packages",
+                            params: { categoryId: String(c.id) },
+                          })
+                    }
+                  />
+                );
+              })}
+            </ScrollView>
+          ) : (
+            <View style={{ gap: 12, marginBottom: 8 }}>
+              {packages.map((plan) => (
+                <PackageCard
+                  key={plan.id}
+                  plan={plan}
+                  onPress={() => router.push(`/package/${plan.id}`)}
+                />
+              ))}
+            </View>
+          )}
+        </>
+      ) : null}
+
+      {/* Personal Trainers — find a coach & book a 1-on-1 session */}
+      <PersonalTrainersCard onPress={() => router.push("/trainers")} />
+
+      {/* Shop by category */}
+      <ShopByCategory />
+
+      {/* Home banner slider (admin-managed) */}
+      <HeroSlider
+        gyms={heroGyms}
+        isMember={isMember}
+        membershipSettled={membershipSettled}
+        onExplore={() =>
+          router.push({
+            pathname: "/web",
+            params: { url: exploreUrl, title: "Explore gyms" },
+          })
+        }
+        onOpenUrl={(url, title) => {
+          // Keep the viewer inside the app: internal paths navigate directly,
+          // external links open in the in-app browser screen.
+          if (url.startsWith("/")) {
+            router.push(url as never);
+            return;
+          }
+          router.push({
+            pathname: "/web",
+            params: { url, title: title ?? "Iconic Fitness" },
+          });
+        }}
+        aiSlide={
+          isSignedIn
+            ? {
+                needsAssessment:
+                  !!meQuery.data && !meQuery.data.assessmentComplete,
+                onPress: () => router.push("/coach"),
+              }
+            : undefined
+        }
+        nearSlide={
+          isSignedIn ? undefined : { onOpenGym: () => openExternal(exploreUrl) }
+        }
+      />
+
+      {/* Current membership — for members with a plan */}
+      {membership ? (
+        <MembershipStatusCard
+          membership={membership}
+          onManage={() => openExternal(membershipsUrl)}
+        />
+      ) : null}
+
+      {/* Watch our story (member testimonials) */}
+      <StorySection />
+
+      {/* Top rated gyms — guests only */}
+      {showDiscovery ? (
+        <>
+          <SectionHeader
+            title="Top rated gyms"
+            action="View all"
+            onAction={() => openExternal(exploreUrl)}
+          />
+          {gymsQuery.isLoading ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.gymRow}
+              style={{ marginBottom: 28 }}
+            >
+              {[0, 1, 2].map((k) => (
+                <GymCardSkeleton key={k} />
+              ))}
+            </ScrollView>
+          ) : gyms.length === 0 ? (
+            <Card style={{ marginBottom: 28 }}>
+              <AppText weight="700" size={15}>
+                No gyms to show yet
+              </AppText>
+              <AppText muted size={13} style={{ marginTop: 4 }}>
+                Pull to refresh or explore on our website.
+              </AppText>
+            </Card>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.gymRow}
+              style={{ marginBottom: 28 }}
+            >
+              {gyms.slice(0, 8).map((g, i) => (
+                <GymCard
+                  key={g.id}
+                  gym={g}
+                  index={i}
+                  onPress={() => openExternal(exploreUrl)}
+                />
+              ))}
+            </ScrollView>
+          )}
+        </>
+      ) : null}
+
+      {/* Book a class */}
+      <SectionHeader
+        title="Book your next session"
+        action="See all"
+        onAction={() => router.push("/classes")}
+      />
+      {classesQuery.isLoading ? (
+        <View style={{ height: 150, justifyContent: "center" }}>
+          <LoadingView />
+        </View>
+      ) : featured.length === 0 ? (
+        <Card style={{ marginBottom: 28 }}>
+          <AppText weight="700" size={15}>
+            No classes scheduled
+          </AppText>
+          <AppText muted size={13} style={{ marginTop: 4 }}>
+            New sessions drop soon — pull to refresh.
+          </AppText>
+        </Card>
       ) : (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.classRow}
+          style={{ marginBottom: 28 }}
+        >
+          {featured.map((s) => (
+            <ClassCard
+              key={s.id}
+              session={s}
+              booked={bookedClassIds.has(s.id)}
+              loading={bookingId === s.id}
+              onBook={() => onBook(s)}
+              onOpen={() => router.push("/classes")}
+            />
+          ))}
+        </ScrollView>
+      )}
+
+      {/* Guest sign-in nudge */}
+      {!isSignedIn ? (
         <Pressable onPress={() => router.push("/(auth)/sign-in")}>
           <Card style={[styles.joinCta, SOFT_SHADOW]} tone="elevated">
             <View style={[styles.joinIcon, { backgroundColor: colors.primary }]}>
@@ -824,7 +826,7 @@ export default function HomeScreen() {
             <Feather name="chevron-right" size={22} color={colors.mutedForeground} />
           </Card>
         </Pressable>
-      )}
+      ) : null}
     </Screen>
       <NotificationBell />
     </View>

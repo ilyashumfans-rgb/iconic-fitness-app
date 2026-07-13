@@ -82,7 +82,7 @@ Full-bleed slider at the top of mobile Home; slides managed in web admin (`pages
 
 ### Home plan card & member-focused Home (mobile)
 
-Active members see `MembershipStatusCard` pinned under the hero; discovery sections (Explore packages, Top rated gyms) hidden. Two different gates: card renders for any membership row (paused/expired get renew nudge); sections hide only for `hasActivePlan`. `showDiscovery = membershipSettled && !hasActivePlan` prevents flash while `/memberships/mine` loads. Expiry warning via IST day-diff: ≤7 days → amber "Expiring…", past → red "Expired on …"; CTA "Renew plan"/"Manage plan" opens `membershipsUrl`.
+Signed-in Home is tracking-first: the personal tracking block (Your progress today rings, Quick log, Today stats, hydration CTA) is pinned to the top, and discovery sections (Explore packages, Gyms-near-me hero slide, Top rated gyms) are **guest-only** (`showDiscovery = !isSignedIn`). `MembershipStatusCard` renders under the hero for any membership row (paused/expired get renew nudge). Expiry warning via IST day-diff: ≤7 days → amber "Expiring…", past → red "Expired on …"; CTA "Renew plan"/"Manage plan" opens `membershipsUrl`.
 
 ### YoActiv integration (live gym-management data)
 
