@@ -87,6 +87,17 @@ export default function MoreScreen() {
       icon: "credit-card",
       action: () => router.push("/plans"),
     },
+    // Packages moved off the signed-in Home — members reach them here.
+    ...(!isGuest
+      ? [
+          {
+            title: "Packages",
+            subtitle: "Explore annual packages and offers",
+            icon: "gift",
+            action: () => router.push("/(tabs)/packages"),
+          } as MoreLink,
+        ]
+      : []),
     {
       title: "Notifications",
       subtitle: "Updates, offers and announcements",
