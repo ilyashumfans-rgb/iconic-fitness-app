@@ -149,9 +149,19 @@ export default function Profile() {
       {membership ? (
         <Card className="bg-card border-none shadow-sm">
           <CardContent className="p-6">
-            <h3 className="font-bold flex items-center mb-6 text-lg">
-              <BadgeCheck className="h-5 w-5 mr-2 text-primary" /> My membership
-            </h3>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-bold flex items-center text-lg">
+                <BadgeCheck className="h-5 w-5 mr-2 text-primary" /> My membership
+              </h3>
+              <Button
+                variant="outline"
+                size="sm"
+                className="font-bold"
+                onClick={() => navigate("/invoices")}
+              >
+                View invoices
+              </Button>
+            </div>
             <div className="flex flex-col sm:flex-row gap-6 items-start">
               <div className="h-20 w-20 rounded-full bg-secondary overflow-hidden shrink-0">
                 {membership.photoUrl ? (

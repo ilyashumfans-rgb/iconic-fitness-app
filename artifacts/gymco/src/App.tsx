@@ -24,6 +24,7 @@ import Trainers from "@/pages/Trainers";
 import TrainerDetail from "@/pages/TrainerDetail";
 import Wallet from "@/pages/Wallet";
 import Profile from "@/pages/Profile";
+import Invoices from "@/pages/Invoices";
 import SignInPage from "@/pages/SignInPage";
 import SignUpPage from "@/pages/SignUpPage";
 
@@ -250,6 +251,7 @@ function MemberShellRoutes() {
         <Route path="/trainers" component={Trainers} />
         <Route path="/trainers/:trainerId" component={TrainerDetail} />
         <Route path="/wallet" component={Wallet} />
+        <Route path="/invoices" component={Invoices} />
         <Route path="/profile" component={Profile} />
         <Route path="/support" component={Support} />
         <Route path="/blog" component={Blog} />

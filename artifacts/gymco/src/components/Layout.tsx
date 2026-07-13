@@ -9,6 +9,7 @@ import {
   ShoppingBag,
   LogOut,
   LifeBuoy,
+  ReceiptText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
@@ -56,6 +57,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const desktopNavItems = [
     ...navItems,
     { href: "/wallet", label: "Wallet", icon: Wallet },
+    { href: "/invoices", label: "Invoices", icon: ReceiptText },
     { href: "/store", label: "Store", icon: ShoppingBag },
     { href: "/memberships", label: "Memberships", icon: Crown },
     { href: "/support", label: "Support", icon: LifeBuoy },

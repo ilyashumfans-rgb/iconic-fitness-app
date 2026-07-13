@@ -60,6 +60,8 @@
   },
   "dependencies": {
     "expo-notifications": "~0.32.17",
+    "expo-print": "~15.0.8",
+    "expo-sharing": "~14.0.8",
     "expo-video": "~3.0.16",
     "react-native-webview": "13.15.0"
   }

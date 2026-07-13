@@ -93,6 +93,10 @@ function RootLayoutNav() {
           options={{ presentation: "modal", headerShown: false }}
         />
         <Stack.Screen
+          name="invoices"
+          options={{ presentation: "modal", headerShown: false }}
+        />
+        <Stack.Screen
           name="water"
           options={{ presentation: "modal", headerShown: false }}
         />

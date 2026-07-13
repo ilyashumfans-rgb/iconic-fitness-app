@@ -359,7 +359,11 @@ export default function ProfileScreen() {
           {/* Payment / renewal history (from the gym-management system) */}
           {paymentsQuery.data && paymentsQuery.data.length > 0 ? (
             <>
-              <SectionHeader title="Payment history" />
+              <SectionHeader
+                title="Payment history"
+                action="Invoices"
+                onAction={() => router.push("/invoices")}
+              />
               <Card style={{ gap: 0 }}>
                 {paymentsQuery.data.slice(0, 10).map((p, i) => (
                   <View
