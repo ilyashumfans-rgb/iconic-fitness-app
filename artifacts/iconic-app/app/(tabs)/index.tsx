@@ -449,42 +449,8 @@ export default function HomeScreen() {
       onRefresh={refetchAll}
       contentContainerStyle={{ paddingTop: 8 }}
     >
-      {/* Home banner slider (admin-managed) — full-bleed at the very top */}
-      <HeroSlider
-        gyms={heroGyms}
-        isMember={isMember}
-        membershipSettled={membershipSettled}
-        onExplore={() =>
-          router.push({
-            pathname: "/web",
-            params: { url: exploreUrl, title: "Explore gyms" },
-          })
-        }
-        onOpenUrl={(url, title) => {
-          // Keep the viewer inside the app: internal paths navigate directly,
-          // external links open in the in-app browser screen.
-          if (url.startsWith("/")) {
-            router.push(url as never);
-            return;
-          }
-          router.push({
-            pathname: "/web",
-            params: { url, title: title ?? "Iconic Fitness" },
-          });
-        }}
-        aiSlide={
-          isSignedIn
-            ? {
-                needsAssessment:
-                  !!meQuery.data && !meQuery.data.assessmentComplete,
-                onPress: () => router.push("/coach"),
-              }
-            : undefined
-        }
-      />
-
       {/* AI Coach — signed-in users reach it as the last slide of the hero
-          carousel above (one shared row); guests get the standalone card
+          carousel below (one shared row); guests get the standalone card
           for the public Iconic assistant. */}
       {!isSignedIn ? (
         <AICoachCard
@@ -518,6 +484,40 @@ export default function HomeScreen() {
 
       {/* Shop by category */}
       <ShopByCategory />
+
+      {/* Home banner slider (admin-managed) */}
+      <HeroSlider
+        gyms={heroGyms}
+        isMember={isMember}
+        membershipSettled={membershipSettled}
+        onExplore={() =>
+          router.push({
+            pathname: "/web",
+            params: { url: exploreUrl, title: "Explore gyms" },
+          })
+        }
+        onOpenUrl={(url, title) => {
+          // Keep the viewer inside the app: internal paths navigate directly,
+          // external links open in the in-app browser screen.
+          if (url.startsWith("/")) {
+            router.push(url as never);
+            return;
+          }
+          router.push({
+            pathname: "/web",
+            params: { url, title: title ?? "Iconic Fitness" },
+          });
+        }}
+        aiSlide={
+          isSignedIn
+            ? {
+                needsAssessment:
+                  !!meQuery.data && !meQuery.data.assessmentComplete,
+                onPress: () => router.push("/coach"),
+              }
+            : undefined
+        }
+      />
 
       {/* Current membership — for members with a plan */}
       {membership ? (
@@ -928,15 +928,7 @@ function HeroSlider({
   if (total === 0) return null;
 
   return (
-    <View
-      style={[
-        styles.sliderWrap,
-        // On native the Screen's SafeAreaView already clears the notch/status
-        // bar. On web there are no safe-area insets, so add a little top space
-        // so the banner never sits under the status bar / device notch.
-        insets.top === 0 ? { paddingTop: 24 } : null,
-      ]}
-    >
+    <View style={styles.sliderWrap}>
       <ScrollView
         ref={scrollRef}
         horizontal
