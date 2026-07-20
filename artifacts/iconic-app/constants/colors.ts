@@ -22,8 +22,8 @@ const colors = {
     cardForeground: "#16180F",
     elevated: "#F2F5EC",
 
-    // Primary action color (deepened green so white text passes contrast)
-    primary: "#5E9E2E",
+    // Primary action color (logo green, deepened so white text passes contrast)
+    primary: "#029900",
     primaryForeground: "#FFFFFF",
 
     // Brand button gradient (logo green), used for primary buttons app-wide
@@ -72,8 +72,8 @@ const colors = {
     cardForeground: "#F4F7EE",
     elevated: "#1B2113",
 
-    // Primary action color (bright Iconic green on dark)
-    primary: "#7FC240",
+    // Primary action color (bright logo green on dark)
+    primary: "#04CA01",
     primaryForeground: "#0A1400",
 
     // Brand button gradient (logo green), used for primary buttons app-wide
