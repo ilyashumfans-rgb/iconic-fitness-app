@@ -109,7 +109,16 @@ export default function TrainersScreen() {
           message="This branch hasn't published its trainer roster yet — check back soon or ask at the front desk."
         />
       ) : (
-        <View style={{ gap: 12 }}>
+        // Two-up grid: big photo tiles with the name underneath, so the
+        // whole roster is visible at a glance instead of a long list.
+        <View
+          style={{
+            flexDirection: "row",
+            flexWrap: "wrap",
+            justifyContent: "space-between",
+            rowGap: 12,
+          }}
+        >
           {liveTrainers.map((t) => (
             <LiveTrainerCard
               key={t.id}
@@ -187,43 +196,35 @@ function LiveTrainerCard({
     .join("");
 
   return (
-    <Pressable onPress={onPress}>
-      <Card>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-          {photo ? (
-            <Image
-              source={{ uri: photo }}
-              style={{ width: 52, height: 52, borderRadius: 14 }}
-            />
-          ) : (
-            <View
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: 14,
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: colors.elevated,
-              }}
-            >
-              <AppText weight="700" size={16} color={colors.primary}>
-                {initials || "PT"}
-              </AppText>
-            </View>
-          )}
-          <View style={{ flex: 1 }}>
-            <AppText weight="700" size={16}>
-              {trainer.name}
-            </AppText>
-            <AppText muted size={13} style={{ marginTop: 1 }}>
-              Personal Trainer
+    <Pressable onPress={onPress} style={{ width: "48.5%" }}>
+      <Card style={{ padding: 0, overflow: "hidden" }}>
+        {photo ? (
+          <Image
+            source={{ uri: photo }}
+            style={{ width: "100%", aspectRatio: 1 }}
+          />
+        ) : (
+          <View
+            style={{
+              width: "100%",
+              aspectRatio: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: colors.elevated,
+            }}
+          >
+            <AppText weight="700" size={34} color={colors.primary}>
+              {initials || "PT"}
             </AppText>
           </View>
-          <Feather
-            name="chevron-right"
-            size={20}
-            color={colors.mutedForeground}
-          />
+        )}
+        <View style={{ padding: 12, gap: 2 }}>
+          <AppText weight="700" size={15} numberOfLines={1}>
+            {trainer.name}
+          </AppText>
+          <AppText muted size={12}>
+            Personal Trainer
+          </AppText>
         </View>
       </Card>
     </Pressable>
