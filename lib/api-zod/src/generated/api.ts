@@ -558,7 +558,8 @@ export const GetMyMembershipResponse = zod.union([zod.object({
 export const CreateMembershipRenewalResponse = zod.object({
   "id": zod.number(),
   "status": zod.enum(['pending', 'paid', 'failed']),
-  "amountInr": zod.number(),
+  "amountInr": zod.number().describe('Amount payable after any points discount'),
+  "redeemedInr": zod.number().optional().describe('Wallet points actually applied (₹)'),
   "paymentUrl": zod.string(),
   "token": zod.string().optional().describe('Access token for guest status polling (only returned to the purchase creator)')
 })
@@ -781,6 +782,8 @@ export const createPackageBookingBodyNameMin = 2;
 
 export const createPackageBookingBodyMobileMin = 10;
 
+export const createPackageBookingBodyRedeemPointsMin = 0;
+
 
 
 export const CreatePackageBookingBody = zod.object({
@@ -788,13 +791,15 @@ export const CreatePackageBookingBody = zod.object({
   "packageId": zod.number(),
   "name": zod.string().min(createPackageBookingBodyNameMin),
   "mobile": zod.string().min(createPackageBookingBodyMobileMin),
-  "startDate": zod.string().describe('ISO date (YYYY-MM-DD)')
+  "startDate": zod.string().describe('ISO date (YYYY-MM-DD)'),
+  "redeemPoints": zod.number().min(createPackageBookingBodyRedeemPointsMin).optional().describe('Wallet points (₹) to apply as a discount — signed-in members only; clamped server-side')
 })
 
 export const CreatePackageBookingResponse = zod.object({
   "id": zod.number(),
   "status": zod.enum(['pending', 'paid', 'failed']),
-  "amountInr": zod.number(),
+  "amountInr": zod.number().describe('Amount payable after any points discount'),
+  "redeemedInr": zod.number().optional().describe('Wallet points actually applied (₹)'),
   "paymentUrl": zod.string(),
   "token": zod.string().optional().describe('Access token for guest status polling (only returned to the purchase creator)')
 })
@@ -836,6 +841,56 @@ export const GetPackageBookingResponse = zod.object({
   "gymName": zod.string(),
   "startDate": zod.string(),
   "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary The caller's referral code, wallet points balance and reward history
+ */
+export const GetMyReferralInfoResponse = zod.object({
+  "code": zod.string().describe('The caller\'s shareable referral code'),
+  "balanceInr": zod.number().describe('Redeemable wallet points (1 point = ₹1)'),
+  "referredCount": zod.number().describe('Members who joined with this code'),
+  "appliedCode": zod.boolean().describe('Whether the caller has already applied someone\'s code'),
+  "rewardType": zod.enum(['fixed', 'percent']),
+  "rewardValue": zod.number(),
+  "isActive": zod.boolean().describe('Whether the Refer & Earn program is currently on'),
+  "history": zod.array(zod.object({
+  "id": zod.number(),
+  "label": zod.string(),
+  "amountInr": zod.number().describe('Positive = credit, negative = debit'),
+  "kind": zod.enum(['cashback', 'referral', 'refund', 'debit', 'topup']),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Apply another member's referral code to the caller's account (once)
+ */
+export const applyReferralCodeBodyCodeMin = 4;
+
+
+
+export const ApplyReferralCodeBody = zod.object({
+  "code": zod.string().min(applyReferralCodeBodyCodeMin)
+})
+
+export const ApplyReferralCodeResponse = zod.object({
+  "code": zod.string().describe('The caller\'s shareable referral code'),
+  "balanceInr": zod.number().describe('Redeemable wallet points (1 point = ₹1)'),
+  "referredCount": zod.number().describe('Members who joined with this code'),
+  "appliedCode": zod.boolean().describe('Whether the caller has already applied someone\'s code'),
+  "rewardType": zod.enum(['fixed', 'percent']),
+  "rewardValue": zod.number(),
+  "isActive": zod.boolean().describe('Whether the Refer & Earn program is currently on'),
+  "history": zod.array(zod.object({
+  "id": zod.number(),
+  "label": zod.string(),
+  "amountInr": zod.number().describe('Positive = credit, negative = debit'),
+  "kind": zod.enum(['cashback', 'referral', 'refund', 'debit', 'topup']),
+  "createdAt": zod.coerce.date()
+}))
 })
 
 

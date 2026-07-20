@@ -98,6 +98,16 @@ export default function MoreScreen() {
           } as MoreLink,
         ]
       : []),
+    ...(!isGuest
+      ? [
+          {
+            title: "Refer & Earn",
+            subtitle: "Share your code, earn wallet points",
+            icon: "share-2",
+            action: () => router.push("/refer"),
+          } as MoreLink,
+        ]
+      : []),
     {
       title: "Notifications",
       subtitle: "Updates, offers and announcements",

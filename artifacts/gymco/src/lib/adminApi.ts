@@ -84,6 +84,12 @@ export type PackageCategoryRow = {
   imageUrl: string;
 };
 
+export type ReferralSettings = {
+  rewardType: "fixed" | "percent";
+  rewardValue: number;
+  isActive: boolean;
+};
+
 export type AgencyAccount = {
   id: number;
   username: string;
@@ -287,6 +293,14 @@ export const adminApi = {
   },
   users: {
     list: () => request<any[]>("/admin/users"),
+  },
+  referrals: {
+    settings: () => request<ReferralSettings>("/admin/referral-settings"),
+    saveSettings: (body: ReferralSettings) =>
+      request<ReferralSettings>("/admin/referral-settings", {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
   },
   staff: {
     list: () => request<any[]>("/admin/staff"),

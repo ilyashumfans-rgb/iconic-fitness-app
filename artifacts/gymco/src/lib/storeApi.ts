@@ -84,8 +84,9 @@ export const storeApi = {
     shippingCity: string;
     shippingPincode: string;
     items: { productId: number; qty: number; size?: string; color?: string }[];
+    redeemPoints?: number;
   }) =>
-    req<{ ok: true; orderId: number; total: number }>("/store/checkout", {
+    req<{ ok: true; orderId: number; total: number; redeemedInr?: number }>("/store/checkout", {
       method: "POST",
       body: JSON.stringify(body),
     }),

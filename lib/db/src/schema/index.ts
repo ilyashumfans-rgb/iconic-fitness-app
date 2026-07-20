@@ -11,7 +11,9 @@ import {
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
-export const usersTable = pgTable("users", {
+export const usersTable = pgTable(
+  "users",
+  {
   id: serial("id").primaryKey(),
   clerkUserId: text("clerk_user_id").unique(),
   name: text("name").notNull(),
@@ -43,7 +45,31 @@ export const usersTable = pgTable("users", {
     withTimezone: true,
   }),
   memberCode: text("member_code").notNull(),
+  // Refer & Earn: this member's own shareable code (lazily generated) and the
+  // id of the member whose code they applied (0 = not referred).
+  referralCode: text("referral_code"),
+  referredBy: integer("referred_by").notNull().default(0),
   joinedAt: timestamp("joined_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("users_referral_code_unique")
+      .on(t.referralCode)
+      .where(sql`referral_code IS NOT NULL AND referral_code <> ''`),
+  ],
+);
+
+// Refer & Earn admin configuration (single row, lazily created on first save).
+// rewardType 'fixed' → rewardValue is ₹ credited per successful referral;
+// rewardType 'percent' → rewardValue is % of the referred member's first paid
+// purchase. Points are rupee-valued (1 point = ₹1) and live in wallets.
+export const referralSettingsTable = pgTable("referral_settings", {
+  id: serial("id").primaryKey(),
+  rewardType: text("reward_type").notNull().default("fixed"), // fixed | percent
+  rewardValue: integer("reward_value").notNull().default(100),
+  isActive: boolean("is_active").notNull().default(true),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
 });
@@ -120,6 +146,9 @@ export const packageBookingsTable = pgTable("package_bookings", {
   packageName: text("package_name").notNull().default(""),
   serviceName: text("service_name").notNull().default(""),
   amountInr: integer("amount_inr").notNull().default(0),
+  // Wallet points applied to this purchase (₹). amountInr is the amount
+  // actually charged after the discount; points are debited at paid-flip.
+  redeemPointsInr: integer("redeem_points_inr").notNull().default(0),
   startDate: text("start_date").notNull().default(""),
   status: text("status").notNull().default("pending"), // pending | paid | failed
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -384,23 +413,41 @@ export const gymWorkoutSessionsTable = pgTable("gym_workout_sessions", {
   instructor: text("instructor").notNull().default(""),
 });
 
-export const walletsTable = pgTable("wallets", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  balanceInr: integer("balance_inr").notNull().default(0),
-  rewardPoints: integer("reward_points").notNull().default(0),
-});
+export const walletsTable = pgTable(
+  "wallets",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").notNull(),
+    balanceInr: integer("balance_inr").notNull().default(0),
+    rewardPoints: integer("reward_points").notNull().default(0),
+  },
+  (t) => [uniqueIndex("wallets_user_id_unique").on(t.userId)],
+);
 
-export const walletTransactionsTable = pgTable("wallet_transactions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  label: text("label").notNull(),
-  amountInr: integer("amount_inr").notNull(),
-  kind: text("kind").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const walletTransactionsTable = pgTable(
+  "wallet_transactions",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").notNull(),
+    label: text("label").notNull(),
+    amountInr: integer("amount_inr").notNull(),
+    kind: text("kind").notNull(),
+    // Idempotency anchor for programmatic credits/debits (e.g. one referral
+    // reward per referred buyer, one redemption per booking). '' = manual/legacy.
+    refType: text("ref_type").notNull().default(""),
+    refId: text("ref_id").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    // One programmatic credit/debit per reference — the DB-level idempotency
+    // guard behind creditWallet/debitWallet (manual/legacy rows keep '').
+    uniqueIndex("wallet_tx_ref_unique")
+      .on(t.refType, t.refId)
+      .where(sql`ref_type <> '' AND ref_id <> ''`),
+  ],
+);
 
 export const adminsTable = pgTable("admins", {
   id: serial("id").primaryKey(),
@@ -442,6 +489,10 @@ export const productOrdersTable = pgTable("product_orders", {
   shippingCity: text("shipping_city").notNull(),
   shippingPincode: text("shipping_pincode").notNull(),
   totalInr: integer("total_inr").notNull(),
+  // Refer & Earn: buyer account (0 = guest) and wallet points applied (₹).
+  // totalInr is the payable amount after the points discount.
+  userId: integer("user_id").notNull().default(0),
+  pointsRedeemedInr: integer("points_redeemed_inr").notNull().default(0),
   paymentMethod: text("payment_method").notNull().default("cod"),
   status: text("status").notNull().default("placed"),
   createdAt: timestamp("created_at", { withTimezone: true })

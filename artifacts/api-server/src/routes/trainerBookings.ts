@@ -11,6 +11,7 @@ import {
   GetTrainerBookingResponse,
 } from "@workspace/api-zod";
 import { requireUser } from "../lib/currentUser";
+import { creditReferralRewardOnce } from "../lib/referrals";
 import {
   applyPackagePref,
   isPackageVisible,
@@ -258,7 +259,7 @@ router.get(
     const outcome = req.params.outcome === "success" ? "paid" : "failed";
     if (/^[0-9a-f]{48}$/.test(token)) {
       // Only move pending rows — a landing page reload can't flip a final state.
-      await db
+      const [flipped] = await db
         .update(trainerBookingsTable)
         .set(
           outcome === "paid"
@@ -270,7 +271,13 @@ router.get(
             eq(trainerBookingsTable.token, token),
             eq(trainerBookingsTable.status, "pending"),
           ),
-        );
+        )
+        .returning();
+      // Refer & Earn: a paid PT purchase also counts as the referred member's
+      // first purchase (credited once per referred user, idempotent).
+      if (flipped && outcome === "paid") {
+        await creditReferralRewardOnce(flipped.userId, flipped.amountInr);
+      }
     }
     res.setHeader("Cache-Control", "no-store");
     res.status(200).send(landingHtml(outcome === "paid"));

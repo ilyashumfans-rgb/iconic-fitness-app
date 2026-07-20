@@ -10,7 +10,10 @@ import type { PackageBookingCreatedStatus } from './packageBookingCreatedStatus'
 export interface PackageBookingCreated {
   id: number;
   status: PackageBookingCreatedStatus;
+  /** Amount payable after any points discount */
   amountInr: number;
+  /** Wallet points actually applied (₹) */
+  redeemedInr?: number;
   paymentUrl: string;
   /** Access token for guest status polling (only returned to the purchase creator) */
   token?: string;

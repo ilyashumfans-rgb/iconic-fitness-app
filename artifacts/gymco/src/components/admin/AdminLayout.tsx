@@ -28,6 +28,7 @@ import {
   LifeBuoy,
   GalleryHorizontalEnd,
   CalendarClock,
+  Gift as GiftIcon,
   Menu,
   X,
 } from "lucide-react";
@@ -194,6 +195,11 @@ const SECTIONS: Section[] = [
         label: "Package Purchases",
         href: "/admin/package-bookings",
         icon: <CalendarClock className="h-4 w-4" />,
+      },
+      {
+        label: "Refer & Earn",
+        href: "/admin/referrals",
+        icon: <GiftIcon className="h-4 w-4" />,
       },
     ],
   },

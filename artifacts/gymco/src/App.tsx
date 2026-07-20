@@ -82,6 +82,7 @@ import AdminSsoCallback from "@/pages/admin/SsoCallback";
 import AdminStaffManagement from "@/pages/admin/StaffManagement";
 import AdminTeam from "@/pages/admin/AdminUsers";
 import AdminAgencies from "@/pages/admin/Agencies";
+import AdminReferrals from "@/pages/admin/Referrals";
 import AdminTrainerBookings from "@/pages/admin/TrainerBookings";
 import AdminPackageBookings from "@/pages/admin/PackageBookings";
 import AdminYoactivMembers from "@/pages/admin/YoactivMembers";
@@ -372,6 +373,7 @@ function AppShell() {
         <Route path="/admin/staff" component={AdminStaffManagement} />
         <Route path="/admin/admins" component={AdminTeam} />
         <Route path="/admin/agencies" component={AdminAgencies} />
+        <Route path="/admin/referrals" component={AdminReferrals} />
         <Route path="/admin/trainer-bookings" component={AdminTrainerBookings} />
         <Route path="/admin/package-bookings" component={AdminPackageBookings} />
         <Route path="/admin/yoactiv-members" component={AdminYoactivMembers} />

@@ -1,8 +1,13 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
+import {
+  useGetMyReferralInfo,
+  getGetMyReferralInfoQueryKey,
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCart, cartKey } from "@/lib/cart";
 import { storeApi } from "@/lib/storeApi";
-import { CheckCircle2, ArrowRight } from "lucide-react";
+import { CheckCircle2, ArrowRight, Coins } from "lucide-react";
 
 const INPUT =
   "w-full px-3 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-lime-500/60";
@@ -15,6 +20,15 @@ export default function Checkout() {
   const [success, setSuccess] = useState<{ orderId: number; total: number } | null>(
     null,
   );
+  const [usePoints, setUsePoints] = useState(false);
+  const queryClient = useQueryClient();
+  // Signed-in members see their wallet points; guests just get a silent 401.
+  const { data: referral } = useGetMyReferralInfo({
+    query: { queryKey: getGetMyReferralInfoQueryKey(), retry: false },
+  });
+  const pointsAvailable = referral?.balanceInr ?? 0;
+  const pointsDiscount = Math.min(pointsAvailable, cart.subtotal);
+  const payable = usePoints ? cart.subtotal - pointsDiscount : cart.subtotal;
   const [form, setForm] = useState({
     customerName: "",
     customerEmail: "",
@@ -41,8 +55,16 @@ export default function Checkout() {
           size: i.size,
           color: i.color,
         })),
+        ...(usePoints && pointsDiscount > 0
+          ? { redeemPoints: pointsDiscount }
+          : {}),
       });
       cart.clear();
+      if (usePoints) {
+        void queryClient.invalidateQueries({
+          queryKey: getGetMyReferralInfoQueryKey(),
+        });
+      }
       setSuccess({ orderId: result.orderId, total: result.total });
     } catch (e: any) {
       setErr(e?.message ?? "Checkout failed");
@@ -205,11 +227,42 @@ export default function Checkout() {
               );
             })}
           </div>
-          <div className="flex justify-between items-baseline pt-3 mt-3 border-t border-border">
-            <span className="font-bold">Total</span>
-            <span className="text-2xl font-extrabold">
-              ₹{cart.subtotal.toLocaleString("en-IN")}
-            </span>
+          {pointsAvailable > 0 && (
+            <label className="flex items-start gap-2.5 mt-3 p-3 rounded-lg border border-lime-500/40 bg-lime-500/5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={usePoints}
+                onChange={(e) => setUsePoints(e.target.checked)}
+                className="h-4 w-4 mt-0.5 accent-lime-500"
+              />
+              <span className="text-sm">
+                <span className="font-semibold text-foreground inline-flex items-center gap-1.5">
+                  <Coins className="h-4 w-4 text-lime-500" /> Use wallet points
+                </span>
+                <span className="block text-xs text-muted-foreground mt-0.5">
+                  You have {pointsAvailable.toLocaleString("en-IN")} points (₹
+                  {pointsAvailable.toLocaleString("en-IN")}). Up to ₹
+                  {pointsDiscount.toLocaleString("en-IN")} will be applied to this
+                  order.
+                </span>
+              </span>
+            </label>
+          )}
+          <div className="pt-3 mt-3 border-t border-border space-y-1">
+            {usePoints && pointsDiscount > 0 && (
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>Points discount</span>
+                <span className="text-lime-500 font-semibold">
+                  −₹{pointsDiscount.toLocaleString("en-IN")}
+                </span>
+              </div>
+            )}
+            <div className="flex justify-between items-baseline">
+              <span className="font-bold">Total</span>
+              <span className="text-2xl font-extrabold">
+                ₹{payable.toLocaleString("en-IN")}
+              </span>
+            </div>
           </div>
           <button
             type="submit"

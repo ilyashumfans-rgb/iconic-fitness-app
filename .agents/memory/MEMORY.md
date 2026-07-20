@@ -26,5 +26,6 @@
 - [Async-derived UI gating](async-derived-ui-gating.md) — gate per-viewer content (audience/role/flags) on query-settled tri-state, not `!!data`, or members flash the wrong audience's content while loading.
 - [Deploy promote fails: probe & pg pool](deploy-healthcheck-and-pool.md) — build ok but "failed to initialize": mount /healthz before DB/session middleware; add pool.on('error') so idle-conn drops don't crash Node.
 - [Web notch top-padding fallback](web-notch-top-fallback.md) — Expo web insets are 0 under the canvas fake notch; pad WEB_NOTCH_TOP(52) on web only, merged after contentContainerStyle via max().
+- [Wallet money-path concurrency](wallet-money-path-concurrency.md) — points wallet: DB unique index (23505 catch) is the idempotency truth, FOR UPDATE lock for balance clamp, conditional UPDATE...RETURNING for one-shot flips.
 - [Lazy milestone reminders](lazy-milestone-reminders.md) — countdown reminders: ascending thresholds + `find(t => t >= daysLeft)` (never fires early, catches up late); fire-and-forget from the feed endpoint.
 - [Pre-auth stash linking](pre-auth-stash-linking.md) — data captured before login and auto-applied after must be TTL'd and never overwrite an existing differing profile value (shared devices).

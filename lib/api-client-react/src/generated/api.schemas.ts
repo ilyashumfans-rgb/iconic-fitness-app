@@ -379,6 +379,11 @@ export interface CreatePackageBookingRequest {
   mobile: string;
   /** ISO date (YYYY-MM-DD) */
   startDate: string;
+  /**
+     * Wallet points (₹) to apply as a discount — signed-in members only; clamped server-side
+     * @minimum 0
+     */
+  redeemPoints?: number;
 }
 
 export type PackageBookingCreatedStatus = typeof PackageBookingCreatedStatus[keyof typeof PackageBookingCreatedStatus];
@@ -393,7 +398,10 @@ export const PackageBookingCreatedStatus = {
 export interface PackageBookingCreated {
   id: number;
   status: PackageBookingCreatedStatus;
+  /** Amount payable after any points discount */
   amountInr: number;
+  /** Wallet points actually applied (₹) */
+  redeemedInr?: number;
   paymentUrl: string;
   /** Access token for guest status polling (only returned to the purchase creator) */
   token?: string;
@@ -573,6 +581,30 @@ export interface Wallet {
   balanceInr: number;
   rewardPoints: number;
   transactions: WalletTransaction[];
+}
+
+export type ReferralInfoRewardType = typeof ReferralInfoRewardType[keyof typeof ReferralInfoRewardType];
+
+
+export const ReferralInfoRewardType = {
+  fixed: 'fixed',
+  percent: 'percent',
+} as const;
+
+export interface ReferralInfo {
+  /** The caller's shareable referral code */
+  code: string;
+  /** Redeemable wallet points (1 point = ₹1) */
+  balanceInr: number;
+  /** Members who joined with this code */
+  referredCount: number;
+  /** Whether the caller has already applied someone's code */
+  appliedCode: boolean;
+  rewardType: ReferralInfoRewardType;
+  rewardValue: number;
+  /** Whether the Refer & Earn program is currently on */
+  isActive: boolean;
+  history: WalletTransaction[];
 }
 
 export interface DayActivity {
@@ -902,6 +934,11 @@ export type GetPackageBookingParams = {
  * Purchase access token — lets a guest poll their own purchase without signing in
  */
 token?: string;
+};
+
+export type ApplyReferralCodeBody = {
+  /** @minLength 4 */
+  code: string;
 };
 
 export type ListTrainersParams = {

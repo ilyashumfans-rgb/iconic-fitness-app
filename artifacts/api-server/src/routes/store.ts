@@ -9,6 +9,12 @@ import {
   partnersTable,
 } from "@workspace/db";
 import { DEFAULT_PRODUCT_CATEGORIES } from "../lib/productCategories.js";
+import { optionalUser } from "../lib/currentUser";
+import {
+  creditReferralRewardOnce,
+  debitWallet,
+  walletBalance,
+} from "../lib/referrals";
 
 const router: IRouter = Router();
 
@@ -114,6 +120,7 @@ router.get(
 
 router.post(
   "/store/checkout",
+  optionalUser,
   async (req: Request, res: Response): Promise<void> => {
     const b = (req.body ?? {}) as Record<string, unknown>;
     const customerName = String(b.customerName ?? "").trim();
@@ -190,6 +197,16 @@ router.post(
       });
     }
 
+    // Refer & Earn: signed-in members may apply wallet points (1 point = ₹1).
+    // Clamp to their balance and the order total; the debit happens right away
+    // because a COD order is placed immediately (no payment flip to wait for).
+    let redeemInr = 0;
+    const requestedRedeem = Math.round(Number(b.redeemPoints) || 0);
+    if (req.userId && requestedRedeem > 0) {
+      const balance = await walletBalance(req.userId);
+      redeemInr = Math.max(0, Math.min(requestedRedeem, balance, total));
+    }
+
     const [order] = await db
       .insert(productOrdersTable)
       .values({
@@ -199,7 +216,9 @@ router.post(
         shippingAddress,
         shippingCity,
         shippingPincode,
-        totalInr: total,
+        totalInr: total - redeemInr,
+        userId: req.userId ?? 0,
+        pointsRedeemedInr: redeemInr,
         paymentMethod: "cod",
         status: "placed",
       })
@@ -207,7 +226,32 @@ router.post(
     await db.insert(productOrderItemsTable).values(
       lineItems.map((li) => ({ ...li, orderId: order!.id })),
     );
-    res.json({ ok: true, orderId: order!.id, total });
+    if (req.userId && redeemInr > 0) {
+      // Re-clamped inside; if the balance moved, charge the difference as COD.
+      const debited = await debitWallet({
+        userId: req.userId,
+        amountInr: redeemInr,
+        label: `Points redeemed — store order #${order!.id}`,
+        refType: "order_redeem",
+        refId: String(order!.id),
+      });
+      if (debited < redeemInr) {
+        await db
+          .update(productOrdersTable)
+          .set({ totalInr: total - debited, pointsRedeemedInr: debited })
+          .where(eq(productOrdersTable.id, order!.id));
+        redeemInr = debited;
+      }
+    }
+    // A placed COD order counts as the referred member's first purchase; the
+    // reward base is the full pre-redemption order value. Never throws.
+    await creditReferralRewardOnce(req.userId, total);
+    res.json({
+      ok: true,
+      orderId: order!.id,
+      total: total - redeemInr,
+      redeemedInr: redeemInr,
+    });
   },
 );
 

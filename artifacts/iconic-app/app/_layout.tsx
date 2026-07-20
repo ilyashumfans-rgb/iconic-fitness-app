@@ -136,6 +136,10 @@ function RootLayoutNav() {
           name="plans"
           options={{ presentation: "modal", headerShown: false }}
         />
+        <Stack.Screen
+          name="refer"
+          options={{ presentation: "modal", headerShown: false }}
+        />
       </Stack>
     </>
   );

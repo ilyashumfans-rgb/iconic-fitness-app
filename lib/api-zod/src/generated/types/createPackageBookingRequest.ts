@@ -15,4 +15,9 @@ export interface CreatePackageBookingRequest {
   mobile: string;
   /** ISO date (YYYY-MM-DD) */
   startDate: string;
+  /**
+     * Wallet points (₹) to apply as a discount — signed-in members only; clamped server-side
+     * @minimum 0
+     */
+  redeemPoints?: number;
 }

@@ -13,6 +13,11 @@ import {
 } from "@workspace/api-zod";
 import { optionalUser, requireUser } from "../lib/currentUser";
 import {
+  creditReferralRewardOnce,
+  debitWallet,
+  walletBalance,
+} from "../lib/referrals";
+import {
   applyPackagePref,
   isPackageVisible,
   packagePrefs,
@@ -153,6 +158,23 @@ router.post(
       return;
     }
 
+    // Refer & Earn: signed-in members may apply wallet points (1 point = ₹1)
+    // as a discount. Clamp to their balance and keep at least ₹1 payable so
+    // the hosted payment page always has a real charge. Points are debited at
+    // the paid-flip (a pending purchase that never completes costs nothing).
+    const listPrice = Math.round(pkg.amountInr);
+    let redeemInr = 0;
+    if (req.userId && (body.redeemPoints ?? 0) > 0) {
+      const balance = await walletBalance(req.userId);
+      redeemInr = Math.min(
+        Math.round(body.redeemPoints!),
+        balance,
+        Math.max(listPrice - 1, 0),
+      );
+      redeemInr = Math.max(redeemInr, 0);
+    }
+    const chargeInr = listPrice - redeemInr;
+
     const token = randomBytes(24).toString("hex");
     const [booking] = await db
       .insert(packageBookingsTable)
@@ -166,7 +188,8 @@ router.post(
         mobile,
         packageName: pkg.name,
         serviceName: pkg.serviceName,
-        amountInr: Math.round(pkg.amountInr),
+        amountInr: chargeInr,
+        redeemPointsInr: redeemInr,
         startDate: body.startDate,
         status: "pending",
       })
@@ -177,7 +200,7 @@ router.post(
       target,
       memberId,
       variationId: pkg.id,
-      amountInr: Math.round(pkg.amountInr),
+      amountInr: chargeInr,
       startDateIso: body.startDate,
       successUrl: `${base}/api/pay/package/${token}/success`,
       failedUrl: `${base}/api/pay/package/${token}/failed`,
@@ -196,7 +219,8 @@ router.post(
       CreatePackageBookingResponse.parse({
         id: booking!.id,
         status: "pending",
-        amountInr: Math.round(pkg.amountInr),
+        amountInr: chargeInr,
+        redeemedInr: redeemInr,
         paymentUrl,
         // Returned only here, to the purchase creator — lets a guest poll
         // their purchase status without an account.
@@ -290,7 +314,7 @@ router.get(
     const outcome = req.params.outcome === "success" ? "paid" : "failed";
     if (/^[0-9a-f]{48}$/.test(token)) {
       // Only move pending rows — a landing page reload can't flip a final state.
-      await db
+      const [flipped] = await db
         .update(packageBookingsTable)
         .set(
           outcome === "paid"
@@ -302,7 +326,26 @@ router.get(
             eq(packageBookingsTable.token, token),
             eq(packageBookingsTable.status, "pending"),
           ),
+        )
+        .returning();
+      // Refer & Earn side effects run exactly once, on the pending→paid flip:
+      // settle the points the buyer applied, then credit their referrer (if
+      // this was the referred member's first paid purchase).
+      if (flipped && outcome === "paid") {
+        if (flipped.userId && flipped.redeemPointsInr > 0) {
+          await debitWallet({
+            userId: flipped.userId,
+            amountInr: flipped.redeemPointsInr,
+            label: `Points redeemed — ${flipped.packageName}`,
+            refType: "package_redeem",
+            refId: String(flipped.id),
+          });
+        }
+        await creditReferralRewardOnce(
+          flipped.userId,
+          flipped.amountInr + flipped.redeemPointsInr,
         );
+      }
     }
     res.setHeader("Cache-Control", "no-store");
     res.status(200).send(landingHtml(outcome === "paid"));

@@ -2,16 +2,19 @@ import { useAuth } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
 import {
   getGetMeQueryKey,
+  getGetMyReferralInfoQueryKey,
   getGetPackageBookingQueryKey,
   getListMembershipPackagesQueryKey,
   useCreatePackageBooking,
   useGetMe,
+  useGetMyReferralInfo,
   useGetPackageBooking,
   useListGyms,
   useListMembershipPackages,
   type Gym,
   type TrainerPackage,
 } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Image, Pressable, View } from "react-native";
@@ -76,6 +79,17 @@ export default function BookPackageScreen() {
 
   const dateOptions = [istToday(), istDateInNDays(1), istDateInNDays(2)];
 
+  // Wallet points redemption (signed-in members only).
+  const queryClient = useQueryClient();
+  const referralQuery = useGetMyReferralInfo({
+    query: {
+      enabled: isLoaded && !!isSignedIn,
+      queryKey: getGetMyReferralInfoQueryKey(),
+    },
+  });
+  const pointsAvailable = referralQuery.data?.balanceInr ?? 0;
+  const [usePoints, setUsePoints] = useState(false);
+
   const [pkgId, setPkgId] = useState<number | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -105,6 +119,23 @@ export default function BookPackageScreen() {
   const status = bookingId !== null ? statusQuery.data?.status : undefined;
   const selectedPkg = packages.find((p) => p.id === pkgId) ?? null;
 
+  // Points cover at most price minus ₹1 — the gateway needs a real charge.
+  const pointsDiscount = selectedPkg
+    ? Math.min(pointsAvailable, Math.max(0, selectedPkg.amountInr - 1))
+    : 0;
+  const payableInr = selectedPkg
+    ? selectedPkg.amountInr - (usePoints ? pointsDiscount : 0)
+    : 0;
+
+  // Points are debited server-side when the payment lands; refresh the wallet.
+  useEffect(() => {
+    if (status === "paid") {
+      void queryClient.invalidateQueries({
+        queryKey: getGetMyReferralInfoQueryKey(),
+      });
+    }
+  }, [status, queryClient]);
+
   function validateContact(): boolean {
     if (name.trim().length < 2) {
       Alert.alert("Name required", "Please enter your full name.");
@@ -132,6 +163,9 @@ export default function BookPackageScreen() {
           name: name.trim(),
           mobile: phone.trim(),
           startDate: date,
+          ...(usePoints && pointsDiscount > 0
+            ? { redeemPoints: pointsDiscount }
+            : {}),
         },
       });
       setBookingId(created.id);
@@ -349,12 +383,45 @@ export default function BookPackageScreen() {
           ))}
         </View>
 
+        {paidFlow && isSignedIn && pointsAvailable > 0 ? (
+          <Pressable
+            onPress={() => setUsePoints((v) => !v)}
+            style={{
+              marginTop: 18,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 10,
+              padding: 12,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: usePoints ? colors.primary : colors.border,
+              backgroundColor: usePoints ? `${colors.primary}14` : "transparent",
+            }}
+          >
+            <Feather
+              name={usePoints ? "check-square" : "square"}
+              size={20}
+              color={usePoints ? colors.primary : colors.mutedForeground}
+            />
+            <View style={{ flex: 1 }}>
+              <AppText weight="600" size={13}>
+                Use wallet points
+              </AppText>
+              <AppText muted size={11} style={{ marginTop: 2 }}>
+                {selectedPkg
+                  ? `₹${pointsDiscount.toLocaleString("en-IN")} of your ${pointsAvailable.toLocaleString("en-IN")} points will be applied.`
+                  : `You have ${pointsAvailable.toLocaleString("en-IN")} points (₹${pointsAvailable.toLocaleString("en-IN")}).`}
+              </AppText>
+            </View>
+          </Pressable>
+        ) : null}
+
         <View style={{ marginTop: 20 }}>
           {paidFlow ? (
             <Button
               label={
                 selectedPkg
-                  ? `Pay ₹${selectedPkg.amountInr.toLocaleString("en-IN")}`
+                  ? `Pay ₹${payableInr.toLocaleString("en-IN")}`
                   : "Pay online"
               }
               onPress={onPay}
