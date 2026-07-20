@@ -399,8 +399,8 @@ const styles = StyleSheet.create({
     opacity: 0.1,
   },
   logo: {
-    width: 180,
-    height: 180,
+    width: 230,
+    height: 230,
     alignSelf: "center",
   },
   eyebrow: { letterSpacing: 3, marginBottom: 2 },
