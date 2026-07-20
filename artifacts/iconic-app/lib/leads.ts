@@ -11,6 +11,9 @@ export type LeadPayload = {
   preferredTime: string;
   message?: string;
   gymId?: number | null;
+  gymName?: string;
+  /** For PT-session enquiries this carries the coach's name. */
+  className?: string;
   source?: string;
 };
 

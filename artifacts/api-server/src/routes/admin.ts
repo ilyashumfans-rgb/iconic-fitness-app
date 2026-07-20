@@ -48,6 +48,7 @@ import {
   setPackageHidden,
 } from "../lib/yoactivPackagePrefs";
 import { yoactivBranchName } from "../lib/yoactivBranchNames";
+import { fetchTrainerEnquiryRows } from "../lib/trainerEnquiryLeads";
 import {
   trainerPhotoMap,
   setTrainerPhoto,
@@ -2273,7 +2274,11 @@ router.get(
       .from(trainerBookingsTable)
       .orderBy(desc(trainerBookingsTable.createdAt))
       .limit(5000);
-    res.json(rows);
+    const enquiries = await fetchTrainerEnquiryRows();
+    const merged = [...rows, ...enquiries].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+    res.json(merged);
   },
 );
 

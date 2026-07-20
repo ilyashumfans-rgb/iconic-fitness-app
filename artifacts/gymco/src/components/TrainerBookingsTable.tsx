@@ -20,7 +20,9 @@ function StatusBadge({ status }: { status: TrainerBookingRow["status"] }) {
       ? "bg-green-100 text-green-800"
       : status === "failed"
         ? "bg-red-100 text-red-700"
-        : "bg-amber-100 text-amber-800";
+        : status === "enquiry"
+          ? "bg-blue-100 text-blue-800"
+          : "bg-amber-100 text-amber-800";
   return (
     <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}>
       {status}
@@ -80,6 +82,7 @@ export function TrainerBookingsTable({
           <option value="paid">Paid</option>
           <option value="pending">Pending</option>
           <option value="failed">Failed</option>
+          <option value="enquiry">Enquiry</option>
         </select>
         {summary ? (
           <span className="ml-auto text-sm text-muted-foreground">{summary}</span>
@@ -111,7 +114,11 @@ export function TrainerBookingsTable({
                   {r.serviceName ? `${r.serviceName} · ` : ""}
                   {r.packageName}
                 </td>
-                <td className="py-2 pr-3">₹{r.amountInr.toLocaleString("en-IN")}</td>
+                <td className="py-2 pr-3">
+                  {r.status === "enquiry"
+                    ? "—"
+                    : `₹${r.amountInr.toLocaleString("en-IN")}`}
+                </td>
                 <td className="py-2 pr-3">{fmtDate(r.preferredDate)}</td>
                 <td className="py-2 pr-3">
                   <StatusBadge status={r.status} />

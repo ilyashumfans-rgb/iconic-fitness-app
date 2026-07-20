@@ -162,6 +162,11 @@ export default function BookTrainerScreen() {
         preferredTime: time,
         message: `Personal training session request with ${coach}${params.gymName ? ` at ${params.gymName}` : ""}.`,
         source: "iconic-app-live-trainer",
+        // Branch + coach details so the request shows on the partner's
+        // PT Bookings page (className carries the coach's name).
+        gymId,
+        gymName: params.gymName ?? "",
+        className: coach,
       });
       Alert.alert(
         "Request sent",

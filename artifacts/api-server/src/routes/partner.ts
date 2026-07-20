@@ -39,6 +39,7 @@ import {
   PARTNER_STAFF_PERMISSIONS,
 } from "../lib/partnerAuth";
 import { DEFAULT_GROUP_CLASS_SCHEDULE } from "../lib/groupClassSchedule";
+import { fetchTrainerEnquiryRows } from "../lib/trainerEnquiryLeads";
 import {
   fetchYoactivMemberByMobile,
   fetchYoactivMemberList,
@@ -1573,7 +1574,11 @@ router.get(
       .where(inArray(trainerBookingsTable.gymId, gymIds))
       .orderBy(desc(trainerBookingsTable.createdAt))
       .limit(2000);
-    res.json(rows);
+    const enquiries = await fetchTrainerEnquiryRows(gymIds);
+    const merged = [...rows, ...enquiries].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+    res.json(merged);
   },
 );
 
