@@ -224,7 +224,7 @@ export default function BookTrainerScreen() {
 
   return (
     <Screen contentContainerStyle={{ paddingBottom: 40 }}>
-      <ModalHeader title="Book a session" />
+      <ModalHeader title="Book a PT session" />
 
       <Card>
         <AppText weight="700" size={16} style={{ marginBottom: 4 }}>
