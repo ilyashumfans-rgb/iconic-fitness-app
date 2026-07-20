@@ -109,16 +109,8 @@ export default function TrainersScreen() {
           message="This branch hasn't published its trainer roster yet — check back soon or ask at the front desk."
         />
       ) : (
-        // Two-up grid: big photo tiles with the name underneath, so the
-        // whole roster is visible at a glance instead of a long list.
-        <View
-          style={{
-            flexDirection: "row",
-            flexWrap: "wrap",
-            justifyContent: "space-between",
-            rowGap: 12,
-          }}
-        >
+        // Single column: one big photo tile per row, name underneath.
+        <View style={{ gap: 14 }}>
           {liveTrainers.map((t) => (
             <LiveTrainerCard
               key={t.id}
@@ -196,33 +188,33 @@ function LiveTrainerCard({
     .join("");
 
   return (
-    <Pressable onPress={onPress} style={{ width: "48.5%" }}>
+    <Pressable onPress={onPress}>
       <Card style={{ padding: 0, overflow: "hidden" }}>
         {photo ? (
           <Image
             source={{ uri: photo }}
-            style={{ width: "100%", aspectRatio: 1 }}
+            style={{ width: "100%", aspectRatio: 4 / 3 }}
           />
         ) : (
           <View
             style={{
               width: "100%",
-              aspectRatio: 1,
+              aspectRatio: 4 / 3,
               alignItems: "center",
               justifyContent: "center",
               backgroundColor: colors.elevated,
             }}
           >
-            <AppText weight="700" size={34} color={colors.primary}>
+            <AppText weight="700" size={48} color={colors.primary}>
               {initials || "PT"}
             </AppText>
           </View>
         )}
-        <View style={{ padding: 12, gap: 2 }}>
-          <AppText weight="700" size={15} numberOfLines={1}>
+        <View style={{ padding: 16, gap: 2 }}>
+          <AppText weight="700" size={17} numberOfLines={1}>
             {trainer.name}
           </AppText>
-          <AppText muted size={12}>
+          <AppText muted size={13}>
             Personal Trainer
           </AppText>
         </View>
