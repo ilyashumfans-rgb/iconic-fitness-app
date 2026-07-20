@@ -1,9 +1,9 @@
 import { useAuth } from "@clerk/expo";
-import { Feather } from "@expo/vector-icons";
 import { Redirect, Tabs, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 
+import { TabIcon } from "@/components/TabIcon";
 import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/hooks/useGuest";
 
@@ -65,8 +65,8 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="home" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon name="home" size={size} color={color} focused={focused} />
           ),
         }}
       />
@@ -74,8 +74,8 @@ export default function TabsLayout() {
         name="sports"
         options={{
           title: "Branches",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="award" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon name="award" size={size} color={color} focused={focused} />
           ),
         }}
       />
@@ -83,8 +83,13 @@ export default function TabsLayout() {
         name="store"
         options={{
           title: "Store",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="shopping-bag" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon
+              name="shopping-bag"
+              size={size}
+              color={color}
+              focused={focused}
+            />
           ),
         }}
       />
@@ -95,8 +100,13 @@ export default function TabsLayout() {
           // Members already have a plan — hide the tab for signed-in users
           // (still reachable from the More tab); guests keep it.
           href: isSignedIn ? null : undefined,
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="package" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon
+              name="package"
+              size={size}
+              color={color}
+              focused={focused}
+            />
           ),
         }}
       />
@@ -104,8 +114,8 @@ export default function TabsLayout() {
         name="pt"
         options={{
           title: "Trainers",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="users" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon name="users" size={size} color={color} focused={focused} />
           ),
         }}
         listeners={{
@@ -121,8 +131,8 @@ export default function TabsLayout() {
         name="more"
         options={{
           title: "More",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="menu" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon name="menu" size={size} color={color} focused={focused} />
           ),
         }}
       />
