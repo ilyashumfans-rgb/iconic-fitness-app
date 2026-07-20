@@ -447,6 +447,11 @@ export const adminApi = {
       request<import("./partnerApi").TrainerBookingRow[]>(
         "/admin/trainer-bookings",
       ),
+    assign: (id: number, body: { trainerId?: string; trainerName: string }) =>
+      request<{ ok: true }>(`/admin/trainer-bookings/${id}/assign`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
   },
   packageBookings: {
     list: () =>

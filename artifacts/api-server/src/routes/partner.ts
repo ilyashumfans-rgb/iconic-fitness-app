@@ -41,6 +41,11 @@ import {
 import { DEFAULT_GROUP_CLASS_SCHEDULE } from "../lib/groupClassSchedule";
 import { fetchTrainerEnquiryRows } from "../lib/trainerEnquiryLeads";
 import {
+  fetchPtAssignmentMap,
+  ptAssignTargetGymId,
+  upsertPtAssignment,
+} from "../lib/ptAssignments";
+import {
   fetchYoactivMemberByMobile,
   fetchYoactivMemberList,
   fetchYoactivBranchTrainers,
@@ -1560,6 +1565,7 @@ router.get(
         id: trainerBookingsTable.id,
         gymId: trainerBookingsTable.gymId,
         gymName: trainerBookingsTable.gymName,
+        branchId: trainerBookingsTable.branchId,
         trainerName: trainerBookingsTable.trainerName,
         memberName: trainerBookingsTable.memberName,
         mobile: trainerBookingsTable.mobile,
@@ -1575,10 +1581,65 @@ router.get(
       .orderBy(desc(trainerBookingsTable.createdAt))
       .limit(2000);
     const enquiries = await fetchTrainerEnquiryRows(gymIds);
-    const merged = [...rows, ...enquiries].sort(
+    const [bookingAssign, enquiryAssign] = await Promise.all([
+      fetchPtAssignmentMap(
+        "booking",
+        rows.map((r) => r.id),
+      ),
+      fetchPtAssignmentMap(
+        "enquiry",
+        enquiries.map((r) => -r.id),
+      ),
+    ]);
+    const merged = [
+      ...rows.map((r) => ({
+        ...r,
+        assignedTrainerName: bookingAssign.get(r.id)?.trainerName ?? "",
+      })),
+      ...enquiries.map((r) => ({
+        ...r,
+        assignedTrainerName: enquiryAssign.get(-r.id)?.trainerName ?? "",
+      })),
+    ].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
     res.json(merged);
+  },
+);
+
+// Assign (or reassign) a trainer to a PT booking or enquiry the partner owns.
+// Merged-list ids: positive = trainer_bookings row, negative = enquiry lead.
+// Staff access: also gated to the "classes" permission by the router-level
+// STAFF_PERMISSION_PREFIXES guard; the explicit gate below is belt-and-braces.
+router.put(
+  "/partner/trainer-bookings/:id/assign",
+  requirePartner,
+  requirePartnerPerm("classes"),
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const trainerId = String(req.body?.trainerId ?? "").trim();
+    const trainerName = String(req.body?.trainerName ?? "").trim();
+    if (!Number.isFinite(id) || id === 0 || !trainerName || trainerName.length > 120) {
+      res.status(400).json({ error: "Valid id and trainer name required" });
+      return;
+    }
+    const gymIds = await ownedGymIds(req.session.partnerId!);
+    const gymId = await ptAssignTargetGymId(id);
+    if (gymId === null) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+    if (!gymIds.includes(gymId)) {
+      res.status(403).json({ error: "Not allowed" });
+      return;
+    }
+    await upsertPtAssignment(
+      id > 0 ? "booking" : "enquiry",
+      Math.abs(id),
+      trainerId,
+      trainerName,
+    );
+    res.json({ ok: true });
   },
 );
 

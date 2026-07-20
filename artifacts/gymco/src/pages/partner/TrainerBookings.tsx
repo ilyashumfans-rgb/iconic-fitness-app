@@ -29,6 +29,8 @@ export default function PartnerTrainerBookings() {
           <TrainerBookingsTable
             rows={rows}
             summary={`${paid.length} paid · ₹${paid.reduce((s, r) => s + r.amountInr, 0).toLocaleString("en-IN")} collected`}
+            loadTrainers={(branchId) => partnerApi.yoactiv.trainers(branchId)}
+            onAssign={(id, body) => partnerApi.trainerBookings.assign(id, body)}
           />
         )}
       </PartnerCard>

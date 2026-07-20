@@ -132,6 +132,24 @@ export const trainerBookingsTable = pgTable("trainer_bookings", {
   paidAt: timestamp("paid_at", { withTimezone: true }),
 });
 
+// Staff-assigned trainer for a PT enrolment. One row per booking/enquiry
+// (refType "booking" = trainer_bookings.id, "enquiry" = leads.id), upserted
+// on reassignment. Display-only — no cross-table FKs (repo convention).
+export const ptTrainerAssignmentsTable = pgTable(
+  "pt_trainer_assignments",
+  {
+    id: serial("id").primaryKey(),
+    refType: text("ref_type").notNull(), // booking | enquiry
+    refId: integer("ref_id").notNull(),
+    trainerId: text("trainer_id").notNull().default(""), // YoActiv staff id, "" if free-text
+    trainerName: text("trainer_name").notNull().default(""),
+    assignedAt: timestamp("assigned_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [uniqueIndex("pt_assign_ref_unique").on(t.refType, t.refId)],
+);
+
 // Paid membership-package purchases (YoActiv hosted Razorpay), mirroring
 // trainer_bookings: pending row + token, redirect landing flips the status.
 export const packageBookingsTable = pgTable("package_bookings", {

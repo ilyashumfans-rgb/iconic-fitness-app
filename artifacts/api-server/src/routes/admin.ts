@@ -50,6 +50,11 @@ import {
 import { yoactivBranchName } from "../lib/yoactivBranchNames";
 import { fetchTrainerEnquiryRows } from "../lib/trainerEnquiryLeads";
 import {
+  fetchPtAssignmentMap,
+  ptAssignTargetGymId,
+  upsertPtAssignment,
+} from "../lib/ptAssignments";
+import {
   trainerPhotoMap,
   setTrainerPhoto,
   removeTrainerPhoto,
@@ -2261,6 +2266,7 @@ router.get(
         id: trainerBookingsTable.id,
         gymId: trainerBookingsTable.gymId,
         gymName: trainerBookingsTable.gymName,
+        branchId: trainerBookingsTable.branchId,
         trainerName: trainerBookingsTable.trainerName,
         memberName: trainerBookingsTable.memberName,
         mobile: trainerBookingsTable.mobile,
@@ -2275,10 +2281,57 @@ router.get(
       .orderBy(desc(trainerBookingsTable.createdAt))
       .limit(5000);
     const enquiries = await fetchTrainerEnquiryRows();
-    const merged = [...rows, ...enquiries].sort(
+    const [bookingAssign, enquiryAssign] = await Promise.all([
+      fetchPtAssignmentMap(
+        "booking",
+        rows.map((r) => r.id),
+      ),
+      fetchPtAssignmentMap(
+        "enquiry",
+        enquiries.map((r) => -r.id),
+      ),
+    ]);
+    const merged = [
+      ...rows.map((r) => ({
+        ...r,
+        assignedTrainerName: bookingAssign.get(r.id)?.trainerName ?? "",
+      })),
+      ...enquiries.map((r) => ({
+        ...r,
+        assignedTrainerName: enquiryAssign.get(-r.id)?.trainerName ?? "",
+      })),
+    ].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
     res.json(merged);
+  },
+);
+
+// Assign (or reassign) a trainer to any PT booking or enquiry.
+// Merged-list ids: positive = trainer_bookings row, negative = enquiry lead.
+router.put(
+  "/admin/trainer-bookings/:id/assign",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const trainerId = String(req.body?.trainerId ?? "").trim();
+    const trainerName = String(req.body?.trainerName ?? "").trim();
+    if (!Number.isFinite(id) || id === 0 || !trainerName || trainerName.length > 120) {
+      res.status(400).json({ error: "Valid id and trainer name required" });
+      return;
+    }
+    const gymId = await ptAssignTargetGymId(id);
+    if (gymId === null) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+    await upsertPtAssignment(
+      id > 0 ? "booking" : "enquiry",
+      Math.abs(id),
+      trainerId,
+      trainerName,
+    );
+    res.json({ ok: true });
   },
 );
 

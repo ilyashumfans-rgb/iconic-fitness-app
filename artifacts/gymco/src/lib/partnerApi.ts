@@ -171,7 +171,9 @@ export type TrainerBookingRow = {
   id: number;
   gymId: number;
   gymName: string;
+  branchId: number; // YoActiv branch id (0 = unmapped)
   trainerName: string;
+  assignedTrainerName: string; // "" until staff assigns a trainer
   memberName: string;
   mobile: string;
   packageName: string;
@@ -351,6 +353,11 @@ export const partnerApi = {
   },
   trainerBookings: {
     list: () => request<TrainerBookingRow[]>("/partner/trainer-bookings"),
+    assign: (id: number, body: { trainerId?: string; trainerName: string }) =>
+      request<{ ok: true }>(`/partner/trainer-bookings/${id}/assign`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
   },
   packageBookings: {
     list: () => request<PackageBookingRow[]>("/partner/package-bookings"),

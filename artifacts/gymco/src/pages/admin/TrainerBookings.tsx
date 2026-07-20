@@ -30,6 +30,8 @@ export default function AdminTrainerBookings() {
           <TrainerBookingsTable
             rows={rows}
             summary={`${paid.length} paid · ₹${paid.reduce((s, r) => s + r.amountInr, 0).toLocaleString("en-IN")} collected`}
+            loadTrainers={(branchId) => adminApi.yoactiv.trainers(branchId)}
+            onAssign={(id, body) => adminApi.trainerBookings.assign(id, body)}
           />
         )}
       </AdminCard>

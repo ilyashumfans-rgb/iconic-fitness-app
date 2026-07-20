@@ -1,5 +1,5 @@
 import { desc, eq, and, inArray } from "drizzle-orm";
-import { db, leadsTable } from "@workspace/db";
+import { db, leadsTable, gymsTable } from "@workspace/db";
 
 /**
  * Free PT-session enquiry requests (submitted from the mobile app when a
@@ -13,6 +13,9 @@ export type TrainerEnquiryRow = {
   id: number;
   gymId: number;
   gymName: string;
+  // YoActiv branch id of the gym (0 when unmapped) — lets staff pages load
+  // the branch's live trainer roster for assignment.
+  branchId: number;
   trainerName: string;
   memberName: string;
   mobile: string;
@@ -60,10 +63,23 @@ export async function fetchTrainerEnquiryRows(
     .orderBy(desc(leadsTable.createdAt))
     .limit(2000);
 
+  const leadGymIds = Array.from(
+    new Set(rows.map((r) => r.gymId ?? 0).filter((g) => g > 0)),
+  );
+  const branchByGym = new Map<number, number>();
+  if (leadGymIds.length > 0) {
+    const gyms = await db
+      .select({ id: gymsTable.id, yoactivBranchId: gymsTable.yoactivBranchId })
+      .from(gymsTable)
+      .where(inArray(gymsTable.id, leadGymIds));
+    for (const g of gyms) branchByGym.set(g.id, g.yoactivBranchId ?? 0);
+  }
+
   return rows.map((r) => ({
     id: -r.id,
     gymId: r.gymId ?? 0,
     gymName: r.gymName,
+    branchId: branchByGym.get(r.gymId ?? 0) ?? 0,
     trainerName: r.trainerName,
     memberName: r.memberName,
     mobile: r.mobile,
