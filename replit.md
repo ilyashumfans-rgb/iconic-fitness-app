@@ -45,7 +45,7 @@ Admin-managed grouping for annual packages. `package_categories` table (name, so
 ### Trainers
 
 - Partners: CRUD from `/partner/trainers` (scoped via `ensureOwnsGym`, manual `partnerApi.trainers.*`). Admins have global CRUD. Trainers attach to a gym and are selectable when scheduling classes. No trainer login exists — records only.
-- Mobile: `app/trainers.tsx` prefers the **live YoActiv roster** (see YoActiv section), falling back to local DB profiles (`useListTrainers` → `app/trainer/[id].tsx`); booking posts a `kind="general"` lead. Home entry: `PersonalTrainersCard`.
+- Mobile: `app/trainers.tsx` is **live-YoActiv-roster only** (no local DB fallback — unmapped/empty branch shows an empty state); tap → `book-trainer`. Home entry: `PersonalTrainersCard`.
 
 ### Class visibility & booking window
 
