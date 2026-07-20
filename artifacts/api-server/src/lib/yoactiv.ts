@@ -46,6 +46,21 @@ function branchTargets(): { branchIds: number[] }[] {
       { branchIds: parseBranchIds(process.env.YOACTIV_BRANCH_IDS_2) },
     ].filter((t) => t.branchIds.length > 0);
   }
+  // Dev testing override: YOACTIV_DEV_BRANCH_IDS lists LIVE branch ids to use
+  // instead of the sandbox branch. Each id is routed to the key set it belongs
+  // to (BRANCH_IDS_1 vs _2) so the usual key probing still auto-assigns keys.
+  const devIds = parseBranchIds(process.env.YOACTIV_DEV_BRANCH_IDS);
+  if (devIds.length > 0) {
+    const set1 = new Set(parseBranchIds(process.env.YOACTIV_BRANCH_IDS_1));
+    const set2 = new Set(parseBranchIds(process.env.YOACTIV_BRANCH_IDS_2));
+    return [
+      { branchIds: devIds.filter((id) => set1.has(id)) },
+      { branchIds: devIds.filter((id) => set2.has(id)) },
+      // Unknown ids (not in either live set) get their own target so a key
+      // can still be probed against them rather than being silently dropped.
+      { branchIds: devIds.filter((id) => !set1.has(id) && !set2.has(id)) },
+    ].filter((t) => t.branchIds.length > 0);
+  }
   const sandboxBranch = Number.parseInt(
     process.env.YOACTIV_SANDBOX_BRANCH_ID ?? "7820",
     10,
