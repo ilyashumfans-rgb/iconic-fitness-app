@@ -37,7 +37,15 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import Animated, {
+  FadeInDown,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 import {
   Alert,
   Image,
@@ -2352,6 +2360,33 @@ function QuickTile({
   loading?: boolean;
 }) {
   const colors = useColors();
+  const shake = useSharedValue(0);
+
+  useEffect(() => {
+    // Attention nudge: rest ~3.5s, then a quick wiggle, forever.
+    shake.value = withRepeat(
+      withDelay(
+        3500,
+        withSequence(
+          withTiming(-1, { duration: 70 }),
+          withTiming(1, { duration: 120 }),
+          withTiming(-1, { duration: 120 }),
+          withTiming(1, { duration: 120 }),
+          withTiming(0, { duration: 90 }),
+        ),
+      ),
+      -1,
+      false,
+    );
+  }, [shake]);
+
+  const shakeStyle = useAnimatedStyle(() => ({
+    transform: [
+      { rotate: `${shake.value * 10}deg` },
+      { scale: 1 + Math.abs(shake.value) * 0.12 },
+    ],
+  }));
+
   return (
     <Pressable
       onPress={onPress}
@@ -2366,9 +2401,22 @@ function QuickTile({
         },
       ]}
     >
-      <View style={[styles.quickIcon, { backgroundColor: color + "22" }]}>
-        <Feather name={icon} size={20} color={color} />
-      </View>
+      <Animated.View
+        style={[
+          styles.quickIcon3d,
+          { shadowColor: color, borderColor: color + "55" },
+          shakeStyle,
+        ]}
+      >
+        <LinearGradient
+          colors={[color + "55", color + "14"]}
+          start={{ x: 0.2, y: 0 }}
+          end={{ x: 0.8, y: 1 }}
+          style={styles.quickIconFill}
+        >
+          <Feather name={icon} size={20} color={color} />
+        </LinearGradient>
+      </Animated.View>
       <AppText weight="700" size={14}>
         {label}
       </AppText>
@@ -2881,6 +2929,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 4,
+  },
+  quickIcon3d: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    borderWidth: 1,
+    marginBottom: 6,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.55,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  quickIconFill: {
+    flex: 1,
+    borderRadius: 22,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
   },
   statGrid: {
     flexDirection: "row",
