@@ -891,7 +891,7 @@ export default function HomeScreen() {
       ) : isSignedIn && myMembershipQuery.isFetched ? (
         <NoMembershipCard
           memberName={meQuery.data?.name ?? ""}
-          onViewPlans={() => router.push("/plans")}
+          onViewPlans={() => router.push("/book-package")}
         />
       ) : isSignedIn ? null : (
         <AICoachCard
