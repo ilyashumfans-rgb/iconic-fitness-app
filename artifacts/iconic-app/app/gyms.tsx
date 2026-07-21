@@ -44,6 +44,7 @@ function openDirections(gym: Gym) {
 
 function BranchCard({ gym, index, near }: { gym: Gym; index: number; near: boolean }) {
   const colors = useColors();
+  const router = useRouter();
   const img = resolveImageUrl(gym.heroImage);
 
   return (
@@ -53,7 +54,7 @@ function BranchCard({ gym, index, near }: { gym: Gym; index: number; near: boole
         .damping(16)}
     >
       <Pressable
-        onPress={() => openDirections(gym)}
+        onPress={() => router.push(`/gym/${gym.id}`)}
         style={({ pressed }) => [
           styles.card,
           {
@@ -119,12 +120,22 @@ function BranchCard({ gym, index, near }: { gym: Gym; index: number; near: boole
               </>
             ) : null}
             <View style={{ flex: 1 }} />
-            <View style={[styles.directions, { borderColor: colors.primary + "66" }]}>
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation();
+                openDirections(gym);
+              }}
+              hitSlop={8}
+              style={({ pressed }) => [
+                styles.directions,
+                { borderColor: colors.primary + "66", opacity: pressed ? 0.7 : 1 },
+              ]}
+            >
               <Feather name="corner-up-right" size={13} color={colors.primary} />
               <AppText weight="700" size={12} color={colors.primary}>
                 Directions
               </AppText>
-            </View>
+            </Pressable>
           </View>
           {gym.address ? (
             <AppText muted size={12} numberOfLines={2} style={{ marginTop: 6 }}>
