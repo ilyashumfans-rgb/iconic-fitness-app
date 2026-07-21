@@ -2718,14 +2718,15 @@ const styles = StyleSheet.create({
     ...CARD_SHADOW,
   },
   pkgCatMedia: {
-    width: 92,
-    height: 84,
-    borderRadius: 12,
+    width: 118,
+    height: 108,
+    borderRadius: 14,
     overflow: "hidden",
   },
   pkgCatBody: {
     flex: 1,
     paddingRight: 4,
+    justifyContent: "center",
   },
   pkgCatFoot: {
     flexDirection: "row",
