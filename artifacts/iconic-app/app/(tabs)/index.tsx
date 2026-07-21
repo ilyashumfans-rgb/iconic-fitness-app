@@ -793,44 +793,23 @@ export default function HomeScreen() {
       onRefresh={refetchAll}
       contentContainerStyle={{ paddingTop: 8 }}
     >
-      {/* Top card — AI coach for everyone; members with a plan get a swipeable
-          pager that merges the AI coach and the premium member card. When the
-          plan needs renewal the member card leads so the warning is seen. */}
+      {/* Top card — signed-in members with a plan see only the membership card
+          (the AI coach lives on the floating chat button); everyone else gets
+          the AI coach card. */}
       {membership ? (
-        <TopCardPager
-          membershipFirst={
-            membership.status === "expired" ||
-            (membership.expiryKnown !== false &&
-              daysUntilIst(membership.renewsOn) <= EXPIRY_SOON_DAYS)
-          }
-          aiCard={
-            <AICoachCard
-              embedded
-              needsAssessment={
-                !!isSignedIn && !!meQuery.data && !meQuery.data.assessmentComplete
-              }
-              onPress={() => router.push("/coach")}
-            />
-          }
-          memberCard={
-            <MembershipStatusCard
-              embedded
-              membership={membership}
-              memberName={meQuery.data?.name ?? ""}
-              onManage={() =>
-                router.push({
-                  pathname: "/web",
-                  params: { url: membershipsUrl, title: "Manage plan" },
-                })
-              }
-            />
+        <MembershipStatusCard
+          membership={membership}
+          memberName={meQuery.data?.name ?? ""}
+          onManage={() =>
+            router.push({
+              pathname: "/web",
+              params: { url: membershipsUrl, title: "Manage plan" },
+            })
           }
         />
-      ) : (
+      ) : isSignedIn ? null : (
         <AICoachCard
-          needsAssessment={
-            !!isSignedIn && !!meQuery.data && !meQuery.data.assessmentComplete
-          }
+          needsAssessment={false}
           onPress={() => router.push("/coach")}
         />
       )}
