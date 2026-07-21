@@ -1,11 +1,10 @@
 import { Platform, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { AppText } from "@/components/AppText";
 import { WEB_NOTCH_TOP } from "@/components/Screen";
-import { SiteWebView } from "@/components/SiteWebView";
 import { useColors } from "@/hooks/useColors";
-import { exploreUrl } from "@/lib/links";
+
+import { BranchesContent } from "../gyms";
 
 export default function SportsScreen() {
   const colors = useColors();
@@ -16,16 +15,12 @@ export default function SportsScreen() {
     >
       <View
         style={{
-          paddingHorizontal: 20,
-          paddingBottom: 12,
-          paddingTop: Platform.OS === "web" ? WEB_NOTCH_TOP : 8,
+          flex: 1,
+          paddingTop: Platform.OS === "web" ? WEB_NOTCH_TOP : 0,
         }}
       >
-        <AppText weight="700" size={22}>
-          Branches
-        </AppText>
+        <BranchesContent showBack={false} />
       </View>
-      <SiteWebView url={exploreUrl} />
     </SafeAreaView>
   );
 }

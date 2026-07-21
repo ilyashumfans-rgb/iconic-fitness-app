@@ -137,7 +137,7 @@ function BranchCard({ gym, index, near }: { gym: Gym; index: number; near: boole
   );
 }
 
-export default function BranchesScreen() {
+export function BranchesContent({ showBack = true }: { showBack?: boolean }) {
   const colors = useColors();
   const router = useRouter();
   const { coords, status, request } = useUserLocation();
@@ -166,31 +166,33 @@ export default function BranchesScreen() {
   }, [gymsQuery.data, search]);
 
   return (
-    <>
-      <Stack.Screen options={{ title: "Our branches" }} />
-      <Screen>
-        <ScrollView
-          contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.headerRow}>
-            <Pressable
-              onPress={() => router.back()}
-              style={[styles.backBtn, { borderColor: colors.border }]}
-            >
-              <Feather name="arrow-left" size={18} color={colors.foreground} />
-            </Pressable>
-            <View style={{ marginLeft: 12, flex: 1 }}>
-              <AppText weight="700" size={22}>
-                Our branches
-              </AppText>
-              <AppText muted size={13}>
-                {near
-                  ? "Sorted by distance from you"
-                  : "All Iconic Fitness branches"}
-              </AppText>
-            </View>
-          </View>
+    <ScrollView
+      contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.headerRow}>
+        {showBack ? (
+          <Pressable
+            onPress={() => router.back()}
+            style={[
+              styles.backBtn,
+              { borderColor: colors.border, marginRight: 12 },
+            ]}
+          >
+            <Feather name="arrow-left" size={18} color={colors.foreground} />
+          </Pressable>
+        ) : null}
+        <View style={{ flex: 1 }}>
+          <AppText weight="700" size={22}>
+            Our branches
+          </AppText>
+          <AppText muted size={13}>
+            {near
+              ? "Sorted by distance from you"
+              : "All Iconic Fitness branches"}
+          </AppText>
+        </View>
+      </View>
 
           <View
             style={[
@@ -244,7 +246,16 @@ export default function BranchesScreen() {
               <BranchCard key={g.id} gym={g} index={i} near={near} />
             ))
           )}
-        </ScrollView>
+    </ScrollView>
+  );
+}
+
+export default function BranchesScreen() {
+  return (
+    <>
+      <Stack.Screen options={{ title: "Our branches" }} />
+      <Screen>
+        <BranchesContent />
       </Screen>
     </>
   );
