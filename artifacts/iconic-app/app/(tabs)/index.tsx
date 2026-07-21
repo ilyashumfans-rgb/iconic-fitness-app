@@ -746,18 +746,14 @@ export default function HomeScreen() {
   const meQuery = useGetMe({
     query: { enabled: !!isSignedIn, queryKey: getGetMeQueryKey() },
   });
-  // Membership status drives which admin banner slides this viewer sees.
-  // Guests can't call this endpoint (401), so it's only fetched when signed in;
-  // a signed-in viewer with a non-null active plan counts as a "member".
   const myMembershipQuery = useGetMyMembership({
     query: { enabled: !!isSignedIn, queryKey: getGetMyMembershipQueryKey() },
   });
-  // Guests are known non-members immediately. For signed-in viewers we only
-  // "know" their status once /memberships/mine resolves — until then (or on a
-  // transient error) targeting stays unsettled so we never misclassify a
-  // member as a customer while loading.
-  const membershipSettled = !isSignedIn || myMembershipQuery.isSuccess;
-  const isMember = !!isSignedIn && !!myMembershipQuery.data;
+  // Banner slide targeting: "Members" = anyone logged in to the app,
+  // "Customers" = guests browsing without an account. Auth state is known
+  // synchronously, so targeting is always settled.
+  const membershipSettled = true;
+  const isMember = !!isSignedIn;
   const membership = myMembershipQuery.data ?? null;
   // Signed-in users get a tracking-focused Home: the discovery sections
   // (Explore packages / Gyms near me / Top rated gyms) are guest-only.

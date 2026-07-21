@@ -17,11 +17,15 @@ type Audience = "all" | "members" | "customers";
 
 const AUDIENCE_OPTIONS: { value: Audience; label: string; hint: string }[] = [
   { value: "all", label: "Everyone", hint: "All app users" },
-  { value: "members", label: "Members only", hint: "People with an active plan" },
+  {
+    value: "members",
+    label: "Members only",
+    hint: "Anyone logged in to the app",
+  },
   {
     value: "customers",
     label: "Customers only",
-    hint: "People without a plan yet",
+    hint: "Guests browsing without an account",
   },
 ];
 

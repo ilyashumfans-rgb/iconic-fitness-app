@@ -76,7 +76,7 @@ Full-bleed slider at the top of mobile Home; slides managed in web admin (`pages
 
 - DB: `homeSlidesTable` — `kind` (image|gif|youtube), `mediaUrl`, title/subtitle/CTA, `audience` (all|members|customers), `sortOrder`, `isActive`. GIFs upload raw (preserve animation); other images canvas-compressed.
 - API: public `GET /home-slides` + admin CRUD in `routes/homeSlides.ts`; server validates kind↔mediaUrl (`validateMedia`).
-- Audience gating on mobile (`HeroSlider` in `app/(tabs)/index.tsx`): members = active plan via `useGetMyMembership`, customers = no plan/guests. **Tri-state:** while membership is unsettled only `audience='all'` slides show. Code-default brand/gym slides render when nothing is visible (never empty).
+- Audience gating on mobile (`HeroSlider` in `app/(tabs)/index.tsx`): **members = anyone signed in, customers = guests** (per user decision; no plan check, targeting always settled). Code-default brand/gym slides render when nothing is visible (never empty).
 - YouTube slides autoplay inline muted+looping via platform-split `components/YouTubeInline` (`.tsx` webview / `.web.tsx` iframe), `pointerEvents="none"` so swipe/tap still work. Slider clears the notch: safe-area top on native, `paddingTop` only when `insets.top === 0` (web).
 - **Slide taps stay in-app:** `ctaUrl` starting with `/` → `router.push`; external URLs (and YouTube slides / Explore) open the `app/web.tsx` in-app browser modal (native WebView / web iframe, header with close + open-externally).
 
