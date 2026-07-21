@@ -13,6 +13,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { setAuthTokenGetter, setBaseUrl } from "@workspace/api-client-react";
 import { Stack } from "expo-router";
 import * as Notifications from "expo-notifications";
+import { ensureDefaultReminders } from "@/lib/notifications";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
@@ -171,6 +172,12 @@ export default function RootLayout() {
   useEffect(() => {
     const t = setTimeout(() => setSplashDone(true), 3000);
     return () => clearTimeout(t);
+  }, []);
+
+  // Daily action reminders are ON by default — keep them scheduled on every
+  // launch unless the user explicitly turned them off in Settings.
+  useEffect(() => {
+    void ensureDefaultReminders();
   }, []);
 
   // IMPORTANT: do NOT gate the whole app on font loading (`return null`). Doing

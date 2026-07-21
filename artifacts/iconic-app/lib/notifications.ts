@@ -156,10 +156,29 @@ export async function scheduleActionReminders(): Promise<boolean> {
 export async function cancelActionReminders(): Promise<void> {
   if (Platform.OS === "web") return;
   await Notifications.cancelAllScheduledNotificationsAsync();
-  await AsyncStorage.removeItem(REMINDERS_KEY);
+  // Explicit opt-out — reminders are ON by default, so record "0" rather than
+  // clearing the key (a missing key means "use the default: on").
+  await AsyncStorage.setItem(REMINDERS_KEY, "0");
 }
 
+/** Reminders are on by default; only an explicit toggle-off ("0") disables them. */
 export async function areRemindersOn(): Promise<boolean> {
+  if (Platform.OS === "web") return false;
   const raw = await AsyncStorage.getItem(REMINDERS_KEY);
-  return raw === "1";
+  return raw !== "0";
+}
+
+/**
+ * Called on app launch: keep daily reminders scheduled for everyone who hasn't
+ * explicitly turned them off. Safe to call repeatedly (reschedules in place);
+ * silently does nothing if notification permission is denied.
+ */
+export async function ensureDefaultReminders(): Promise<void> {
+  if (Platform.OS === "web") return;
+  try {
+    if (!(await areRemindersOn())) return;
+    await scheduleActionReminders();
+  } catch {
+    // Never let reminder scheduling break app startup.
+  }
 }
