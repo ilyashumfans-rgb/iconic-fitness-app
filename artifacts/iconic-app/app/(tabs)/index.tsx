@@ -152,6 +152,87 @@ function daysUntilIst(dateIso: string): number {
 /** Plan card pinned to the top of Home for members with a plan. */
 // Fixed premium palette — the card always renders as a dark "black card"
 // with lime accents, matching the high-end fitness brand.
+/** Premium-style card for signed-in members with no active membership. */
+function NoMembershipCard({
+  memberName,
+  onViewPlans,
+}: {
+  memberName: string;
+  onViewPlans: () => void;
+}) {
+  const initials = (memberName || "M")
+    .split(/\s+/)
+    .map((w) => w[0] ?? "")
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  return (
+    <View style={[styles.premiumWrap, CARD_SHADOW]}>
+      <LinearGradient
+        colors={[PREMIUM.bgTop, PREMIUM.bgBottom]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0.6, y: 1 }}
+        style={styles.premiumCard}
+      >
+        <LinearGradient
+          colors={["transparent", PREMIUM.gold + "2E", "transparent"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0.4 }}
+          style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}
+        />
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <Feather name="award" size={14} color={PREMIUM.gold} />
+          <AppText
+            size={11}
+            weight="700"
+            color={PREMIUM.gold}
+            style={{ letterSpacing: 1.2 }}
+          >
+            ICONIC MEMBER
+          </AppText>
+        </View>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+            marginTop: 12,
+          }}
+        >
+          <View style={styles.noPlanAvatar}>
+            <AppText weight="700" size={16} color={PREMIUM.gold}>
+              {initials}
+            </AppText>
+          </View>
+          <View style={{ flex: 1 }}>
+            {memberName ? (
+              <AppText weight="700" size={16} color={PREMIUM.text}>
+                {memberName}
+              </AppText>
+            ) : null}
+            <AppText size={13} color={PREMIUM.faint}>
+              No active membership
+            </AppText>
+          </View>
+        </View>
+        <Pressable
+          onPress={onViewPlans}
+          style={({ pressed }) => [
+            styles.noPlanCta,
+            { opacity: pressed ? 0.85 : 1 },
+          ]}
+        >
+          <Feather name="credit-card" size={15} color="#0A0C08" />
+          <AppText weight="700" size={14} color="#0A0C08">
+            View membership plans
+          </AppText>
+        </Pressable>
+      </LinearGradient>
+    </View>
+  );
+}
+
 const PREMIUM = {
   bgTop: "#1A1F14",
   bgBottom: "#080A06",
@@ -806,6 +887,11 @@ export default function HomeScreen() {
               params: { url: membershipsUrl, title: "Manage plan" },
             })
           }
+        />
+      ) : isSignedIn && myMembershipQuery.isFetched ? (
+        <NoMembershipCard
+          memberName={meQuery.data?.name ?? ""}
+          onViewPlans={() => router.push("/plans")}
         />
       ) : isSignedIn ? null : (
         <AICoachCard
@@ -2460,6 +2546,26 @@ const styles = StyleSheet.create({
   // ── Premium member card ────────────────────────────────────────────────
   // Shadow on the wrapper, clipping on the gradient (iOS clips a view's own
   // shadow when it also has overflow:hidden).
+  noPlanAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: PREMIUM.hairline,
+    backgroundColor: "rgba(255,255,255,0.06)",
+  },
+  noPlanCta: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 14,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: PREMIUM.gold,
+  },
   premiumWrap: {
     marginBottom: 16,
     borderRadius: 24,
