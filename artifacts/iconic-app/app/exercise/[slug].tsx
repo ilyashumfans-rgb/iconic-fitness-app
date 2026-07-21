@@ -1,18 +1,65 @@
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  Image,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
 import { WEB_NOTCH_TOP } from "@/components/Screen";
 import { useColors } from "@/hooks/useColors";
+import { EXERCISE_FRAMES } from "@/lib/exerciseMedia";
 import {
   categoryLabel,
   getExercise,
   type Exercise,
 } from "@/lib/exercises";
+
+/**
+ * Animated movement demo: flips between the start and end position frames
+ * so members can see the exercise like a GIF.
+ */
+function ExerciseDemo({ slug }: { slug: string }) {
+  const colors = useColors();
+  const frames = EXERCISE_FRAMES[slug];
+  const [frame, setFrame] = useState(0);
+
+  useEffect(() => {
+    if (!frames) return;
+    const t = setInterval(() => setFrame((f) => (f === 0 ? 1 : 0)), 900);
+    return () => clearInterval(t);
+  }, [frames]);
+
+  if (!frames) return null;
+  return (
+    <View
+      style={[
+        styles.demoWrap,
+        { backgroundColor: "#FFFFFF", borderColor: colors.border },
+      ]}
+    >
+      <Image
+        source={frames[frame]}
+        style={styles.demoImg}
+        resizeMode="contain"
+      />
+      <View style={[styles.demoBadge, { backgroundColor: colors.primary }]}>
+        <Feather name="play" size={10} color={colors.primaryForeground} />
+        <AppText weight="700" size={10} color={colors.primaryForeground}>
+          DEMO
+        </AppText>
+      </View>
+    </View>
+  );
+}
 
 const DIFFICULTY_TINT: Record<string, "success" | "warning" | "destructive"> = {
   Beginner: "success",
@@ -138,6 +185,7 @@ export default function ExerciseDetailScreen() {
 
           {/* Instructions */}
           <Section title="How to do it" icon="list">
+            <ExerciseDemo slug={exercise.slug} />
             {exercise.instructions.map((step, i) => (
               <View key={i} style={styles.stepRow}>
                 <View
@@ -337,6 +385,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginTop: 1,
+  },
+  demoWrap: {
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: "hidden",
+    marginBottom: 16,
+  },
+  demoImg: {
+    width: "100%",
+    height: 210,
+  },
+  demoBadge: {
+    position: "absolute",
+    top: 10,
+    left: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
   bulletRow: { flexDirection: "row", gap: 10, marginBottom: 12, alignItems: "flex-start" },
   altRow: { flexDirection: "row", alignItems: "center", gap: 12, padding: 12 },
