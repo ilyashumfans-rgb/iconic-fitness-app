@@ -65,6 +65,7 @@ import { AICoachCard } from "@/components/AICoachCard";
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
+import { CoachFab } from "@/components/CoachFab";
 import { NotificationBell } from "@/components/NotificationBell";
 import { PackageCard } from "@/components/PackageCard";
 import { Screen } from "@/components/Screen";
@@ -1166,6 +1167,7 @@ export default function HomeScreen() {
       ) : null}
     </Screen>
       <NotificationBell />
+      <CoachFab />
     </View>
   );
 }
