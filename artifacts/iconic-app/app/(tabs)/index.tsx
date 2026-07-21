@@ -1801,8 +1801,7 @@ function GymCard({
   const colors = useColors();
   const img = resolveImageUrl(gym.heroImage);
   return (
-    <Animated.View
-      entering={FadeInDown.delay(index * 70).springify().damping(16)}
+    <View
       style={[CARD_SHADOW, { borderRadius: 26, backgroundColor: colors.card }]}
     >
       <Pressable
@@ -1878,7 +1877,7 @@ function GymCard({
           </View>
         </View>
       </Pressable>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -1991,8 +1990,7 @@ function CategoryCard({
   const uri = resolveImageUrl(image);
 
   return (
-    <Animated.View
-      entering={FadeInDown.delay(index * 80).springify().damping(16)}
+    <View
       style={[CARD_SHADOW, { borderRadius: 22, backgroundColor: "#0A0C08" }]}
     >
       <Pressable
@@ -2047,7 +2045,7 @@ function CategoryCard({
           )}
         </View>
       </Pressable>
-    </Animated.View>
+    </View>
   );
 }
 
