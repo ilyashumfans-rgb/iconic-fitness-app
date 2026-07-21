@@ -13,7 +13,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 const BRAND_BG = "#0A0C08";
-const BRAND_LIME = "#C7F000";
+const BRAND_LIME = "#0BE607";
 
 /**
  * Premium launch animation: a glowing lime mark springs in, a halo pulses,

@@ -147,7 +147,7 @@ function daysUntilIst(dateIso: string): number {
 const PREMIUM = {
   bgTop: "#1A1F14",
   bgBottom: "#080A06",
-  gold: "#C7F000",
+  gold: "#0BE607",
   goldDeep: "#9EBE00",
   hairline: "rgba(199,240,0,0.25)",
   text: "#FFFFFF",

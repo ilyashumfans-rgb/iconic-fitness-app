@@ -23,7 +23,7 @@ const colors = {
     elevated: "#F2F5EC",
 
     // Primary action color (logo green, deepened so white text passes contrast)
-    primary: "#C7F000",
+    primary: "#0BE607",
     primaryForeground: "#0A0C08",
 
     // Brand button gradient (logo green), used for primary buttons app-wide
@@ -73,7 +73,7 @@ const colors = {
     elevated: "#1B2113",
 
     // Primary action color (bright logo green on dark)
-    primary: "#C7F000",
+    primary: "#0BE607",
     primaryForeground: "#0A0C08",
 
     // Brand button gradient (logo green), used for primary buttons app-wide
