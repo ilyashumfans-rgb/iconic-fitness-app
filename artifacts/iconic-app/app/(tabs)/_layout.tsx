@@ -76,8 +76,27 @@ export default function TabsLayout() {
         name="sports"
         options={{
           title: "Branches",
+          // Members reach Branches from the More tab — free the slot for
+          // Progress; guests keep the Branches tab.
+          href: isSignedIn ? null : undefined,
           tabBarIcon: ({ color, size, focused }) => (
             <TabIcon name="award" size={size} color={color} focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="progress"
+        options={{
+          title: "Progress",
+          // Progress is member data — main tab bar after login only.
+          href: isSignedIn ? undefined : null,
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon
+              name="bar-chart-2"
+              size={size}
+              color={color}
+              focused={focused}
+            />
           ),
         }}
       />
@@ -141,7 +160,6 @@ export default function TabsLayout() {
       {/* Reachable from the More tab, hidden from the tab bar. */}
       <Tabs.Screen name="train" options={{ href: null }} />
       <Tabs.Screen name="classes" options={{ href: null }} />
-      <Tabs.Screen name="progress" options={{ href: null }} />
       <Tabs.Screen name="profile" options={{ href: null }} />
     </Tabs>
   );

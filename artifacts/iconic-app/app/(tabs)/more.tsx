@@ -81,6 +81,17 @@ export default function MoreScreen() {
       icon: "bar-chart-2",
       action: () => router.push("/progress"),
     },
+    // Branches left the tab bar for signed-in members — reachable here.
+    ...(!isGuest
+      ? [
+          {
+            title: "Branches",
+            subtitle: "Explore all Iconic Fitness branches",
+            icon: "map-pin",
+            action: () => router.push("/(tabs)/sports"),
+          } as MoreLink,
+        ]
+      : []),
     {
       title: "Membership Plans",
       subtitle: "One pass. Every gym. Pick your plan",
