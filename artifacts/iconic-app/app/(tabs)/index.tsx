@@ -168,54 +168,83 @@ function NoMembershipCard({
     .toUpperCase();
 
   return (
-    <View style={[styles.premiumWrap, CARD_SHADOW]}>
+    <View style={[styles.premiumWrap, CARD_SHADOW, styles.noPlanWrap]}>
       <LinearGradient
         colors={[PREMIUM.bgTop, PREMIUM.bgBottom]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0.6, y: 1 }}
-        style={styles.premiumCard}
+        style={[styles.premiumCard, styles.noPlanCard]}
       >
+        {/* Gold sheen sweeping the top edge */}
         <LinearGradient
           colors={["transparent", PREMIUM.gold + "2E", "transparent"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0.4 }}
           style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}
         />
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Feather name="award" size={14} color={PREMIUM.gold} />
-          <AppText
-            size={11}
-            weight="700"
-            color={PREMIUM.gold}
-            style={{ letterSpacing: 1.2 }}
-          >
-            ICONIC MEMBER
-          </AppText>
-        </View>
+        {/* Soft glow bottom-right */}
+        <LinearGradient
+          colors={["transparent", PREMIUM.gold + "14"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}
+        />
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
-            gap: 12,
-            marginTop: 12,
+            justifyContent: "space-between",
           }}
         >
-          <View style={styles.noPlanAvatar}>
-            <AppText weight="700" size={16} color={PREMIUM.gold}>
-              {initials}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Feather name="award" size={14} color={PREMIUM.gold} />
+            <AppText
+              size={11}
+              weight="700"
+              color={PREMIUM.gold}
+              style={{ letterSpacing: 1.6 }}
+            >
+              ICONIC MEMBER
             </AppText>
           </View>
-          <View style={{ flex: 1 }}>
-            {memberName ? (
-              <AppText weight="700" size={16} color={PREMIUM.text}>
-                {memberName}
-              </AppText>
-            ) : null}
-            <AppText size={13} color={PREMIUM.faint}>
-              No active membership
+          <View style={styles.noPlanBadge}>
+            <AppText size={10} weight="700" color={PREMIUM.faint}>
+              INACTIVE
             </AppText>
           </View>
         </View>
+
+        <View style={styles.noPlanHairline} />
+
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 14,
+          }}
+        >
+          <View style={styles.noPlanAvatarRing}>
+            <View style={styles.noPlanAvatar}>
+              <AppText weight="700" size={17} color={PREMIUM.gold}>
+                {initials}
+              </AppText>
+            </View>
+          </View>
+          <View style={{ flex: 1 }}>
+            {memberName ? (
+              <AppText weight="700" size={17} color={PREMIUM.text}>
+                {memberName}
+              </AppText>
+            ) : null}
+            <AppText size={13} color={PREMIUM.faint} style={{ marginTop: 2 }}>
+              No active membership
+            </AppText>
+            <AppText size={12} color={PREMIUM.faint} style={{ marginTop: 1 }}>
+              Unlock all Iconic branches & classes
+            </AppText>
+          </View>
+        </View>
+
         <Pressable
           onPress={onViewPlans}
           style={({ pressed }) => [
@@ -227,6 +256,7 @@ function NoMembershipCard({
           <AppText weight="700" size={14} color="#0A0C08">
             View membership plans
           </AppText>
+          <Feather name="arrow-right" size={15} color="#0A0C08" />
         </Pressable>
       </LinearGradient>
     </View>
@@ -2546,10 +2576,40 @@ const styles = StyleSheet.create({
   // ── Premium member card ────────────────────────────────────────────────
   // Shadow on the wrapper, clipping on the gradient (iOS clips a view's own
   // shadow when it also has overflow:hidden).
+  noPlanWrap: {
+    marginTop: 18,
+  },
+  noPlanCard: {
+    borderWidth: 1,
+    borderColor: PREMIUM.hairline,
+    paddingVertical: 20,
+  },
+  noPlanBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+    backgroundColor: "rgba(255,255,255,0.05)",
+  },
+  noPlanHairline: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: PREMIUM.hairline,
+    marginVertical: 14,
+  },
+  noPlanAvatarRing: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: PREMIUM.gold + "66",
+  },
   noPlanAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
