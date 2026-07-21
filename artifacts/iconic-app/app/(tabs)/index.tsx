@@ -1257,7 +1257,7 @@ export default function HomeScreen() {
       ) : null}
     </Screen>
       <NotificationBell />
-      <CoachFab />
+      {isSignedIn ? <CoachFab /> : null}
     </View>
   );
 }
