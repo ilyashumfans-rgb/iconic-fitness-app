@@ -27,7 +27,7 @@ const colors = {
     primaryForeground: "#0A0C08",
 
     // Brand button gradient (logo green), used for primary buttons app-wide
-    primaryGradient: ["#D4FF00", "#9EBE00"],
+    primaryGradient: ["#0BE607", "#05A303"],
 
     // Secondary surfaces
     secondary: "#EEF2E6",
@@ -77,7 +77,7 @@ const colors = {
     primaryForeground: "#0A0C08",
 
     // Brand button gradient (logo green), used for primary buttons app-wide
-    primaryGradient: ["#D4FF00", "#9EBE00"],
+    primaryGradient: ["#0BE607", "#05A303"],
 
     // Secondary surfaces
     secondary: "#1B2113",
