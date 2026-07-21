@@ -274,10 +274,10 @@ const styles = StyleSheet.create({
   },
   coachWrap: {
     position: "absolute",
-    right: -26,
+    right: -20,
     bottom: 0,
-    width: 258,
-    height: 270,
+    width: 240,
+    height: 251,
   },
   coach: { width: "100%", height: "100%" },
   sheen: { position: "absolute", top: 0, left: 0, right: 0, height: 80 },
