@@ -313,7 +313,7 @@ export default function PackageDetailScreen() {
 
 const styles = StyleSheet.create({
   hero: {
-    height: 190,
+    height: 340,
     borderRadius: 22,
     overflow: "hidden",
   },
