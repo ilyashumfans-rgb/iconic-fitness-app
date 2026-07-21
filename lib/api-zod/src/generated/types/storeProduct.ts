@@ -17,4 +17,7 @@ export interface StoreProduct {
   gallery?: string[];
   stock?: number;
   status?: string;
+  description?: string;
+  sizes?: string[];
+  colors?: string[];
 }

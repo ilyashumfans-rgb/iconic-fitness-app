@@ -172,6 +172,39 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/StoreProduct" }
+  /store/checkout:
+    post:
+      operationId: storeCheckout
+      tags: [gyms]
+      summary: Place a Cash-on-Delivery store order (guest or signed-in)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StoreCheckoutRequest" }
+      responses:
+        "200":
+          description: Order placed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StoreCheckoutResponse" }
+        "400":
+          description: Invalid input
+  /store/orders/mine:
+    get:
+      operationId: listMyStoreOrders
+      tags: [gyms]
+      summary: Store orders of the signed-in member, newest first
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/StoreOrder" }
+        "401":
+          description: Not signed in
   /gyms:
     get:
       operationId: listGyms
@@ -1156,6 +1189,71 @@ components:
         gallery: { type: array, items: { type: string } }
         stock: { type: integer }
         status: { type: string }
+        description: { type: string }
+        sizes: { type: array, items: { type: string } }
+        colors: { type: array, items: { type: string } }
+    StoreCheckoutRequest:
+      type: object
+      required:
+        [
+          customerName, customerEmail, customerPhone, shippingAddress,
+          shippingCity, shippingPincode, items
+        ]
+      properties:
+        customerName: { type: string }
+        customerEmail: { type: string }
+        customerPhone: { type: string }
+        shippingAddress: { type: string }
+        shippingCity: { type: string }
+        shippingPincode: { type: string }
+        redeemPoints: { type: integer, description: "Wallet points to apply (signed-in only, 1 point = ₹1)" }
+        items:
+          type: array
+          items:
+            type: object
+            required: [productId, qty]
+            properties:
+              productId: { type: integer }
+              qty: { type: integer }
+              size: { type: string }
+              color: { type: string }
+    StoreCheckoutResponse:
+      type: object
+      required: [ok, orderId, total, redeemedInr]
+      properties:
+        ok: { type: boolean }
+        orderId: { type: integer }
+        total: { type: integer }
+        redeemedInr: { type: integer }
+    StoreOrderItem:
+      type: object
+      required: [id, productName, unitPriceInr, qty, variant, status]
+      properties:
+        id: { type: integer }
+        productName: { type: string }
+        unitPriceInr: { type: integer }
+        qty: { type: integer }
+        variant: { type: string }
+        status: { type: string }
+    StoreOrder:
+      type: object
+      required:
+        [id, totalInr, pointsRedeemedInr, paymentMethod, status, createdAt, items]
+      properties:
+        id: { type: integer }
+        totalInr: { type: integer }
+        pointsRedeemedInr: { type: integer }
+        paymentMethod: { type: string }
+        status:
+          type: string
+          description: "placed | confirmed | shipped | delivered | cancelled"
+        createdAt: { type: string }
+        shippingAddress: { type: string }
+        shippingCity: { type: string }
+        shippingPincode: { type: string }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/StoreOrderItem" }
     Gym:
       type: object
       required:

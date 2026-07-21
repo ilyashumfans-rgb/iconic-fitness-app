@@ -9,7 +9,7 @@ import {
   partnersTable,
 } from "@workspace/db";
 import { DEFAULT_PRODUCT_CATEGORIES } from "../lib/productCategories.js";
-import { optionalUser } from "../lib/currentUser";
+import { optionalUser, requireUser } from "../lib/currentUser";
 import {
   creditReferralRewardOnce,
   debitWallet,
@@ -149,7 +149,15 @@ router.post(
       res.status(400).json({ error: "Missing required fields or empty cart" });
       return;
     }
-    const ids = items.map((i) => Number(i.productId)).filter((n) => Number.isInteger(n) && n > 0);
+    // Dedupe ids: the same product can appear on multiple cart lines (one per
+    // size/color variant), but SQL IN returns each row once.
+    const ids = Array.from(
+      new Set(
+        items
+          .map((i) => Number(i.productId))
+          .filter((n) => Number.isInteger(n) && n > 0),
+      ),
+    );
     if (ids.length === 0) {
       res.status(400).json({ error: "Invalid items" });
       return;
@@ -257,11 +265,59 @@ router.post(
 
 // NOTE: a public order-lookup endpoint was removed intentionally.
 // Looking up by enumerable integer id would leak customer PII to anyone.
-// If order tracking is added later, use an unguessable opaque token and
-// return status-only fields.
+// Signed-in members list their own orders below (scoped by userId — safe).
+
+// ── My orders (signed-in members) ──
+
+router.get(
+  "/store/orders/mine",
+  requireUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const orders = await db
+      .select()
+      .from(productOrdersTable)
+      .where(eq(productOrdersTable.userId, req.userId!))
+      .orderBy(desc(productOrdersTable.id));
+    if (orders.length === 0) {
+      res.json([]);
+      return;
+    }
+    const items = await db
+      .select()
+      .from(productOrderItemsTable)
+      .where(
+        inArray(
+          productOrderItemsTable.orderId,
+          orders.map((o) => o.id),
+        ),
+      );
+    res.json(
+      orders.map((o) => ({
+        id: o.id,
+        totalInr: o.totalInr,
+        pointsRedeemedInr: o.pointsRedeemedInr,
+        paymentMethod: o.paymentMethod,
+        status: o.status,
+        createdAt: o.createdAt.toISOString(),
+        shippingAddress: o.shippingAddress,
+        shippingCity: o.shippingCity,
+        shippingPincode: o.shippingPincode,
+        items: items
+          .filter((i) => i.orderId === o.id)
+          .map((i) => ({
+            id: i.id,
+            productName: i.productName,
+            unitPriceInr: i.unitPriceInr,
+            qty: i.qty,
+            variant: i.variant,
+            status: i.status,
+          })),
+      })),
+    );
+  },
+);
 
 // Suppress unused import warning
 void and;
-void productOrderItemsTable;
 
 export default router;

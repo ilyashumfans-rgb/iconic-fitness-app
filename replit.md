@@ -144,11 +144,17 @@ Expo app in `artifacts/iconic-app` (previewPath `/iconic-app/`), talks to the GY
 - **Auth:** Clerk (Replit-managed) via `@clerk/expo` v3 Future signals API; token wired by `setAuthTokenGetter` in root `ApiAuthBridge` (`app/_layout.tsx`). Guest mode via "Continue without login". Tabs + authed modals redirect to `/(auth)/sign-in` when signed out.
 - **Backend:** tracking endpoints in `routes/tracking.ts` (`/tracking/*`, `/checkins`), `requireUser` (Clerk bearer).
 - **Features:** dashboard rings, water/diet/workout+steps logging (modals), class browse+book+check-in, progress charts/streaks, goals, daily reminders. Theme: dark `#0A0C08` + lime `#C7F000`.
-- **Bottom tabs:** Home, Sports & Fitness, Store, Packages, More. Sports & Fitness and Store tabs are external links (`tabPress` preventDefault → `openExternal`). `train`/`classes`/`progress`/`profile` are hidden routes (`href: null`) reached via the More hub, which also holds settings (Daily reminders toggle, Appearance/theme, Log out/login).
+- **Bottom tabs:** Home, Sports & Fitness, Store, Packages, More. Sports & Fitness tab is an external link (`tabPress` preventDefault → `openExternal`); Store is a **native in-app store** (see "Native mobile store" below). `train`/`classes`/`progress`/`profile` are hidden routes (`href: null`) reached via the More hub, which also holds settings (Daily reminders toggle, Appearance/theme, Log out/login).
 - **Profile:** Membership section (plan, status, IST renew date, payment history) + editable Personal details (`PATCH /me`); both hidden for guests.
 - **Login screen** (`app/(auth)/sign-in.tsx`): full-bleed hero photo + gradient scrim, logo pinned top, form bottom-anchored (`flexGrow:1` + `marginTop:"auto"` — never a `flex:1` spacer child; see `.agents/memory/rn-login-scroll-anchor.md`); forces dark palette via `<ThemeContext.Provider value={FORCE_DARK}>`. Login is **email OTP only** (no password field: email → `signIn.emailCode.sendCode` → code → `verifyCode`+finalize, with Resend / Use-a-different-email resets; SMS OTP unsupported by managed Clerk) + Google SSO + guest.
 - **Launch splash:** `components/AnimatedSplash.tsx` (brand mark + halo animation, hardcoded dark palette, fail-safe timeouts).
 - **Gotchas:** `GestureHandlerRootView` needs `style={{ flex: 1 }}` or the app renders blank. `AppText` weight caps at "700".
+
+### Native mobile store & order tracking
+
+Store tab is fully native (no WebView). Data via `/store/*` (categories, products, checkout in OpenAPI; hooks generated). New `GET /store/orders/mine` (requireUser, userId-scoped in `routes/store.ts`) returns orders + item snapshots — public order lookup stays removed (PII). Checkout dedupes product ids (same product in 2 variants = 2 lines, one DB row).
+
+- Mobile: `lib/cart.ts` (AsyncStorage module store, variant-keyed lines, mutate-wins over slow load); `(tabs)/store.tsx` (search, category chips, 2-col grid, cart badge); `app/product/[slug].tsx` (gallery, size/color, qty, add/buy now); `app/cart.tsx` (COD checkout, prefill from `/me`, wallet-points toggle for signed-in, guest checkout OK); `app/orders.tsx` (status timeline placed→confirmed→shipped→delivered, cancelled banner) linked from More hub "Orders & Tracking" (non-guest). Statuses set by staff in web admin Orders page.
 
 ### Challenges & leaderboards
 

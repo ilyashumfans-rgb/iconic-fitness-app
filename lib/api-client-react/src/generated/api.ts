@@ -74,6 +74,9 @@ import type {
   ProgressReport,
   ReferralInfo,
   StoreCategory,
+  StoreCheckoutRequest,
+  StoreCheckoutResponse,
+  StoreOrder,
   StoreProduct,
   Trainer,
   TrainerBooking,
@@ -770,6 +773,154 @@ export function useListStoreProducts<TData = Awaited<ReturnType<typeof listStore
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getListStoreProductsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getStoreCheckoutUrl = () => {
+
+
+
+
+  return `/api/store/checkout`
+}
+
+/**
+ * @summary Place a Cash-on-Delivery store order (guest or signed-in)
+ */
+export const storeCheckout = async (storeCheckoutRequest: StoreCheckoutRequest, options?: RequestInit): Promise<StoreCheckoutResponse> => {
+
+  return customFetch<StoreCheckoutResponse>(getStoreCheckoutUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      storeCheckoutRequest,)
+  }
+);}
+
+
+
+
+export const getStoreCheckoutMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storeCheckout>>, TError,{data: BodyType<StoreCheckoutRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof storeCheckout>>, TError,{data: BodyType<StoreCheckoutRequest>}, TContext> => {
+
+const mutationKey = ['storeCheckout'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof storeCheckout>>, {data: BodyType<StoreCheckoutRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  storeCheckout(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StoreCheckoutMutationResult = NonNullable<Awaited<ReturnType<typeof storeCheckout>>>
+    export type StoreCheckoutMutationBody = BodyType<StoreCheckoutRequest>
+    export type StoreCheckoutMutationError = ErrorType<void>
+
+    /**
+ * @summary Place a Cash-on-Delivery store order (guest or signed-in)
+ */
+export const useStoreCheckout = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storeCheckout>>, TError,{data: BodyType<StoreCheckoutRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof storeCheckout>>,
+        TError,
+        {data: BodyType<StoreCheckoutRequest>},
+        TContext
+      > => {
+      return useMutation(getStoreCheckoutMutationOptions(options));
+    }
+
+export const getListMyStoreOrdersUrl = () => {
+
+
+
+
+  return `/api/store/orders/mine`
+}
+
+/**
+ * @summary Store orders of the signed-in member, newest first
+ */
+export const listMyStoreOrders = async ( options?: RequestInit): Promise<StoreOrder[]> => {
+
+  return customFetch<StoreOrder[]>(getListMyStoreOrdersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyStoreOrdersQueryKey = () => {
+    return [
+    `/api/store/orders/mine`
+    ] as const;
+    }
+
+
+export const getListMyStoreOrdersQueryOptions = <TData = Awaited<ReturnType<typeof listMyStoreOrders>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyStoreOrders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyStoreOrdersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyStoreOrders>>> = ({ signal }) => listMyStoreOrders({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyStoreOrders>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMyStoreOrdersQueryResult = NonNullable<Awaited<ReturnType<typeof listMyStoreOrders>>>
+export type ListMyStoreOrdersQueryError = ErrorType<void>
+
+
+/**
+ * @summary Store orders of the signed-in member, newest first
+ */
+
+export function useListMyStoreOrders<TData = Awaited<ReturnType<typeof listMyStoreOrders>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyStoreOrders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMyStoreOrdersQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

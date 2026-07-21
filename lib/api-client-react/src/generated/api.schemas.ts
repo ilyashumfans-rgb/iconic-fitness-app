@@ -142,6 +142,58 @@ export interface StoreProduct {
   gallery?: string[];
   stock?: number;
   status?: string;
+  description?: string;
+  sizes?: string[];
+  colors?: string[];
+}
+
+export type StoreCheckoutRequestItemsItem = {
+  productId: number;
+  qty: number;
+  size?: string;
+  color?: string;
+};
+
+export interface StoreCheckoutRequest {
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  shippingAddress: string;
+  shippingCity: string;
+  shippingPincode: string;
+  /** Wallet points to apply (signed-in only, 1 point = ₹1) */
+  redeemPoints?: number;
+  items: StoreCheckoutRequestItemsItem[];
+}
+
+export interface StoreCheckoutResponse {
+  ok: boolean;
+  orderId: number;
+  total: number;
+  redeemedInr: number;
+}
+
+export interface StoreOrderItem {
+  id: number;
+  productName: string;
+  unitPriceInr: number;
+  qty: number;
+  variant: string;
+  status: string;
+}
+
+export interface StoreOrder {
+  id: number;
+  totalInr: number;
+  pointsRedeemedInr: number;
+  paymentMethod: string;
+  /** placed | confirmed | shipped | delivered | cancelled */
+  status: string;
+  createdAt: string;
+  shippingAddress?: string;
+  shippingCity?: string;
+  shippingPincode?: string;
+  items: StoreOrderItem[];
 }
 
 export interface Gym {

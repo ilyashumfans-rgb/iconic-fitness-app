@@ -241,9 +241,64 @@ export const ListStoreProductsResponseItem = zod.object({
   "imageUrl": zod.string(),
   "gallery": zod.array(zod.string()).optional(),
   "stock": zod.number().optional(),
-  "status": zod.string().optional()
+  "status": zod.string().optional(),
+  "description": zod.string().optional(),
+  "sizes": zod.array(zod.string()).optional(),
+  "colors": zod.array(zod.string()).optional()
 })
 export const ListStoreProductsResponse = zod.array(ListStoreProductsResponseItem)
+
+
+/**
+ * @summary Place a Cash-on-Delivery store order (guest or signed-in)
+ */
+export const StoreCheckoutBody = zod.object({
+  "customerName": zod.string(),
+  "customerEmail": zod.string(),
+  "customerPhone": zod.string(),
+  "shippingAddress": zod.string(),
+  "shippingCity": zod.string(),
+  "shippingPincode": zod.string(),
+  "redeemPoints": zod.number().optional().describe('Wallet points to apply (signed-in only, 1 point = ₹1)'),
+  "items": zod.array(zod.object({
+  "productId": zod.number(),
+  "qty": zod.number(),
+  "size": zod.string().optional(),
+  "color": zod.string().optional()
+}))
+})
+
+export const StoreCheckoutResponse = zod.object({
+  "ok": zod.boolean(),
+  "orderId": zod.number(),
+  "total": zod.number(),
+  "redeemedInr": zod.number()
+})
+
+
+/**
+ * @summary Store orders of the signed-in member, newest first
+ */
+export const ListMyStoreOrdersResponseItem = zod.object({
+  "id": zod.number(),
+  "totalInr": zod.number(),
+  "pointsRedeemedInr": zod.number(),
+  "paymentMethod": zod.string(),
+  "status": zod.string().describe('placed | confirmed | shipped | delivered | cancelled'),
+  "createdAt": zod.string(),
+  "shippingAddress": zod.string().optional(),
+  "shippingCity": zod.string().optional(),
+  "shippingPincode": zod.string().optional(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "productName": zod.string(),
+  "unitPriceInr": zod.number(),
+  "qty": zod.number(),
+  "variant": zod.string(),
+  "status": zod.string()
+}))
+})
+export const ListMyStoreOrdersResponse = zod.array(ListMyStoreOrdersResponseItem)
 
 
 /**

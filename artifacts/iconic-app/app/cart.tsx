@@ -1,0 +1,388 @@
+import { useAuth } from "@clerk/expo";
+import { Feather } from "@expo/vector-icons";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  Alert,
+  Image,
+  Pressable,
+  StyleSheet,
+  Switch,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import {
+  getGetMeQueryKey,
+  getGetMyReferralInfoQueryKey,
+  getListMyStoreOrdersQueryKey,
+  useGetMe,
+  useGetMyReferralInfo,
+  useStoreCheckout,
+} from "@workspace/api-client-react";
+
+import { AppText } from "@/components/AppText";
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
+import { Field } from "@/components/Field";
+import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
+import { ModalHeader } from "@/components/ModalHeader";
+import { EmptyState } from "@/components/ui-bits";
+import { useColors } from "@/hooks/useColors";
+import { cartKey, useCart } from "@/lib/cart";
+import { resolveImageUrl } from "@/lib/images";
+
+export default function CartScreen() {
+  const colors = useColors();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { isSignedIn } = useAuth();
+  const { items, setQty, remove, clear, totalInr } = useCart();
+
+  const me = useGetMe({
+    query: { enabled: !!isSignedIn, queryKey: getGetMeQueryKey() },
+  });
+  const referral = useGetMyReferralInfo({
+    query: { enabled: !!isSignedIn, queryKey: getGetMyReferralInfoQueryKey() },
+  });
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [pincode, setPincode] = useState("");
+  const [usePoints, setUsePoints] = useState(false);
+  const [placedOrderId, setPlacedOrderId] = useState<number | null>(null);
+
+  // Prefill contact details from the member profile once it loads.
+  useEffect(() => {
+    const u = me.data;
+    if (!u) return;
+    setName((v) => v || u.name || "");
+    setEmail((v) => v || u.email || "");
+    setPhone((v) => v || u.mobile || "");
+  }, [me.data]);
+
+  const checkout = useStoreCheckout();
+
+  const balance = referral.data?.balanceInr ?? 0;
+  const pointsDiscount = usePoints ? Math.min(balance, totalInr) : 0;
+  const payable = totalInr - pointsDiscount;
+
+  const onPlaceOrder = async () => {
+    if (name.trim().length < 2) {
+      Alert.alert("Name required", "Please enter your full name.");
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      Alert.alert("Email required", "Please enter a valid email address.");
+      return;
+    }
+    if (!/^[+0-9 ()-]{7,}$/.test(phone.trim())) {
+      Alert.alert("Phone required", "Please enter a valid phone number.");
+      return;
+    }
+    if (address.trim().length < 5) {
+      Alert.alert("Address required", "Please enter your delivery address.");
+      return;
+    }
+    if (!city.trim()) {
+      Alert.alert("City required", "Please enter your city.");
+      return;
+    }
+    if (!/^\d{6}$/.test(pincode.trim())) {
+      Alert.alert("Pincode required", "Please enter a valid 6-digit pincode.");
+      return;
+    }
+    try {
+      const res = await checkout.mutateAsync({
+        data: {
+          customerName: name.trim(),
+          customerEmail: email.trim(),
+          customerPhone: phone.trim(),
+          shippingAddress: address.trim(),
+          shippingCity: city.trim(),
+          shippingPincode: pincode.trim(),
+          ...(isSignedIn && pointsDiscount > 0
+            ? { redeemPoints: pointsDiscount }
+            : {}),
+          items: items.map((i) => ({
+            productId: i.productId,
+            qty: i.qty,
+            ...(i.size ? { size: i.size } : {}),
+            ...(i.color ? { color: i.color } : {}),
+          })),
+        },
+      });
+      clear();
+      setPlacedOrderId(res.orderId);
+      void queryClient.invalidateQueries({
+        queryKey: getListMyStoreOrdersQueryKey(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: getGetMyReferralInfoQueryKey(),
+      });
+    } catch (err) {
+      Alert.alert(
+        "Could not place order",
+        err instanceof Error ? err.message : "Please try again.",
+      );
+    }
+  };
+
+  if (placedOrderId !== null) {
+    return (
+      <Shell>
+        <View style={styles.successWrap}>
+          <View style={[styles.successIcon, { backgroundColor: colors.primary }]}>
+            <Feather name="check" size={36} color={colors.primaryForeground} />
+          </View>
+          <AppText weight="700" size={22} style={{ textAlign: "center" }}>
+            Order placed!
+          </AppText>
+          <AppText muted size={14} style={{ textAlign: "center" }}>
+            Order #{placedOrderId} — pay cash on delivery. We&apos;ll be in
+            touch soon.
+          </AppText>
+          {isSignedIn ? (
+            <Button
+              label="Track my order"
+              icon="package"
+              onPress={() => {
+                setPlacedOrderId(null);
+                router.replace("/orders");
+              }}
+            />
+          ) : null}
+          <Button
+            label="Continue shopping"
+            variant="secondary"
+            onPress={() => {
+              setPlacedOrderId(null);
+              router.back();
+            }}
+          />
+        </View>
+      </Shell>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <Shell>
+        <EmptyState
+          icon="shopping-cart"
+          title="Your cart is empty"
+          message="Browse the store and add something you like."
+        />
+        <View style={{ paddingHorizontal: 20 }}>
+          <Button label="Back to store" onPress={() => router.back()} />
+        </View>
+      </Shell>
+    );
+  }
+
+  return (
+    <Shell>
+      <KeyboardAwareScrollViewCompat
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40, gap: 12 }}
+      >
+        {items.map((i) => {
+          const key = cartKey(i);
+          return (
+            <Card key={key} style={styles.line}>
+              <Image
+                source={{ uri: resolveImageUrl(i.imageUrl) }}
+                style={[styles.lineImage, { backgroundColor: colors.elevated }]}
+              />
+              <View style={{ flex: 1, gap: 2 }}>
+                <AppText weight="600" size={14} numberOfLines={2}>
+                  {i.name}
+                </AppText>
+                {i.size || i.color ? (
+                  <AppText muted size={12}>
+                    {[i.size, i.color].filter(Boolean).join(" / ")}
+                  </AppText>
+                ) : null}
+                <AppText weight="700" size={15}>
+                  ₹{i.priceInr * i.qty}
+                </AppText>
+              </View>
+              <View style={{ alignItems: "center", gap: 6 }}>
+                <View style={styles.qtyRow}>
+                  <Pressable
+                    onPress={() => setQty(key, i.qty - 1)}
+                    style={[styles.qtyBtn, { backgroundColor: colors.elevated }]}
+                  >
+                    <AppText weight="700" size={16}>−</AppText>
+                  </Pressable>
+                  <AppText weight="700" size={14} style={{ minWidth: 24, textAlign: "center" }}>
+                    {i.qty}
+                  </AppText>
+                  <Pressable
+                    onPress={() => setQty(key, i.qty + 1)}
+                    style={[styles.qtyBtn, { backgroundColor: colors.elevated }]}
+                  >
+                    <AppText weight="700" size={16}>+</AppText>
+                  </Pressable>
+                </View>
+                <Pressable onPress={() => remove(key)} hitSlop={8}>
+                  <Feather name="trash-2" size={16} color={colors.mutedForeground} />
+                </Pressable>
+              </View>
+            </Card>
+          );
+        })}
+
+        {/* Delivery details */}
+        <AppText weight="700" size={17} style={{ marginTop: 10 }}>
+          Delivery details
+        </AppText>
+        <Field label="Full name" value={name} onChangeText={setName} />
+        <Field
+          label="Email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <Field
+          label="Phone"
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
+        />
+        <Field
+          label="Address"
+          value={address}
+          onChangeText={setAddress}
+          multiline
+        />
+        <Field label="City" value={city} onChangeText={setCity} />
+        <Field
+          label="Pincode"
+          value={pincode}
+          onChangeText={setPincode}
+          keyboardType="number-pad"
+          maxLength={6}
+        />
+
+        {isSignedIn && balance > 0 ? (
+          <Card style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <AppText weight="600" size={14}>
+                Use wallet points
+              </AppText>
+              <AppText muted size={12}>
+                Balance ₹{balance} — save ₹{Math.min(balance, totalInr)} on
+                this order
+              </AppText>
+            </View>
+            <Switch
+              value={usePoints}
+              onValueChange={setUsePoints}
+              trackColor={{ true: colors.primary, false: colors.elevated }}
+              thumbColor="#fff"
+            />
+          </Card>
+        ) : null}
+
+        {/* Summary */}
+        <Card style={{ gap: 8 }}>
+          <Row label="Items total" value={`₹${totalInr}`} />
+          {pointsDiscount > 0 ? (
+            <Row label="Points discount" value={`−₹${pointsDiscount}`} />
+          ) : null}
+          <Row label="Payment" value="Cash on delivery" />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          <Row label="To pay" value={`₹${payable}`} bold />
+        </Card>
+
+        <Button
+          label={checkout.isPending ? "Placing order…" : `Place order — ₹${payable}`}
+          icon="check-circle"
+          loading={checkout.isPending}
+          onPress={() => void onPlaceOrder()}
+        />
+      </KeyboardAwareScrollViewCompat>
+    </Shell>
+  );
+}
+
+function Row({
+  label,
+  value,
+  bold,
+}: {
+  label: string;
+  value: string;
+  bold?: boolean;
+}) {
+  return (
+    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+      <AppText muted={!bold} weight={bold ? "700" : "500"} size={bold ? 16 : 14}>
+        {label}
+      </AppText>
+      <AppText weight={bold ? "700" : "600"} size={bold ? 16 : 14}>
+        {value}
+      </AppText>
+    </View>
+  );
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
+  const colors = useColors();
+  return (
+    <SafeAreaView
+      edges={["top"]}
+      style={{ flex: 1, backgroundColor: colors.background }}
+    >
+      <ModalHeader title="Cart" />
+      {children}
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  line: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  lineImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 12,
+  },
+  qtyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  qtyBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+  },
+  successWrap: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 28,
+    gap: 16,
+  },
+  successIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

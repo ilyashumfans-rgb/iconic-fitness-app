@@ -112,6 +112,16 @@ export default function MoreScreen() {
     ...(!isGuest
       ? [
           {
+            title: "Orders & Tracking",
+            subtitle: "Your store orders and delivery status",
+            icon: "package",
+            action: () => router.push("/orders"),
+          } as MoreLink,
+        ]
+      : []),
+    ...(!isGuest
+      ? [
+          {
             title: "Refer & Earn",
             subtitle: "Share your code, earn wallet points",
             icon: "share-2",
