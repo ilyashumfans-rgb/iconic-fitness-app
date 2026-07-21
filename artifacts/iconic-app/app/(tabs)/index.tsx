@@ -1125,8 +1125,8 @@ export default function HomeScreen() {
         </>
       ) : null}
 
-      {/* Shop by category */}
-      <ShopByCategory />
+      {/* Shop by category — guests only */}
+      {isSignedIn ? null : <ShopByCategory />}
 
       {/* Home banner slider (admin-managed) */}
       <HeroSlider
