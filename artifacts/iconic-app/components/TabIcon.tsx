@@ -29,23 +29,23 @@ export function TabIcon({
     <View
       style={{
         shadowColor: colors.primary,
-        shadowOpacity: 0.55,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.35,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 6 },
         elevation: 8,
-        borderRadius: 16,
+        borderRadius: 20,
         // Nudge the chip up a touch so it feels raised out of the bar.
-        marginTop: -6,
+        marginTop: -8,
       }}
     >
-      <View style={{ borderRadius: 16, overflow: "hidden" }}>
+      <View style={{ borderRadius: 20, overflow: "hidden" }}>
         <LinearGradient
           colors={colors.primaryGradient as [string, string]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{
-            width: 46,
-            height: 34,
+            width: 52,
+            height: 38,
             alignItems: "center",
             justifyContent: "center",
           }}

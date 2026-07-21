@@ -183,7 +183,7 @@ export function AICoachCard({
 
             {/* Top sheen for glass depth */}
             <LinearGradient
-              colors={["rgba(255,255,255,0.10)", "rgba(255,255,255,0)"]}
+              colors={["rgba(255,255,255,0.15)", "rgba(255,255,255,0)"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
               style={styles.sheen}
@@ -193,16 +193,16 @@ export function AICoachCard({
             {/* Content */}
             <View style={styles.content}>
               <View style={styles.eyebrowRow}>
-                <View style={[styles.liveDot, { backgroundColor: colors.primary }]} />
-                <AppText size={11} weight="700" style={{ letterSpacing: 1.6, color: colors.primary }}>
+                <View style={[styles.liveDot, { backgroundColor: colors.primary, shadowColor: colors.primary, shadowOpacity: 0.8, shadowRadius: 6, shadowOffset: { width: 0, height: 0 } }]} />
+                <AppText size={11} weight="700" style={{ letterSpacing: 2, color: colors.primary }}>
                   AI FITNESS COACH
                 </AppText>
               </View>
 
-              <AppText weight="700" size={21} style={{ marginTop: 8, color: "#F4F7EE" }}>
+              <AppText weight="700" size={24} style={{ marginTop: 10, color: "#FFFFFF" }}>
                 {title}
               </AppText>
-              <AppText size={13} style={{ marginTop: 5, maxWidth: 210, color: "rgba(244,247,238,0.72)", lineHeight: 18 }}>
+              <AppText size={14} style={{ marginTop: 6, maxWidth: 210, color: "rgba(255,255,255,0.7)", lineHeight: 20 }}>
                 {subtitle}
               </AppText>
 

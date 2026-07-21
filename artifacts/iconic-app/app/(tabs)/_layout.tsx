@@ -1,7 +1,7 @@
 import { useAuth } from "@clerk/expo";
 import { Redirect, Tabs, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, View, Platform, StyleSheet } from "react-native";
 
 import { TabIcon } from "@/components/TabIcon";
 import { useColors } from "@/hooks/useColors";
@@ -49,11 +49,13 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
         tabBarStyle: {
-          backgroundColor: colors.card,
+          backgroundColor: colors.background, // Match premium dark theme seamlessly
           borderTopColor: colors.border,
-          borderTopWidth: 0.5,
-          height: 86,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          height: Platform.OS === "ios" ? 88 : 76,
           paddingTop: 8,
+          paddingBottom: Platform.OS === "ios" ? 28 : 12,
+          elevation: 0, // Remove android shadow for flatter premium look
         },
         tabBarLabelStyle: {
           fontFamily: "Inter_600SemiBold",

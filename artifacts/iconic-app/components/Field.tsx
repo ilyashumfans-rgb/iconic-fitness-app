@@ -34,9 +34,14 @@ export const Field = forwardRef<TextInput, Props>(function Field(
           {
             backgroundColor: colors.input,
             borderColor: colors.border,
-            borderRadius: 14,
+            borderRadius: 16,
             color: colors.foreground,
             fontFamily: "Inter_500Medium",
+            borderWidth: 1, // Slightly thicker border for premium input feel
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.05,
+            shadowRadius: 4,
           },
           style,
         ]}

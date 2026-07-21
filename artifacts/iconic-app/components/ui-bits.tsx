@@ -96,7 +96,7 @@ export function Segmented<T extends string>({
     <View
       style={[
         styles.segment,
-        { backgroundColor: colors.elevated, borderRadius: colors.radius },
+        { backgroundColor: colors.elevated, borderRadius: 999 },
       ]}
     >
       {options.map((opt) => {
@@ -109,7 +109,7 @@ export function Segmented<T extends string>({
               styles.segmentItem,
               {
                 backgroundColor: active ? colors.primary : "transparent",
-                borderRadius: colors.radius - 4,
+                borderRadius: 999,
               },
             ]}
           >

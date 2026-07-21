@@ -143,15 +143,15 @@ function daysUntilIst(dateIso: string): number {
 
 /** Plan card pinned to the top of Home for members with a plan. */
 // Fixed premium palette — the card always renders as a dark "black card"
-// with gold accents regardless of app theme.
+// with lime accents, matching the high-end fitness brand.
 const PREMIUM = {
-  bgTop: "#15130C",
-  bgBottom: "#0B0A06",
-  gold: "#E8C56A",
-  goldDeep: "#B8933B",
-  hairline: "rgba(232,197,106,0.35)",
-  text: "#F5EFDF",
-  faint: "rgba(245,239,223,0.55)",
+  bgTop: "#1A1F14",
+  bgBottom: "#080A06",
+  gold: "#C7F000",
+  goldDeep: "#9EBE00",
+  hairline: "rgba(199,240,0,0.25)",
+  text: "#FFFFFF",
+  faint: "rgba(255,255,255,0.65)",
 };
 
 function MembershipStatusCard({

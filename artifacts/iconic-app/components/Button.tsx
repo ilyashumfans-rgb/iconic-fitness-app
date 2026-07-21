@@ -69,14 +69,15 @@ export function Button({
         styles.btn,
         {
           backgroundColor: bg,
-          borderRadius: colors.radius,
-          paddingVertical: size === "lg" ? 17 : 13,
-          borderWidth: variant === "ghost" ? StyleSheet.hairlineWidth : 0,
-          borderColor: colors.border,
-          opacity: isDisabled ? 0.5 : pressed ? 0.85 : 1,
+          borderRadius: 999, // Pill shape for premium feel
+          paddingVertical: size === "lg" ? 18 : 14,
+          borderWidth: variant === "ghost" || variant === "secondary" ? 1 : 0,
+          borderColor: variant === "secondary" ? colors.border : "transparent",
+          opacity: isDisabled ? 0.5 : pressed ? 0.8 : 1,
           alignSelf: full ? "stretch" : "flex-start",
-          paddingHorizontal: full ? 16 : 22,
+          paddingHorizontal: full ? 16 : 28,
           overflow: "hidden",
+          transform: [{ scale: pressed && !isDisabled ? 0.98 : 1 }],
         },
       ]}
     >
