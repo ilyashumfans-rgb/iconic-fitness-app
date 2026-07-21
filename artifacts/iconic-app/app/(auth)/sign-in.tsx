@@ -194,10 +194,10 @@ function SignInContent() {
         <View style={[styles.ambient, { backgroundColor: colors.primary }]} />
       </View>
 
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      {/* Android (edge-to-edge) no longer resizes the window for the keyboard,
+          so pad on both platforms or the bottom-anchored form stays hidden
+          behind the keyboard while typing. */}
+      <KeyboardAvoidingView style={styles.flex} behavior="padding">
         {/* Logo pinned top; form anchored bottom via marginTop:auto.
             Scrolls only when the viewport/keyboard leaves too little room. */}
         <ScrollView
