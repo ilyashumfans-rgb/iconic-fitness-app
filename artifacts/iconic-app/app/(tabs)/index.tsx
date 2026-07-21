@@ -85,7 +85,6 @@ import {
 } from "@/lib/dates";
 import { resolveImageUrl } from "@/lib/images";
 import {
-  exploreUrl,
   membershipsUrl,
   openExternal,
   websiteUrl,
@@ -1038,12 +1037,7 @@ export default function HomeScreen() {
         gyms={heroGyms}
         isMember={isMember}
         membershipSettled={membershipSettled}
-        onExplore={() =>
-          router.push({
-            pathname: "/web",
-            params: { url: exploreUrl, title: "Explore gyms" },
-          })
-        }
+        onExplore={() => router.push("/gyms")}
         onOpenUrl={(url, title) => {
           // Keep the viewer inside the app: internal paths navigate directly,
           // external links open in the in-app browser screen.
@@ -1057,7 +1051,7 @@ export default function HomeScreen() {
           });
         }}
         nearSlide={
-          isSignedIn ? undefined : { onOpenGym: () => openExternal(exploreUrl) }
+          isSignedIn ? undefined : { onOpenGym: () => router.push("/gyms") }
         }
       />
 
@@ -1070,7 +1064,7 @@ export default function HomeScreen() {
           <SectionHeader
             title="Top rated gyms"
             action="View all"
-            onAction={() => openExternal(exploreUrl)}
+            onAction={() => router.push("/gyms")}
           />
           {gymsQuery.isLoading ? (
             <ScrollView
@@ -1104,7 +1098,7 @@ export default function HomeScreen() {
                   key={g.id}
                   gym={g}
                   index={i}
-                  onPress={() => openExternal(exploreUrl)}
+                  onPress={() => router.push("/gyms")}
                 />
               ))}
             </ScrollView>
