@@ -96,7 +96,8 @@ type StoryVideo = {
   role: string;
   quote: string;
   src: string;
-  poster: string;
+  /** Bundled asset so faces always render, even if the website is unreachable. */
+  poster: number;
 };
 
 const STORY_VIDEOS: StoryVideo[] = [
@@ -106,7 +107,7 @@ const STORY_VIDEOS: StoryVideo[] = [
     quote:
       "One pass, every gym near me — I finally stopped making excuses and started showing up.",
     src: `${websiteUrl}/media/testimonial-rikitha.mp4`,
-    poster: `${websiteUrl}/media/testimonial-rikitha-poster.jpg`,
+    poster: require("@/assets/images/testimonial-rikitha-poster.jpg"),
   },
   {
     name: "Suraj",
@@ -114,7 +115,7 @@ const STORY_VIDEOS: StoryVideo[] = [
     quote:
       "The flexibility is unreal. I train wherever my day takes me and never miss a session.",
     src: `${websiteUrl}/media/testimonial-suraj.mp4`,
-    poster: `${websiteUrl}/media/testimonial-suraj-poster.jpg`,
+    poster: require("@/assets/images/testimonial-suraj-poster.jpg"),
   },
   {
     name: "Albha",
@@ -122,7 +123,7 @@ const STORY_VIDEOS: StoryVideo[] = [
     quote:
       "Best decision I made this year. The gyms are world-class and the community keeps me going.",
     src: `${websiteUrl}/media/testimonial-albha.mp4`,
-    poster: `${websiteUrl}/media/testimonial-albha-poster.jpg`,
+    poster: require("@/assets/images/testimonial-albha-poster.jpg"),
   },
 ];
 
@@ -1121,8 +1122,8 @@ export default function HomeScreen() {
         </>
       ) : null}
 
-      {/* Shop by category — guests only */}
-      {isSignedIn ? null : <ShopByCategory />}
+      {/* Shop by category — everyone */}
+      <ShopByCategory />
 
       {/* Home banner slider (admin-managed) */}
       <HeroSlider
@@ -1150,9 +1151,8 @@ export default function HomeScreen() {
       {/* Watch our story (member testimonials) */}
       <StorySection />
 
-      {/* Top rated gyms — guests only */}
-      {showDiscovery ? (
-        <>
+      {/* Top rated gyms — everyone */}
+      <>
           <SectionHeader
             title="Top rated gyms"
             action="View all"
@@ -1196,7 +1196,6 @@ export default function HomeScreen() {
             </ScrollView>
           )}
         </>
-      ) : null}
 
       {/* Book a class */}
       <SectionHeader
@@ -1709,7 +1708,7 @@ function StorySection() {
             ]}
           >
             <View style={styles.storyPosterWrap}>
-              <Image source={{ uri: s.poster }} style={styles.storyPoster} />
+              <Image source={s.poster} style={styles.storyPoster} />
               <LinearGradient
                 colors={["transparent", "rgba(10,12,8,0.85)"]}
                 style={StyleSheet.absoluteFill}
