@@ -30,6 +30,13 @@ import { useGuest } from "@/hooks/useGuest";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import { istDateLabel, istDateStr } from "@/lib/dates";
 import { membershipsUrl, openExternal } from "@/lib/links";
+
+/** Whole IST calendar days from today until `dateIso` (negative = past). */
+function daysUntilIst(dateIso: string): number {
+  const today = Date.parse(`${istDateStr()}T00:00:00Z`);
+  const target = Date.parse(`${istDateStr(new Date(dateIso))}T00:00:00Z`);
+  return Math.round((target - today) / 86_400_000);
+}
 import {
   ACTION_REMINDERS,
   areRemindersOn,
@@ -284,66 +291,138 @@ export default function ProfileScreen() {
                 Loading your plan…
               </AppText>
             ) : membershipQuery.data ? (
-              <>
-                <View style={styles.switchRow}>
-                  <View style={{ flex: 1 }}>
-                    <AppText weight="700" size={18}>
-                      {membershipQuery.data.planName}
-                    </AppText>
-                    <AppText muted size={13} style={{ marginTop: 2 }}>
-                      Renews{" "}
-                      {istDateLabel(
-                        istDateStr(new Date(membershipQuery.data.renewsOn)),
-                      )}
-                    </AppText>
-                  </View>
-                  <View
-                    style={[
-                      styles.statusPill,
-                      { backgroundColor: colors.primary + "22" },
-                    ]}
-                  >
-                    <AppText
-                      size={12}
-                      weight="700"
-                      color={colors.primary}
-                      style={{ textTransform: "capitalize" }}
-                    >
-                      {membershipQuery.data.status}
-                    </AppText>
-                  </View>
-                </View>
-                <View style={styles.row2}>
-                  <View style={styles.half}>
-                    <AppText muted size={12}>
-                      Classes this month
-                    </AppText>
-                    <AppText weight="700" size={16}>
-                      {membershipQuery.data.classesUsed} /{" "}
-                      {membershipQuery.data.classesIncluded}
-                    </AppText>
-                  </View>
-                  <View style={styles.half}>
-                    <AppText muted size={12}>
-                      Gyms accessed
-                    </AppText>
-                    <AppText weight="700" size={16}>
-                      {membershipQuery.data.gymsAccessed}
-                    </AppText>
-                  </View>
-                </View>
-                <Button
-                  label="Manage plan"
-                  variant="secondary"
-                  icon="credit-card"
-                  onPress={() =>
-                    router.push({
-                      pathname: "/web",
-                      params: { url: membershipsUrl, title: "Manage plan" },
-                    })
-                  }
-                />
-              </>
+              (() => {
+                const m = membershipQuery.data;
+                const expiryKnown = m.expiryKnown !== false;
+                const days = expiryKnown ? daysUntilIst(m.renewsOn) : null;
+                const isExpired =
+                  m.status === "expired" || (days !== null && days < 0);
+                const soon = !isExpired && days !== null && days <= 7;
+                const urgencyColor = isExpired
+                  ? colors.destructive
+                  : soon
+                    ? colors.warning
+                    : colors.foreground;
+                const pillColor = isExpired
+                  ? colors.destructive
+                  : colors.primary;
+                return (
+                  <>
+                    <View style={styles.switchRow}>
+                      <View style={{ flex: 1 }}>
+                        <AppText weight="700" size={18}>
+                          {m.planName}
+                        </AppText>
+                        {m.branchName ? (
+                          <AppText muted size={13} style={{ marginTop: 2 }}>
+                            {m.branchName}
+                          </AppText>
+                        ) : null}
+                      </View>
+                      <View
+                        style={[
+                          styles.statusPill,
+                          { backgroundColor: pillColor + "22" },
+                        ]}
+                      >
+                        <AppText
+                          size={12}
+                          weight="700"
+                          color={pillColor}
+                          style={{ textTransform: "capitalize" }}
+                        >
+                          {isExpired ? "expired" : m.status}
+                        </AppText>
+                      </View>
+                    </View>
+                    <View style={styles.row2}>
+                      <View style={styles.half}>
+                        <AppText muted size={12}>
+                          Started on
+                        </AppText>
+                        <AppText weight="700" size={15}>
+                          {m.startedOn
+                            ? istDateLabel(istDateStr(new Date(m.startedOn)))
+                            : "—"}
+                        </AppText>
+                      </View>
+                      <View style={styles.half}>
+                        <AppText muted size={12}>
+                          {isExpired ? "Expired on" : "Expires on"}
+                        </AppText>
+                        <AppText weight="700" size={15} color={urgencyColor}>
+                          {expiryKnown
+                            ? istDateLabel(istDateStr(new Date(m.renewsOn)))
+                            : "—"}
+                        </AppText>
+                      </View>
+                    </View>
+                    {days !== null ? (
+                      <View
+                        style={[
+                          styles.renewNote,
+                          {
+                            backgroundColor: isExpired
+                              ? colors.destructive + "1A"
+                              : soon
+                                ? colors.warning + "1A"
+                                : colors.muted,
+                          },
+                        ]}
+                      >
+                        <Feather
+                          name={isExpired ? "alert-circle" : soon ? "clock" : "check-circle"}
+                          size={14}
+                          color={isExpired ? colors.destructive : soon ? colors.warning : colors.success}
+                        />
+                        <AppText
+                          size={13}
+                          weight="600"
+                          color={isExpired ? colors.destructive : soon ? colors.warning : colors.foreground}
+                          style={{ flex: 1 }}
+                        >
+                          {isExpired
+                            ? "Your plan has expired — renew to keep access"
+                            : days === 0
+                              ? "Your plan expires today — renew to stay active"
+                              : days === 1
+                                ? "1 day left on your plan"
+                                : `${days} days left on your plan`}
+                        </AppText>
+                      </View>
+                    ) : null}
+                    <View style={styles.row2}>
+                      <View style={styles.half}>
+                        <AppText muted size={12}>
+                          Classes this month
+                        </AppText>
+                        <AppText weight="700" size={16}>
+                          {m.classesUsed} / {m.classesIncluded}
+                        </AppText>
+                      </View>
+                      <View style={styles.half}>
+                        <AppText muted size={12}>
+                          Gyms accessed
+                        </AppText>
+                        <AppText weight="700" size={16}>
+                          {m.gymsAccessed}
+                        </AppText>
+                      </View>
+                    </View>
+                    <Button
+                      label="Manage plan"
+                      variant="secondary"
+                      icon="credit-card"
+                      onPress={() =>
+                        router.push({
+                          pathname: "/web",
+                          params: { url: membershipsUrl, title: "Manage plan" },
+                        })
+                      }
+                    />
+                  </>
+                );
+              })()
             ) : (
               <>
                 <AppText weight="600" size={15}>
@@ -686,6 +765,14 @@ const styles = StyleSheet.create({
   },
   row2: { flexDirection: "row", gap: 12 },
   half: { flex: 1 },
+  renewNote: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
   paymentRow: {
     flexDirection: "row",
     alignItems: "center",
