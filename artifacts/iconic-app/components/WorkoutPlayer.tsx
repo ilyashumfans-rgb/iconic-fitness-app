@@ -1,11 +1,12 @@
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Image, Pressable, StyleSheet, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
 import { useColors } from "@/hooks/useColors";
+import { EXERCISE_FRAMES } from "@/lib/exerciseMedia";
 import { workoutStats, type Workout } from "@/lib/workouts";
 import { type Exercise } from "@/lib/exercises";
 
@@ -173,18 +174,22 @@ export function WorkoutPlayer({
       </View>
 
       <View style={styles.body}>
-        <View
-          style={[
-            styles.bigIcon,
-            { backgroundColor: colors.accent, borderColor: colors.border },
-          ]}
-        >
-          <Feather
-            name={resting ? "clock" : step.exercise.icon}
-            size={52}
-            color={colors.primary}
-          />
-        </View>
+        {!resting && EXERCISE_FRAMES[step.exercise.slug] ? (
+          <PlayerDemo slug={step.exercise.slug} />
+        ) : (
+          <View
+            style={[
+              styles.bigIcon,
+              { backgroundColor: colors.accent, borderColor: colors.border },
+            ]}
+          >
+            <Feather
+              name={resting ? "clock" : step.exercise.icon}
+              size={52}
+              color={colors.primary}
+            />
+          </View>
+        )}
 
         {resting && nextStep ? (
           <>
@@ -246,6 +251,34 @@ export function WorkoutPlayer({
   );
 }
 
+/** Two-frame exercise demo (start/end position) flipped like a GIF. */
+function PlayerDemo({ slug }: { slug: string }) {
+  const colors = useColors();
+  const frames = EXERCISE_FRAMES[slug];
+  const [frame, setFrame] = useState(0);
+
+  // Restart from the first frame whenever the exercise changes.
+  useEffect(() => {
+    setFrame(0);
+    if (!frames) return;
+    const t = setInterval(() => setFrame((f) => (f === 0 ? 1 : 0)), 900);
+    return () => clearInterval(t);
+  }, [frames]);
+
+  if (!frames) return null;
+  return (
+    <View style={[styles.demoWrap, { borderColor: colors.border }]}>
+      <Image source={frames[frame]} style={styles.demoImg} resizeMode="contain" />
+      <View style={[styles.demoBadge, { backgroundColor: colors.primary }]}>
+        <Feather name="play" size={10} color={colors.primaryForeground} />
+        <AppText weight="700" size={10} color={colors.primaryForeground}>
+          DEMO
+        </AppText>
+      </View>
+    </View>
+  );
+}
+
 function SetStat({ value, label }: { value: string; label: string }) {
   const colors = useColors();
   return (
@@ -300,6 +333,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: StyleSheet.hairlineWidth,
+  },
+  demoWrap: {
+    width: 220,
+    height: 176,
+    borderRadius: 24,
+    backgroundColor: "#FFFFFF",
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  demoImg: { width: "92%", height: "92%" },
+  demoBadge: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
   },
   setRow: {
     flexDirection: "row",
