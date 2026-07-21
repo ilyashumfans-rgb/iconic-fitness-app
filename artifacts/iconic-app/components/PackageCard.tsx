@@ -49,7 +49,7 @@ export function PackageCard({
       </View>
 
       <View style={styles.body}>
-        <View style={{ flex: 1 }}>
+        <View>
           <AppText weight="700" size={17} numberOfLines={1}>
             {plan.name}
           </AppText>
@@ -85,14 +85,12 @@ export function PackageCard({
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: "row",
     borderRadius: 20,
     overflow: "hidden",
-    height: 138,
   },
   media: {
-    width: 122,
-    height: "100%",
+    width: "100%",
+    height: 170,
   },
   image: {
     width: "100%",
@@ -105,7 +103,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   body: {
-    flex: 1,
     paddingHorizontal: 16,
     paddingVertical: 14,
   },

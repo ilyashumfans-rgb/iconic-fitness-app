@@ -67,7 +67,7 @@ function CategoryCard({
       </View>
 
       <View style={styles.body}>
-        <View style={{ flex: 1 }}>
+        <View>
           <AppText weight="700" size={17} numberOfLines={1}>
             {name}
           </AppText>
@@ -272,14 +272,12 @@ function BackRow({ label, onBack }: { label: string; onBack: () => void }) {
 const styles = StyleSheet.create({
   // Same shape as PackageCard so categories and packages feel like one family.
   card: {
-    flexDirection: "row",
     borderRadius: 20,
     overflow: "hidden",
-    height: 138,
   },
   media: {
-    width: 122,
-    height: "100%",
+    width: "100%",
+    height: 170,
   },
   image: {
     width: "100%",
@@ -292,7 +290,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   body: {
-    flex: 1,
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
