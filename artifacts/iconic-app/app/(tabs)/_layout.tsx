@@ -134,7 +134,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="pt"
         options={{
-          title: "PT Trainers",
+          title: "PT Dashboard",
           tabBarIcon: ({ color, size, focused }) => (
             <TabIcon name="users" size={size} color={color} focused={focused} />
           ),
