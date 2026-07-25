@@ -13,15 +13,9 @@ import { Card } from "@/components/Card";
 import { Field } from "@/components/Field";
 import { ModalHeader } from "@/components/ModalHeader";
 import { Screen } from "@/components/Screen";
-import { Chip } from "@/components/ui-bits";
-import { istDateInNDays, istDateLabel, istToday } from "@/lib/dates";
+import { CalendarPicker, TimePicker } from "@/components/DateTimePickers";
+import { istDateLabel, istToday } from "@/lib/dates";
 import { submitLead } from "@/lib/leads";
-
-const TIME_OPTIONS: { value: string; label: string }[] = [
-  { value: "07:00", label: "Morning" },
-  { value: "13:00", label: "Afternoon" },
-  { value: "19:00", label: "Evening" },
-];
 
 // PT sessions are request-only: no package picker or online payment here.
 // Members send a session request (prefilled from their profile) and the
@@ -48,13 +42,11 @@ export default function BookTrainerScreen() {
     },
   });
 
-  const dateOptions = [istToday(), istDateInNDays(1), istDateInNDays(2)];
-
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [date, setDate] = useState(dateOptions[0]);
-  const [time, setTime] = useState(TIME_OPTIONS[0].value);
+  const [date, setDate] = useState(istToday());
+  const [time, setTime] = useState("07:00");
   const [busy, setBusy] = useState(false);
 
   // Prefill contact details from the signed-in member's profile so they can
@@ -161,18 +153,9 @@ export default function BookTrainerScreen() {
           size={13}
           style={{ marginTop: 18, marginBottom: 8 }}
         >
-          Preferred day
+          Preferred date — {istDateLabel(date)}
         </AppText>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-          {dateOptions.map((d) => (
-            <Chip
-              key={d}
-              label={istDateLabel(d)}
-              active={d === date}
-              onPress={() => setDate(d)}
-            />
-          ))}
-        </View>
+        <CalendarPicker value={date} onChange={setDate} />
 
         <AppText
           weight="600"
@@ -181,16 +164,7 @@ export default function BookTrainerScreen() {
         >
           Preferred time
         </AppText>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-          {TIME_OPTIONS.map((t) => (
-            <Chip
-              key={t.value}
-              label={t.label}
-              active={t.value === time}
-              onPress={() => setTime(t.value)}
-            />
-          ))}
-        </View>
+        <TimePicker value={time} onChange={setTime} />
 
         <View style={{ marginTop: 20 }}>
           <Button
