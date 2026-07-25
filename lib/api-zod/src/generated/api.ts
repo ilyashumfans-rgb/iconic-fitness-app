@@ -832,6 +832,7 @@ export const GetTrainerBookingResponse = zod.object({
 export const GetMyPtProgramResponse = zod.object({
   "active": zod.boolean().describe('True when the caller has a PT enrolment with an assigned trainer'),
   "trainerName": zod.string(),
+  "trainerPhotoUrl": zod.string().optional().describe('Staff-uploaded photo of the assigned trainer (\'\' when none)'),
   "gymName": zod.string(),
   "packageName": zod.string(),
   "totalSessions": zod.number().describe('Sessions included per month (12)'),

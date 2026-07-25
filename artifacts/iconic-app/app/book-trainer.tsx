@@ -34,7 +34,9 @@ export default function BookTrainerScreen() {
     trainerId?: string;
     gymId?: string;
     gymName?: string;
+    trial?: string;
   }>();
+  const isTrial = params.trial === "1";
   const coach = (params.trainerName ?? "").trim() || "a personal trainer";
   const gymId = Number(params.gymId);
   const hasGym = Number.isFinite(gymId) && gymId > 0;
@@ -88,13 +90,16 @@ export default function BookTrainerScreen() {
         email: email.trim() || undefined,
         preferredDate: date,
         preferredTime: time,
-        message: `Personal training session request with ${coach}${params.gymName ? ` at ${params.gymName}` : ""}.`,
+        message: isTrial
+          ? `Kick-starter PT trial session request${params.gymName ? ` at ${params.gymName}` : ""}.`
+          : `Personal training session request with ${coach}${params.gymName ? ` at ${params.gymName}` : ""}.`,
         source: "iconic-app-live-trainer",
         // Branch + coach details so the request shows on the partner's
         // PT Bookings page (className carries the coach's name).
         gymId: hasGym ? gymId : undefined,
         gymName: params.gymName ?? "",
-        className: coach,
+        // Trial requests have no chosen coach — staff assign one later.
+        className: isTrial ? "Trial session" : coach,
       });
       Alert.alert(
         "Request sent",
@@ -113,11 +118,13 @@ export default function BookTrainerScreen() {
 
   return (
     <Screen contentContainerStyle={{ paddingBottom: 40 }}>
-      <ModalHeader title="Book a PT session" />
+      <ModalHeader title={isTrial ? "Book your trial session" : "Book a PT session"} />
 
       <Card>
         <AppText weight="700" size={16} style={{ marginBottom: 4 }}>
-          Request a session with {coach}
+          {isTrial
+            ? "Request your kick-starter trial session"
+            : `Request a session with ${coach}`}
         </AppText>
         <AppText muted size={13} style={{ marginBottom: 16 }}>
           Share your details and preferred slot — the team will reach out to

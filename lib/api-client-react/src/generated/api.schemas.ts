@@ -447,6 +447,8 @@ export interface PtProgram {
   /** True when the caller has a PT enrolment with an assigned trainer */
   active: boolean;
   trainerName: string;
+  /** Staff-uploaded photo of the assigned trainer ('' when none) */
+  trainerPhotoUrl?: string;
   gymName: string;
   packageName: string;
   /** Sessions included per month (12) */

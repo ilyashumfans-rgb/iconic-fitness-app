@@ -149,6 +149,47 @@ export default function TrainersScreen() {
         )}
       </Pressable>
 
+      {/* Prominent kick-starter trial CTA — no need to pick a coach first. */}
+      <Pressable
+        onPress={() =>
+          router.push({
+            pathname: "/book-trainer",
+            params: {
+              trial: "1",
+              gymId: String(gymId),
+              gymName: selectedGym?.name ?? membershipQuery.data?.branchName ?? "",
+            },
+          })
+        }
+        style={{ marginBottom: 18 }}
+      >
+        {({ pressed }) => (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 12,
+              backgroundColor: "#C7F000",
+              borderRadius: 16,
+              paddingHorizontal: 18,
+              paddingVertical: 16,
+              opacity: pressed ? 0.85 : 1,
+            }}
+          >
+            <Feather name="zap" size={20} color="#0A0C08" />
+            <View style={{ flex: 1 }}>
+              <AppText weight="700" size={16} color="#0A0C08">
+                Book your trial session
+              </AppText>
+              <AppText size={12} color="#0A0C08" style={{ opacity: 0.7 }}>
+                Free kick-starter PT trial — we'll match you with a coach
+              </AppText>
+            </View>
+            <Feather name="arrow-right" size={20} color="#0A0C08" />
+          </View>
+        )}
+      </Pressable>
+
       {liveQuery.isLoading ? (
         <LoadingView />
       ) : liveQuery.isError ? (

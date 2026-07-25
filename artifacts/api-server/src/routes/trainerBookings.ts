@@ -25,6 +25,7 @@ import { desc, sql } from "drizzle-orm";
 import { leadsTable } from "@workspace/db";
 import { TRAINER_ENQUIRY_SOURCE } from "../lib/trainerEnquiryLeads";
 import { fetchPtAssignmentMap } from "../lib/ptAssignments";
+import { trainerPhotoMap } from "../lib/trainerPhotos";
 import { PT_TOTAL_SESSIONS, listPtSessions } from "../lib/ptSessions";
 import { requireUser } from "../lib/currentUser";
 import { creditReferralRewardOnce } from "../lib/referrals";
@@ -368,6 +369,7 @@ router.get(
     type Candidate = {
       refType: "booking" | "enquiry";
       refId: number;
+      trainerId: string;
       trainerName: string;
       gymName: string;
       packageName: string;
@@ -379,6 +381,7 @@ router.get(
         .map((b) => ({
           refType: "booking" as const,
           refId: b.id,
+          trainerId: bookingAssign.get(b.id)!.trainerId,
           trainerName: bookingAssign.get(b.id)!.trainerName,
           gymName: b.gymName,
           packageName: b.packageName,
@@ -389,6 +392,7 @@ router.get(
         .map((l) => ({
           refType: "enquiry" as const,
           refId: l.id,
+          trainerId: enquiryAssign.get(l.id)!.trainerId,
           trainerName: enquiryAssign.get(l.id)!.trainerName,
           gymName: l.gymName ?? "",
           packageName: "Personal training",
@@ -402,10 +406,15 @@ router.get(
       return;
     }
     const sessions = await listPtSessions(current.refType, current.refId);
+    // Staff-uploaded photo of the assigned trainer (shown on the member Home).
+    const photos = current.trainerId
+      ? await trainerPhotoMap([current.trainerId])
+      : new Map<string, string>();
     res.json(
       GetMyPtProgramResponse.parse({
         active: true,
         trainerName: current.trainerName,
+        trainerPhotoUrl: photos.get(current.trainerId) ?? "",
         gymName: current.gymName,
         packageName: current.packageName,
         totalSessions: PT_TOTAL_SESSIONS,

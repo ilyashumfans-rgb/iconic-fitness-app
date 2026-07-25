@@ -1547,6 +1547,7 @@ components:
       properties:
         active: { type: boolean, description: "True when the caller has a PT enrolment with an assigned trainer" }
         trainerName: { type: string }
+        trainerPhotoUrl: { type: string, description: "Staff-uploaded photo of the assigned trainer ('' when none)" }
         gymName: { type: string }
         packageName: { type: string }
         totalSessions: { type: integer, description: "Sessions included per month (12)" }

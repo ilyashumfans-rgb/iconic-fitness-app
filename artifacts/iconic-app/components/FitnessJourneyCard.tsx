@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  Image,
   Modal,
   Pressable,
   StyleSheet,
@@ -20,6 +21,7 @@ import {
 } from "@workspace/api-client-react";
 import { AppText } from "@/components/AppText";
 import { useColors } from "@/hooks/useColors";
+import { resolveImageUrl } from "@/lib/images";
 
 const GOLD = "#F5C842";
 const LIME = "#C7F000";
@@ -107,8 +109,13 @@ export function FitnessJourneyCard() {
     }
   };
 
+  const trainerPhoto = assigned
+    ? resolveImageUrl(pt?.trainerPhotoUrl || null)
+    : null;
+
   const steps: {
     label: string;
+    photoUrl?: string | null;
     action?: { label: string; onPress: () => void };
   }[] = [
     {
@@ -117,7 +124,12 @@ export function FitnessJourneyCard() {
         ? { label: "Book now", onPress: () => router.push("/trainers") }
         : undefined,
     },
-    { label: "Trainer assignment" },
+    {
+      label: assigned
+        ? `Accepted by ${pt?.trainerName ?? "your trainer"}`
+        : "Trainer assignment",
+      photoUrl: trainerPhoto,
+    },
     { label: "First trial session" },
     {
       label: "Session feedback",
@@ -177,15 +189,24 @@ export function FitnessJourneyCard() {
               ) : null}
             </View>
             <View style={styles.stepBody}>
-              <AppText
-                size={14}
-                weight={state === "current" ? "700" : "600"}
-                color={
-                  state === "upcoming" ? colors.mutedForeground : colors.foreground
-                }
-              >
-                {step.label}
-              </AppText>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                {step.photoUrl ? (
+                  <Image
+                    source={{ uri: step.photoUrl }}
+                    style={styles.trainerAvatar}
+                  />
+                ) : null}
+                <AppText
+                  size={14}
+                  weight={state === "current" ? "700" : "600"}
+                  color={
+                    state === "upcoming" ? colors.mutedForeground : colors.foreground
+                  }
+                  style={{ flex: 1 }}
+                >
+                  {step.label}
+                </AppText>
+              </View>
               {state !== "done" && step.action ? (
                 <Pressable onPress={step.action.onPress}>
                   {({ pressed }) => (
@@ -321,6 +342,13 @@ const styles = StyleSheet.create({
   stepBody: {
     flex: 1,
     paddingBottom: 16,
+  },
+  trainerAvatar: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 2,
+    borderColor: LIME,
   },
   actionBtn: {
     flexDirection: "row",
