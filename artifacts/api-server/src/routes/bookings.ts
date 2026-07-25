@@ -17,8 +17,39 @@ import {
 } from "@workspace/api-zod";
 import { requireUser } from "../lib/currentUser";
 import { CLASS_VISIBLE_BEFORE_MS } from "../lib/classVisibility";
+import {
+  fetchYoactivMemberByMobile,
+  pickPrimaryMembership,
+  yoactivConfigured,
+} from "../lib/yoactiv";
+import { usersTable } from "@workspace/db";
 
 const router: IRouter = Router();
+
+/**
+ * Home gym of an ACTIVE member (mapped from their YoActiv plan branch), or
+ * null when the viewer has no active plan / no mapping / lookup fails.
+ * Fail-open on errors so a YoActiv outage never blocks class bookings.
+ */
+async function activeMemberHomeGymId(userId: number): Promise<number | null> {
+  if (!yoactivConfigured()) return null;
+  try {
+    const [user] = await db
+      .select({ mobile: usersTable.mobile })
+      .from(usersTable)
+      .where(eq(usersTable.id, userId));
+    const profile = await fetchYoactivMemberByMobile(user?.mobile);
+    const primary = profile ? pickPrimaryMembership(profile) : null;
+    if (!primary || primary.status !== "active") return null;
+    const [gym] = await db
+      .select({ id: gymsTable.id })
+      .from(gymsTable)
+      .where(eq(gymsTable.yoactivBranchId, primary.branchId));
+    return gym?.id ?? null;
+  } catch {
+    return null;
+  }
+}
 
 async function toBookingDto(b: typeof bookingsTable.$inferSelect) {
   const [c] = await db
@@ -75,6 +106,21 @@ router.post("/bookings", requireUser, async (req, res): Promise<void> => {
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
+  }
+  // Active members are branch-locked: they may only book classes at their
+  // home branch (matches the app's scoped class list).
+  const homeGymId = await activeMemberHomeGymId(req.userId!);
+  if (homeGymId !== null) {
+    const [target] = await db
+      .select({ gymId: classSessionsTable.gymId })
+      .from(classSessionsTable)
+      .where(eq(classSessionsTable.id, parsed.data.classId));
+    if (target && target.gymId !== homeGymId) {
+      res
+        .status(403)
+        .json({ error: "You can only book classes at your own branch." });
+      return;
+    }
   }
   // Run the seat check and the insert atomically. We lock the class_sessions
   // row (FOR UPDATE) so concurrent bookings for the same class are serialized

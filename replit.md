@@ -47,6 +47,10 @@ Admin-managed grouping for annual packages. `package_categories` table (name, so
 - Partners: CRUD from `/partner/trainers` (scoped via `ensureOwnsGym`, manual `partnerApi.trainers.*`). Admins have global CRUD. Trainers attach to a gym and are selectable when scheduling classes. No trainer login exists — records only.
 - Mobile: `app/trainers.tsx` is **live-YoActiv-roster only** (no local DB fallback — unmapped/empty branch shows an empty state); tap → `book-trainer`. Home entry: `PersonalTrainersCard`.
 
+### Branch-locked member experience
+
+Active members only see their home branch's content; guests / no-plan / expired / unmapped-branch members see all branches. `MyMembership.homeGymId` (nullable) = local gym mapped from the YoActiv plan branch via `gymsTable.yoactivBranchId` (set in `GET /memberships/mine` YoActiv path). Mobile: `app/trainers.tsx` auto-locks the branch (no picker, "· your branch") and `app/(tabs)/classes.tsx` filters Discover to the home gym — both gate on membership-query settled (no cross-branch flash). Server enforces on `POST /bookings` via `activeMemberHomeGymId()` in `bookings.ts` (fail-open on YoActiv outage → never blocks bookings).
+
 ### Class visibility & booking window
 
 Classes hidden/not bookable until 24h before start. Source of truth: `api-server/src/lib/classVisibility.ts`; applied to member class listings + `POST /bookings` gate (started → 400, >24h → 403). Partner/admin views unaffected.

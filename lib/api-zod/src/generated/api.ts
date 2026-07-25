@@ -603,6 +603,7 @@ export const GetMyMembershipResponse = zod.union([zod.object({
   "photoUrl": zod.string().nullish().describe('Member photo hosted by YoActiv, when one exists there'),
   "startedOn": zod.string().nullish().describe('ISO date the current plan started (YoActiv only)'),
   "branchName": zod.string().optional().describe('Home branch of the current plan (empty when unknown)'),
+  "homeGymId": zod.number().nullish().describe('Local gym id mapped from the plan\'s YoActiv branch (null when unmapped)'),
   "expiryKnown": zod.boolean().optional().describe('False when the upstream system reported no expiry date (renewsOn is then a placeholder)')
 }),zod.null()])
 

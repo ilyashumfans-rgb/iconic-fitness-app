@@ -349,6 +349,8 @@ export interface MyMembership {
   startedOn?: string | null;
   /** Home branch of the current plan (empty when unknown) */
   branchName?: string;
+  /** Local gym id mapped from the plan's YoActiv branch (null when unmapped) */
+  homeGymId?: number | null;
   /** False when the upstream system reported no expiry date (renewsOn is then a placeholder) */
   expiryKnown?: boolean;
 }

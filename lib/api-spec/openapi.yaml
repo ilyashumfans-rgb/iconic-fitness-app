@@ -1415,6 +1415,12 @@ components:
             type: string,
             description: "Home branch of the current plan (empty when unknown)",
           }
+        homeGymId:
+          {
+            type: integer,
+            nullable: true,
+            description: "Local gym id mapped from the plan's YoActiv branch (null when unmapped)",
+          }
         expiryKnown:
           {
             type: boolean,

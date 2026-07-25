@@ -131,6 +131,12 @@ router.get("/memberships/mine", requireUser, async (req, res): Promise<void> => 
     const profile = await fetchYoactivMemberByMobile(user?.mobile);
     const primary = profile ? pickPrimaryMembership(profile) : null;
     if (primary) {
+      // Map the plan's YoActiv branch to our local gym so clients can scope
+      // branch-specific content (trainers, classes) to the member's home gym.
+      const [homeGym] = await db
+        .select({ id: gymsTable.id })
+        .from(gymsTable)
+        .where(eq(gymsTable.yoactivBranchId, primary.branchId));
       res.json(
         GetMyMembershipResponse.parse({
           planId: 0,
@@ -146,6 +152,7 @@ router.get("/memberships/mine", requireUser, async (req, res): Promise<void> => 
           photoUrl: profile!.photoUrl,
           startedOn: primary.startDate,
           branchName: primary.branchName,
+          homeGymId: homeGym?.id ?? null,
           expiryKnown: !!primary.expiryDate,
         }),
       );

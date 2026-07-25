@@ -1,6 +1,9 @@
+import { useAuth } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
 import {
+  getGetMyMembershipQueryKey,
   getListLiveTrainersQueryKey,
+  useGetMyMembership,
   useListGyms,
   useListLiveTrainers,
   type Gym,
@@ -21,8 +24,24 @@ import { resolveImageUrl } from "@/lib/images";
 export default function TrainersScreen() {
   const router = useRouter();
   const colors = useColors();
+  const { isSignedIn } = useAuth();
   const gymsQuery = useListGyms({});
-  const [gymId, setGymId] = useState<number | null>(null);
+  const [pickedGymId, setPickedGymId] = useState<number | null>(null);
+
+  // Active members are locked to their home branch: only that branch's
+  // coaches are shown, no picker. Everyone else browses all branches.
+  const membershipQuery = useGetMyMembership({
+    query: { enabled: !!isSignedIn, queryKey: getGetMyMembershipQueryKey() },
+  });
+  const homeGymId =
+    membershipQuery.data?.status === "active"
+      ? (membershipQuery.data.homeGymId ?? null)
+      : null;
+  const locked = homeGymId !== null;
+  const gymId = locked ? homeGymId : pickedGymId;
+  // Don't flash the all-branches picker while the membership check loads.
+  const membershipSettled =
+    !isSignedIn || membershipQuery.isSuccess || membershipQuery.isError;
 
   const gyms = useMemo(() => gymsQuery.data ?? [], [gymsQuery.data]);
   const selectedGym = gyms.find((g) => g.id === gymId) ?? null;
@@ -39,7 +58,16 @@ export default function TrainersScreen() {
 
   const liveTrainers = useMemo(() => liveQuery.data ?? [], [liveQuery.data]);
 
-  // Step 1 — pick a branch.
+  if (!membershipSettled) {
+    return (
+      <Screen contentContainerStyle={{ paddingTop: 8 }}>
+        <ModalHeader title="Personal Trainers" />
+        <LoadingView />
+      </Screen>
+    );
+  }
+
+  // Step 1 — pick a branch (skipped for active members: home branch only).
   if (gymId === null) {
     return (
       <Screen
@@ -64,7 +92,7 @@ export default function TrainersScreen() {
         ) : (
           <View style={{ gap: 12 }}>
             {gyms.map((g) => (
-              <BranchCard key={g.id} gym={g} onPress={() => setGymId(g.id)} />
+              <BranchCard key={g.id} gym={g} onPress={() => setPickedGymId(g.id)} />
             ))}
           </View>
         )}
@@ -81,7 +109,8 @@ export default function TrainersScreen() {
     >
       <ModalHeader title="Personal Trainers" />
       <Pressable
-        onPress={() => setGymId(null)}
+        onPress={locked ? undefined : () => setPickedGymId(null)}
+        disabled={locked}
         style={{
           flexDirection: "row",
           alignItems: "center",
@@ -91,11 +120,17 @@ export default function TrainersScreen() {
       >
         <Feather name="map-pin" size={14} color={colors.primary} />
         <AppText weight="600" size={14} color={colors.primary}>
-          {selectedGym?.name ?? "Branch"}
+          {selectedGym?.name ?? membershipQuery.data?.branchName ?? "Branch"}
         </AppText>
-        <AppText muted size={13}>
-          · change
-        </AppText>
+        {locked ? (
+          <AppText muted size={13}>
+            · your branch
+          </AppText>
+        ) : (
+          <AppText muted size={13}>
+            · change
+          </AppText>
+        )}
       </Pressable>
 
       {liveQuery.isLoading ? (

@@ -1,8 +1,11 @@
+import { useAuth } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
 import {
+  getGetMyMembershipQueryKey,
   getListMyBookingsQueryKey,
   useCreateBooking,
   useCreateCheckin,
+  useGetMyMembership,
   useListClasses,
   useListMyBookings,
   type Booking,
@@ -34,10 +37,29 @@ export default function ClassesScreen() {
   const [category, setCategory] = useState("All");
   const queryClient = useQueryClient();
 
+  const { isSignedIn } = useAuth();
   const classesQuery = useListClasses(
     category === "All" ? {} : { category: category.toLowerCase() },
   );
   const bookingsQuery = useListMyBookings({ status: "upcoming" });
+
+  // Active members only see classes at their home branch; everyone else
+  // (guests, no plan, expired) browses every branch.
+  const membershipQuery = useGetMyMembership({
+    query: { enabled: !!isSignedIn, queryKey: getGetMyMembershipQueryKey() },
+  });
+  const homeGymId =
+    membershipQuery.data?.status === "active"
+      ? (membershipQuery.data.homeGymId ?? null)
+      : null;
+  // Don't show any (possibly cross-branch) classes until we know whether the
+  // viewer is branch-locked — otherwise active members flash all branches.
+  const membershipSettled =
+    !isSignedIn || membershipQuery.isSuccess || membershipQuery.isError;
+  const visibleClasses = useMemo(() => {
+    const all = classesQuery.data ?? [];
+    return homeGymId !== null ? all.filter((s) => s.gymId === homeGymId) : all;
+  }, [classesQuery.data, homeGymId]);
   const createBooking = useCreateBooking();
   const createCheckin = useCreateCheckin();
   const [busyId, setBusyId] = useState<number | null>(null);
@@ -117,17 +139,21 @@ export default function ClassesScreen() {
             ))}
           </ChipRow>
 
-          {classesQuery.isLoading ? (
+          {classesQuery.isLoading || !membershipSettled ? (
             <LoadingView />
-          ) : (classesQuery.data ?? []).length === 0 ? (
+          ) : visibleClasses.length === 0 ? (
             <EmptyState
               icon="calendar"
               title="No classes found"
-              message="Try a different category or check back soon."
+              message={
+                homeGymId !== null
+                  ? "No classes at your branch right now — check back soon."
+                  : "Try a different category or check back soon."
+              }
             />
           ) : (
             <View style={{ gap: 12, marginTop: 8 }}>
-              {(classesQuery.data ?? []).map((s) => {
+              {visibleClasses.map((s) => {
                 const full = s.booked >= s.capacity;
                 const booked = bookedClassIds.has(s.id);
                 return (
