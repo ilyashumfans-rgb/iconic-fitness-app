@@ -883,6 +883,8 @@ export default function HomeScreen() {
   const addWater = useAddWater();
   const createBooking = useCreateBooking();
   const [quickLogging, setQuickLogging] = useState(false);
+  // Collapsible "Your progress today" block — arrow toggles it open/closed.
+  const [trackingOpen, setTrackingOpen] = useState(false);
   const [bookingId, setBookingId] = useState<number | null>(null);
 
   const bookedClassIds = useMemo(
@@ -1033,10 +1035,33 @@ export default function HomeScreen() {
         />
       )}
 
-      {/* Personal tracking — pinned to the top for signed-in members */}
+      {/* Personal tracking — pinned to the top for signed-in members.
+          One arrow collapses/expands the whole block (progress + quick log + today). */}
       {isSignedIn ? (
         <>
-          <SectionHeader title="Your progress today" />
+          <Pressable
+            onPress={() => setTrackingOpen((v) => !v)}
+            style={styles.sectionToggleRow}
+            hitSlop={8}
+          >
+            <AppText weight="700" size={18} style={{ flex: 1 }}>
+              Your progress today
+            </AppText>
+            <View
+              style={[
+                styles.sectionToggleBtn,
+                { borderColor: colors.border, backgroundColor: colors.card },
+              ]}
+            >
+              <Feather
+                name={trackingOpen ? "chevron-up" : "chevron-down"}
+                size={18}
+                color={colors.primary}
+              />
+            </View>
+          </Pressable>
+          {trackingOpen ? (
+          <>
           <View style={styles.heroWrap}>
             <LinearGradient
               colors={[colors.primary + "26", "transparent"]}
@@ -1167,6 +1192,8 @@ export default function HomeScreen() {
               />
             </Card>
           </Pressable>
+          </>
+          ) : null}
         </>
       ) : null}
 
@@ -3115,6 +3142,20 @@ const styles = StyleSheet.create({
 
   // Personal tracking
   heroWrap: { marginBottom: 28 },
+  sectionToggleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 14,
+  },
+  sectionToggleBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   heroGlow: {
     position: "absolute",
     top: -10,
