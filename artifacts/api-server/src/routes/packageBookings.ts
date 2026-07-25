@@ -26,6 +26,7 @@ import {
   createYoactivPaymentUrl,
   ensureYoactivMemberId,
   fetchYoactivPackages,
+  invalidateYoactivMemberCache,
   normalizeMobile,
   resolveBranchTarget,
   yoactivConfigured,
@@ -332,6 +333,9 @@ router.get(
       // settle the points the buyer applied, then credit their referrer (if
       // this was the referred member's first paid purchase).
       if (flipped && outcome === "paid") {
+        // The plan changed upstream — bust the 5-min YoActiv lookup cache so
+        // the member's next /memberships/mine sees the new plan immediately.
+        invalidateYoactivMemberCache(flipped.mobile);
         if (flipped.userId && flipped.redeemPointsInr > 0) {
           await debitWallet({
             userId: flipped.userId,

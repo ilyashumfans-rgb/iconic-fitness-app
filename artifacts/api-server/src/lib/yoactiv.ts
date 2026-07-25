@@ -273,6 +273,18 @@ const SUCCESS_TTL_MS = 5 * 60 * 1000;
 const FAILURE_TTL_MS = 60 * 1000;
 
 /**
+ * Drop the cached lookup for a mobile so the next /memberships/mine fetch is
+ * fresh — call after a payment lands, or the member sees a stale "no plan"
+ * for up to 5 minutes.
+ */
+export function invalidateYoactivMemberCache(
+  rawMobile: string | null | undefined,
+): void {
+  const mobile = normalizeMobile(rawMobile);
+  if (mobile) cache.delete(mobile);
+}
+
+/**
  * Look up a member across all configured YoActiv keys/branches by mobile.
  * Returns null when the mobile isn't found anywhere (or nothing configured).
  * Throws only on unexpected transport errors when nothing cached.

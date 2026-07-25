@@ -2,6 +2,7 @@ import { useAuth } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
 import {
   getGetMeQueryKey,
+  getGetMyMembershipQueryKey,
   getGetMyReferralInfoQueryKey,
   getGetPackageBookingQueryKey,
   getListMembershipPackagesQueryKey,
@@ -127,11 +128,15 @@ export default function BookPackageScreen() {
     ? selectedPkg.amountInr - (usePoints ? pointsDiscount : 0)
     : 0;
 
-  // Points are debited server-side when the payment lands; refresh the wallet.
+  // Points are debited server-side when the payment lands; refresh the wallet
+  // and the membership (the new plan should replace "Join membership" cues).
   useEffect(() => {
     if (status === "paid") {
       void queryClient.invalidateQueries({
         queryKey: getGetMyReferralInfoQueryKey(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: getGetMyMembershipQueryKey(),
       });
     }
   }, [status, queryClient]);
