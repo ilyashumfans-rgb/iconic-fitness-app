@@ -1,0 +1,46 @@
+1. Member Onboarding Master
+Auto workflow after enrollment: Trainer Assignment, Welcome Call, Welcome WhatsApp Message
+and Welcome Kit by Member Coordinator.
+2. Initial Assessment Master
+Within 24 hours, member visits on an empty stomach for BMI, Body Fat, Muscle Mass, Visceral Fat,
+Water %, BMR, Weight, Photos (optional), Goals and Medical History.
+3. Trial Session 1
+Fitness Assessment including Mobility, Strength, Flexibility, Posture Analysis, Lifestyle Discussion,
+Goal Setting and Assessment Report.
+4. Session Feedback
+Member rates Trainer Behaviour, Explanation, Knowledge, Friendliness, Confidence and provides
+comments or complaints.
+5. Trial Session 2
+Gym Orientation covering Warm-up, Stretching, Equipment Usage, Machine Safety, Correct
+Posture, Range of Motion, Breathing Technique, Workout Etiquette and Cool Down.
+6. Session 2 Feedback
+Collect ratings and comments after orientation.
+7. PT Counselling Workflow
+Trainer marks member ready. Member Coordinator explains PT Packages, Pricing, Offers and EMI.
+Trainer explains transformation plan, accountability, nutrition support and progress tracking.
+8. PT Decision
+If PT is purchased: assign trainer, create PT schedule and enable PT dashboard. If not:
+automatically start the General Member Engagement Program.
+9. General Member Engagement
+Assign a 45-day workout plan with Beginner, Intermediate or Advanced workout cards including
+warm-up, workout, cardio, core and stretching.
+10. Dietician Assignment
+Automatically assign the member to the in-house dietician for diet planning, meal timing, hydration
+and follow-up.
+11. Follow-up Master
+Automatic follow-ups on Day 7, Day 15, Day 30 and Day 45 to record attendance, motivation,
+issues, improvement and PT interest.
+12. Re-conversion Master
+Automatic PT review reminders on Day 15, 30 and 45 for members who have not purchased PT.
+13. Member Engagement Dashboard
+Show onboarding progress, BMI, trial sessions, feedback, PT counselling, PT status, workout plan,
+diet plan, attendance, last visit and next follow-up.
+14. Trainer Dashboard
+Track assigned members, pending BMI, pending sessions, feedback, PT conversion, workout
+assignments, dietician referrals and follow-ups.
+15. Automatic Notifications
+Welcome, BMI reminder, Trial Session reminders, Feedback requests, PT counselling reminder,
+Workout Plan, Diet Consultation and Day 15/30/45 progress reminders.
+16. Member Engagement Score
+Calculate an engagement score (0-100). Green: 80-100, Yellow: 60-79, Red: Below 60. Members
+with low scores automatically appear in Trainer and Member Coordinator follow-up lists.

@@ -264,6 +264,105 @@ function NoMembershipCard({
   );
 }
 
+// Shown at most once per app session so the prompt greets the member right
+// after login without nagging on every visit to Home.
+let joinPromptShownThisSession = false;
+
+function JoinMembershipPrompt({
+  visible,
+  expired,
+  onJoin,
+  onClose,
+}: {
+  visible: boolean;
+  expired: boolean;
+  onJoin: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <View style={styles.joinPromptBackdrop}>
+        <View style={[styles.premiumWrap, CARD_SHADOW, { marginHorizontal: 20, marginBottom: 0 }]}>
+          <LinearGradient
+            colors={[PREMIUM.bgTop, PREMIUM.bgBottom]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0.6, y: 1 }}
+            style={[styles.premiumCard, { paddingVertical: 26 }]}
+          >
+            <LinearGradient
+              colors={["transparent", PREMIUM.gold + "2E", "transparent"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0.4 }}
+              style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}
+            />
+            <Pressable
+              onPress={onClose}
+              hitSlop={12}
+              style={styles.joinPromptClose}
+            >
+              <Feather name="x" size={18} color={PREMIUM.faint} />
+            </Pressable>
+            <View style={{ alignItems: "center", gap: 8 }}>
+              <View style={styles.joinPromptIconRing}>
+                <Feather name="award" size={26} color={PREMIUM.gold} />
+              </View>
+              <AppText
+                size={11}
+                weight="700"
+                color={PREMIUM.gold}
+                style={{ letterSpacing: 1.6 }}
+              >
+                ICONIC MEMBERSHIP
+              </AppText>
+              <AppText
+                weight="700"
+                size={20}
+                color={PREMIUM.text}
+                style={{ textAlign: "center" }}
+              >
+                {expired
+                  ? "Your membership has expired"
+                  : "You don't have an active membership"}
+              </AppText>
+              <AppText
+                size={13}
+                color={PREMIUM.faint}
+                style={{ textAlign: "center", lineHeight: 19 }}
+              >
+                Choose your branch, pick a plan and pay online — you'll be
+                training in minutes.
+              </AppText>
+            </View>
+            <Pressable
+              onPress={onJoin}
+              style={({ pressed }) => [
+                styles.noPlanCta,
+                { marginTop: 18, opacity: pressed ? 0.85 : 1 },
+              ]}
+            >
+              <Feather name="zap" size={15} color="#0A0C08" />
+              <AppText weight="700" size={14} color="#0A0C08">
+                {expired ? "Rejoin membership" : "Join membership"}
+              </AppText>
+              <Feather name="arrow-right" size={15} color="#0A0C08" />
+            </Pressable>
+            <Pressable onPress={onClose} hitSlop={8} style={{ marginTop: 12, alignSelf: "center" }}>
+              <AppText size={13} color={PREMIUM.faint}>
+                Maybe later
+              </AppText>
+            </Pressable>
+          </LinearGradient>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 const PREMIUM = {
   bgTop: "#1A1F14",
   bgBottom: "#080A06",
@@ -756,6 +855,28 @@ export default function HomeScreen() {
   const membershipSettled = true;
   const isMember = !!isSignedIn;
   const membership = myMembershipQuery.data ?? null;
+
+  // ── Post-login join prompt ────────────────────────────────────────────────
+  // Once the membership check settles after login, members without an active
+  // plan (none at all, or expired) get a one-time highlighted prompt that
+  // leads straight into branch selection → plan → online payment.
+  const [joinPromptVisible, setJoinPromptVisible] = useState(false);
+  const membershipFetched =
+    myMembershipQuery.isSuccess || myMembershipQuery.isError;
+  const membershipInactive =
+    myMembershipQuery.isSuccess &&
+    (!membership || membership.status === "expired");
+  useEffect(() => {
+    if (
+      isSignedIn &&
+      membershipFetched &&
+      membershipInactive &&
+      !joinPromptShownThisSession
+    ) {
+      joinPromptShownThisSession = true;
+      setJoinPromptVisible(true);
+    }
+  }, [isSignedIn, membershipFetched, membershipInactive]);
   // Signed-in users get a tracking-focused Home: the discovery sections
   // (Explore packages / Gyms near me / Top rated gyms) are guest-only.
   const showDiscovery = !isSignedIn;
@@ -926,6 +1047,16 @@ export default function HomeScreen() {
           onPress={() => router.push("/coach")}
         />
       )}
+
+      <JoinMembershipPrompt
+        visible={joinPromptVisible}
+        expired={membership?.status === "expired"}
+        onJoin={() => {
+          setJoinPromptVisible(false);
+          router.push("/book-package");
+        }}
+        onClose={() => setJoinPromptVisible(false)}
+      />
 
       {/* Personal tracking — pinned to the top for signed-in members */}
       {isSignedIn ? (
@@ -2622,6 +2753,28 @@ const styles = StyleSheet.create({
   premiumWrap: {
     marginBottom: 16,
     borderRadius: 24,
+  },
+  joinPromptBackdrop: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.72)",
+  },
+  joinPromptClose: {
+    position: "absolute",
+    top: 14,
+    right: 14,
+    zIndex: 2,
+  },
+  joinPromptIconRing: {
+    width: 62,
+    height: 62,
+    borderRadius: 31,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: PREMIUM.gold + "66",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    marginBottom: 4,
   },
   topPagerWrap: { marginTop: 20, marginBottom: 4 },
   topPagerDots: {
