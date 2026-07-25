@@ -86,7 +86,6 @@ import {
 } from "@/lib/dates";
 import { resolveImageUrl } from "@/lib/images";
 import {
-  membershipsUrl,
   openExternal,
   websiteUrl,
 } from "@/lib/links";
@@ -376,9 +375,9 @@ function MembershipStatusCard({
         "Online renewal unavailable",
         err instanceof Error && err.message
           ? err.message
-          : "Please try again or renew via our website.",
+          : "Please pick your plan manually instead.",
         [
-          { text: "Open website", onPress: onManage },
+          { text: "Choose a plan", onPress: onManage },
           { text: "Close", style: "cancel" },
         ],
       );
@@ -952,12 +951,7 @@ export default function HomeScreen() {
         <MembershipStatusCard
           membership={membership}
           memberName={meQuery.data?.name ?? ""}
-          onManage={() =>
-            router.push({
-              pathname: "/web",
-              params: { url: membershipsUrl, title: "Manage plan" },
-            })
-          }
+          onManage={() => router.push("/book-package")}
         />
       ) : isSignedIn && myMembershipQuery.isFetched ? (
         <NoMembershipCard

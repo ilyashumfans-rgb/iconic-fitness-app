@@ -29,7 +29,6 @@ import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/hooks/useGuest";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import { istDateLabel, istDateStr } from "@/lib/dates";
-import { membershipsUrl, openExternal } from "@/lib/links";
 
 /** Whole IST calendar days from today until `dateIso` (negative = past). */
 function daysUntilIst(dateIso: string): number {
@@ -413,12 +412,7 @@ export default function ProfileScreen() {
                       label="Manage plan"
                       variant="secondary"
                       icon="credit-card"
-                      onPress={() =>
-                        router.push({
-                          pathname: "/web",
-                          params: { url: membershipsUrl, title: "Manage plan" },
-                        })
-                      }
+                      onPress={() => router.push("/book-package")}
                     />
                   </>
                 );
