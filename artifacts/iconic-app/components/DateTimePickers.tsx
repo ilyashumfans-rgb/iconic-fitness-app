@@ -165,11 +165,10 @@ export function CalendarPicker({
   );
 }
 
-const MINUTES = ["00", "15", "30", "45"];
 const HOURS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 /**
- * Exact time selector: hour + minutes + AM/PM.
+ * Time selector: hour + AM/PM (minutes are always :00).
  * Value in/out is 24h "HH:MM".
  */
 export function TimePicker({
@@ -180,16 +179,15 @@ export function TimePicker({
   onChange: (time24: string) => void;
 }) {
   const colors = useColors();
-  const [h24Str, minStr] = value.split(":");
+  const [h24Str] = value.split(":");
   const h24 = Number(h24Str);
   const meridiem: "AM" | "PM" = h24 >= 12 ? "PM" : "AM";
   const hour12 = h24 % 12 === 0 ? 12 : h24 % 12;
-  const minute = MINUTES.includes(minStr) ? minStr : "00";
 
-  function emit(h12: number, min: string, mer: "AM" | "PM") {
+  function emit(h12: number, mer: "AM" | "PM") {
     let h = h12 % 12;
     if (mer === "PM") h += 12;
-    onChange(`${pad2(h)}:${min}`);
+    onChange(`${pad2(h)}:00`);
   }
 
   const pill = (
@@ -227,17 +225,7 @@ export function TimePicker({
         </AppText>
         <View style={styles.pillWrap}>
           {HOURS.map((h) =>
-            pill(String(h), h === hour12, () => emit(h, minute, meridiem), `h-${h}`),
-          )}
-        </View>
-      </View>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        <AppText size={12} weight="600" color={colors.mutedForeground} style={{ width: 52 }}>
-          Minutes
-        </AppText>
-        <View style={styles.pillWrap}>
-          {MINUTES.map((m) =>
-            pill(`:${m}`, m === minute, () => emit(hour12, m, meridiem), `m-${m}`),
+            pill(String(h), h === hour12, () => emit(h, meridiem), `h-${h}`),
           )}
         </View>
       </View>
@@ -247,12 +235,12 @@ export function TimePicker({
         </AppText>
         <View style={styles.pillWrap}>
           {(["AM", "PM"] as const).map((m) =>
-            pill(m, m === meridiem, () => emit(hour12, minute, m), `mer-${m}`),
+            pill(m, m === meridiem, () => emit(hour12, m), `mer-${m}`),
           )}
         </View>
       </View>
       <AppText size={12} color={colors.mutedForeground}>
-        Selected time: {hour12}:{minute} {meridiem}
+        Selected time: {hour12} {meridiem}
       </AppText>
     </View>
   );
