@@ -1,7 +1,9 @@
 import { useAuth } from "@clerk/expo";
 import {
   getGetMeQueryKey,
+  getListLiveTrainersQueryKey,
   useGetMe,
+  useListLiveTrainers,
 } from "@workspace/api-client-react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -14,6 +16,7 @@ import { Field } from "@/components/Field";
 import { ModalHeader } from "@/components/ModalHeader";
 import { Screen } from "@/components/Screen";
 import { CalendarPicker, TimePicker } from "@/components/DateTimePickers";
+import { Chip } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
 import { istDateLabel, istToday } from "@/lib/dates";
 import { resolveImageUrl } from "@/lib/images";
@@ -57,7 +60,19 @@ export default function BookTrainerScreen() {
   const [email, setEmail] = useState("");
   const [date, setDate] = useState(istToday());
   const [time, setTime] = useState("07:00");
+  const [preferredTrainer, setPreferredTrainer] = useState("");
   const [busy, setBusy] = useState(false);
+
+  // Trial requests let the member optionally pick a preferred coach from the
+  // branch's live roster. Staff still see and handle every request.
+  const trialRosterParams = hasGym ? { gymId } : undefined;
+  const trialRosterQuery = useListLiveTrainers(trialRosterParams, {
+    query: {
+      enabled: isTrial && hasGym,
+      queryKey: getListLiveTrainersQueryKey(trialRosterParams),
+    },
+  });
+  const trialRoster = trialRosterQuery.data ?? [];
 
   // Prefill contact details from the signed-in member's profile so they can
   // submit the request without retyping stored data.
@@ -93,7 +108,9 @@ export default function BookTrainerScreen() {
         preferredDate: date,
         preferredTime: time,
         message: isTrial
-          ? `Kick-starter PT trial session request${params.gymName ? ` at ${params.gymName}` : ""}.`
+          ? `Kick-starter PT trial session request${params.gymName ? ` at ${params.gymName}` : ""}.${
+              preferredTrainer ? ` Preferred trainer: ${preferredTrainer}.` : ""
+            }`
           : `Personal training session request with ${coach}${params.gymName ? ` at ${params.gymName}` : ""}.`,
         source: "iconic-app-live-trainer",
         // Branch + coach details so the request shows on the partner's
@@ -216,6 +233,33 @@ export default function BookTrainerScreen() {
           keyboardType="email-address"
           autoCapitalize="none"
         />
+
+        {isTrial && trialRoster.length > 0 ? (
+          <>
+            <AppText
+              weight="600"
+              size={13}
+              style={{ marginTop: 18, marginBottom: 8 }}
+            >
+              Preferred trainer (optional)
+            </AppText>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              <Chip
+                label="Any trainer"
+                active={preferredTrainer === ""}
+                onPress={() => setPreferredTrainer("")}
+              />
+              {trialRoster.map((t) => (
+                <Chip
+                  key={t.id}
+                  label={t.name}
+                  active={preferredTrainer === t.name}
+                  onPress={() => setPreferredTrainer(t.name)}
+                />
+              ))}
+            </View>
+          </>
+        ) : null}
 
         <AppText
           weight="600"

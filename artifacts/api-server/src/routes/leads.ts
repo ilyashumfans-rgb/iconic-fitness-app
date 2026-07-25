@@ -1,8 +1,17 @@
+import { randomUUID } from "node:crypto";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { desc, eq, sql } from "drizzle-orm";
-import { db, leadsTable } from "@workspace/db";
+import {
+  adminsTable,
+  db,
+  gymsTable,
+  leadsTable,
+  notificationsTable,
+  staffTable,
+} from "@workspace/db";
 import { requireAdmin } from "../lib/adminAuth";
 import { resolveGymSchedule } from "../lib/resolveGymSchedule";
+import { TRAINER_ENQUIRY_SOURCE } from "../lib/trainerEnquiryLeads";
 
 const router: IRouter = Router();
 
@@ -157,8 +166,130 @@ router.post("/leads", async (req: Request, res: Response): Promise<void> => {
     { leadId: row.id, kind, classId, gymId },
     "lead captured",
   );
+
+  // PT / trial session requests: alert every backend account (admins, staff,
+  // and the owning partner) so no request sits unseen. Fire-and-forget —
+  // notification failure must never fail the member's request. The public
+  // endpoint's `source` is client-controlled, so the fan-out is rate limited
+  // per IP to prevent internal notification spam (the lead itself still saves).
+  if (source === TRAINER_ENQUIRY_SOURCE && allowEnquiryNotify(req.ip ?? "")) {
+    void notifyPtEnquiry({
+      leadName: name,
+      gymId,
+      gymName,
+      className,
+      preferredDate,
+      preferredTime,
+      message,
+    }).catch((err) =>
+      req.log?.warn({ err, leadId: row.id }, "pt enquiry notify failed"),
+    );
+  }
+
   res.status(201).json({ id: row.id, ok: true });
 });
+
+// Per-IP throttle for the notification fan-out: max 5 fan-outs per 15 minutes.
+const ENQUIRY_NOTIFY_WINDOW_MS = 15 * 60 * 1000;
+const ENQUIRY_NOTIFY_MAX = 5;
+const enquiryNotifyHits = new Map<string, number[]>();
+
+function allowEnquiryNotify(ip: string): boolean {
+  const now = Date.now();
+  const hits = (enquiryNotifyHits.get(ip) ?? []).filter(
+    (t) => now - t < ENQUIRY_NOTIFY_WINDOW_MS,
+  );
+  if (hits.length >= ENQUIRY_NOTIFY_MAX) {
+    enquiryNotifyHits.set(ip, hits);
+    return false;
+  }
+  hits.push(now);
+  enquiryNotifyHits.set(ip, hits);
+  // Opportunistic cleanup so the map can't grow unbounded.
+  if (enquiryNotifyHits.size > 5000) {
+    for (const [k, v] of enquiryNotifyHits) {
+      if (v.every((t) => now - t >= ENQUIRY_NOTIFY_WINDOW_MS)) {
+        enquiryNotifyHits.delete(k);
+      }
+    }
+  }
+  return true;
+}
+
+// Insert one notification row per admin, active staff member, and the gym's
+// owning partner for a new PT/trial session request.
+async function notifyPtEnquiry(opts: {
+  leadName: string;
+  gymId: number | null;
+  gymName: string;
+  className: string;
+  preferredDate: string;
+  preferredTime: string;
+  message: string;
+}): Promise<void> {
+  const isTrial = opts.className === "Trial session";
+  const title = isTrial ? "New trial session request" : "New PT session request";
+  // Surface the member's preferred trainer (embedded in the lead message by
+  // the app) so staff can triage straight from the notification feed.
+  const preferredMatch = opts.message.match(/Preferred trainer: ([^.]+)\./);
+  const preferredNote = preferredMatch
+    ? ` Preferred trainer: ${preferredMatch[1].trim()}.`
+    : "";
+  const body = `${opts.leadName} requested ${
+    isTrial ? "a kick-starter trial session" : `a PT session (${opts.className})`
+  }${opts.gymName ? ` at ${opts.gymName}` : ""} on ${opts.preferredDate} ${opts.preferredTime}.${preferredNote}`;
+  const batchId = randomUUID();
+
+  const rows: (typeof notificationsTable.$inferInsert)[] = [];
+
+  const admins = await db.select({ id: adminsTable.id }).from(adminsTable);
+  for (const a of admins) {
+    rows.push({
+      recipientType: "admin",
+      recipientId: a.id,
+      title,
+      body,
+      link: "/admin/trainer-bookings",
+      batchId,
+    });
+  }
+
+  const staff = await db
+    .select({ id: staffTable.id })
+    .from(staffTable)
+    .where(eq(staffTable.isActive, true));
+  for (const s of staff) {
+    rows.push({
+      recipientType: "staff",
+      recipientId: s.id,
+      title,
+      body,
+      link: "/staff/leads",
+      batchId,
+    });
+  }
+
+  if (opts.gymId) {
+    const [gym] = await db
+      .select({ ownerPartnerId: gymsTable.ownerPartnerId })
+      .from(gymsTable)
+      .where(eq(gymsTable.id, opts.gymId));
+    if (gym?.ownerPartnerId) {
+      rows.push({
+        recipientType: "partner",
+        recipientId: gym.ownerPartnerId,
+        title,
+        body,
+        link: "/partner/trainer-bookings",
+        batchId,
+      });
+    }
+  }
+
+  if (rows.length > 0) {
+    await db.insert(notificationsTable).values(rows);
+  }
+}
 
 // ─────────────────────────── Admin CRM ───────────────────────────
 
