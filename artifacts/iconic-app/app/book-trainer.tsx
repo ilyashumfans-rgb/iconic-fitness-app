@@ -5,7 +5,7 @@ import {
 } from "@workspace/api-client-react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, View } from "react-native";
+import { Alert, Image, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
@@ -14,7 +14,9 @@ import { Field } from "@/components/Field";
 import { ModalHeader } from "@/components/ModalHeader";
 import { Screen } from "@/components/Screen";
 import { CalendarPicker, TimePicker } from "@/components/DateTimePickers";
+import { useColors } from "@/hooks/useColors";
 import { istDateLabel, istToday } from "@/lib/dates";
+import { resolveImageUrl } from "@/lib/images";
 import { submitLead } from "@/lib/leads";
 
 // PT sessions are request-only: no package picker or online payment here.
@@ -22,18 +24,26 @@ import { submitLead } from "@/lib/leads";
 // team confirms offline. Paid package purchase lives on its own screen.
 export default function BookTrainerScreen() {
   const router = useRouter();
+  const colors = useColors();
   const { isLoaded, isSignedIn } = useAuth();
   const params = useLocalSearchParams<{
     trainerName?: string;
     trainerId?: string;
+    trainerPhotoUrl?: string;
     gymId?: string;
     gymName?: string;
     trial?: string;
   }>();
   const isTrial = params.trial === "1";
-  const coach = (params.trainerName ?? "").trim() || "a personal trainer";
+  const coachName = (params.trainerName ?? "").trim();
+  const coach = coachName || "a personal trainer";
   const gymId = Number(params.gymId);
   const hasGym = Number.isFinite(gymId) && gymId > 0;
+
+  // When a specific trainer was picked, land on their profile first — the
+  // request form stays hidden until "Book a PT Session" is tapped.
+  const hasCoachProfile = !isTrial && coachName.length > 0;
+  const [showForm, setShowForm] = useState(!hasCoachProfile);
 
   const meQuery = useGetMe({
     query: {
@@ -106,6 +116,65 @@ export default function BookTrainerScreen() {
     } finally {
       setBusy(false);
     }
+  }
+
+  // Trainer profile view — details + photo only; the form opens on demand.
+  if (hasCoachProfile && !showForm) {
+    const photo = resolveImageUrl(params.trainerPhotoUrl || null);
+    const initials = coachName
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0]!.toUpperCase())
+      .join("");
+    return (
+      <Screen contentContainerStyle={{ paddingBottom: 40 }}>
+        <ModalHeader title="Trainer" />
+        <Card style={{ padding: 0, overflow: "hidden" }}>
+          {photo ? (
+            <Image
+              source={{ uri: photo }}
+              style={{ width: "100%", aspectRatio: 4 / 3 }}
+            />
+          ) : (
+            <View
+              style={{
+                width: "100%",
+                aspectRatio: 4 / 3,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: colors.elevated,
+              }}
+            >
+              <AppText weight="700" size={48} color={colors.primary}>
+                {initials || "PT"}
+              </AppText>
+            </View>
+          )}
+          <View style={{ padding: 18, gap: 4 }}>
+            <AppText weight="700" size={20}>
+              {coachName}
+            </AppText>
+            <AppText muted size={14}>
+              Personal Trainer
+              {params.gymName ? ` · ${params.gymName}` : ""}
+            </AppText>
+            <AppText muted size={13} style={{ marginTop: 8 }}>
+              One-on-one coaching tailored to your goals — strength, fat loss,
+              mobility, or general fitness. Send a request and the team will
+              set up your session.
+            </AppText>
+            <View style={{ marginTop: 16 }}>
+              <Button
+                label="Book a PT Session"
+                onPress={() => setShowForm(true)}
+                icon="calendar"
+              />
+            </View>
+          </View>
+        </Card>
+      </Screen>
+    );
   }
 
   return (

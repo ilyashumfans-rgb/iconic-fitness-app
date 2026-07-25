@@ -213,8 +213,12 @@ export default function TrainersScreen() {
                   params: {
                     trainerName: t.name,
                     trainerId: t.id,
+                    trainerPhotoUrl: t.photoUrl ?? "",
                     gymId: String(gymId),
-                    gymName: selectedGym?.name ?? "",
+                    gymName:
+                      selectedGym?.name ??
+                      membershipQuery.data?.branchName ??
+                      "",
                   },
                 })
               }
