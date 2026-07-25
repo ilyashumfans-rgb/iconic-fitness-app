@@ -225,7 +225,13 @@ router.get(
     const rows = await db
       .select()
       .from(trainerBookingsTable)
-      .where(eq(trainerBookingsTable.userId, req.userId!))
+      .where(
+        and(
+          eq(trainerBookingsTable.userId, req.userId!),
+          // Staff-cancelled bookings drop out so the member can book again.
+          ne(trainerBookingsTable.status, "cancelled"),
+        ),
+      )
       .orderBy(desc(trainerBookingsTable.createdAt));
 
     const out = rows.map((row) => ({
@@ -263,6 +269,8 @@ router.get(
           and(
             eq(leadsTable.source, TRAINER_ENQUIRY_SOURCE),
             eq(leadsTable.kind, "general"),
+            // Staff-cancelled requests drop out so the member can book again.
+            ne(leadsTable.status, "cancelled"),
             sql`right(regexp_replace(${leadsTable.phone}, '\\D', '', 'g'), 10) = ${mobile}`,
           ),
         )
