@@ -1,5 +1,6 @@
 import { useAuth } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   getGetMeQueryKey,
   getGetMyMembershipQueryKey,
@@ -66,6 +67,7 @@ import {
 } from "react-native";
 
 import { AICoachCard } from "@/components/AICoachCard";
+import { WelcomeCelebration } from "@/components/WelcomeCelebration";
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
@@ -830,6 +832,35 @@ export default function HomeScreen() {
     !!isSignedIn &&
     myMembershipQuery.isSuccess &&
     (!membership || membership.status === "expired");
+
+  // ── One-time "Diwali crackers" welcome for new members ───────────────────
+  // First time we see an active plan on this device, celebrate with a
+  // fireworks overlay; an AsyncStorage flag (keyed by plan start so a renewal
+  // to a fresh plan celebrates again) makes sure it only ever plays once.
+  const [showWelcome, setShowWelcome] = useState(false);
+  const welcomeKey =
+    membership && membership.status === "active"
+      ? `welcomeCelebrated:v1:${membership.startedOn ?? membership.planName}`
+      : null;
+  useEffect(() => {
+    if (!welcomeKey) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const seen = await AsyncStorage.getItem(welcomeKey);
+        if (!seen && !cancelled) setShowWelcome(true);
+      } catch {
+        // Storage unavailable — skip the celebration rather than loop it.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [welcomeKey]);
+  const dismissWelcome = useCallback(() => {
+    setShowWelcome(false);
+    if (welcomeKey) void AsyncStorage.setItem(welcomeKey, "1").catch(() => {});
+  }, [welcomeKey]);
   // Signed-in users get a tracking-focused Home: the discovery sections
   // (Explore packages / Gyms near me / Top rated gyms) are guest-only.
   const showDiscovery = !isSignedIn;
@@ -1358,6 +1389,12 @@ export default function HomeScreen() {
         <JoinMembershipBar
           expired={membership?.status === "expired"}
           onJoin={() => router.push("/book-package")}
+        />
+      ) : null}
+      {showWelcome ? (
+        <WelcomeCelebration
+          memberName={meQuery.data?.name ?? ""}
+          onDone={dismissWelcome}
         />
       ) : null}
     </View>
