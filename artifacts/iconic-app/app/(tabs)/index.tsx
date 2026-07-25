@@ -645,33 +645,10 @@ function MembershipStatusCard({
             </AppText>
           </>
         ) : (
-          /* PT Details & Book Classes hidden from the Home card (user request);
-             PT Details is reached via "Personal Trainers", classes via the
-             Classes screen. Members without any PT still get the booking CTA. */
-          !ptActive && !hasPtBooking ? (
-            <View style={{ marginTop: 16, gap: 10 }}>
-              <Pressable onPress={() => router.push("/trainers")}>
-                {({ pressed }) => (
-                  <View
-                    style={[
-                      styles.premiumManageBtn,
-                      { opacity: pressed ? 0.8 : 1, marginTop: 0 },
-                    ]}
-                  >
-                    <Feather name="user-check" size={15} color={PREMIUM.gold} />
-                    <AppText weight="700" size={14} color={PREMIUM.gold}>
-                      Book PT Trainer
-                    </AppText>
-                    <Feather
-                      name="chevron-right"
-                      size={16}
-                      color={PREMIUM.gold}
-                    />
-                  </View>
-                )}
-              </Pressable>
-            </View>
-          ) : null
+          /* All extra CTAs (PT Details, Book Classes, Book PT Trainer) are
+             hidden from the Home card per user request — PT booking lives on
+             the Personal Trainers screen. */
+          null
         )}
       </LinearGradient>
     </View>
