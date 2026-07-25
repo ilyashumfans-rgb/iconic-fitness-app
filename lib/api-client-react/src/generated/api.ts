@@ -2693,6 +2693,83 @@ export const useCreateTrainerBooking = <TError = ErrorType<unknown>,
       return useMutation(getCreateTrainerBookingMutationOptions(options));
     }
 
+export const getListMyTrainerBookingsUrl = () => {
+
+
+
+
+  return `/api/trainer-bookings/mine`
+}
+
+/**
+ * @summary The caller's PT bookings (paid/pending) and session-request enquiries, newest first
+ */
+export const listMyTrainerBookings = async ( options?: RequestInit): Promise<TrainerBooking[]> => {
+
+  return customFetch<TrainerBooking[]>(getListMyTrainerBookingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyTrainerBookingsQueryKey = () => {
+    return [
+    `/api/trainer-bookings/mine`
+    ] as const;
+    }
+
+
+export const getListMyTrainerBookingsQueryOptions = <TData = Awaited<ReturnType<typeof listMyTrainerBookings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyTrainerBookings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyTrainerBookingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyTrainerBookings>>> = ({ signal }) => listMyTrainerBookings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyTrainerBookings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMyTrainerBookingsQueryResult = NonNullable<Awaited<ReturnType<typeof listMyTrainerBookings>>>
+export type ListMyTrainerBookingsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary The caller's PT bookings (paid/pending) and session-request enquiries, newest first
+ */
+
+export function useListMyTrainerBookings<TData = Awaited<ReturnType<typeof listMyTrainerBookings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyTrainerBookings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMyTrainerBookingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
 export const getGetTrainerBookingUrl = (bookingId: number,) => {
 
 

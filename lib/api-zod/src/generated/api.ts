@@ -792,6 +792,22 @@ export const CreateTrainerBookingResponse = zod.object({
 
 
 /**
+ * @summary The caller's PT bookings (paid/pending) and session-request enquiries, newest first
+ */
+export const ListMyTrainerBookingsResponseItem = zod.object({
+  "id": zod.number(),
+  "status": zod.enum(['pending', 'paid', 'failed', 'enquiry']),
+  "amountInr": zod.number(),
+  "packageName": zod.string(),
+  "trainerName": zod.string(),
+  "gymName": zod.string(),
+  "preferredDate": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const ListMyTrainerBookingsResponse = zod.array(ListMyTrainerBookingsResponseItem)
+
+
+/**
  * @summary Status of one of the caller's trainer bookings
  */
 export const GetTrainerBookingParams = zod.object({
@@ -800,7 +816,7 @@ export const GetTrainerBookingParams = zod.object({
 
 export const GetTrainerBookingResponse = zod.object({
   "id": zod.number(),
-  "status": zod.enum(['pending', 'paid', 'failed']),
+  "status": zod.enum(['pending', 'paid', 'failed', 'enquiry']),
   "amountInr": zod.number(),
   "packageName": zod.string(),
   "trainerName": zod.string(),

@@ -7,6 +7,7 @@ import {
   getListGymsQueryKey,
   getListMembershipsQueryKey,
   getListMyBookingsQueryKey,
+  getListMyTrainerBookingsQueryKey,
   getGetPackageBookingQueryKey,
   useAddWater,
   useCreateBooking,
@@ -20,6 +21,7 @@ import {
   useListGyms,
   useListMemberships,
   useListMyBookings,
+  useListMyTrainerBookings,
   useListHomeSlides,
   useListPackageCategories,
   getListPackageCategoriesQueryKey,
@@ -321,6 +323,15 @@ function MembershipStatusCard({
   embedded?: boolean;
 }) {
   const queryClient = useQueryClient();
+  const router = useRouter();
+  // Hide "Book PT Trainer" once the member already has any PT booking or
+  // pending session request.
+  const ptQuery = useListMyTrainerBookings({
+    query: { queryKey: getListMyTrainerBookingsQueryKey() },
+  });
+  const hasPtBooking = (ptQuery.data ?? []).some(
+    (b) => b.status === "paid" || b.status === "pending" || b.status === "enquiry",
+  );
   // When the gym system reported no expiry date, renewsOn is a placeholder —
   // never show urgency or a renewal push off the back of it.
   const expiryKnown = membership.expiryKnown !== false;
@@ -623,21 +634,46 @@ function MembershipStatusCard({
             </AppText>
           </>
         ) : (
-          <Pressable onPress={onManage} style={{ marginTop: 16 }}>
-            {({ pressed }) => (
-              <View
-                style={[
-                  styles.premiumManageBtn,
-                  { opacity: pressed ? 0.8 : 1 },
-                ]}
-              >
-                <AppText weight="700" size={14} color={PREMIUM.gold}>
-                  Manage plan
-                </AppText>
-                <Feather name="chevron-right" size={16} color={PREMIUM.gold} />
-              </View>
-            )}
-          </Pressable>
+          <View style={{ marginTop: 16, gap: 10 }}>
+            {!hasPtBooking ? (
+              <Pressable onPress={() => router.push("/trainers")}>
+                {({ pressed }) => (
+                  <View
+                    style={[
+                      styles.premiumManageBtn,
+                      { opacity: pressed ? 0.8 : 1, marginTop: 0 },
+                    ]}
+                  >
+                    <Feather name="user-check" size={15} color={PREMIUM.gold} />
+                    <AppText weight="700" size={14} color={PREMIUM.gold}>
+                      Book PT Trainer
+                    </AppText>
+                    <Feather
+                      name="chevron-right"
+                      size={16}
+                      color={PREMIUM.gold}
+                    />
+                  </View>
+                )}
+              </Pressable>
+            ) : null}
+            <Pressable onPress={() => router.push("/classes")}>
+              {({ pressed }) => (
+                <View
+                  style={[
+                    styles.premiumManageBtn,
+                    { opacity: pressed ? 0.8 : 1, marginTop: 0 },
+                  ]}
+                >
+                  <Feather name="calendar" size={15} color={PREMIUM.gold} />
+                  <AppText weight="700" size={14} color={PREMIUM.gold}>
+                    Book Classes
+                  </AppText>
+                  <Feather name="chevron-right" size={16} color={PREMIUM.gold} />
+                </View>
+              )}
+            </Pressable>
+          </View>
         )}
       </LinearGradient>
     </View>

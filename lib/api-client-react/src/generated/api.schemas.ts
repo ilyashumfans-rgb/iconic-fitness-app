@@ -411,6 +411,7 @@ export const TrainerBookingStatus = {
   pending: 'pending',
   paid: 'paid',
   failed: 'failed',
+  enquiry: 'enquiry',
 } as const;
 
 export interface TrainerBooking {

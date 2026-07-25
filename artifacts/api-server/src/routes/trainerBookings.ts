@@ -9,7 +9,11 @@ import {
   CreateTrainerBookingResponse,
   GetTrainerBookingParams,
   GetTrainerBookingResponse,
+  ListMyTrainerBookingsResponse,
 } from "@workspace/api-zod";
+import { desc, sql } from "drizzle-orm";
+import { leadsTable } from "@workspace/db";
+import { TRAINER_ENQUIRY_SOURCE } from "../lib/trainerEnquiryLeads";
 import { requireUser } from "../lib/currentUser";
 import { creditReferralRewardOnce } from "../lib/referrals";
 import {
@@ -196,6 +200,77 @@ router.post(
         paymentUrl,
       }),
     );
+  },
+);
+
+// The caller's PT bookings (paid/pending/failed rows) merged with their free
+// session-request enquiries (leads matched by the account's mobile number).
+// Registered BEFORE /:bookingId so "mine" never hits the param route.
+router.get(
+  "/trainer-bookings/mine",
+  requireUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const rows = await db
+      .select()
+      .from(trainerBookingsTable)
+      .where(eq(trainerBookingsTable.userId, req.userId!))
+      .orderBy(desc(trainerBookingsTable.createdAt));
+
+    const out = rows.map((row) => ({
+      id: row.id,
+      status: row.status,
+      amountInr: row.amountInr,
+      packageName: row.packageName,
+      trainerName: row.trainerName,
+      gymName: row.gymName,
+      preferredDate: row.preferredDate,
+      createdAt: row.createdAt.toISOString(),
+    }));
+
+    // Session-request enquiries are leads keyed by phone, not user id — match
+    // them via the account's mobile so "already requested a PT" is visible.
+    const [user] = await db
+      .select({ mobile: usersTable.mobile })
+      .from(usersTable)
+      .where(eq(usersTable.id, req.userId!));
+    const mobile = normalizeMobile(user?.mobile ?? "");
+    if (mobile) {
+      // Match in SQL on the normalized (last-10-digits) phone so every
+      // enquiry the member ever sent is found, regardless of formatting.
+      const leads = await db
+        .select({
+          id: leadsTable.id,
+          trainerName: leadsTable.className,
+          gymName: leadsTable.gymName,
+          phone: leadsTable.phone,
+          preferredDate: leadsTable.preferredDate,
+          createdAt: leadsTable.createdAt,
+        })
+        .from(leadsTable)
+        .where(
+          and(
+            eq(leadsTable.source, TRAINER_ENQUIRY_SOURCE),
+            eq(leadsTable.kind, "general"),
+            sql`right(regexp_replace(${leadsTable.phone}, '\\D', '', 'g'), 10) = ${mobile}`,
+          ),
+        )
+        .orderBy(desc(leadsTable.createdAt));
+      for (const l of leads) {
+        out.push({
+          id: -l.id,
+          status: "enquiry",
+          amountInr: 0,
+          packageName: "Session request",
+          trainerName: l.trainerName,
+          gymName: l.gymName,
+          preferredDate: l.preferredDate,
+          createdAt: l.createdAt.toISOString(),
+        });
+      }
+    }
+
+    out.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    res.json(ListMyTrainerBookingsResponse.parse(out));
   },
 );
 
