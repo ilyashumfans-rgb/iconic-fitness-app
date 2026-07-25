@@ -73,12 +73,14 @@ import type {
   PackageCategory,
   ProgressReport,
   PtProgram,
+  PtTrialFeedback,
   ReferralInfo,
   StoreCategory,
   StoreCheckoutRequest,
   StoreCheckoutResponse,
   StoreOrder,
   StoreProduct,
+  SubmitPtTrialFeedbackRequest,
   Trainer,
   TrainerBooking,
   TrainerBookingCreated,
@@ -2924,6 +2926,154 @@ export function useGetMyPtProgram<TData = Awaited<ReturnType<typeof getMyPtProgr
 
 
 
+
+export const getListMyPtTrialFeedbackUrl = () => {
+
+
+
+
+  return `/api/pt/trial-feedback/mine`
+}
+
+/**
+ * @summary The caller's kick-starter trial session feedback entries
+ */
+export const listMyPtTrialFeedback = async ( options?: RequestInit): Promise<PtTrialFeedback[]> => {
+
+  return customFetch<PtTrialFeedback[]>(getListMyPtTrialFeedbackUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyPtTrialFeedbackQueryKey = () => {
+    return [
+    `/api/pt/trial-feedback/mine`
+    ] as const;
+    }
+
+
+export const getListMyPtTrialFeedbackQueryOptions = <TData = Awaited<ReturnType<typeof listMyPtTrialFeedback>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyPtTrialFeedback>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyPtTrialFeedbackQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyPtTrialFeedback>>> = ({ signal }) => listMyPtTrialFeedback({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyPtTrialFeedback>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMyPtTrialFeedbackQueryResult = NonNullable<Awaited<ReturnType<typeof listMyPtTrialFeedback>>>
+export type ListMyPtTrialFeedbackQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary The caller's kick-starter trial session feedback entries
+ */
+
+export function useListMyPtTrialFeedback<TData = Awaited<ReturnType<typeof listMyPtTrialFeedback>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyPtTrialFeedback>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMyPtTrialFeedbackQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSubmitPtTrialFeedbackUrl = () => {
+
+
+
+
+  return `/api/pt/trial-feedback`
+}
+
+/**
+ * @summary Submit (or update) feedback for a kick-starter trial session
+ */
+export const submitPtTrialFeedback = async (submitPtTrialFeedbackRequest: SubmitPtTrialFeedbackRequest, options?: RequestInit): Promise<PtTrialFeedback> => {
+
+  return customFetch<PtTrialFeedback>(getSubmitPtTrialFeedbackUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      submitPtTrialFeedbackRequest,)
+  }
+);}
+
+
+
+
+export const getSubmitPtTrialFeedbackMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitPtTrialFeedback>>, TError,{data: BodyType<SubmitPtTrialFeedbackRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitPtTrialFeedback>>, TError,{data: BodyType<SubmitPtTrialFeedbackRequest>}, TContext> => {
+
+const mutationKey = ['submitPtTrialFeedback'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitPtTrialFeedback>>, {data: BodyType<SubmitPtTrialFeedbackRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  submitPtTrialFeedback(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubmitPtTrialFeedbackMutationResult = NonNullable<Awaited<ReturnType<typeof submitPtTrialFeedback>>>
+    export type SubmitPtTrialFeedbackMutationBody = BodyType<SubmitPtTrialFeedbackRequest>
+    export type SubmitPtTrialFeedbackMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Submit (or update) feedback for a kick-starter trial session
+ */
+export const useSubmitPtTrialFeedback = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitPtTrialFeedback>>, TError,{data: BodyType<SubmitPtTrialFeedbackRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof submitPtTrialFeedback>>,
+        TError,
+        {data: BodyType<SubmitPtTrialFeedbackRequest>},
+        TContext
+      > => {
+      return useMutation(getSubmitPtTrialFeedbackMutationOptions(options));
+    }
 
 export const getListMembershipPackagesUrl = (params: ListMembershipPackagesParams,) => {
   const normalizedParams = new URLSearchParams();

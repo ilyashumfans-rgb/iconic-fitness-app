@@ -846,6 +846,49 @@ export const GetMyPtProgramResponse = zod.object({
 
 
 /**
+ * @summary The caller's kick-starter trial session feedback entries
+ */
+export const listMyPtTrialFeedbackResponseRatingMax = 5;
+
+
+
+export const ListMyPtTrialFeedbackResponseItem = zod.object({
+  "sessionNo": zod.number().describe('Trial session number (1 or 2)'),
+  "rating": zod.number().min(1).max(listMyPtTrialFeedbackResponseRatingMax),
+  "comment": zod.string()
+})
+export const ListMyPtTrialFeedbackResponse = zod.array(ListMyPtTrialFeedbackResponseItem)
+
+
+/**
+ * @summary Submit (or update) feedback for a kick-starter trial session
+ */
+export const submitPtTrialFeedbackBodySessionNoMax = 2;
+
+export const submitPtTrialFeedbackBodyRatingMax = 5;
+
+export const submitPtTrialFeedbackBodyCommentMax = 1000;
+
+
+
+export const SubmitPtTrialFeedbackBody = zod.object({
+  "sessionNo": zod.number().min(1).max(submitPtTrialFeedbackBodySessionNoMax),
+  "rating": zod.number().min(1).max(submitPtTrialFeedbackBodyRatingMax),
+  "comment": zod.string().max(submitPtTrialFeedbackBodyCommentMax).optional()
+})
+
+export const submitPtTrialFeedbackResponseRatingMax = 5;
+
+
+
+export const SubmitPtTrialFeedbackResponse = zod.object({
+  "sessionNo": zod.number().describe('Trial session number (1 or 2)'),
+  "rating": zod.number().min(1).max(submitPtTrialFeedbackResponseRatingMax),
+  "comment": zod.string()
+})
+
+
+/**
  * @summary Purchasable membership packages for a branch (live prices from the gym-management system)
  */
 export const ListMembershipPackagesQueryParams = zod.object({

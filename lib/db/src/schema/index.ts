@@ -165,6 +165,23 @@ export const ptSessionsTable = pgTable("pt_sessions", {
     .defaultNow(),
 });
 
+// Member feedback for the two kick-starter PT trial sessions (Home "fitness
+// journey" flow). One row per user + session number (1 or 2), upserted.
+export const ptTrialFeedbackTable = pgTable(
+  "pt_trial_feedback",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").notNull(),
+    sessionNo: integer("session_no").notNull(), // 1 | 2
+    rating: integer("rating").notNull(), // 1-5 stars
+    comment: text("comment").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [uniqueIndex("pt_trial_feedback_user_session_unique").on(t.userId, t.sessionNo)],
+);
+
 // Paid membership-package purchases (YoActiv hosted Razorpay), mirroring
 // trainer_bookings: pending row + token, redirect landing flips the status.
 export const packageBookingsTable = pgTable("package_bookings", {

@@ -640,6 +640,37 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/PtProgram" }
 
+  /pt/trial-feedback/mine:
+    get:
+      operationId: listMyPtTrialFeedback
+      tags: [trainers]
+      summary: The caller's kick-starter trial session feedback entries
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PtTrialFeedback" }
+
+  /pt/trial-feedback:
+    post:
+      operationId: submitPtTrialFeedback
+      tags: [trainers]
+      summary: Submit (or update) feedback for a kick-starter trial session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SubmitPtTrialFeedbackRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PtTrialFeedback" }
+
   /membership-packages:
     get:
       operationId: listMembershipPackages
@@ -1523,6 +1554,20 @@ components:
         sessions:
           type: array
           items: { $ref: "#/components/schemas/PtSession" }
+    PtTrialFeedback:
+      type: object
+      required: [sessionNo, rating, comment]
+      properties:
+        sessionNo: { type: integer, description: "Trial session number (1 or 2)" }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: string }
+    SubmitPtTrialFeedbackRequest:
+      type: object
+      required: [sessionNo, rating]
+      properties:
+        sessionNo: { type: integer, minimum: 1, maximum: 2 }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: string, maxLength: 1000 }
     CreatePackageBookingRequest:
       type: object
       required: [gymId, packageId, name, mobile, startDate]

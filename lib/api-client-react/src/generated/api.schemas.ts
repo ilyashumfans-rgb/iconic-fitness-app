@@ -455,6 +455,32 @@ export interface PtProgram {
   sessions: PtSession[];
 }
 
+export interface PtTrialFeedback {
+  /** Trial session number (1 or 2) */
+  sessionNo: number;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  comment: string;
+}
+
+export interface SubmitPtTrialFeedbackRequest {
+  /**
+     * @minimum 1
+     * @maximum 2
+     */
+  sessionNo: number;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  /** @maxLength 1000 */
+  comment?: string;
+}
+
 export interface CreatePackageBookingRequest {
   gymId: number;
   packageId: number;

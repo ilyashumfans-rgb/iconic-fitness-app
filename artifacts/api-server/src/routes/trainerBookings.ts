@@ -1,7 +1,13 @@
 import { randomBytes } from "node:crypto";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { and, eq } from "drizzle-orm";
-import { db, gymsTable, trainerBookingsTable, usersTable } from "@workspace/db";
+import {
+  db,
+  gymsTable,
+  ptTrialFeedbackTable,
+  trainerBookingsTable,
+  usersTable,
+} from "@workspace/db";
 import {
   ListTrainerPackagesQueryParams,
   ListTrainerPackagesResponse,
@@ -11,6 +17,9 @@ import {
   GetTrainerBookingResponse,
   ListMyTrainerBookingsResponse,
   GetMyPtProgramResponse,
+  ListMyPtTrialFeedbackResponse,
+  SubmitPtTrialFeedbackBody,
+  SubmitPtTrialFeedbackResponse,
 } from "@workspace/api-zod";
 import { desc, sql } from "drizzle-orm";
 import { leadsTable } from "@workspace/db";
@@ -392,6 +401,56 @@ router.get(
         totalSessions: PT_TOTAL_SESSIONS,
         completedCount: sessions.filter((s) => s.status === "completed").length,
         sessions,
+      }),
+    );
+  },
+);
+
+// ─── Kick-starter trial session feedback (Home "fitness journey") ───────────
+
+// The caller's feedback rows for the two trial sessions (1 and 2).
+router.get(
+  "/pt/trial-feedback/mine",
+  requireUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const rows = await db
+      .select({
+        sessionNo: ptTrialFeedbackTable.sessionNo,
+        rating: ptTrialFeedbackTable.rating,
+        comment: ptTrialFeedbackTable.comment,
+      })
+      .from(ptTrialFeedbackTable)
+      .where(eq(ptTrialFeedbackTable.userId, req.userId!))
+      .orderBy(ptTrialFeedbackTable.sessionNo);
+    res.json(ListMyPtTrialFeedbackResponse.parse(rows));
+  },
+);
+
+// Submit (or update) feedback for a trial session — upserted per user+session.
+router.post(
+  "/pt/trial-feedback",
+  requireUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const body = SubmitPtTrialFeedbackBody.safeParse(req.body);
+    if (!body.success) {
+      res.status(400).json({ error: body.error.message });
+      return;
+    }
+    const { sessionNo, rating } = body.data;
+    const comment = body.data.comment ?? "";
+    const [row] = await db
+      .insert(ptTrialFeedbackTable)
+      .values({ userId: req.userId!, sessionNo, rating, comment })
+      .onConflictDoUpdate({
+        target: [ptTrialFeedbackTable.userId, ptTrialFeedbackTable.sessionNo],
+        set: { rating, comment },
+      })
+      .returning();
+    res.json(
+      SubmitPtTrialFeedbackResponse.parse({
+        sessionNo: row!.sessionNo,
+        rating: row!.rating,
+        comment: row!.comment,
       }),
     );
   },
