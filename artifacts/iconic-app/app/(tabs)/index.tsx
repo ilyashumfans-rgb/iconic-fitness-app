@@ -642,32 +642,11 @@ function MembershipStatusCard({
             </AppText>
           </>
         ) : (
-          <View style={{ marginTop: 16, gap: 10 }}>
-            {ptActive ? (
-              <Pressable onPress={() => router.push("/pt-details")}>
-                {({ pressed }) => (
-                  <View
-                    style={[
-                      styles.premiumManageBtn,
-                      { opacity: pressed ? 0.8 : 1, marginTop: 0 },
-                    ]}
-                  >
-                    <Feather name="clipboard" size={15} color={PREMIUM.gold} />
-                    <AppText weight="700" size={14} color={PREMIUM.gold} style={{ flex: 1 }}>
-                      PT Details
-                      {ptProgram.data?.trainerName
-                        ? ` · ${ptProgram.data.trainerName}`
-                        : ""}
-                    </AppText>
-                    <Feather
-                      name="chevron-right"
-                      size={16}
-                      color={PREMIUM.gold}
-                    />
-                  </View>
-                )}
-              </Pressable>
-            ) : !hasPtBooking ? (
+          /* PT Details & Book Classes hidden from the Home card (user request);
+             PT Details is reached via "Personal Trainers", classes via the
+             Classes screen. Members without any PT still get the booking CTA. */
+          !ptActive && !hasPtBooking ? (
+            <View style={{ marginTop: 16, gap: 10 }}>
               <Pressable onPress={() => router.push("/trainers")}>
                 {({ pressed }) => (
                   <View
@@ -688,24 +667,8 @@ function MembershipStatusCard({
                   </View>
                 )}
               </Pressable>
-            ) : null}
-            <Pressable onPress={() => router.push("/classes")}>
-              {({ pressed }) => (
-                <View
-                  style={[
-                    styles.premiumManageBtn,
-                    { opacity: pressed ? 0.8 : 1, marginTop: 0 },
-                  ]}
-                >
-                  <Feather name="calendar" size={15} color={PREMIUM.gold} />
-                  <AppText weight="700" size={14} color={PREMIUM.gold}>
-                    Book Classes
-                  </AppText>
-                  <Feather name="chevron-right" size={16} color={PREMIUM.gold} />
-                </View>
-              )}
-            </Pressable>
-          </View>
+            </View>
+          ) : null
         )}
       </LinearGradient>
     </View>
