@@ -2,14 +2,16 @@ import { useAuth } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
 import {
   getGetMyMembershipQueryKey,
+  getGetMyPtProgramQueryKey,
   getListLiveTrainersQueryKey,
   useGetMyMembership,
+  useGetMyPtProgram,
   useListGyms,
   useListLiveTrainers,
   type Gym,
   type LiveTrainer,
 } from "@workspace/api-client-react";
-import { useRouter } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Image, Pressable, View } from "react-native";
 
@@ -39,9 +41,18 @@ export default function TrainersScreen() {
       : null;
   const locked = homeGymId !== null;
   const gymId = locked ? homeGymId : pickedGymId;
-  // Don't flash the all-branches picker while the membership check loads.
+  // Members with an assigned PT program skip the roster entirely — their
+  // trainer is already fixed, so show their PT Details instead.
+  const ptProgramQuery = useGetMyPtProgram({
+    query: {
+      enabled: !!isSignedIn,
+      queryKey: getGetMyPtProgramQueryKey(),
+    },
+  });
+  // Don't flash the all-branches picker (or the roster) while checks load.
   const membershipSettled =
-    !isSignedIn || membershipQuery.isSuccess || membershipQuery.isError;
+    (!isSignedIn || membershipQuery.isSuccess || membershipQuery.isError) &&
+    (!isSignedIn || ptProgramQuery.isSuccess || ptProgramQuery.isError);
 
   const gyms = useMemo(() => gymsQuery.data ?? [], [gymsQuery.data]);
   const selectedGym = gyms.find((g) => g.id === gymId) ?? null;
@@ -65,6 +76,11 @@ export default function TrainersScreen() {
         <LoadingView />
       </Screen>
     );
+  }
+
+  // Assigned PT members never see the roster — straight to their PT Details.
+  if (ptProgramQuery.data?.active === true) {
+    return <Redirect href="/pt-details" />;
   }
 
   // Step 1 — pick a branch (skipped for active members: home branch only).
