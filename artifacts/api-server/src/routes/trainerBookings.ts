@@ -10,10 +10,13 @@ import {
   GetTrainerBookingParams,
   GetTrainerBookingResponse,
   ListMyTrainerBookingsResponse,
+  GetMyPtProgramResponse,
 } from "@workspace/api-zod";
 import { desc, sql } from "drizzle-orm";
 import { leadsTable } from "@workspace/db";
 import { TRAINER_ENQUIRY_SOURCE } from "../lib/trainerEnquiryLeads";
+import { fetchPtAssignmentMap } from "../lib/ptAssignments";
+import { PT_TOTAL_SESSIONS, listPtSessions } from "../lib/ptSessions";
 import { requireUser } from "../lib/currentUser";
 import { creditReferralRewardOnce } from "../lib/referrals";
 import {
@@ -271,6 +274,126 @@ router.get(
 
     out.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     res.json(ListMyTrainerBookingsResponse.parse(out));
+  },
+);
+
+// The caller's active PT program: their newest PT enrolment (paid booking or
+// enquiry lead) that has a staff-assigned trainer, plus the scheduled session
+// timings. `active:false` when nothing is assigned yet.
+router.get(
+  "/pt/mine",
+  requireUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const empty = {
+      active: false,
+      trainerName: "",
+      gymName: "",
+      packageName: "",
+      totalSessions: PT_TOTAL_SESSIONS,
+      completedCount: 0,
+      sessions: [],
+    };
+
+    // Candidate enrolments, newest first: paid bookings by user id, then
+    // enquiry leads matched via the account's normalized mobile.
+    const bookings = await db
+      .select({
+        id: trainerBookingsTable.id,
+        gymName: trainerBookingsTable.gymName,
+        packageName: trainerBookingsTable.packageName,
+        createdAt: trainerBookingsTable.createdAt,
+      })
+      .from(trainerBookingsTable)
+      .where(
+        and(
+          eq(trainerBookingsTable.userId, req.userId!),
+          eq(trainerBookingsTable.status, "paid"),
+        ),
+      )
+      .orderBy(desc(trainerBookingsTable.createdAt));
+
+    const [user] = await db
+      .select({ mobile: usersTable.mobile })
+      .from(usersTable)
+      .where(eq(usersTable.id, req.userId!));
+    const mobile = normalizeMobile(user?.mobile ?? "");
+    const enquiries = mobile
+      ? await db
+          .select({
+            id: leadsTable.id,
+            gymName: leadsTable.gymName,
+            createdAt: leadsTable.createdAt,
+          })
+          .from(leadsTable)
+          .where(
+            and(
+              eq(leadsTable.source, TRAINER_ENQUIRY_SOURCE),
+              eq(leadsTable.kind, "general"),
+              sql`right(regexp_replace(${leadsTable.phone}, '\\D', '', 'g'), 10) = ${mobile}`,
+            ),
+          )
+          .orderBy(desc(leadsTable.createdAt))
+      : [];
+
+    const [bookingAssign, enquiryAssign] = await Promise.all([
+      fetchPtAssignmentMap(
+        "booking",
+        bookings.map((b) => b.id),
+      ),
+      fetchPtAssignmentMap(
+        "enquiry",
+        enquiries.map((l) => l.id),
+      ),
+    ]);
+
+    type Candidate = {
+      refType: "booking" | "enquiry";
+      refId: number;
+      trainerName: string;
+      gymName: string;
+      packageName: string;
+      createdAt: Date;
+    };
+    const candidates: Candidate[] = [
+      ...bookings
+        .filter((b) => bookingAssign.has(b.id))
+        .map((b) => ({
+          refType: "booking" as const,
+          refId: b.id,
+          trainerName: bookingAssign.get(b.id)!.trainerName,
+          gymName: b.gymName,
+          packageName: b.packageName,
+          createdAt: b.createdAt,
+        })),
+      ...enquiries
+        .filter((l) => enquiryAssign.has(l.id))
+        .map((l) => ({
+          refType: "enquiry" as const,
+          refId: l.id,
+          trainerName: enquiryAssign.get(l.id)!.trainerName,
+          gymName: l.gymName ?? "",
+          packageName: "Personal training",
+          createdAt: l.createdAt,
+        })),
+    ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    const current = candidates[0];
+    if (!current) {
+      res.json(GetMyPtProgramResponse.parse(empty));
+      return;
+    }
+    const sessions = await listPtSessions(current.refType, current.refId);
+    res.json(
+      GetMyPtProgramResponse.parse({
+        active: true,
+        trainerName: current.trainerName,
+        gymName: current.gymName,
+        packageName: current.packageName,
+        totalSessions: PT_TOTAL_SESSIONS,
+        completedCount: sessions.filter((s) => s.status === "completed").length,
+        sessions,
+      }),
+    );
   },
 );
 

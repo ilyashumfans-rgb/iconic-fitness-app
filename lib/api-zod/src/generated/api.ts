@@ -827,6 +827,25 @@ export const GetTrainerBookingResponse = zod.object({
 
 
 /**
+ * @summary The caller's active PT program (assigned trainer + scheduled sessions)
+ */
+export const GetMyPtProgramResponse = zod.object({
+  "active": zod.boolean().describe('True when the caller has a PT enrolment with an assigned trainer'),
+  "trainerName": zod.string(),
+  "gymName": zod.string(),
+  "packageName": zod.string(),
+  "totalSessions": zod.number().describe('Sessions included per month (12)'),
+  "completedCount": zod.number(),
+  "sessions": zod.array(zod.object({
+  "id": zod.number(),
+  "date": zod.string().describe('YYYY-MM-DD (IST)'),
+  "time": zod.string().describe('HH:MM 24h (IST)'),
+  "status": zod.enum(['scheduled', 'completed', 'cancelled'])
+}))
+})
+
+
+/**
  * @summary Purchasable membership packages for a branch (live prices from the gym-management system)
  */
 export const ListMembershipPackagesQueryParams = zod.object({

@@ -32,6 +32,14 @@ export default function AdminTrainerBookings() {
             summary={`${paid.length} paid · ₹${paid.reduce((s, r) => s + r.amountInr, 0).toLocaleString("en-IN")} collected`}
             loadTrainers={(branchId) => adminApi.yoactiv.trainers(branchId)}
             onAssign={(id, body) => adminApi.trainerBookings.assign(id, body)}
+            sessionApi={{
+              list: (id) => adminApi.trainerBookings.sessions(id),
+              add: (id, body) => adminApi.trainerBookings.addSession(id, body),
+              setStatus: (id, sid, status) =>
+                adminApi.trainerBookings.setSessionStatus(id, sid, status),
+              remove: (id, sid) =>
+                adminApi.trainerBookings.deleteSession(id, sid),
+            }}
           />
         )}
       </AdminCard>

@@ -46,6 +46,13 @@ import {
   upsertPtAssignment,
 } from "../lib/ptAssignments";
 import {
+  addPtSession,
+  deletePtSession,
+  listPtSessions,
+  setPtSessionStatus,
+  validPtSessionInput,
+} from "../lib/ptSessions";
+import {
   fetchYoactivMemberByMobile,
   fetchYoactivMemberList,
   fetchYoactivBranchTrainers,
@@ -1639,6 +1646,111 @@ router.put(
       trainerId,
       trainerName,
     );
+    res.json({ ok: true });
+  },
+);
+
+// ─── PT session scheduling (partner, owned branches only) ───
+// Merged-list ids: positive = trainer_bookings row, negative = enquiry lead.
+
+/** Resolve + authorize a merged id for the signed-in partner. */
+async function ptSessionAccess(
+  req: Request,
+  res: Response,
+): Promise<{ refType: "booking" | "enquiry"; refId: number } | null> {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id) || id === 0) {
+    res.status(400).json({ error: "Invalid id" });
+    return null;
+  }
+  const gymIds = await ownedGymIds(req.session.partnerId!);
+  const gymId = await ptAssignTargetGymId(id);
+  if (gymId === null) {
+    res.status(404).json({ error: "Booking not found" });
+    return null;
+  }
+  if (!gymIds.includes(gymId)) {
+    res.status(403).json({ error: "Not allowed" });
+    return null;
+  }
+  return { refType: id > 0 ? "booking" : "enquiry", refId: Math.abs(id) };
+}
+
+router.get(
+  "/partner/trainer-bookings/:id/sessions",
+  requirePartner,
+  requirePartnerPerm("classes"),
+  async (req: Request, res: Response): Promise<void> => {
+    const ref = await ptSessionAccess(req, res);
+    if (!ref) return;
+    res.json(await listPtSessions(ref.refType, ref.refId));
+  },
+);
+
+router.post(
+  "/partner/trainer-bookings/:id/sessions",
+  requirePartner,
+  requirePartnerPerm("classes"),
+  async (req: Request, res: Response): Promise<void> => {
+    const date = String(req.body?.date ?? "").trim();
+    const time = String(req.body?.time ?? "").trim();
+    if (!validPtSessionInput(date, time)) {
+      res.status(400).json({ error: "Valid date (YYYY-MM-DD) and time (HH:MM) required" });
+      return;
+    }
+    const ref = await ptSessionAccess(req, res);
+    if (!ref) return;
+    res.json(await addPtSession(ref.refType, ref.refId, date, time));
+  },
+);
+
+router.patch(
+  "/partner/trainer-bookings/:id/sessions/:sessionId",
+  requirePartner,
+  requirePartnerPerm("classes"),
+  async (req: Request, res: Response): Promise<void> => {
+    const sessionId = Number(req.params.sessionId);
+    const status = String(req.body?.status ?? "");
+    if (
+      !Number.isFinite(sessionId) ||
+      !["scheduled", "completed", "cancelled"].includes(status)
+    ) {
+      res.status(400).json({ error: "Invalid request" });
+      return;
+    }
+    const ref = await ptSessionAccess(req, res);
+    if (!ref) return;
+    const ok = await setPtSessionStatus(
+      ref.refType,
+      ref.refId,
+      sessionId,
+      status as "scheduled" | "completed" | "cancelled",
+    );
+    if (!ok) {
+      res.status(404).json({ error: "Session not found" });
+      return;
+    }
+    res.json({ ok: true });
+  },
+);
+
+router.delete(
+  "/partner/trainer-bookings/:id/sessions/:sessionId",
+  requirePartner,
+  requirePartnerPerm("classes"),
+  async (req: Request, res: Response): Promise<void> => {
+    const sessionId = Number(req.params.sessionId);
+    if (!Number.isFinite(sessionId)) {
+      res.status(400).json({ error: "Invalid request" });
+      return;
+    }
+    const ref = await ptSessionAccess(req, res);
+    if (!ref) return;
+    const ok = await deletePtSession(ref.refType, ref.refId, sessionId);
+    if (!ok) {
+      res.status(404).json({ error: "Session not found" });
+      return;
+    }
     res.json({ ok: true });
   },
 );

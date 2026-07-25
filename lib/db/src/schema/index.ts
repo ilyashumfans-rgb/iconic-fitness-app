@@ -150,6 +150,21 @@ export const ptTrainerAssignmentsTable = pgTable(
   (t) => [uniqueIndex("pt_assign_ref_unique").on(t.refType, t.refId)],
 );
 
+// Staff-scheduled PT session timings for a PT enrolment (same refType/refId
+// keying as pt_trainer_assignments). Members see these on the PT Details
+// screen; staff manage them from the PT Bookings dashboards.
+export const ptSessionsTable = pgTable("pt_sessions", {
+  id: serial("id").primaryKey(),
+  refType: text("ref_type").notNull(), // booking | enquiry
+  refId: integer("ref_id").notNull(),
+  sessionDate: text("session_date").notNull(), // YYYY-MM-DD (IST)
+  startTime: text("start_time").notNull(), // HH:MM 24h (IST)
+  status: text("status").notNull().default("scheduled"), // scheduled | completed | cancelled
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // Paid membership-package purchases (YoActiv hosted Razorpay), mirroring
 // trainer_bookings: pending row + token, redirect landing flips the status.
 export const packageBookingsTable = pgTable("package_bookings", {

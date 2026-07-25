@@ -55,6 +55,13 @@ import {
   upsertPtAssignment,
 } from "../lib/ptAssignments";
 import {
+  addPtSession,
+  deletePtSession,
+  listPtSessions,
+  setPtSessionStatus,
+  validPtSessionInput,
+} from "../lib/ptSessions";
+import {
   trainerPhotoMap,
   setTrainerPhoto,
   removeTrainerPhoto,
@@ -2331,6 +2338,96 @@ router.put(
       trainerId,
       trainerName,
     );
+    res.json({ ok: true });
+  },
+);
+
+// ─── PT session scheduling (admin) ───
+// Merged-list ids: positive = trainer_bookings row, negative = enquiry lead.
+
+router.get(
+  "/admin/trainer-bookings/:id/sessions",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id) || id === 0) {
+      res.status(400).json({ error: "Invalid id" });
+      return;
+    }
+    if ((await ptAssignTargetGymId(id)) === null) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+    res.json(await listPtSessions(id > 0 ? "booking" : "enquiry", Math.abs(id)));
+  },
+);
+
+router.post(
+  "/admin/trainer-bookings/:id/sessions",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const date = String(req.body?.date ?? "").trim();
+    const time = String(req.body?.time ?? "").trim();
+    if (!Number.isFinite(id) || id === 0 || !validPtSessionInput(date, time)) {
+      res.status(400).json({ error: "Valid id, date (YYYY-MM-DD) and time (HH:MM) required" });
+      return;
+    }
+    if ((await ptAssignTargetGymId(id)) === null) {
+      res.status(404).json({ error: "Booking not found" });
+      return;
+    }
+    res.json(await addPtSession(id > 0 ? "booking" : "enquiry", Math.abs(id), date, time));
+  },
+);
+
+router.patch(
+  "/admin/trainer-bookings/:id/sessions/:sessionId",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const sessionId = Number(req.params.sessionId);
+    const status = String(req.body?.status ?? "");
+    if (
+      !Number.isFinite(id) || id === 0 || !Number.isFinite(sessionId) ||
+      !["scheduled", "completed", "cancelled"].includes(status)
+    ) {
+      res.status(400).json({ error: "Invalid request" });
+      return;
+    }
+    const ok = await setPtSessionStatus(
+      id > 0 ? "booking" : "enquiry",
+      Math.abs(id),
+      sessionId,
+      status as "scheduled" | "completed" | "cancelled",
+    );
+    if (!ok) {
+      res.status(404).json({ error: "Session not found" });
+      return;
+    }
+    res.json({ ok: true });
+  },
+);
+
+router.delete(
+  "/admin/trainer-bookings/:id/sessions/:sessionId",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const sessionId = Number(req.params.sessionId);
+    if (!Number.isFinite(id) || id === 0 || !Number.isFinite(sessionId)) {
+      res.status(400).json({ error: "Invalid request" });
+      return;
+    }
+    const ok = await deletePtSession(
+      id > 0 ? "booking" : "enquiry",
+      Math.abs(id),
+      sessionId,
+    );
+    if (!ok) {
+      res.status(404).json({ error: "Session not found" });
+      return;
+    }
     res.json({ ok: true });
   },
 );

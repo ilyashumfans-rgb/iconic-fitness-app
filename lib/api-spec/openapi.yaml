@@ -628,6 +628,18 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/TrainerBooking" }
 
+  /pt/mine:
+    get:
+      operationId: getMyPtProgram
+      tags: [trainers]
+      summary: The caller's active PT program (assigned trainer + scheduled sessions)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PtProgram" }
+
   /membership-packages:
     get:
       operationId: listMembershipPackages
@@ -1490,6 +1502,27 @@ components:
         gymName: { type: string }
         preferredDate: { type: string }
         createdAt: { type: string, format: date-time }
+    PtSession:
+      type: object
+      required: [id, date, time, status]
+      properties:
+        id: { type: integer }
+        date: { type: string, description: "YYYY-MM-DD (IST)" }
+        time: { type: string, description: "HH:MM 24h (IST)" }
+        status: { type: string, enum: [scheduled, completed, cancelled] }
+    PtProgram:
+      type: object
+      required: [active, trainerName, gymName, packageName, totalSessions, completedCount, sessions]
+      properties:
+        active: { type: boolean, description: "True when the caller has a PT enrolment with an assigned trainer" }
+        trainerName: { type: string }
+        gymName: { type: string }
+        packageName: { type: string }
+        totalSessions: { type: integer, description: "Sessions included per month (12)" }
+        completedCount: { type: integer }
+        sessions:
+          type: array
+          items: { $ref: "#/components/schemas/PtSession" }
     CreatePackageBookingRequest:
       type: object
       required: [gymId, packageId, name, mobile, startDate]

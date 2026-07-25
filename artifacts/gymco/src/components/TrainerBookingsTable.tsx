@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import type { TrainerBookingRow } from "@/lib/partnerApi";
+import type { TrainerBookingRow, PtSessionRow } from "@/lib/partnerApi";
+
+/** Session-scheduling API surface (admin or partner flavor). */
+export type PtSessionApi = {
+  list: (id: number) => Promise<PtSessionRow[]>;
+  add: (id: number, body: { date: string; time: string }) => Promise<PtSessionRow>;
+  setStatus: (id: number, sessionId: number, status: string) => Promise<unknown>;
+  remove: (id: number, sessionId: number) => Promise<unknown>;
+};
 
 const ALL = "__all__";
 
@@ -145,11 +153,186 @@ function AssignEditor({
   );
 }
 
+/**
+ * Session-timings manager for one PT enrolment (12 sessions/month).
+ * Staff add date+time rows, mark them done/cancelled, or remove them.
+ */
+function SessionsManager({
+  row,
+  api,
+  onClose,
+}: {
+  row: TrainerBookingRow;
+  api: PtSessionApi;
+  onClose: () => void;
+}) {
+  const [sessions, setSessions] = useState<PtSessionRow[] | null>(null);
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .list(row.id)
+      .then((list) => {
+        if (!cancelled) setSessions(list);
+      })
+      .catch((e) => {
+        if (!cancelled) setErr(e instanceof Error ? e.message : String(e));
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [row.id]);
+
+  const run = async (fn: () => Promise<void>) => {
+    setBusy(true);
+    setErr(null);
+    try {
+      await fn();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const completed = (sessions ?? []).filter((s) => s.status === "completed").length;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-xl">
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <div>
+            <h3 className="font-semibold">PT sessions — {row.memberName}</h3>
+            <p className="text-xs text-muted-foreground">
+              {row.gymName} · {completed}/12 completed this program
+            </p>
+          </div>
+          <button
+            type="button"
+            className="rounded-md border px-2 py-1 text-xs"
+            onClick={onClose}
+          >
+            Close
+          </button>
+        </div>
+        {sessions === null && !err ? (
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        ) : (
+          <>
+            <div className="max-h-64 space-y-1.5 overflow-y-auto">
+              {(sessions ?? []).length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No sessions scheduled yet.
+                </p>
+              ) : (
+                (sessions ?? []).map((s) => (
+                  <div
+                    key={s.id}
+                    className="flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm"
+                  >
+                    <span className="font-medium">{fmtDate(s.date)}</span>
+                    <span>{s.time}</span>
+                    <span
+                      className={`ml-auto rounded-full px-2 py-0.5 text-xs ${
+                        s.status === "completed"
+                          ? "bg-green-100 text-green-800"
+                          : s.status === "cancelled"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-slate-100 text-slate-700"
+                      }`}
+                    >
+                      {s.status}
+                    </span>
+                    {s.status === "scheduled" ? (
+                      <button
+                        type="button"
+                        className="rounded-md border px-1.5 py-0.5 text-xs"
+                        disabled={busy}
+                        onClick={() =>
+                          run(async () => {
+                            await api.setStatus(row.id, s.id, "completed");
+                            setSessions((list) =>
+                              (list ?? []).map((x) =>
+                                x.id === s.id ? { ...x, status: "completed" } : x,
+                              ),
+                            );
+                          })
+                        }
+                      >
+                        Done
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="rounded-md border px-1.5 py-0.5 text-xs text-red-600"
+                      disabled={busy}
+                      onClick={() =>
+                        run(async () => {
+                          await api.remove(row.id, s.id);
+                          setSessions((list) =>
+                            (list ?? []).filter((x) => x.id !== s.id),
+                          );
+                        })
+                      }
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="mt-3 flex items-center gap-1.5">
+              <input
+                type="date"
+                className="rounded-md border px-2 py-1 text-xs"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
+              <input
+                type="time"
+                className="rounded-md border px-2 py-1 text-xs"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+              />
+              <button
+                type="button"
+                className="rounded-md bg-primary px-2 py-1 text-xs font-medium text-primary-foreground disabled:opacity-50"
+                disabled={busy || !date || !time}
+                onClick={() =>
+                  run(async () => {
+                    const created = await api.add(row.id, { date, time });
+                    setSessions((list) =>
+                      [...(list ?? []), created].sort((a, b) =>
+                        `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`),
+                      ),
+                    );
+                    setDate("");
+                    setTime("");
+                  })
+                }
+              >
+                Add session
+              </button>
+            </div>
+          </>
+        )}
+        {err ? <p className="mt-2 text-xs text-red-600">{err}</p> : null}
+      </div>
+    </div>
+  );
+}
+
 export function TrainerBookingsTable({
   rows,
   summary,
   loadTrainers,
   onAssign,
+  sessionApi,
 }: {
   rows: TrainerBookingRow[];
   summary?: string;
@@ -160,10 +343,13 @@ export function TrainerBookingsTable({
     id: number,
     body: { trainerId?: string; trainerName: string },
   ) => Promise<unknown>;
+  /** When provided, staff can schedule/track PT session timings per row. */
+  sessionApi?: PtSessionApi;
 }) {
   const [branch, setBranch] = useState<string>(ALL);
   const [status, setStatus] = useState<string>(ALL);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [sessionsRow, setSessionsRow] = useState<TrainerBookingRow | null>(null);
   // Local overlay so a saved assignment shows immediately without refetch.
   const [savedNames, setSavedNames] = useState<Map<number, string>>(new Map());
 
@@ -228,6 +414,7 @@ export function TrainerBookingsTable({
               <th className="py-2 pr-3">Preferred date</th>
               <th className="py-2 pr-3">Status</th>
               {onAssign ? <th className="py-2 pr-3">Assigned trainer</th> : null}
+              {sessionApi ? <th className="py-2 pr-3">Sessions</th> : null}
               <th className="py-2">Booked</th>
             </tr>
           </thead>
@@ -287,6 +474,17 @@ export function TrainerBookingsTable({
                       )}
                     </td>
                   ) : null}
+                  {sessionApi ? (
+                    <td className="py-2 pr-3">
+                      <button
+                        type="button"
+                        className="rounded-md border px-2 py-0.5 text-xs hover:bg-muted"
+                        onClick={() => setSessionsRow(r)}
+                      >
+                        Manage
+                      </button>
+                    </td>
+                  ) : null}
                   <td className="py-2 text-muted-foreground">
                     {new Date(r.createdAt).toLocaleDateString(undefined, {
                       month: "short",
@@ -299,6 +497,13 @@ export function TrainerBookingsTable({
           </tbody>
         </table>
       </div>
+      {sessionApi && sessionsRow ? (
+        <SessionsManager
+          row={sessionsRow}
+          api={sessionApi}
+          onClose={() => setSessionsRow(null)}
+        />
+      ) : null}
     </div>
   );
 }

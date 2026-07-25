@@ -425,6 +425,36 @@ export interface TrainerBooking {
   createdAt: string;
 }
 
+export type PtSessionStatus = typeof PtSessionStatus[keyof typeof PtSessionStatus];
+
+
+export const PtSessionStatus = {
+  scheduled: 'scheduled',
+  completed: 'completed',
+  cancelled: 'cancelled',
+} as const;
+
+export interface PtSession {
+  id: number;
+  /** YYYY-MM-DD (IST) */
+  date: string;
+  /** HH:MM 24h (IST) */
+  time: string;
+  status: PtSessionStatus;
+}
+
+export interface PtProgram {
+  /** True when the caller has a PT enrolment with an assigned trainer */
+  active: boolean;
+  trainerName: string;
+  gymName: string;
+  packageName: string;
+  /** Sessions included per month (12) */
+  totalSessions: number;
+  completedCount: number;
+  sessions: PtSession[];
+}
+
 export interface CreatePackageBookingRequest {
   gymId: number;
   packageId: number;

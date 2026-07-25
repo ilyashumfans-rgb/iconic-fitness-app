@@ -22,6 +22,8 @@ import {
   useListMemberships,
   useListMyBookings,
   useListMyTrainerBookings,
+  useGetMyPtProgram,
+  getGetMyPtProgramQueryKey,
   useListHomeSlides,
   useListPackageCategories,
   getListPackageCategoriesQueryKey,
@@ -332,6 +334,12 @@ function MembershipStatusCard({
   const hasPtBooking = (ptQuery.data ?? []).some(
     (b) => b.status === "paid" || b.status === "pending" || b.status === "enquiry",
   );
+  // Once staff assign a trainer, the card swaps "Book PT Trainer" for a
+  // "PT Details" entry (trainer + scheduled session timings).
+  const ptProgram = useGetMyPtProgram({
+    query: { queryKey: getGetMyPtProgramQueryKey() },
+  });
+  const ptActive = ptProgram.data?.active === true;
   // When the gym system reported no expiry date, renewsOn is a placeholder —
   // never show urgency or a renewal push off the back of it.
   const expiryKnown = membership.expiryKnown !== false;
@@ -635,7 +643,31 @@ function MembershipStatusCard({
           </>
         ) : (
           <View style={{ marginTop: 16, gap: 10 }}>
-            {!hasPtBooking ? (
+            {ptActive ? (
+              <Pressable onPress={() => router.push("/pt-details")}>
+                {({ pressed }) => (
+                  <View
+                    style={[
+                      styles.premiumManageBtn,
+                      { opacity: pressed ? 0.8 : 1, marginTop: 0 },
+                    ]}
+                  >
+                    <Feather name="clipboard" size={15} color={PREMIUM.gold} />
+                    <AppText weight="700" size={14} color={PREMIUM.gold} style={{ flex: 1 }}>
+                      PT Details
+                      {ptProgram.data?.trainerName
+                        ? ` · ${ptProgram.data.trainerName}`
+                        : ""}
+                    </AppText>
+                    <Feather
+                      name="chevron-right"
+                      size={16}
+                      color={PREMIUM.gold}
+                    />
+                  </View>
+                )}
+              </Pressable>
+            ) : !hasPtBooking ? (
               <Pressable onPress={() => router.push("/trainers")}>
                 {({ pressed }) => (
                   <View

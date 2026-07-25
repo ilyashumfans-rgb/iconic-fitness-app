@@ -72,6 +72,7 @@ import type {
   PackageBookingCreated,
   PackageCategory,
   ProgressReport,
+  PtProgram,
   ReferralInfo,
   StoreCategory,
   StoreCheckoutRequest,
@@ -2835,6 +2836,83 @@ export function useGetTrainerBooking<TData = Awaited<ReturnType<typeof getTraine
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetTrainerBookingQueryOptions(bookingId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetMyPtProgramUrl = () => {
+
+
+
+
+  return `/api/pt/mine`
+}
+
+/**
+ * @summary The caller's active PT program (assigned trainer + scheduled sessions)
+ */
+export const getMyPtProgram = async ( options?: RequestInit): Promise<PtProgram> => {
+
+  return customFetch<PtProgram>(getGetMyPtProgramUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyPtProgramQueryKey = () => {
+    return [
+    `/api/pt/mine`
+    ] as const;
+    }
+
+
+export const getGetMyPtProgramQueryOptions = <TData = Awaited<ReturnType<typeof getMyPtProgram>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyPtProgram>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyPtProgramQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyPtProgram>>> = ({ signal }) => getMyPtProgram({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyPtProgram>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMyPtProgramQueryResult = NonNullable<Awaited<ReturnType<typeof getMyPtProgram>>>
+export type GetMyPtProgramQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary The caller's active PT program (assigned trainer + scheduled sessions)
+ */
+
+export function useGetMyPtProgram<TData = Awaited<ReturnType<typeof getMyPtProgram>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyPtProgram>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMyPtProgramQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

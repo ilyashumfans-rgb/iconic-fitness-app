@@ -452,6 +452,25 @@ export const adminApi = {
         method: "PUT",
         body: JSON.stringify(body),
       }),
+    sessions: (id: number) =>
+      request<import("./partnerApi").PtSessionRow[]>(
+        `/admin/trainer-bookings/${id}/sessions`,
+      ),
+    addSession: (id: number, body: { date: string; time: string }) =>
+      request<import("./partnerApi").PtSessionRow>(
+        `/admin/trainer-bookings/${id}/sessions`,
+        { method: "POST", body: JSON.stringify(body) },
+      ),
+    setSessionStatus: (id: number, sessionId: number, status: string) =>
+      request<{ ok: true }>(
+        `/admin/trainer-bookings/${id}/sessions/${sessionId}`,
+        { method: "PATCH", body: JSON.stringify({ status }) },
+      ),
+    deleteSession: (id: number, sessionId: number) =>
+      request<{ ok: true }>(
+        `/admin/trainer-bookings/${id}/sessions/${sessionId}`,
+        { method: "DELETE" },
+      ),
   },
   packageBookings: {
     list: () =>

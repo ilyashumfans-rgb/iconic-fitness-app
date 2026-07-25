@@ -184,6 +184,13 @@ export type TrainerBookingRow = {
   createdAt: string;
 };
 
+export type PtSessionRow = {
+  id: number;
+  date: string; // "YYYY-MM-DD"
+  time: string; // "HH:MM"
+  status: string; // scheduled | completed | cancelled
+};
+
 export type PartnerEarnings = {
   today: { visits: number; payoutInr: number };
   week: { visits: number; payoutInr: number };
@@ -358,6 +365,23 @@ export const partnerApi = {
         method: "PUT",
         body: JSON.stringify(body),
       }),
+    sessions: (id: number) =>
+      request<PtSessionRow[]>(`/partner/trainer-bookings/${id}/sessions`),
+    addSession: (id: number, body: { date: string; time: string }) =>
+      request<PtSessionRow>(`/partner/trainer-bookings/${id}/sessions`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    setSessionStatus: (id: number, sessionId: number, status: string) =>
+      request<{ ok: true }>(
+        `/partner/trainer-bookings/${id}/sessions/${sessionId}`,
+        { method: "PATCH", body: JSON.stringify({ status }) },
+      ),
+    deleteSession: (id: number, sessionId: number) =>
+      request<{ ok: true }>(
+        `/partner/trainer-bookings/${id}/sessions/${sessionId}`,
+        { method: "DELETE" },
+      ),
   },
   packageBookings: {
     list: () => request<PackageBookingRow[]>("/partner/package-bookings"),

@@ -31,6 +31,14 @@ export default function PartnerTrainerBookings() {
             summary={`${paid.length} paid · ₹${paid.reduce((s, r) => s + r.amountInr, 0).toLocaleString("en-IN")} collected`}
             loadTrainers={(branchId) => partnerApi.yoactiv.trainers(branchId)}
             onAssign={(id, body) => partnerApi.trainerBookings.assign(id, body)}
+            sessionApi={{
+              list: (id) => partnerApi.trainerBookings.sessions(id),
+              add: (id, body) => partnerApi.trainerBookings.addSession(id, body),
+              setStatus: (id, sid, status) =>
+                partnerApi.trainerBookings.setSessionStatus(id, sid, status),
+              remove: (id, sid) =>
+                partnerApi.trainerBookings.deleteSession(id, sid),
+            }}
           />
         )}
       </PartnerCard>
