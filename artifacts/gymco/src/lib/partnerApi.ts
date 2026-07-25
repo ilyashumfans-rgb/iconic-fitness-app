@@ -180,7 +180,7 @@ export type TrainerBookingRow = {
   serviceName: string;
   amountInr: number;
   preferredDate: string; // "YYYY-MM-DD"
-  status: "pending" | "paid" | "failed" | "enquiry";
+  status: "pending" | "paid" | "failed" | "enquiry" | "cancelled";
   createdAt: string;
 };
 

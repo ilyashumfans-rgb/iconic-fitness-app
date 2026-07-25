@@ -452,6 +452,10 @@ export const adminApi = {
         method: "PUT",
         body: JSON.stringify(body),
       }),
+    cancel: (id: number) =>
+      request<{ ok: true }>(`/admin/trainer-bookings/${id}/cancel`, {
+        method: "PUT",
+      }),
     sessions: (id: number) =>
       request<import("./partnerApi").PtSessionRow[]>(
         `/admin/trainer-bookings/${id}/sessions`,

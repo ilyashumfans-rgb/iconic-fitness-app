@@ -32,7 +32,9 @@ function StatusBadge({ status }: { status: TrainerBookingRow["status"] }) {
         ? "bg-red-100 text-red-700"
         : status === "enquiry"
           ? "bg-blue-100 text-blue-800"
-          : "bg-amber-100 text-amber-800";
+          : status === "cancelled"
+            ? "bg-slate-200 text-slate-600"
+            : "bg-amber-100 text-amber-800";
   return (
     <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}>
       {status}
@@ -333,6 +335,7 @@ export function TrainerBookingsTable({
   loadTrainers,
   onAssign,
   sessionApi,
+  onCancel,
 }: {
   rows: TrainerBookingRow[];
   summary?: string;
@@ -345,6 +348,8 @@ export function TrainerBookingsTable({
   ) => Promise<unknown>;
   /** When provided, staff can schedule/track PT session timings per row. */
   sessionApi?: PtSessionApi;
+  /** When provided, staff can cancel a PT booking/enquiry per row. */
+  onCancel?: (id: number) => Promise<unknown>;
 }) {
   const [branch, setBranch] = useState<string>(ALL);
   const [status, setStatus] = useState<string>(ALL);
@@ -352,12 +357,19 @@ export function TrainerBookingsTable({
   const [sessionsRow, setSessionsRow] = useState<TrainerBookingRow | null>(null);
   // Local overlay so a saved assignment shows immediately without refetch.
   const [savedNames, setSavedNames] = useState<Map<number, string>>(new Map());
+  // Local overlay so a cancelled row shows immediately without refetch.
+  const [cancelledIds, setCancelledIds] = useState<Set<number>>(new Set());
+  const [cancellingId, setCancellingId] = useState<number | null>(null);
 
   const branches = useMemo(
     () => Array.from(new Set(rows.map((r) => r.gymName))).sort(),
     [rows],
   );
-  const filtered = rows.filter(
+  // Overlay locally-cancelled rows so the change shows without a refetch.
+  const effectiveRows = rows.map((r) =>
+    cancelledIds.has(r.id) ? { ...r, status: "cancelled" as const } : r,
+  );
+  const filtered = effectiveRows.filter(
     (r) =>
       (branch === ALL || r.gymName === branch) &&
       (status === ALL || r.status === status),
@@ -396,6 +408,7 @@ export function TrainerBookingsTable({
           <option value="pending">Pending</option>
           <option value="failed">Failed</option>
           <option value="enquiry">Enquiry</option>
+          <option value="cancelled">Cancelled</option>
         </select>
         {summary ? (
           <span className="ml-auto text-sm text-muted-foreground">{summary}</span>
@@ -438,7 +451,37 @@ export function TrainerBookingsTable({
                   </td>
                   <td className="py-2 pr-3">{fmtDate(r.preferredDate)}</td>
                   <td className="py-2 pr-3">
-                    <StatusBadge status={r.status} />
+                    <span className="flex items-center gap-2">
+                      <StatusBadge status={r.status} />
+                      {onCancel && r.status !== "cancelled" && r.status !== "failed" ? (
+                        <button
+                          type="button"
+                          className="rounded-md border border-red-200 px-2 py-0.5 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50"
+                          disabled={cancellingId === r.id}
+                          onClick={async () => {
+                            if (
+                              !window.confirm(
+                                `Cancel this PT ${r.status === "enquiry" ? "request" : "booking"} for ${r.memberName}?`,
+                              )
+                            )
+                              return;
+                            setCancellingId(r.id);
+                            try {
+                              await onCancel(r.id);
+                              setCancelledIds((s) => new Set(s).add(r.id));
+                            } catch (e) {
+                              window.alert(
+                                e instanceof Error ? e.message : "Cancel failed",
+                              );
+                            } finally {
+                              setCancellingId(null);
+                            }
+                          }}
+                        >
+                          {cancellingId === r.id ? "…" : "Cancel"}
+                        </button>
+                      ) : null}
+                    </span>
                   </td>
                   {onAssign ? (
                     <td className="py-2 pr-3">

@@ -6,6 +6,7 @@ import {
   partnersTable,
   partnerLoginTokensTable,
   gymsTable,
+  leadsTable,
   agencyUsersTable,
   trainersTable,
   classSessionsTable,
@@ -48,7 +49,10 @@ import {
   setPackageHidden,
 } from "../lib/yoactivPackagePrefs";
 import { yoactivBranchName } from "../lib/yoactivBranchNames";
-import { fetchTrainerEnquiryRows } from "../lib/trainerEnquiryLeads";
+import {
+  fetchTrainerEnquiryRows,
+  TRAINER_ENQUIRY_SOURCE,
+} from "../lib/trainerEnquiryLeads";
 import {
   fetchPtAssignmentMap,
   ptAssignTargetGymId,
@@ -2338,6 +2342,51 @@ router.put(
       trainerId,
       trainerName,
     );
+    res.json({ ok: true });
+  },
+);
+
+// Cancel a PT booking or enquiry. Merged-list ids: positive = paid/pending
+// trainer_bookings row (status → cancelled), negative = enquiry lead
+// (leads.status → cancelled; the merged list then shows it as cancelled).
+router.put(
+  "/admin/trainer-bookings/:id/cancel",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id) || id === 0) {
+      res.status(400).json({ error: "Valid id required" });
+      return;
+    }
+    if (id > 0) {
+      const [row] = await db
+        .update(trainerBookingsTable)
+        .set({ status: "cancelled" })
+        .where(eq(trainerBookingsTable.id, id))
+        .returning({ id: trainerBookingsTable.id });
+      if (!row) {
+        res.status(404).json({ error: "Booking not found" });
+        return;
+      }
+    } else {
+      // Scope strictly to PT enquiry leads so an arbitrary negative id can
+      // never cancel an unrelated lead row.
+      const [row] = await db
+        .update(leadsTable)
+        .set({ status: "cancelled" })
+        .where(
+          and(
+            eq(leadsTable.id, -id),
+            eq(leadsTable.source, TRAINER_ENQUIRY_SOURCE),
+            eq(leadsTable.kind, "general"),
+          ),
+        )
+        .returning({ id: leadsTable.id });
+      if (!row) {
+        res.status(404).json({ error: "Enquiry not found" });
+        return;
+      }
+    }
     res.json({ ok: true });
   },
 );

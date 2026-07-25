@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { Router, type IRouter, type Request, type Response } from "express";
-import { and, eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import {
   db,
   gymsTable,
@@ -338,6 +338,8 @@ router.get(
             and(
               eq(leadsTable.source, TRAINER_ENQUIRY_SOURCE),
               eq(leadsTable.kind, "general"),
+              // Staff-cancelled requests must not count as an active PT program.
+              ne(leadsTable.status, "cancelled"),
               sql`right(regexp_replace(${leadsTable.phone}, '\\D', '', 'g'), 10) = ${mobile}`,
             ),
           )

@@ -56,6 +56,7 @@ export async function fetchTrainerEnquiryRows(
       memberName: leadsTable.name,
       mobile: leadsTable.phone,
       preferredDate: leadsTable.preferredDate,
+      leadStatus: leadsTable.status,
       createdAt: leadsTable.createdAt,
     })
     .from(leadsTable)
@@ -87,7 +88,8 @@ export async function fetchTrainerEnquiryRows(
     serviceName: "",
     amountInr: 0,
     preferredDate: r.preferredDate,
-    status: "enquiry",
+    // Cancelled leads surface as cancelled; everything else stays "enquiry".
+    status: r.leadStatus === "cancelled" ? "cancelled" : "enquiry",
     createdAt: r.createdAt,
   }));
 }
