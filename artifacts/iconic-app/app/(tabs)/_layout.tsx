@@ -39,7 +39,7 @@ export default function TabsLayout() {
         </View>
       );
     }
-    return <Redirect href="/(auth)/sign-in" />;
+    return <Redirect href="/(auth)/welcome" />;
   }
 
   return (
