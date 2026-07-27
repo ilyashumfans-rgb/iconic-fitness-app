@@ -86,6 +86,13 @@ function CreateStaffForm({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
+  const [created, setCreated] = useState<{
+    name: string;
+    email: string;
+    username: string;
+    password: string;
+  } | null>(null);
+  const [copied, setCopied] = useState(false);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const emailRef = useRef<HTMLInputElement | null>(null);
 
@@ -116,6 +123,16 @@ function CreateStaffForm({
         isActive: true,
       });
       setOk(true);
+      // Show the credentials the admin just set so they can be shared with
+      // the staff member. This is the ONLY time the password is visible —
+      // it's stored hashed and can never be viewed again, only reset.
+      setCreated({
+        name: f.name,
+        email: f.email,
+        username: f.username.trim(),
+        password: f.password,
+      });
+      setCopied(false);
       setF({ name: "", email: "", username: "", password: "", permissions: [] });
       onCreated();
       setTimeout(() => setOk(false), 1500);
@@ -212,6 +229,63 @@ function CreateStaffForm({
         {ok && (
           <div className="text-sm text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3">
             Staff member created.
+          </div>
+        )}
+        {created && (
+          <div className="bg-slate-800/70 border border-lime-500/40 rounded-xl p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-bold text-lime-300">
+                Login details for {created.name} — share these now
+              </div>
+              <button
+                type="button"
+                onClick={() => setCreated(null)}
+                className="text-xs text-slate-400 hover:text-slate-200"
+              >
+                ✕ Dismiss
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-sm font-mono">
+              <div>
+                <span className="text-slate-500">Email: </span>
+                <span className="text-white">{created.email}</span>
+              </div>
+              {created.username && (
+                <div>
+                  <span className="text-slate-500">Username: </span>
+                  <span className="text-white">{created.username}</span>
+                </div>
+              )}
+              <div>
+                <span className="text-slate-500">Password: </span>
+                <span className="text-white">{created.password}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  const lines = [
+                    `Iconic Fitness — Studio login for ${created.name}`,
+                    `Email: ${created.email}`,
+                    created.username ? `Username: ${created.username}` : null,
+                    `Password: ${created.password}`,
+                    `Login: mobile app → Studio Login, or /staff/login`,
+                  ].filter(Boolean);
+                  navigator.clipboard
+                    .writeText(lines.join("\n"))
+                    .then(() => setCopied(true))
+                    .catch(() => {});
+                }}
+                className="text-xs px-3 py-1.5 rounded bg-lime-500/20 text-lime-300 border border-lime-500/40 hover:bg-lime-500/30"
+              >
+                {copied ? "Copied ✓" : "Copy login details"}
+              </button>
+              <span className="text-[11px] text-slate-500">
+                The password is shown only now — once dismissed it can only be
+                reset, never viewed.
+              </span>
+            </div>
           </div>
         )}
         <button
@@ -441,6 +515,8 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
   const [isActive, setIsActive] = useState(row.isActive);
   const [resetting, setResetting] = useState(false);
   const [newPwd, setNewPwd] = useState("");
+  const [lastReset, setLastReset] = useState<string | null>(null);
+  const [resetCopied, setResetCopied] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const save = async () => {
@@ -467,6 +543,8 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
     setBusy(true);
     try {
       await adminApi.staff.resetPassword(row.id, newPwd);
+      setLastReset(newPwd);
+      setResetCopied(false);
       setNewPwd("");
       setResetting(false);
     } finally {
@@ -622,6 +700,40 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
             >
               <KeyRound className="h-3 w-3" /> Reset Password
             </button>
+          )}
+          {lastReset && (
+            <div className="text-xs bg-slate-800/70 border border-lime-500/40 rounded-lg p-2 space-y-1 max-w-[240px]">
+              <div className="text-lime-300 font-semibold">
+                New password set:
+              </div>
+              <div className="font-mono text-white break-all">{lastReset}</div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    navigator.clipboard
+                      .writeText(
+                        `Iconic Fitness — new password for ${row.name}\n${
+                          row.username ? `Username: ${row.username}\n` : ""
+                        }Email: ${row.email}\nPassword: ${lastReset}`,
+                      )
+                      .then(() => setResetCopied(true))
+                      .catch(() => {});
+                  }}
+                  className="px-2 py-0.5 rounded bg-lime-500/20 text-lime-300 border border-lime-500/40"
+                >
+                  {resetCopied ? "Copied ✓" : "Copy"}
+                </button>
+                <button
+                  onClick={() => setLastReset(null)}
+                  className="text-slate-400 hover:text-slate-200"
+                >
+                  Dismiss
+                </button>
+              </div>
+              <div className="text-[10px] text-slate-500">
+                Visible only now — share it, then dismiss.
+              </div>
+            </div>
           )}
           <button
             onClick={remove}
