@@ -223,12 +223,14 @@ function CreateStaffForm({
 }
 
 type YoactivBranch = { branchId: number; branchName: string | null };
-type YoactivTrainer = {
+type YoactivRosterMember = {
   id: string;
   name: string;
   mobile: string;
   photoUrl: string | null;
+  role: "trainer" | "staff";
 };
+type RoleFilter = "all" | "trainer" | "staff";
 
 /**
  * YoActiv trainer roster, right inside Staff Management. YoActiv only gives
@@ -245,7 +247,8 @@ function YoactivTrainersPanel({
 }) {
   const [branches, setBranches] = useState<YoactivBranch[]>([]);
   const [branchId, setBranchId] = useState<number | null>(null);
-  const [trainers, setTrainers] = useState<YoactivTrainer[]>([]);
+  const [roster, setRoster] = useState<YoactivRosterMember[]>([]);
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -264,14 +267,39 @@ function YoactivTrainersPanel({
     setLoading(true);
     setErr(null);
     adminApi.yoactiv
-      .trainers(branchId)
-      .then((rows: YoactivTrainer[]) => setTrainers(rows))
-      .catch(() => setErr("Couldn't load the trainer roster"))
+      .staff(branchId)
+      .then((rows) => setRoster(rows as YoactivRosterMember[]))
+      .catch(() => setErr("Couldn't load the staff roster"))
       .finally(() => setLoading(false));
   }, [branchId]);
 
   const staffByName = new Map(
     staffRows.map((s) => [s.name.trim().toLowerCase(), s]),
+  );
+
+  const counts = {
+    all: roster.length,
+    trainer: roster.filter((m) => m.role === "trainer").length,
+    staff: roster.filter((m) => m.role === "staff").length,
+  };
+  const visible =
+    roleFilter === "all"
+      ? roster
+      : roster.filter((m) => m.role === roleFilter);
+
+  const filterBtn = (value: RoleFilter, label: string) => (
+    <button
+      key={value}
+      onClick={() => setRoleFilter(value)}
+      className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+        roleFilter === value
+          ? "bg-lime-500/20 text-lime-300 border-lime-500/50"
+          : "bg-slate-800 text-slate-400 border-slate-700 hover:border-lime-500/40"
+      }`}
+    >
+      {label}{" "}
+      <span className="opacity-70">({counts[value]})</span>
+    </button>
   );
 
   return (
@@ -280,7 +308,7 @@ function YoactivTrainersPanel({
         <div className="flex items-center gap-2">
           <Dumbbell className="h-5 w-5 text-lime-400" />
           <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300">
-            YoActiv Trainers — Login Status
+            YoActiv Staff — Login Status
           </h2>
         </div>
         {branches.length > 1 && (
@@ -297,28 +325,35 @@ function YoactivTrainersPanel({
           </select>
         )}
       </div>
+      <div className="px-5 py-3 border-b border-slate-800/60 flex flex-wrap items-center gap-2">
+        {filterBtn("all", "All")}
+        {filterBtn("trainer", "Trainers")}
+        {filterBtn("staff", "Other staff (MCs, sales…)")}
+      </div>
       <div className="px-5 py-3 text-[11px] text-slate-500 border-b border-slate-800/60 leading-relaxed">
-        YoActiv shares only each trainer's name and mobile — email IDs and
-        passwords are never stored in YoActiv. Login details live here: a
-        trainer with a badge below already has one (shown with their email /
-        username). For the rest, press <span className="text-slate-300">Create login</span>,
-        add their email ID (copy it from Gym Members → View Active if they're
-        also a member) and set a password.
+        YoActiv shares only each person's name and mobile — email IDs and
+        passwords are never stored in YoActiv, and it doesn't label exact
+        designations, so people are grouped as Trainers (PT roster) and Other
+        staff. Login details live here: a green badge means they already have
+        one (shown with their email / username). For the rest, press{" "}
+        <span className="text-slate-300">Create login</span>, add their email
+        ID (copy it from Gym Members → View Active if they're also a member)
+        and set a password.
       </div>
       {err && (
         <div className="px-5 py-3 text-sm text-red-400">{err}</div>
       )}
       {loading ? (
         <div className="px-5 py-8 text-center text-sm text-slate-500">
-          Loading trainer roster…
+          Loading staff roster…
         </div>
-      ) : trainers.length === 0 ? (
+      ) : visible.length === 0 ? (
         <div className="px-5 py-8 text-center text-sm text-slate-500">
-          No trainers found for this branch.
+          No staff found for this branch.
         </div>
       ) : (
         <ul className="divide-y divide-slate-800/60">
-          {trainers.map((t) => {
+          {visible.map((t) => {
             const existing = staffByName.get(t.name.trim().toLowerCase());
             return (
               <li
@@ -340,8 +375,17 @@ function YoactivTrainersPanel({
                   <div className="font-medium text-white truncate">
                     {t.name}
                   </div>
-                  <div className="text-xs text-slate-400">
-                    {t.mobile || "No mobile on record"}
+                  <div className="text-xs text-slate-400 flex items-center gap-2">
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                        t.role === "trainer"
+                          ? "bg-lime-500/10 text-lime-300 border-lime-500/30"
+                          : "bg-sky-500/10 text-sky-300 border-sky-500/30"
+                      }`}
+                    >
+                      {t.role === "trainer" ? "Trainer" : "Staff"}
+                    </span>
+                    <span>{t.mobile || "No mobile on record"}</span>
                   </div>
                 </div>
                 {existing ? (

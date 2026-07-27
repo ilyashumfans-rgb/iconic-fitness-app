@@ -39,6 +39,7 @@ import {
   fetchYoactivMemberByMobile,
   fetchYoactivMemberList,
   fetchYoactivBranchTrainers,
+  fetchYoactivBranchStaff,
   fetchYoactivPackages,
   yoactivConfigured,
   yoactivKeyConfigs,
@@ -2750,6 +2751,29 @@ router.get(
     const photos = await trainerPhotoMap(trainers.map((t) => t.id));
     res.json(
       trainers.map((t) => ({ ...t, photoUrl: photos.get(t.id) ?? null })),
+    );
+  },
+);
+
+// FULL staff roster for one branch (trainers + MCs/sales/front desk …),
+// tagged with role — used by Staff Management to hand out logins.
+router.get(
+  "/admin/yoactiv/staff",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const branchId = Number(req.query.branchId);
+    if (!Number.isFinite(branchId) || branchId <= 0) {
+      res.status(400).json({ error: "branchId required" });
+      return;
+    }
+    if (!yoactivConfigured()) {
+      res.json([]);
+      return;
+    }
+    const staff = await fetchYoactivBranchStaff(branchId);
+    const photos = await trainerPhotoMap(staff.map((s) => s.id));
+    res.json(
+      staff.map((s) => ({ ...s, photoUrl: photos.get(s.id) ?? null })),
     );
   },
 );

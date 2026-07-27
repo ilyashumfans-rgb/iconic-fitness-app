@@ -612,6 +612,99 @@ export async function fetchYoactivBranchTrainers(
   }
 }
 
+// ─── Branch full-staff directory (admin) ────────────────────────────────────
+
+export type YoactivStaffMember = YoactivStaffTrainer & {
+  /**
+   * "trainer" = appears in YoActiv's PT roster; "staff" = everyone else on
+   * the branch staff list (MCs, sales, front desk …). YoActiv does not
+   * expose finer designations, so two buckets is all we can distinguish.
+   */
+  role: "trainer" | "staff";
+};
+
+type GetAllStaffResponse = { Data?: { SaleStaffs?: StaffRow[] } };
+
+const branchStaffCache = new Map<
+  number,
+  { at: number; ttlMs: number; value: YoactivStaffMember[] }
+>();
+
+/**
+ * FULL staff roster for a single branch (trainers + everyone else),
+ * including mobile numbers — admin-facing only. `GetStaff` with `PT: 1`
+ * returns the PT roster; without it, the wider `SaleStaffs` list. People on
+ * the PT roster are tagged "trainer", the rest "staff".
+ */
+export async function fetchYoactivBranchStaff(
+  branchId: number,
+): Promise<YoactivStaffMember[]> {
+  const target = await resolveBranchTarget(branchId);
+  if (!target) return [];
+  const cached = branchStaffCache.get(branchId);
+  if (cached && Date.now() - cached.at < cached.ttlMs) return cached.value;
+  try {
+    const [ptRes, allRes] = await withDeadline(
+      Promise.all([
+        yoactivPost<GetStaffResponse>(
+          "/Billing/GetStaff",
+          target.apiKey,
+          target.branchId,
+          { PT: 1 },
+        ),
+        yoactivPost<GetAllStaffResponse>(
+          "/Billing/GetStaff",
+          target.apiKey,
+          target.branchId,
+          {},
+        ),
+      ]),
+      TRAINERS_BUDGET_MS,
+    );
+    const trainerIds = new Set(
+      (ptRes.Data?.PTStaffs ?? [])
+        .map((r) => String(r.ID ?? "").trim())
+        .filter(Boolean),
+    );
+    const seen = new Set<string>();
+    const staff: YoactivStaffMember[] = [];
+    // The SaleStaffs list is the superset; anyone only on the PT list (edge
+    // case) is appended afterwards.
+    const rows = [
+      ...(allRes.Data?.SaleStaffs ?? []),
+      ...(ptRes.Data?.PTStaffs ?? []),
+    ];
+    for (const row of rows) {
+      const id = String(row.ID ?? "").trim();
+      const name = String(row.Staff ?? "").trim();
+      if (!id || !name || seen.has(id)) continue;
+      seen.add(id);
+      staff.push({
+        id,
+        name,
+        mobile: typeof row.Mobile === "string" ? row.Mobile.trim() : "",
+        role: trainerIds.has(id) ? "trainer" : "staff",
+      });
+    }
+    staff.sort((a, b) => a.name.localeCompare(b.name));
+    branchStaffCache.set(branchId, {
+      at: Date.now(),
+      ttlMs: TRAINERS_SUCCESS_TTL_MS,
+      value: staff,
+    });
+    return staff;
+  } catch (err) {
+    logger.warn({ err, branchId }, "yoactiv branch full staff fetch failed");
+    const stale = cached?.value ?? [];
+    branchStaffCache.set(branchId, {
+      at: Date.now(),
+      ttlMs: TRAINERS_FAILURE_TTL_MS,
+      value: stale,
+    });
+    return stale;
+  }
+}
+
 // ─── Branch member directory (admin) ────────────────────────────────────────
 
 export type YoactivMemberRow = {
