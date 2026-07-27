@@ -91,6 +91,7 @@ import AdminHomeSlides from "@/pages/admin/HomeSlides";
 import AdminNotifications from "@/pages/admin/Notifications";
 import AdminLeads from "@/pages/admin/Leads";
 import AdminBlogManagement from "@/pages/admin/BlogManagement";
+import AdminPtManager from "@/pages/admin/PtManager";
 import StaffLogin from "@/pages/staff/Login";
 import StaffDashboard from "@/pages/staff/Dashboard";
 import StaffPartnerOnboarding from "@/pages/staff/PartnerOnboarding";
@@ -100,6 +101,7 @@ import StaffResetPartnerPassword from "@/pages/staff/ResetPartnerPassword";
 import StaffGymManagement from "@/pages/staff/GymManagement";
 import StaffLeads from "@/pages/staff/Leads";
 import StaffBlogManagement from "@/pages/staff/BlogManagement";
+import StaffPtDashboard from "@/pages/staff/PtDashboard";
 import Support from "@/pages/Support";
 import AdminTickets from "@/pages/admin/Tickets";
 import StaffTickets from "@/pages/staff/Tickets";
@@ -382,6 +384,7 @@ function AppShell() {
         <Route path="/admin/leads" component={AdminLeads} />
         <Route path="/admin/home-slider" component={AdminHomeSlides} />
         <Route path="/admin/blogs" component={AdminBlogManagement} />
+        <Route path="/admin/pt" component={AdminPtManager} />
         <Route path="/admin/tickets" component={AdminTickets} />
         <Route component={NotFound} />
       </Switch>
@@ -400,6 +403,7 @@ function AppShell() {
         <Route path="/staff/gym-management" component={StaffGymManagement} />
         <Route path="/staff/leads" component={StaffLeads} />
         <Route path="/staff/blogs" component={StaffBlogManagement} />
+        <Route path="/staff/pt" component={StaffPtDashboard} />
         <Route path="/staff/tickets" component={StaffTickets} />
         <Route component={NotFound} />
       </Switch>

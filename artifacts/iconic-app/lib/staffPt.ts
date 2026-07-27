@@ -142,6 +142,127 @@ export const staffPtApi = {
     ),
 };
 
+// ── PT dashboard (memberships / revenue / targets / incentives) ─────────────
+
+export type PtMembership = {
+  id: number;
+  source: string;
+  memberName: string;
+  membershipId: string;
+  mobile: string;
+  gymId: number | null;
+  gymName: string;
+  packageName: string;
+  durationDays: number;
+  originalSessions: number;
+  amountPaidInr: number;
+  paymentStatus: "paid" | "pending";
+  startDate: string;
+  endDate: string;
+  renewalStatus: "pending" | "renewed" | "lost";
+  followUpDate: string;
+  notes: string;
+  status: "active" | "expired";
+  daysCompleted: number;
+  remainingDays: number;
+  daysLeft: number;
+  sessionsAvailable: number;
+  sessionsDelivered: number;
+  lastSessionDate: string;
+  todayAttendance: boolean;
+};
+
+export type PtSummary = {
+  month: string;
+  summary: {
+    activeMembers: number;
+    expiredMembers: number;
+    revenueTodayInr: number;
+    revenueMonthInr: number;
+    revenueYearInr: number;
+    pendingPaymentsInr: number;
+    lostRevenueInr: number;
+    todaysSessions: number;
+    pendingRenewals: number;
+    sevenDayExpiry: {
+      id: number;
+      memberName: string;
+      mobile: string;
+      endDate: string;
+      daysLeft: number;
+      amountPaidInr: number;
+    }[];
+  };
+  target: {
+    salesInr: number;
+    targetInr: number;
+    achievementPct: number;
+    remainingTargetInr: number;
+    incentivePct: number;
+    grossIncentiveInr: number;
+    adjustmentsInr: number;
+    netIncentiveInr: number;
+    approvalStatus: string;
+  };
+  alerts: { kind: string; message: string }[];
+};
+
+export type NewMembership = {
+  memberName: string;
+  membershipId?: string;
+  mobile?: string;
+  gymId?: number;
+  packageName?: string;
+  durationDays: number;
+  originalSessions: number;
+  amountPaidInr: number;
+  paymentStatus?: "paid" | "pending";
+  startDate?: string;
+  notes?: string;
+  source?: string;
+};
+
+export const ptDashboardApi = {
+  summary: async (month?: string) =>
+    asJson<PtSummary>(
+      await staffFetch(`/staff/pt/summary${month ? `?month=${month}` : ""}`),
+    ),
+  members: async (filter?: "active" | "expired") =>
+    asJson<{ rows: PtMembership[] }>(
+      await staffFetch(`/staff/pt/members${filter ? `?filter=${filter}` : ""}`),
+    ),
+  createMember: async (body: NewMembership) =>
+    asJson<PtMembership>(
+      await staffFetch("/staff/pt/members", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    ),
+  patchMember: async (id: number, body: Record<string, unknown>) =>
+    asJson<PtMembership>(
+      await staffFetch(`/staff/pt/members/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    ),
+  markAttendance: async (id: number) =>
+    asJson<{ ok: boolean }>(
+      await staffFetch(`/staff/pt/members/${id}/attendance`, { method: "POST" }),
+    ),
+  renew: async (id: number, body: Omit<NewMembership, "memberName">) =>
+    asJson<PtMembership>(
+      await staffFetch(`/staff/pt/members/${id}/renew`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    ),
+  yoactivMembers: async (gymId: number) =>
+    asJson<{
+      mapped: boolean;
+      members: { memberId: number; name: string; mobile: string; status: string }[];
+    }>(await staffFetch(`/staff/pt/yoactiv-members?gymId=${gymId}`)),
+};
+
 // ── Staff notification polling with sound ───────────────────────────────────
 
 const LAST_SEEN_KEY = "staffNotifyLastSeen:v1";

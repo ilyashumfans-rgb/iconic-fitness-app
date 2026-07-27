@@ -178,6 +178,36 @@ export const staffApi = {
     remove: (id: number) =>
       request<{ ok: true }>(`/staff/blogs/${id}`, { method: "DELETE" }),
   },
+  pt: {
+    summary: (month?: string) =>
+      request<any>(
+        `/staff/pt/summary${month ? `?month=${encodeURIComponent(month)}` : ""}`,
+      ),
+    members: (filter?: "active" | "expired") =>
+      request<{ rows: any[] }>(
+        `/staff/pt/members${filter ? `?filter=${filter}` : ""}`,
+      ),
+    createMember: (body: Record<string, unknown>) =>
+      request<any>("/staff/pt/members", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    updateMember: (id: number, body: Record<string, unknown>) =>
+      request<any>(`/staff/pt/members/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+    markAttendance: (id: number) =>
+      request<{ ok: true; date: string }>(
+        `/staff/pt/members/${id}/attendance`,
+        { method: "POST" },
+      ),
+    renewMember: (id: number, body: Record<string, unknown>) =>
+      request<any>(`/staff/pt/members/${id}/renew`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+  },
   tickets: {
     mine: () => request<Ticket[]>("/staff/tickets/mine"),
     assigned: () => request<Ticket[]>("/staff/tickets/assigned"),

@@ -14,9 +14,11 @@ import { AppText } from "@/components/AppText";
 import { useColors } from "@/hooks/useColors";
 import { ThemeContext } from "@/hooks/useTheme";
 import {
+  ptDashboardApi,
   staffPtApi,
   useStaffNotificationPolling,
   type PtProgram,
+  type PtSummary,
 } from "@/lib/staffPt";
 
 const FORCE_DARK = {
@@ -25,6 +27,10 @@ const FORCE_DARK = {
   setMode: () => {},
   toggle: () => {},
 };
+
+function inr(n: number): string {
+  return `₹${n.toLocaleString("en-IN")}`;
+}
 
 /** Last 6 month options as { value: "YYYY-MM", label: "Jul 2026" }, IST. */
 function monthOptions(): { value: string; label: string }[] {
@@ -58,17 +64,20 @@ function Content() {
   useStaffNotificationPolling(true);
 
   const months = useMemo(monthOptions, []);
-  const [month, setMonth] = useState<string>(""); // "" = all time
-  const [counts, setCounts] = useState({ accepted: 0, ongoing: 0, completed: 0 });
+  const [month, setMonth] = useState<string>(months[0]?.value ?? "");
+  const [data, setData] = useState<PtSummary | null>(null);
   const [programs, setPrograms] = useState<PtProgram[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async (m: string) => {
     setLoading(true);
     try {
-      const data = await staffPtApi.dashboard(m || undefined);
-      setCounts(data.counts);
-      setPrograms(data.programs);
+      const [summary, dash] = await Promise.all([
+        ptDashboardApi.summary(m || undefined),
+        staffPtApi.dashboard(m || undefined),
+      ]);
+      setData(summary);
+      setPrograms(dash.programs);
     } catch {
       // keep last data
     } finally {
@@ -79,6 +88,9 @@ function Content() {
   useEffect(() => {
     void load(month);
   }, [load, month]);
+
+  const s = data?.summary;
+  const t = data?.target;
 
   return (
     <View style={[styles.flex, { backgroundColor: colors.background }]}>
@@ -91,21 +103,32 @@ function Content() {
         }}
         showsVerticalScrollIndicator={false}
       >
-        <Pressable onPress={() => router.back()} style={styles.backRow}>
-          <Feather name="arrow-left" size={20} color={colors.foreground} />
-          <AppText weight="700" size={18}>
-            My PT Dashboard
-          </AppText>
-        </Pressable>
+        <View style={styles.rowBetween}>
+          <Pressable onPress={() => router.back()} style={styles.backRow}>
+            <Feather name="arrow-left" size={20} color={colors.foreground} />
+            <AppText weight="700" size={18}>
+              PT Dashboard
+            </AppText>
+          </Pressable>
+          <Pressable
+            onPress={() => router.push("/staff-pt/members")}
+            style={[styles.membersBtn, { borderColor: colors.primary }]}
+          >
+            <Feather name="users" size={14} color={colors.primary} />
+            <AppText weight="700" size={12} color={colors.primary}>
+              My Members
+            </AppText>
+          </Pressable>
+        </View>
 
         {/* Month filter chips */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View style={{ flexDirection: "row", gap: 8 }}>
-            {[{ value: "", label: "All time" }, ...months].map((m) => {
+            {months.map((m) => {
               const active = month === m.value;
               return (
                 <Pressable
-                  key={m.value || "all"}
+                  key={m.value}
                   onPress={() => setMonth(m.value)}
                   style={[
                     styles.chip,
@@ -128,79 +151,213 @@ function Content() {
           </View>
         </ScrollView>
 
-        {/* Counters */}
-        <View style={{ flexDirection: "row", gap: 10 }}>
-          <StatCard label="Ongoing" value={counts.ongoing + counts.accepted} color={colors.primary} bg={colors.card} border={colors.border} />
-          <StatCard label="Completed" value={counts.completed} color={colors.foreground} bg={colors.card} border={colors.border} />
-        </View>
-
-        {loading ? (
+        {loading && !data ? (
           <ActivityIndicator color={colors.primary} style={{ marginTop: 30 }} />
-        ) : programs.length === 0 ? (
-          <AppText size={13} color={colors.mutedForeground}>
-            No programs {month ? "in this month" : "yet"}. Accept a request to
-            get started.
-          </AppText>
-        ) : (
-          programs.map((p) => (
-            <Pressable
-              key={p.id}
-              onPress={() => router.push(`/staff-pt/program/${p.id}`)}
-              style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
-            >
+        ) : s && t ? (
+          <>
+            {/* Alerts */}
+            {(data?.alerts ?? []).length > 0 ? (
+              <View
+                style={[
+                  styles.card,
+                  { backgroundColor: "rgba(245,184,64,0.08)", borderColor: "#f5b840" },
+                ]}
+              >
+                {(data?.alerts ?? []).slice(0, 6).map((a, i) => (
+                  <View key={i} style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+                    <Feather
+                      name={
+                        a.kind === "incentive"
+                          ? "award"
+                          : a.kind === "payment"
+                            ? "credit-card"
+                            : a.kind === "target"
+                              ? "target"
+                              : "clock"
+                      }
+                      size={14}
+                      color="#f5b840"
+                    />
+                    <AppText size={13} style={{ flex: 1 }}>
+                      {a.message}
+                    </AppText>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+
+            {/* Summary grid */}
+            <View style={styles.grid}>
+              <Stat label="Active PT members" value={String(s.activeMembers)} colors={colors} accent />
+              <Stat label="Expired members" value={String(s.expiredMembers)} colors={colors} />
+              <Stat label="Revenue this month" value={inr(s.revenueMonthInr)} colors={colors} accent />
+              <Stat label="Today's revenue" value={inr(s.revenueTodayInr)} colors={colors} />
+              <Stat label="Today's PT sessions" value={String(s.todaysSessions)} colors={colors} />
+              <Stat label="Pending renewals (7d)" value={String(s.pendingRenewals)} colors={colors} />
+              <Stat label="Pending payments" value={inr(s.pendingPaymentsInr)} colors={colors} />
+              <Stat label="Lost revenue" value={inr(s.lostRevenueInr)} colors={colors} />
+              <Stat label="Yearly revenue" value={inr(s.revenueYearInr)} colors={colors} />
+            </View>
+
+            {/* Target & incentive */}
+            <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <View style={styles.rowBetween}>
                 <AppText weight="700" size={15}>
-                  {p.memberName || "Member"}
+                  Monthly target
                 </AppText>
-                <AppText
-                  size={11}
-                  weight="700"
-                  color={
-                    p.status === "ongoing"
-                      ? colors.primary
-                      : p.status === "completed"
-                        ? colors.mutedForeground
-                        : "#f5b840"
-                  }
-                >
-                  {p.status.toUpperCase()}
+                <AppText weight="700" size={15} color={colors.primary}>
+                  {t.achievementPct}%
                 </AppText>
               </View>
+              <View style={[styles.progressTrack, { backgroundColor: colors.border }]}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    {
+                      backgroundColor: t.achievementPct >= 100 ? colors.primary : t.achievementPct >= 50 ? colors.primary : "#f5b840",
+                      width: `${Math.min(100, t.achievementPct)}%`,
+                    },
+                  ]}
+                />
+              </View>
               <AppText size={13} color={colors.mutedForeground}>
-                {p.memberPhone ? `${p.memberPhone} · ` : ""}
-                {p.gymName || "Any branch"}
+                Sales {inr(t.salesInr)} of {inr(t.targetInr)} target
+                {t.remainingTargetInr > 0 ? ` · ${inr(t.remainingTargetInr)} to go` : " · Target achieved! 🎉"}
               </AppText>
-              <AppText size={12} color={colors.mutedForeground}>
-                Free sessions: {p.session1DoneAt ? "1 ✓" : "1 –"}{"  "}
-                {p.session2DoneAt ? "2 ✓" : "2 –"}
+              <View style={[styles.rowBetween, { marginTop: 6 }]}>
+                <View>
+                  <AppText size={12} color={colors.mutedForeground}>
+                    Incentive ({t.incentivePct}%)
+                  </AppText>
+                  <AppText weight="700" size={20} color={colors.primary}>
+                    {inr(t.netIncentiveInr)}
+                  </AppText>
+                  {t.adjustmentsInr !== 0 ? (
+                    <AppText size={11} color={colors.mutedForeground}>
+                      {inr(t.grossIncentiveInr)} gross {t.adjustmentsInr > 0 ? "+" : ""}
+                      {inr(t.adjustmentsInr)} adjustment
+                    </AppText>
+                  ) : null}
+                </View>
+                <View
+                  style={[
+                    styles.badge,
+                    {
+                      backgroundColor:
+                        t.approvalStatus === "approved"
+                          ? "rgba(11,230,7,0.12)"
+                          : "rgba(245,184,64,0.12)",
+                    },
+                  ]}
+                >
+                  <AppText
+                    size={11}
+                    weight="700"
+                    color={t.approvalStatus === "approved" ? colors.primary : "#f5b840"}
+                  >
+                    {t.approvalStatus === "approved" ? "APPROVED" : "PENDING APPROVAL"}
+                  </AppText>
+                </View>
+              </View>
+            </View>
+
+            {/* Renewal radar */}
+            {s.sevenDayExpiry.length > 0 ? (
+              <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <AppText weight="700" size={15}>
+                  Expiring within 7 days
+                </AppText>
+                {s.sevenDayExpiry.map((r) => (
+                  <View key={r.id} style={styles.rowBetween}>
+                    <View style={{ flex: 1 }}>
+                      <AppText size={14} weight="600">
+                        {r.memberName}
+                      </AppText>
+                      <AppText size={12} color={colors.mutedForeground}>
+                        {r.daysLeft === 0 ? "Expires TODAY" : `${r.daysLeft} days left`} · {inr(r.amountPaidInr)}
+                      </AppText>
+                    </View>
+                    <Pressable
+                      onPress={() => router.push("/staff-pt/members")}
+                      style={[styles.membersBtn, { borderColor: colors.primary }]}
+                    >
+                      <AppText weight="700" size={12} color={colors.primary}>
+                        Renew
+                      </AppText>
+                    </Pressable>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+
+            {/* Free kick-starter programs */}
+            <AppText size={12} weight="700" color={colors.primary} style={styles.eyebrow}>
+              FREE KICK-STARTER PROGRAMS
+            </AppText>
+            {programs.length === 0 ? (
+              <AppText size={13} color={colors.mutedForeground}>
+                No free-session programs this month.
               </AppText>
-            </Pressable>
-          ))
+            ) : (
+              programs.map((p) => (
+                <Pressable
+                  key={p.id}
+                  onPress={() => router.push(`/staff-pt/program/${p.id}`)}
+                  style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+                >
+                  <View style={styles.rowBetween}>
+                    <AppText weight="700" size={15}>
+                      {p.memberName || "Member"}
+                    </AppText>
+                    <AppText
+                      size={11}
+                      weight="700"
+                      color={
+                        p.status === "ongoing"
+                          ? colors.primary
+                          : p.status === "completed"
+                            ? colors.mutedForeground
+                            : "#f5b840"
+                      }
+                    >
+                      {p.status.toUpperCase()}
+                    </AppText>
+                  </View>
+                  <AppText size={12} color={colors.mutedForeground}>
+                    Free sessions: {p.session1DoneAt ? "1 ✓" : "1 –"}{"  "}
+                    {p.session2DoneAt ? "2 ✓" : "2 –"}
+                  </AppText>
+                </Pressable>
+              ))
+            )}
+          </>
+        ) : (
+          <AppText size={13} color={colors.mutedForeground}>
+            Could not load the dashboard. Pull to retry.
+          </AppText>
         )}
       </ScrollView>
     </View>
   );
 }
 
-function StatCard({
+function Stat({
   label,
   value,
-  color,
-  bg,
-  border,
+  colors,
+  accent,
 }: {
   label: string;
-  value: number;
-  color: string;
-  bg: string;
-  border: string;
+  value: string;
+  colors: { card: string; border: string; primary: string; mutedForeground: string; foreground: string };
+  accent?: boolean;
 }) {
   return (
-    <View style={[styles.stat, { backgroundColor: bg, borderColor: border }]}>
-      <AppText weight="700" size={26} color={color}>
+    <View style={[styles.stat, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <AppText weight="700" size={18} color={accent ? colors.primary : colors.foreground}>
         {value}
       </AppText>
-      <AppText size={12} color="#9a9a9a">
+      <AppText size={11} color={colors.mutedForeground}>
         {label}
       </AppText>
     </View>
@@ -209,29 +366,59 @@ function StatCard({
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  backRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 4 },
+  backRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  rowBetween: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  membersBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderWidth: 1.5,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
   chip: {
     borderRadius: 999,
     borderWidth: 1,
     paddingHorizontal: 14,
     paddingVertical: 7,
   },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
   stat: {
-    flex: 1,
-    borderRadius: 16,
+    flexBasis: "30%",
+    flexGrow: 1,
+    borderRadius: 14,
     borderWidth: StyleSheet.hairlineWidth,
-    padding: 16,
+    padding: 12,
     gap: 2,
   },
   card: {
     borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
     padding: 14,
-    gap: 5,
+    gap: 10,
   },
-  rowBetween: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+  progressTrack: {
+    height: 8,
+    borderRadius: 4,
+    overflow: "hidden",
   },
+  progressFill: {
+    height: "100%",
+    borderRadius: 4,
+  },
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+  eyebrow: { letterSpacing: 2, marginTop: 6 },
 });

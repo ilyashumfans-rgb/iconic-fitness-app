@@ -13,6 +13,7 @@ import { requireStaffPermission, loadStaffOrUnauthorized } from "../lib/staffAut
 import { requireUser } from "../lib/currentUser";
 import { TRAINER_ENQUIRY_SOURCE } from "../lib/trainerEnquiryLeads";
 import { normalizeMobile } from "../lib/yoactiv";
+import { isUniqueViolation } from "./ptDashboard";
 
 /**
  * Trainer workspace (mobile app studio side). Trainers see member PT
@@ -214,8 +215,7 @@ router.post(
         .returning();
       res.status(201).json(program);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "";
-      if (/unique|duplicate/i.test(msg)) {
+      if (isUniqueViolation(e)) {
         res
           .status(409)
           .json({ error: "Another trainer already accepted this request" });

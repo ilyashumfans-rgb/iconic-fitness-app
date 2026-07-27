@@ -233,7 +233,8 @@ function StaffHomeContent() {
           {(
             [
               { icon: "inbox", label: "PT requests", href: "/staff-pt/requests" },
-              { icon: "bar-chart-2", label: "My dashboard & members", href: "/staff-pt/dashboard" },
+              { icon: "bar-chart-2", label: "PT dashboard", href: "/staff-pt/dashboard" },
+              { icon: "users", label: "My PT members", href: "/staff-pt/members" },
             ] as const
           ).map((item) => (
             <Pressable

@@ -212,6 +212,75 @@ export const memberDietPlansTable = pgTable("member_diet_plans", {
     .defaultNow(),
 });
 
+// PT memberships (trainer dashboard roster). Rows come from manual trainer
+// entry, optionally prefilled from the YoActiv member list. Session
+// deduction is computed from elapsed days (originalSessions/durationDays
+// per day, zero after endDate); delivered sessions come from pt_attendance.
+export const ptMembershipsTable = pgTable("pt_memberships", {
+  id: serial("id").primaryKey(),
+  source: text("source").notNull().default("manual"), // manual | yoactiv
+  staffId: integer("staff_id").notNull(), // owning trainer
+  staffName: text("staff_name").notNull().default(""),
+  memberName: text("member_name").notNull().default(""),
+  membershipId: text("membership_id").notNull().default(""),
+  mobile: text("mobile").notNull().default(""),
+  gymId: integer("gym_id"),
+  gymName: text("gym_name").notNull().default(""),
+  packageName: text("package_name").notNull().default(""),
+  durationDays: integer("duration_days").notNull().default(30),
+  originalSessions: integer("original_sessions").notNull().default(12),
+  amountPaidInr: integer("amount_paid_inr").notNull().default(0),
+  paymentStatus: text("payment_status").notNull().default("paid"), // paid | pending
+  startDate: text("start_date").notNull(), // YYYY-MM-DD (IST)
+  endDate: text("end_date").notNull(), // YYYY-MM-DD (IST)
+  renewalStatus: text("renewal_status").notNull().default("pending"), // pending | renewed | lost
+  followUpDate: text("follow_up_date").notNull().default(""),
+  notes: text("notes").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// One row per delivered PT session (attendance). Unique per membership+day.
+export const ptAttendanceTable = pgTable(
+  "pt_attendance",
+  {
+    id: serial("id").primaryKey(),
+    membershipId: integer("membership_id").notNull(),
+    date: text("date").notNull(), // YYYY-MM-DD (IST)
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [uniqueIndex("pt_attendance_unique").on(t.membershipId, t.date)],
+);
+
+// Admin-set monthly sales target per trainer.
+export const trainerTargetsTable = pgTable(
+  "trainer_targets",
+  {
+    id: serial("id").primaryKey(),
+    staffId: integer("staff_id").notNull(),
+    month: text("month").notNull(), // YYYY-MM
+    targetInr: integer("target_inr").notNull().default(0),
+  },
+  (t) => [uniqueIndex("trainer_targets_unique").on(t.staffId, t.month)],
+);
+
+// Per-trainer monthly incentive adjustments + approval (manager screen).
+export const trainerIncentivesTable = pgTable(
+  "trainer_incentives",
+  {
+    id: serial("id").primaryKey(),
+    staffId: integer("staff_id").notNull(),
+    month: text("month").notNull(), // YYYY-MM
+    adjustmentsInr: integer("adjustments_inr").notNull().default(0),
+    approvalStatus: text("approval_status").notNull().default("pending"), // pending | approved
+    note: text("note").notNull().default(""),
+  },
+  (t) => [uniqueIndex("trainer_incentives_unique").on(t.staffId, t.month)],
+);
+
 // Staff-scheduled PT session timings for a PT enrolment (same refType/refId
 // keying as pt_trainer_assignments). Members see these on the PT Details
 // screen; staff manage them from the PT Bookings dashboards.

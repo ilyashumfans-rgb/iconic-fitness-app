@@ -672,6 +672,32 @@ export const adminApi = {
     remove: (id: number) =>
       request<{ ok: true }>(`/admin/home-slides/${id}`, { method: "DELETE" }),
   },
+  pt: {
+    overview: (month?: string) =>
+      request<any>(
+        `/admin/pt/overview${month ? `?month=${encodeURIComponent(month)}` : ""}`,
+      ),
+    targets: (month?: string) =>
+      request<{ month: string; targets: any[] }>(
+        `/admin/pt/targets${month ? `?month=${encodeURIComponent(month)}` : ""}`,
+      ),
+    saveTarget: (body: { staffId: number; month: string; targetInr: number }) =>
+      request<{ ok: true }>("/admin/pt/targets", {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    saveIncentive: (body: {
+      staffId: number;
+      month: string;
+      adjustmentsInr: number;
+      approvalStatus: "pending" | "approved";
+      note: string;
+    }) =>
+      request<{ ok: true }>("/admin/pt/incentives", {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+  },
   reseedFromSnapshot: () =>
     request<{ ok: true; inserted: Record<string, number> }>(
       "/admin/reseed-from-snapshot",
