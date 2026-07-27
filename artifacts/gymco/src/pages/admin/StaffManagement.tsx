@@ -25,7 +25,7 @@ const ALL_PERMS = [
 ];
 
 const inputCls =
-  "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-lime-500/60";
+  "w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-lime-500/60";
 
 function PermissionCheckboxes({
   value,
@@ -515,6 +515,9 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
   const [isActive, setIsActive] = useState(row.isActive);
   const [resetting, setResetting] = useState(false);
   const [newPwd, setNewPwd] = useState("");
+  const [changingUser, setChangingUser] = useState(false);
+  const [newUsername, setNewUsername] = useState(row.username ?? "");
+  const [userErr, setUserErr] = useState<string | null>(null);
   const [lastReset, setLastReset] = useState<string | null>(null);
   const [resetCopied, setResetCopied] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -547,6 +550,32 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
       setResetCopied(false);
       setNewPwd("");
       setResetting(false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const saveUsername = async () => {
+    setBusy(true);
+    setUserErr(null);
+    try {
+      await adminApi.staff.update(row.id, {
+        username: newUsername.trim() || null,
+      });
+      setChangingUser(false);
+      onChanged();
+    } catch (e) {
+      setUserErr(e instanceof Error ? e.message : "Failed to save username");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const toggleActive = async () => {
+    setBusy(true);
+    try {
+      await adminApi.staff.update(row.id, { isActive: !row.isActive });
+      onChanged();
     } finally {
       setBusy(false);
     }
@@ -623,15 +652,28 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
             Active
           </label>
         ) : (
-          <span
-            className={`text-[11px] px-2 py-0.5 rounded-md border ${
-              row.isActive
-                ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
-                : "bg-slate-700/40 text-slate-400 border-slate-600/40"
-            }`}
-          >
-            {row.isActive ? "Active" : "Disabled"}
-          </span>
+          <div className="flex flex-col gap-1.5 items-start">
+            <span
+              className={`text-[11px] px-2 py-0.5 rounded-md border ${
+                row.isActive
+                  ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
+                  : "bg-slate-700/40 text-slate-400 border-slate-600/40"
+              }`}
+            >
+              {row.isActive ? "Active" : "Inactive"}
+            </span>
+            <button
+              onClick={toggleActive}
+              disabled={busy}
+              className={`text-[11px] px-2 py-0.5 rounded border disabled:opacity-50 ${
+                row.isActive
+                  ? "bg-red-500/10 text-red-300 border-red-500/30 hover:bg-red-500/20"
+                  : "bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20"
+              }`}
+            >
+              {row.isActive ? "Deactivate" : "Activate"}
+            </button>
+          </div>
         )}
       </td>
       <td className="px-5 py-4">
@@ -667,6 +709,51 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
               Edit
             </button>
           )}
+          {changingUser ? (
+            <div className="space-y-1">
+              <div className="flex gap-1">
+                <input
+                  type="text"
+                  value={newUsername}
+                  onChange={(e) => setNewUsername(e.target.value)}
+                  placeholder="New username"
+                  className="text-xs px-2 py-1 rounded bg-white border border-slate-300 text-black placeholder:text-slate-400 w-32"
+                />
+                <button
+                  onClick={saveUsername}
+                  disabled={busy}
+                  className="text-xs px-2 py-1 rounded bg-lime-500/20 text-lime-300 border border-lime-500/40 disabled:opacity-40"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => {
+                    setChangingUser(false);
+                    setNewUsername(row.username ?? "");
+                    setUserErr(null);
+                  }}
+                  className="text-xs px-2 py-1 rounded bg-slate-700/40 text-slate-300 border border-slate-600/40"
+                >
+                  ✕
+                </button>
+              </div>
+              {userErr && (
+                <div className="text-[11px] text-red-400 max-w-[200px]">
+                  {userErr}
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                setNewUsername(row.username ?? "");
+                setChangingUser(true);
+              }}
+              className="text-xs px-3 py-1.5 rounded bg-slate-700/60 text-slate-200 border border-slate-600/60 hover:border-lime-500/40 w-fit"
+            >
+              Change Username
+            </button>
+          )}
           {resetting ? (
             <div className="flex gap-1">
               <input
@@ -674,7 +761,7 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
                 value={newPwd}
                 onChange={(e) => setNewPwd(e.target.value)}
                 placeholder="New password"
-                className="text-xs px-2 py-1 rounded bg-slate-800 border border-slate-700 text-white w-32"
+                className="text-xs px-2 py-1 rounded bg-white border border-slate-300 text-black placeholder:text-slate-400 w-32"
               />
               <button
                 onClick={resetPwd}
@@ -698,7 +785,7 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
               onClick={() => setResetting(true)}
               className="text-xs px-3 py-1.5 rounded bg-slate-700/60 text-slate-200 border border-slate-600/60 hover:border-lime-500/40 inline-flex items-center gap-1 w-fit"
             >
-              <KeyRound className="h-3 w-3" /> Reset Password
+              <KeyRound className="h-3 w-3" /> Change Password
             </button>
           )}
           {lastReset && (
