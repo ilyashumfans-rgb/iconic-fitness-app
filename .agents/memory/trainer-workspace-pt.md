@@ -8,3 +8,4 @@ description: How the trainer PT workspace is gated and linked to members
 - Staff notification delivery in the app is a module-level singleton poller (`lib/staffPt.ts`) — multiple mounted screens must not each start an interval; dedupe by notification id + AsyncStorage watermark.
 
 **Why:** architect review flagged staff-wide PII access, fuzzy-phone cross-account leakage, and duplicate notification storms; these were the fixes.
+- Trainer accept now (a) rejects unpaid bookings / cancelled leads, (b) inserts a best-effort member notification (recipientType user) with trainer name + preferred date/time, and (c) surfaces to the member: GET /pt/mine merges pt_programs acceptances with ptTrainerAssignments (assignment wins for photo) and synthesizes up to 2 kick-starter sessions from the lead's preferred slot + session done stamps when no ptSessions exist. Home FitnessJourneyCard step 2 flips to "Accepted by <trainer>" from the same endpoint.

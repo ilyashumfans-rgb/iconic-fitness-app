@@ -1,9 +1,10 @@
 import { randomBytes } from "node:crypto";
 import { Router, type IRouter, type Request, type Response } from "express";
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, ne, or } from "drizzle-orm";
 import {
   db,
   gymsTable,
+  ptProgramsTable,
   ptTrialFeedbackTable,
   trainerBookingsTable,
   usersTable,
@@ -352,6 +353,8 @@ router.get(
             id: leadsTable.id,
             gymName: leadsTable.gymName,
             createdAt: leadsTable.createdAt,
+            preferredDate: leadsTable.preferredDate,
+            preferredTime: leadsTable.preferredTime,
           })
           .from(leadsTable)
           .where(
@@ -377,6 +380,32 @@ router.get(
       ),
     ]);
 
+    // Trainer acceptances from the staff workspace (pt_programs) also count
+    // as an assigned trainer — the member shouldn't wait for a separate
+    // partner-admin assignment to see who accepted their kick-starter trial.
+    const programRefs = [
+      ...bookings.map((b) => ({ refType: "booking" as const, refId: b.id })),
+      ...enquiries.map((l) => ({ refType: "enquiry" as const, refId: l.id })),
+    ];
+    const programRows = programRefs.length
+      ? await db
+          .select()
+          .from(ptProgramsTable)
+          .where(
+            or(
+              ...programRefs.map((r) =>
+                and(
+                  eq(ptProgramsTable.refType, r.refType),
+                  eq(ptProgramsTable.refId, r.refId),
+                ),
+              ),
+            ),
+          )
+      : [];
+    const programByRef = new Map(
+      programRows.map((p) => [`${p.refType}:${p.refId}`, p]),
+    );
+
     type Candidate = {
       refType: "booking" | "enquiry";
       refId: number;
@@ -388,23 +417,33 @@ router.get(
     };
     const candidates: Candidate[] = [
       ...bookings
-        .filter((b) => bookingAssign.has(b.id))
+        .filter(
+          (b) => bookingAssign.has(b.id) || programByRef.has(`booking:${b.id}`),
+        )
         .map((b) => ({
           refType: "booking" as const,
           refId: b.id,
-          trainerId: bookingAssign.get(b.id)!.trainerId,
-          trainerName: bookingAssign.get(b.id)!.trainerName,
+          // Partner assignment wins (it carries the roster photo); a staff
+          // acceptance fills in when no assignment exists yet.
+          trainerId: bookingAssign.get(b.id)?.trainerId ?? "",
+          trainerName:
+            bookingAssign.get(b.id)?.trainerName ??
+            programByRef.get(`booking:${b.id}`)!.staffName,
           gymName: b.gymName,
           packageName: b.packageName,
           createdAt: b.createdAt,
         })),
       ...enquiries
-        .filter((l) => enquiryAssign.has(l.id))
+        .filter(
+          (l) => enquiryAssign.has(l.id) || programByRef.has(`enquiry:${l.id}`),
+        )
         .map((l) => ({
           refType: "enquiry" as const,
           refId: l.id,
-          trainerId: enquiryAssign.get(l.id)!.trainerId,
-          trainerName: enquiryAssign.get(l.id)!.trainerName,
+          trainerId: enquiryAssign.get(l.id)?.trainerId ?? "",
+          trainerName:
+            enquiryAssign.get(l.id)?.trainerName ??
+            programByRef.get(`enquiry:${l.id}`)!.staffName,
           gymName: l.gymName ?? "",
           packageName: "Personal training",
           createdAt: l.createdAt,
@@ -417,6 +456,38 @@ router.get(
       return;
     }
     const sessions = await listPtSessions(current.refType, current.refId);
+    const program = programByRef.get(`${current.refType}:${current.refId}`);
+    // Kick-starter trials often have no partner-scheduled sessions — show the
+    // requested slot and the trainer's done-stamps so the member still sees
+    // their timing and progress.
+    if (sessions.length === 0 && program) {
+      const lead = enquiries.find(
+        (l) => current.refType === "enquiry" && l.id === current.refId,
+      );
+      const istDay = (d: Date): string =>
+        new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Asia/Kolkata",
+        }).format(d);
+      const fallbackDate = lead?.preferredDate ?? "";
+      const fallbackTime = lead?.preferredTime ?? "";
+      const stamps = [program.session1DoneAt, program.session2DoneAt];
+      for (let n = 0; n < 2; n++) {
+        const doneAt = stamps[n];
+        const date = doneAt ? istDay(doneAt) : fallbackDate;
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) continue;
+        sessions.push({
+          id: -(n + 1),
+          date,
+          time: /^([01]\d|2[0-3]):[0-5]\d$/.test(fallbackTime)
+            ? fallbackTime
+            : "07:00",
+          status: doneAt ? "completed" : "scheduled",
+        });
+      }
+    }
+    const doneStamps = program
+      ? [program.session1DoneAt, program.session2DoneAt].filter(Boolean).length
+      : 0;
     // Staff-uploaded photo of the assigned trainer (shown on the member Home).
     const photos = current.trainerId
       ? await trainerPhotoMap([current.trainerId])
@@ -429,7 +500,10 @@ router.get(
         gymName: current.gymName,
         packageName: current.packageName,
         totalSessions: PT_TOTAL_SESSIONS,
-        completedCount: sessions.filter((s) => s.status === "completed").length,
+        completedCount: Math.max(
+          sessions.filter((s) => s.status === "completed").length,
+          doneStamps,
+        ),
         sessions,
       }),
     );

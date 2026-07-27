@@ -1,10 +1,12 @@
+import { randomUUID } from "node:crypto";
 import { Router, type IRouter, type Request, type Response } from "express";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, ne, sql } from "drizzle-orm";
 import {
   db,
   leadsTable,
   memberBmiRecordsTable,
   memberDietPlansTable,
+  notificationsTable,
   ptProgramsTable,
   trainerBookingsTable,
   usersTable,
@@ -82,6 +84,8 @@ async function fetchOpenRequests(): Promise<RequestRow[]> {
       and(
         eq(leadsTable.source, TRAINER_ENQUIRY_SOURCE),
         eq(leadsTable.kind, "general"),
+        // Staff-cancelled requests must not be acceptable.
+        ne(leadsTable.status, "cancelled"),
       ),
     )
     .orderBy(desc(leadsTable.createdAt))
@@ -158,12 +162,26 @@ router.post(
       return;
     }
     // Verify the request actually exists and capture member details.
-    let member: { name: string; phone: string; gymId: number | null; gymName: string; userId: number | null } | null = null;
+    let member: {
+      name: string;
+      phone: string;
+      gymId: number | null;
+      gymName: string;
+      userId: number | null;
+      preferredDate: string;
+      preferredTime: string;
+    } | null = null;
     if (ref.refType === "booking") {
       const [b] = await db
         .select()
         .from(trainerBookingsTable)
-        .where(eq(trainerBookingsTable.id, ref.refId));
+        .where(
+          and(
+            eq(trainerBookingsTable.id, ref.refId),
+            // Only paid bookings are real PT enrolments.
+            eq(trainerBookingsTable.status, "paid"),
+          ),
+        );
       if (b) {
         member = {
           name: b.memberName,
@@ -171,6 +189,8 @@ router.post(
           gymId: b.gymId,
           gymName: b.gymName,
           userId: b.userId ?? null,
+          preferredDate: b.preferredDate,
+          preferredTime: "",
         };
       }
     } else {
@@ -181,6 +201,7 @@ router.post(
           and(
             eq(leadsTable.id, ref.refId),
             eq(leadsTable.source, TRAINER_ENQUIRY_SOURCE),
+            ne(leadsTable.status, "cancelled"),
           ),
         );
       if (l) {
@@ -190,6 +211,8 @@ router.post(
           gymId: l.gymId,
           gymName: l.gymName,
           userId: null,
+          preferredDate: l.preferredDate,
+          preferredTime: l.preferredTime,
         };
       }
     }
@@ -213,6 +236,25 @@ router.post(
           gymName: member.gymName,
         })
         .returning();
+      // Tell the member their trainer is confirmed (in-app notification —
+      // the app's poller turns it into a local push). Never block the
+      // accept on this: notification failure must not undo the program.
+      if (userId !== null) {
+        const when = member.preferredDate
+          ? ` Your session is planned for ${member.preferredDate}${member.preferredTime ? ` at ${member.preferredTime}` : ""}.`
+          : "";
+        try {
+          await db.insert(notificationsTable).values({
+            recipientType: "user",
+            recipientId: userId,
+            title: "Your trainer is confirmed! 💪",
+            body: `${me.name} has accepted your kick-starter PT request${member.gymName ? ` at ${member.gymName}` : ""}.${when} Check your fitness journey on Home for next steps.`,
+            batchId: randomUUID(),
+          });
+        } catch {
+          // Best-effort only.
+        }
+      }
       res.status(201).json(program);
     } catch (e) {
       if (isUniqueViolation(e)) {
