@@ -1,8 +1,8 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
 import { adminApi } from "@/lib/adminApi";
 import { PERMISSION_LABELS } from "@/lib/staffApi";
-import { KeyRound, Trash2, UserPlus } from "lucide-react";
+import { Dumbbell, KeyRound, Trash2, UserPlus } from "lucide-react";
 
 type Staff = {
   id: number;
@@ -67,7 +67,15 @@ function PermissionCheckboxes({
   );
 }
 
-function CreateStaffForm({ onCreated }: { onCreated: () => void }) {
+export type StaffPrefill = { name: string; seq: number };
+
+function CreateStaffForm({
+  onCreated,
+  prefill,
+}: {
+  onCreated: () => void;
+  prefill: StaffPrefill | null;
+}) {
   const [f, setF] = useState({
     name: "",
     email: "",
@@ -78,6 +86,17 @@ function CreateStaffForm({ onCreated }: { onCreated: () => void }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const emailRef = useRef<HTMLInputElement | null>(null);
+
+  // "Create login" from the YoActiv trainers panel prefills the trainer's
+  // name here and jumps to the form so the admin only types email + password.
+  useEffect(() => {
+    if (!prefill) return;
+    setF((prev) => ({ ...prev, name: prefill.name }));
+    cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    emailRef.current?.focus();
+  }, [prefill]);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -104,6 +123,7 @@ function CreateStaffForm({ onCreated }: { onCreated: () => void }) {
   };
 
   return (
+    <div ref={cardRef}>
     <AdminCard className="p-6">
       <div className="flex items-center gap-2 mb-4">
         <UserPlus className="h-5 w-5 text-lime-400" />
@@ -130,6 +150,7 @@ function CreateStaffForm({ onCreated }: { onCreated: () => void }) {
             <input
               required
               type="email"
+              ref={emailRef}
               className={inputCls}
               value={f.email}
               onChange={(e) => setF({ ...f, email: e.target.value })}
@@ -196,6 +217,157 @@ function CreateStaffForm({ onCreated }: { onCreated: () => void }) {
           {busy ? "Creating…" : "Create Staff"}
         </button>
       </form>
+    </AdminCard>
+    </div>
+  );
+}
+
+type YoactivBranch = { branchId: number; branchName: string | null };
+type YoactivTrainer = {
+  id: string;
+  name: string;
+  mobile: string;
+  photoUrl: string | null;
+};
+
+/**
+ * YoActiv trainer roster, right inside Staff Management. YoActiv only gives
+ * us name + mobile for trainers (no email, no passwords) — login details
+ * live in OUR staff table. This panel shows which trainers already have a
+ * login (matched by name) and prefills the create form for the rest.
+ */
+function YoactivTrainersPanel({
+  staffRows,
+  onCreateLogin,
+}: {
+  staffRows: Staff[];
+  onCreateLogin: (name: string) => void;
+}) {
+  const [branches, setBranches] = useState<YoactivBranch[]>([]);
+  const [branchId, setBranchId] = useState<number | null>(null);
+  const [trainers, setTrainers] = useState<YoactivTrainer[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    adminApi.yoactiv
+      .branches()
+      .then((rows: YoactivBranch[]) => {
+        setBranches(rows);
+        if (rows.length > 0) setBranchId(rows[0].branchId);
+      })
+      .catch(() => setErr("Couldn't load YoActiv branches"));
+  }, []);
+
+  useEffect(() => {
+    if (branchId == null) return;
+    setLoading(true);
+    setErr(null);
+    adminApi.yoactiv
+      .trainers(branchId)
+      .then((rows: YoactivTrainer[]) => setTrainers(rows))
+      .catch(() => setErr("Couldn't load the trainer roster"))
+      .finally(() => setLoading(false));
+  }, [branchId]);
+
+  const staffByName = new Map(
+    staffRows.map((s) => [s.name.trim().toLowerCase(), s]),
+  );
+
+  return (
+    <AdminCard className="p-0 overflow-hidden">
+      <div className="px-5 py-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Dumbbell className="h-5 w-5 text-lime-400" />
+          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+            YoActiv Trainers — Login Status
+          </h2>
+        </div>
+        {branches.length > 1 && (
+          <select
+            className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-lime-500/60"
+            value={branchId ?? ""}
+            onChange={(e) => setBranchId(Number(e.target.value))}
+          >
+            {branches.map((b) => (
+              <option key={b.branchId} value={b.branchId}>
+                {b.branchName ?? `Branch ${b.branchId}`}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
+      <div className="px-5 py-3 text-[11px] text-slate-500 border-b border-slate-800/60 leading-relaxed">
+        YoActiv shares only each trainer's name and mobile — email IDs and
+        passwords are never stored in YoActiv. Login details live here: a
+        trainer with a badge below already has one (shown with their email /
+        username). For the rest, press <span className="text-slate-300">Create login</span>,
+        add their email ID (copy it from Gym Members → View Active if they're
+        also a member) and set a password.
+      </div>
+      {err && (
+        <div className="px-5 py-3 text-sm text-red-400">{err}</div>
+      )}
+      {loading ? (
+        <div className="px-5 py-8 text-center text-sm text-slate-500">
+          Loading trainer roster…
+        </div>
+      ) : trainers.length === 0 ? (
+        <div className="px-5 py-8 text-center text-sm text-slate-500">
+          No trainers found for this branch.
+        </div>
+      ) : (
+        <ul className="divide-y divide-slate-800/60">
+          {trainers.map((t) => {
+            const existing = staffByName.get(t.name.trim().toLowerCase());
+            return (
+              <li
+                key={t.id}
+                className="px-5 py-3 flex items-center gap-4"
+              >
+                {t.photoUrl ? (
+                  <img
+                    src={t.photoUrl}
+                    alt=""
+                    className="h-10 w-10 rounded-full object-cover border border-slate-700"
+                  />
+                ) : (
+                  <div className="h-10 w-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-sm font-bold text-lime-400">
+                    {t.name.trim().charAt(0).toUpperCase() || "?"}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium text-white truncate">
+                    {t.name}
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    {t.mobile || "No mobile on record"}
+                  </div>
+                </div>
+                {existing ? (
+                  <div className="text-right">
+                    <span className="text-[11px] px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+                      Has login
+                    </span>
+                    <div className="text-[11px] text-slate-400 mt-1 font-mono truncate max-w-[180px]">
+                      {existing.username
+                        ? `@${existing.username}`
+                        : existing.email}
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => onCreateLogin(t.name.trim())}
+                    className="text-xs px-3 py-1.5 rounded bg-lime-500/20 text-lime-300 border border-lime-500/40 hover:bg-lime-500/30 shrink-0"
+                  >
+                    Create login
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </AdminCard>
   );
 }
@@ -407,6 +579,7 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
 export default function AdminStaffManagement() {
   const [rows, setRows] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
+  const [prefill, setPrefill] = useState<StaffPrefill | null>(null);
 
   const load = async () => {
     try {
@@ -424,7 +597,14 @@ export default function AdminStaffManagement() {
   return (
     <AdminLayout title="Staff Management">
       <div className="space-y-6">
-        <CreateStaffForm onCreated={load} />
+        <CreateStaffForm onCreated={load} prefill={prefill} />
+
+        <YoactivTrainersPanel
+          staffRows={rows}
+          onCreateLogin={(name) =>
+            setPrefill((p) => ({ name, seq: (p?.seq ?? 0) + 1 }))
+          }
+        />
 
         <AdminCard className="p-0 overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
