@@ -65,6 +65,8 @@ import type {
   MembershipLookupResult,
   MembershipPayment,
   MembershipPlan,
+  MyEngagement,
+  MyEngagementPlan,
   MyMembership,
   Notification,
   OkResponse,
@@ -3074,6 +3076,160 @@ export const useSubmitPtTrialFeedback = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getSubmitPtTrialFeedbackMutationOptions(options));
     }
+
+export const getGetMyEngagementUrl = () => {
+
+
+
+
+  return `/api/engagement/mine`
+}
+
+/**
+ * @summary The caller's 45-day engagement program (auto-starts after the kick-starter trial), today's workout card and engagement score
+ */
+export const getMyEngagement = async ( options?: RequestInit): Promise<MyEngagement> => {
+
+  return customFetch<MyEngagement>(getGetMyEngagementUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyEngagementQueryKey = () => {
+    return [
+    `/api/engagement/mine`
+    ] as const;
+    }
+
+
+export const getGetMyEngagementQueryOptions = <TData = Awaited<ReturnType<typeof getMyEngagement>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyEngagement>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyEngagementQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyEngagement>>> = ({ signal }) => getMyEngagement({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyEngagement>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMyEngagementQueryResult = NonNullable<Awaited<ReturnType<typeof getMyEngagement>>>
+export type GetMyEngagementQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary The caller's 45-day engagement program (auto-starts after the kick-starter trial), today's workout card and engagement score
+ */
+
+export function useGetMyEngagement<TData = Awaited<ReturnType<typeof getMyEngagement>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyEngagement>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMyEngagementQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetMyEngagementPlanUrl = () => {
+
+
+
+
+  return `/api/engagement/plan`
+}
+
+/**
+ * @summary The full 45-day workout plan for the caller's level
+ */
+export const getMyEngagementPlan = async ( options?: RequestInit): Promise<MyEngagementPlan> => {
+
+  return customFetch<MyEngagementPlan>(getGetMyEngagementPlanUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyEngagementPlanQueryKey = () => {
+    return [
+    `/api/engagement/plan`
+    ] as const;
+    }
+
+
+export const getGetMyEngagementPlanQueryOptions = <TData = Awaited<ReturnType<typeof getMyEngagementPlan>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyEngagementPlan>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyEngagementPlanQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyEngagementPlan>>> = ({ signal }) => getMyEngagementPlan({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyEngagementPlan>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMyEngagementPlanQueryResult = NonNullable<Awaited<ReturnType<typeof getMyEngagementPlan>>>
+export type GetMyEngagementPlanQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary The full 45-day workout plan for the caller's level
+ */
+
+export function useGetMyEngagementPlan<TData = Awaited<ReturnType<typeof getMyEngagementPlan>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyEngagementPlan>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMyEngagementPlanQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getListMembershipPackagesUrl = (params: ListMembershipPackagesParams,) => {
   const normalizedParams = new URLSearchParams();

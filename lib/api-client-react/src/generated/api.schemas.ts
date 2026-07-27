@@ -468,6 +468,71 @@ export interface PtTrialFeedback {
   comment: string;
 }
 
+export interface EngagementDayCard {
+  /** 1-based day number in the 45-day plan */
+  day: number;
+  title: string;
+  focus: string;
+  restDay: boolean;
+  warmup: string[];
+  workout: string[];
+  cardio: string[];
+  core: string[];
+  stretching: string[];
+}
+
+export type MyEngagementLevel = typeof MyEngagementLevel[keyof typeof MyEngagementLevel];
+
+
+export const MyEngagementLevel = {
+  beginner: 'beginner',
+  intermediate: 'intermediate',
+  advanced: 'advanced',
+} as const;
+
+export type MyEngagementScoreBand = typeof MyEngagementScoreBand[keyof typeof MyEngagementScoreBand];
+
+
+export const MyEngagementScoreBand = {
+  green: 'green',
+  yellow: 'yellow',
+  red: 'red',
+} as const;
+
+export interface MyEngagement {
+  /** True when a 45-day engagement program is running */
+  active: boolean;
+  level: MyEngagementLevel;
+  /** Current day (1-45); 0 when inactive */
+  dayNumber: number;
+  totalDays: number;
+  /** YYYY-MM-DD (IST); '' when inactive */
+  startDate: string;
+  gymName: string;
+  /** In-house dietician the member is assigned to */
+  dieticianName: string;
+  /** Engagement score 0-100 */
+  score: number;
+  scoreBand: MyEngagementScoreBand;
+  /** True when the member hasn't purchased PT yet */
+  showPtOffer: boolean;
+  today?: EngagementDayCard | null;
+}
+
+export type MyEngagementPlanLevel = typeof MyEngagementPlanLevel[keyof typeof MyEngagementPlanLevel];
+
+
+export const MyEngagementPlanLevel = {
+  beginner: 'beginner',
+  intermediate: 'intermediate',
+  advanced: 'advanced',
+} as const;
+
+export interface MyEngagementPlan {
+  level: MyEngagementPlanLevel;
+  days: EngagementDayCard[];
+}
+
 export interface SubmitPtTrialFeedbackRequest {
   /**
      * @minimum 1

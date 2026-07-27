@@ -32,3 +32,4 @@
 - [PT dashboard data model](pt-dashboard-model.md) — time-based session deduction, endDate=start+days−1, atomic renew flip, 20/40% incentive, 23505 via error.cause.
 - [Trainer workspace PT gating](trainer-workspace-pt.md) — /staff/pt/* needs `pt.manage` perm; first-accept-wins via unique index; exact last-10 phone linking; singleton notification poller.
 - [Pre-auth stash linking](pre-auth-stash-linking.md) — data captured before login and auto-applied after must be TTL'd and never overwrite an existing differing profile value (shared devices).
+- [Member engagement 45-day program](member-engagement-program.md) — code-default plan, lazy auto-start + milestone cursors on GET /engagement/mine, batched staff overview; prod needs the CREATE TABLE.

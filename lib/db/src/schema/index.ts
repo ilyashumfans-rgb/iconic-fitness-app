@@ -201,6 +201,35 @@ export const memberBmiRecordsTable = pgTable("member_bmi_records", {
     .defaultNow(),
 });
 
+// General Member Engagement: 45-day workout program auto-started for members
+// who finished the kick-starter trial without buying PT (plan content lives in
+// code — lib/engagementPlan.ts — keyed by level; only the enrolment is a row).
+// last_followup_day / last_pt_reminder_day are lazy-milestone cursors.
+export const memberEngagementProgramsTable = pgTable(
+  "member_engagement_programs",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").notNull(),
+    memberPhone: text("member_phone").notNull().default(""),
+    level: text("level").notNull().default("beginner"), // beginner | intermediate | advanced
+    startDate: text("start_date").notNull(), // YYYY-MM-DD (IST)
+    gymId: integer("gym_id"),
+    gymName: text("gym_name").notNull().default(""),
+    assignedByStaffId: integer("assigned_by_staff_id"),
+    assignedByStaffName: text("assigned_by_staff_name").notNull().default(""),
+    dieticianName: text("dietician_name").notNull().default("In-house dietician"),
+    status: text("status").notNull().default("active"), // active | completed
+    lastFollowupDay: integer("last_followup_day").notNull().default(0),
+    lastPtReminderDay: integer("last_pt_reminder_day").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("member_engagement_programs_user_unique").on(t.userId),
+  ],
+);
+
 // Diet plans a trainer writes for a member (linked to a pt_program).
 export const memberDietPlansTable = pgTable("member_diet_plans", {
   id: serial("id").primaryKey(),

@@ -67,6 +67,7 @@ import {
 } from "react-native";
 
 import { AICoachCard } from "@/components/AICoachCard";
+import { EngagementPlanCard } from "@/components/EngagementPlanCard";
 import { FitnessJourneyCard } from "@/components/FitnessJourneyCard";
 import { WelcomeCelebration } from "@/components/WelcomeCelebration";
 import { AppText } from "@/components/AppText";
@@ -1010,6 +1011,9 @@ export default function HomeScreen() {
       {/* Kick-starter PT trial journey — signed-in members only; the card
           hides itself once every step (both trials + feedbacks) is done. */}
       {isSignedIn ? <FitnessJourneyCard /> : null}
+
+      {/* Engagement 45-day plan */}
+      {isSignedIn ? <EngagementPlanCard /> : null}
 
       {/* Personal tracking — pinned to the top for signed-in members.
           One arrow collapses/expands the whole block (progress + quick log + today). */}

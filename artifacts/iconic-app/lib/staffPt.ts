@@ -263,6 +263,34 @@ export const ptDashboardApi = {
     }>(await staffFetch(`/staff/pt/yoactiv-members?gymId=${gymId}`)),
 };
 
+// ── Engagement Program ────────────────────────────────────────────────────────
+
+export type EngagementMember = {
+  id: number;
+  userId: number;
+  memberName: string;
+  memberPhone: string;
+  level: "beginner" | "intermediate" | "advanced";
+  dayNumber: number;
+  totalDays: number;
+  gymName: string | null;
+  status: string;
+  score: number;
+  scoreBand: "green" | "yellow" | "red";
+  hasPaidPt: boolean;
+};
+
+export const fetchEngagementOverview = async () =>
+  asJson<EngagementMember[]>(await staffFetch("/staff/engagement/overview"));
+
+export const assignEngagement = async (phone: string, level: string) =>
+  asJson<{ success: boolean }>(
+    await staffFetch("/staff/engagement/assign", {
+      method: "POST",
+      body: JSON.stringify({ phone, level }),
+    }),
+  );
+
 // ── Staff notification polling with sound ───────────────────────────────────
 
 const LAST_SEEN_KEY = "staffNotifyLastSeen:v1";

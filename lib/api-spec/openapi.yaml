@@ -671,6 +671,30 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/PtTrialFeedback" }
 
+  /engagement/mine:
+    get:
+      operationId: getMyEngagement
+      tags: [trainers]
+      summary: The caller's 45-day engagement program (auto-starts after the kick-starter trial), today's workout card and engagement score
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MyEngagement" }
+
+  /engagement/plan:
+    get:
+      operationId: getMyEngagementPlan
+      tags: [trainers]
+      summary: The full 45-day workout plan for the caller's level
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MyEngagementPlan" }
+
   /membership-packages:
     get:
       operationId: listMembershipPackages
@@ -1562,6 +1586,44 @@ components:
         sessionNo: { type: integer, description: "Trial session number (1 or 2)" }
         rating: { type: integer, minimum: 1, maximum: 5 }
         comment: { type: string }
+    EngagementDayCard:
+      type: object
+      required: [day, title, focus, restDay, warmup, workout, cardio, core, stretching]
+      properties:
+        day: { type: integer, description: "1-based day number in the 45-day plan" }
+        title: { type: string }
+        focus: { type: string }
+        restDay: { type: boolean }
+        warmup: { type: array, items: { type: string } }
+        workout: { type: array, items: { type: string } }
+        cardio: { type: array, items: { type: string } }
+        core: { type: array, items: { type: string } }
+        stretching: { type: array, items: { type: string } }
+    MyEngagement:
+      type: object
+      required: [active, level, dayNumber, totalDays, startDate, gymName, dieticianName, score, scoreBand, showPtOffer]
+      properties:
+        active: { type: boolean, description: "True when a 45-day engagement program is running" }
+        level: { type: string, enum: [beginner, intermediate, advanced] }
+        dayNumber: { type: integer, description: "Current day (1-45); 0 when inactive" }
+        totalDays: { type: integer }
+        startDate: { type: string, description: "YYYY-MM-DD (IST); '' when inactive" }
+        gymName: { type: string }
+        dieticianName: { type: string, description: "In-house dietician the member is assigned to" }
+        score: { type: integer, description: "Engagement score 0-100" }
+        scoreBand: { type: string, enum: [green, yellow, red] }
+        showPtOffer: { type: boolean, description: "True when the member hasn't purchased PT yet" }
+        today:
+          allOf: [{ $ref: "#/components/schemas/EngagementDayCard" }]
+          nullable: true
+    MyEngagementPlan:
+      type: object
+      required: [level, days]
+      properties:
+        level: { type: string, enum: [beginner, intermediate, advanced] }
+        days:
+          type: array
+          items: { $ref: "#/components/schemas/EngagementDayCard" }
     SubmitPtTrialFeedbackRequest:
       type: object
       required: [sessionNo, rating]

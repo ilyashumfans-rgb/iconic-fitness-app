@@ -890,6 +890,53 @@ export const SubmitPtTrialFeedbackResponse = zod.object({
 
 
 /**
+ * @summary The caller's 45-day engagement program (auto-starts after the kick-starter trial), today's workout card and engagement score
+ */
+export const GetMyEngagementResponse = zod.object({
+  "active": zod.boolean().describe('True when a 45-day engagement program is running'),
+  "level": zod.enum(['beginner', 'intermediate', 'advanced']),
+  "dayNumber": zod.number().describe('Current day (1-45); 0 when inactive'),
+  "totalDays": zod.number(),
+  "startDate": zod.string().describe('YYYY-MM-DD (IST); \'\' when inactive'),
+  "gymName": zod.string(),
+  "dieticianName": zod.string().describe('In-house dietician the member is assigned to'),
+  "score": zod.number().describe('Engagement score 0-100'),
+  "scoreBand": zod.enum(['green', 'yellow', 'red']),
+  "showPtOffer": zod.boolean().describe('True when the member hasn\'t purchased PT yet'),
+  "today": zod.object({
+  "day": zod.number().describe('1-based day number in the 45-day plan'),
+  "title": zod.string(),
+  "focus": zod.string(),
+  "restDay": zod.boolean(),
+  "warmup": zod.array(zod.string()),
+  "workout": zod.array(zod.string()),
+  "cardio": zod.array(zod.string()),
+  "core": zod.array(zod.string()),
+  "stretching": zod.array(zod.string())
+}).nullish()
+})
+
+
+/**
+ * @summary The full 45-day workout plan for the caller's level
+ */
+export const GetMyEngagementPlanResponse = zod.object({
+  "level": zod.enum(['beginner', 'intermediate', 'advanced']),
+  "days": zod.array(zod.object({
+  "day": zod.number().describe('1-based day number in the 45-day plan'),
+  "title": zod.string(),
+  "focus": zod.string(),
+  "restDay": zod.boolean(),
+  "warmup": zod.array(zod.string()),
+  "workout": zod.array(zod.string()),
+  "cardio": zod.array(zod.string()),
+  "core": zod.array(zod.string()),
+  "stretching": zod.array(zod.string())
+}))
+})
+
+
+/**
  * @summary Purchasable membership packages for a branch (live prices from the gym-management system)
  */
 export const ListMembershipPackagesQueryParams = zod.object({
