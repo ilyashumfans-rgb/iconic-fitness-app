@@ -150,6 +150,68 @@ export const ptTrainerAssignmentsTable = pgTable(
   (t) => [uniqueIndex("pt_assign_ref_unique").on(t.refType, t.refId)],
 );
 
+// Trainer-accepted PT programs (trainer workspace in the mobile app's studio
+// side). One row per accepted request — the unique (ref_type, ref_id) index
+// is the "first trainer to accept wins" truth. Status: accepted → ongoing
+// (training started; unlocks the 2 free kick-starter sessions) → completed.
+export const ptProgramsTable = pgTable(
+  "pt_programs",
+  {
+    id: serial("id").primaryKey(),
+    refType: text("ref_type").notNull(), // booking | enquiry
+    refId: integer("ref_id").notNull(),
+    staffId: integer("staff_id").notNull(), // accepting trainer (staff table)
+    staffName: text("staff_name").notNull().default(""),
+    memberName: text("member_name").notNull().default(""),
+    memberPhone: text("member_phone").notNull().default(""),
+    userId: integer("user_id"), // app user when known
+    gymId: integer("gym_id"),
+    gymName: text("gym_name").notNull().default(""),
+    status: text("status").notNull().default("accepted"), // accepted | ongoing | completed
+    session1DoneAt: timestamp("session1_done_at", { withTimezone: true }),
+    session2DoneAt: timestamp("session2_done_at", { withTimezone: true }),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (t) => [uniqueIndex("pt_programs_ref_unique").on(t.refType, t.refId)],
+);
+
+// BMI records a trainer logs for a member (linked to a pt_program). Members
+// see their own records in the app (matched by user_id or phone).
+export const memberBmiRecordsTable = pgTable("member_bmi_records", {
+  id: serial("id").primaryKey(),
+  programId: integer("program_id"),
+  staffId: integer("staff_id").notNull(),
+  staffName: text("staff_name").notNull().default(""),
+  memberPhone: text("member_phone").notNull().default(""),
+  userId: integer("user_id"),
+  heightCm: real("height_cm"),
+  weightKg: real("weight_kg"),
+  bmi: real("bmi"),
+  note: text("note").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// Diet plans a trainer writes for a member (linked to a pt_program).
+export const memberDietPlansTable = pgTable("member_diet_plans", {
+  id: serial("id").primaryKey(),
+  programId: integer("program_id"),
+  staffId: integer("staff_id").notNull(),
+  staffName: text("staff_name").notNull().default(""),
+  memberPhone: text("member_phone").notNull().default(""),
+  userId: integer("user_id"),
+  title: text("title").notNull().default(""),
+  content: text("content").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // Staff-scheduled PT session timings for a PT enrolment (same refType/refId
 // keying as pt_trainer_assignments). Members see these on the PT Details
 // screen; staff manage them from the PT Bookings dashboards.

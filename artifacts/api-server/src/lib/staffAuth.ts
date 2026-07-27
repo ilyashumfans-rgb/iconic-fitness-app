@@ -10,6 +10,7 @@ export const STAFF_PERMISSIONS = [
   "gym.manage",
   "blog.manage",
   "lead.manage",
+  "pt.manage",
 ] as const;
 
 export type StaffPermission = (typeof STAFF_PERMISSIONS)[number];

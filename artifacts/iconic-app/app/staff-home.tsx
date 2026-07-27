@@ -21,6 +21,7 @@ import {
   staffFetch,
   type StaffProfile,
 } from "@/lib/staffSession";
+import { useStaffNotificationPolling } from "@/lib/staffPt";
 
 const FORCE_DARK = {
   mode: "dark" as const,
@@ -39,6 +40,7 @@ const PERMISSION_LABELS: Record<string, string> = {
   "lead.manage": "Leads & enquiries",
   "blog.manage": "Blogs",
   "ticket.manage": "Support tickets",
+  "pt.manage": "Trainer workspace (PT)",
 };
 
 export default function StaffHomeScreen() {
@@ -57,6 +59,11 @@ function StaffHomeContent() {
   const [profile, setProfile] = useState<StaffProfile | null>(null);
   const [checking, setChecking] = useState(true);
   const [busy, setBusy] = useState(false);
+
+  // Ring the bell (local notification with sound) when new staff
+  // notifications — e.g. member PT requests — arrive while the studio
+  // side is open.
+  useStaffNotificationPolling(true);
 
   // Verify the session against the server; a dead/expired cookie bounces
   // back to the studio login screen instead of showing stale data.
@@ -206,6 +213,45 @@ function StaffHomeContent() {
             ))
           )}
         </View>
+
+        {/* Trainer workspace (needs the PT permission) */}
+        {perms.includes("pt.manage") ? (
+        <View
+          style={[
+            styles.card,
+            styles.cardColumn,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
+        >
+          <AppText weight="700" size={15}>
+            Trainer workspace
+          </AppText>
+          <AppText size={13} color={colors.mutedForeground}>
+            Accept member PT requests, run their free kick-starter sessions,
+            and manage BMI records & diet plans.
+          </AppText>
+          {(
+            [
+              { icon: "inbox", label: "PT requests", href: "/staff-pt/requests" },
+              { icon: "bar-chart-2", label: "My dashboard & members", href: "/staff-pt/dashboard" },
+            ] as const
+          ).map((item) => (
+            <Pressable
+              key={item.href}
+              onPress={() => router.push(item.href)}
+              style={({ pressed }) => [
+                styles.portalBtn,
+                { borderColor: colors.primary, opacity: pressed ? 0.8 : 1 },
+              ]}
+            >
+              <Feather name={item.icon} size={16} color={colors.primary} />
+              <AppText weight="700" size={14} color={colors.primary}>
+                {item.label}
+              </AppText>
+            </Pressable>
+          ))}
+        </View>
+        ) : null}
 
         {/* Open the full staff portal in the browser */}
         <View

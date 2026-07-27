@@ -22,6 +22,7 @@ const ALL_PERMS = [
   "gym.manage",
   "blog.manage",
   "lead.manage",
+  "pt.manage",
 ];
 
 const inputCls =

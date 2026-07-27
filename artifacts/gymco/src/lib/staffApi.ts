@@ -208,4 +208,5 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "gym.manage": "Gym Management",
   "blog.manage": "Blog Management",
   "lead.manage": "Leads (CRM)",
+  "pt.manage": "PT Training (mobile trainer workspace)",
 };

@@ -29,4 +29,5 @@
 - [Wallet money-path concurrency](wallet-money-path-concurrency.md) — points wallet: DB unique index (23505 catch) is the idempotency truth, FOR UPDATE lock for balance clamp, conditional UPDATE...RETURNING for one-shot flips.
 - [Lazy milestone reminders](lazy-milestone-reminders.md) — countdown reminders: ascending thresholds + `find(t => t >= daysLeft)` (never fires early, catches up late); fire-and-forget from the feed endpoint.
 - [Mobile studio/staff login](mobile-staff-login.md) — Expo app has dual auth: Clerk members + cookie-session staff via staffFetch; signed-out redirects go to /(auth)/welcome; re-verify /staff/me, cache is only a hint.
+- [Trainer workspace PT gating](trainer-workspace-pt.md) — /staff/pt/* needs `pt.manage` perm; first-accept-wins via unique index; exact last-10 phone linking; singleton notification poller.
 - [Pre-auth stash linking](pre-auth-stash-linking.md) — data captured before login and auto-applied after must be TTL'd and never overwrite an existing differing profile value (shared devices).

@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
+import trainerWorkspaceRouter from "./trainerWorkspace";
 import profileRouter from "./profile";
 import dashboardRouter from "./dashboard";
 import gymsRouter from "./gyms";
@@ -44,6 +45,7 @@ router.use(referralsRouter);
 router.use(adminRouter);
 router.use(partnerRouter);
 router.use(staffRouter);
+router.use(trainerWorkspaceRouter);
 router.use(storeRouter);
 router.use(locationsRouter);
 router.use(storageRouter);

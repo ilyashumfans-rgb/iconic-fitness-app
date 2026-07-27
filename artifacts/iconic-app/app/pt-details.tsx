@@ -5,7 +5,9 @@ import {
   useGetMyPtProgram,
   type PtSession,
 } from "@workspace/api-client-react";
+import { customFetch } from "@workspace/api-client-react";
 import { Redirect } from "expo-router";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 
 import { AppText } from "@/components/AppText";
@@ -215,6 +217,106 @@ export default function PtDetailsScreen() {
           </Card>
         </View>
       )}
+      {isLoaded && isSignedIn ? <TrainerRecords /> : null}
     </Screen>
+  );
+}
+
+type TrainerBmi = {
+  id: number;
+  staffName: string;
+  heightCm: number | null;
+  weightKg: number | null;
+  bmi: number | null;
+  note: string;
+  createdAt: string;
+};
+type TrainerDiet = {
+  id: number;
+  staffName: string;
+  title: string;
+  content: string;
+  createdAt: string;
+};
+
+/** BMI records & diet plans the member's trainer logged for them. */
+function TrainerRecords() {
+  const colors = useColors();
+  const [bmi, setBmi] = useState<TrainerBmi[]>([]);
+  const [diets, setDiets] = useState<TrainerDiet[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const data = await customFetch<{ bmi: TrainerBmi[]; diets: TrainerDiet[] }>(
+          "/api/pt/records/mine",
+        );
+        if (!cancelled) {
+          setBmi(Array.isArray(data.bmi) ? data.bmi : []);
+          setDiets(Array.isArray(data.diets) ? data.diets : []);
+        }
+      } catch {
+        // Section simply stays hidden if the fetch fails.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (bmi.length === 0 && diets.length === 0) return null;
+
+  return (
+    <View style={{ gap: 12, marginTop: 12 }}>
+      {bmi.length > 0 ? (
+        <Card>
+          <AppText weight="700" size={15} style={{ marginBottom: 8 }}>
+            BMI records from your trainer
+          </AppText>
+          <View style={{ gap: 10 }}>
+            {bmi.map((r) => (
+              <View key={r.id} style={{ gap: 2 }}>
+                <AppText weight="700" size={14}>
+                  BMI {r.bmi ?? "—"}{" "}
+                  <AppText size={12} color={colors.mutedForeground}>
+                    ({r.heightCm} cm · {r.weightKg} kg) · {istDateLabel(r.createdAt)}
+                    {r.staffName ? ` · by ${r.staffName}` : ""}
+                  </AppText>
+                </AppText>
+                {r.note ? (
+                  <AppText size={13} color={colors.mutedForeground}>
+                    {r.note}
+                  </AppText>
+                ) : null}
+              </View>
+            ))}
+          </View>
+        </Card>
+      ) : null}
+      {diets.length > 0 ? (
+        <Card>
+          <AppText weight="700" size={15} style={{ marginBottom: 8 }}>
+            Diet plans from your trainer
+          </AppText>
+          <View style={{ gap: 12 }}>
+            {diets.map((d) => (
+              <View key={d.id} style={{ gap: 2 }}>
+                <AppText weight="700" size={14}>
+                  {d.title}{" "}
+                  <AppText size={12} color={colors.mutedForeground}>
+                    · {istDateLabel(d.createdAt)}
+                    {d.staffName ? ` · by ${d.staffName}` : ""}
+                  </AppText>
+                </AppText>
+                <AppText size={13} color={colors.mutedForeground}>
+                  {d.content}
+                </AppText>
+              </View>
+            ))}
+          </View>
+        </Card>
+      ) : null}
+    </View>
   );
 }
