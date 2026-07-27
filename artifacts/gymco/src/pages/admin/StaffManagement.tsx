@@ -492,7 +492,7 @@ function YoactivTrainersPanel({
                 ) : (
                   <button
                     onClick={() => onCreateLogin(t.name.trim(), t.memberEmail)}
-                    className="text-xs px-3 py-1.5 rounded bg-lime-500/20 text-lime-300 border border-lime-500/40 hover:bg-lime-500/30 shrink-0"
+                    className="text-xs px-3 py-1.5 rounded bg-lime-500/20 text-black font-semibold border border-lime-500/40 hover:bg-lime-500/30 shrink-0"
                   >
                     Create login
                   </button>
