@@ -2113,6 +2113,21 @@ function sanitizePermissions(input: unknown): string[] {
   return Array.from(out);
 }
 
+/**
+ * Normalize an optional staff username. Returns:
+ * - `null` when blank/absent (clears the username),
+ * - the lowercased username when valid,
+ * - `false` when present but invalid.
+ */
+function normalizeStaffUsername(
+  input: string | undefined,
+): string | null | false {
+  const v = (input ?? "").trim().toLowerCase();
+  if (!v) return null;
+  if (!/^[a-z0-9][a-z0-9._-]{2,29}$/.test(v) || v.includes("@")) return false;
+  return v;
+}
+
 router.get(
   "/admin/staff",
   requireAdmin,
@@ -2122,6 +2137,7 @@ router.get(
         id: staffTable.id,
         name: staffTable.name,
         email: staffTable.email,
+        username: staffTable.username,
         isActive: staffTable.isActive,
         permissions: staffTable.permissions,
         createdAt: staffTable.createdAt,
@@ -2144,10 +2160,11 @@ router.post(
   "/admin/staff",
   requireAdmin,
   async (req: Request, res: Response): Promise<void> => {
-    const { name, email, password, permissions, isActive } =
+    const { name, email, username, password, permissions, isActive } =
       (req.body ?? {}) as {
         name?: string;
         email?: string;
+        username?: string;
         password?: string;
         permissions?: unknown;
         isActive?: boolean;
@@ -2160,6 +2177,14 @@ router.post(
       res.status(400).json({ error: "Password must be at least 6 chars" });
       return;
     }
+    const cleanUsername = normalizeStaffUsername(username);
+    if (cleanUsername === false) {
+      res.status(400).json({
+        error:
+          "Username must be 3-30 characters: letters, numbers, dot, dash or underscore",
+      });
+      return;
+    }
     const perms = sanitizePermissions(permissions);
     const passwordHash = await hashPassword(password);
     try {
@@ -2168,6 +2193,7 @@ router.post(
         .values({
           name,
           email: email.toLowerCase().trim(),
+          username: cleanUsername,
           passwordHash,
           permissions: perms,
           isActive: isActive !== false,
@@ -2176,6 +2202,7 @@ router.post(
           id: staffTable.id,
           name: staffTable.name,
           email: staffTable.email,
+          username: staffTable.username,
           isActive: staffTable.isActive,
           permissions: staffTable.permissions,
           createdAt: staffTable.createdAt,
@@ -2184,9 +2211,10 @@ router.post(
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed";
       if (/unique|duplicate/i.test(msg)) {
-        res
-          .status(409)
-          .json({ error: "A staff member with this email already exists" });
+        res.status(409).json({
+          error:
+            "A staff member with this email or username already exists",
+        });
         return;
       }
       res.status(500).json({ error: msg });
@@ -2199,13 +2227,25 @@ router.patch(
   requireAdmin,
   async (req: Request, res: Response): Promise<void> => {
     const id = Number(req.params.id);
-    const { name, permissions, isActive } = (req.body ?? {}) as {
+    const { name, username, permissions, isActive } = (req.body ?? {}) as {
       name?: string;
+      username?: string | null;
       permissions?: unknown;
       isActive?: boolean;
     };
     const patch: Record<string, unknown> = {};
     if (name !== undefined) patch.name = name;
+    if (username !== undefined) {
+      const cleanUsername = normalizeStaffUsername(username ?? undefined);
+      if (cleanUsername === false) {
+        res.status(400).json({
+          error:
+            "Username must be 3-30 characters: letters, numbers, dot, dash or underscore",
+        });
+        return;
+      }
+      patch.username = cleanUsername;
+    }
     if (permissions !== undefined)
       patch.permissions = sanitizePermissions(permissions);
     if (isActive !== undefined) patch.isActive = Boolean(isActive);
@@ -2213,23 +2253,35 @@ router.patch(
       res.status(400).json({ error: "Nothing to update" });
       return;
     }
-    const [updated] = await db
-      .update(staffTable)
-      .set(patch)
-      .where(eq(staffTable.id, id))
-      .returning({
-        id: staffTable.id,
-        name: staffTable.name,
-        email: staffTable.email,
-        isActive: staffTable.isActive,
-        permissions: staffTable.permissions,
-        createdAt: staffTable.createdAt,
-      });
-    if (!updated) {
-      res.status(404).json({ error: "Not found" });
-      return;
+    try {
+      const [updated] = await db
+        .update(staffTable)
+        .set(patch)
+        .where(eq(staffTable.id, id))
+        .returning({
+          id: staffTable.id,
+          name: staffTable.name,
+          email: staffTable.email,
+          username: staffTable.username,
+          isActive: staffTable.isActive,
+          permissions: staffTable.permissions,
+          createdAt: staffTable.createdAt,
+        });
+      if (!updated) {
+        res.status(404).json({ error: "Not found" });
+        return;
+      }
+      res.json(updated);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed";
+      if (/unique|duplicate/i.test(msg)) {
+        res
+          .status(409)
+          .json({ error: "That username is already taken" });
+        return;
+      }
+      res.status(500).json({ error: msg });
     }
-    res.json(updated);
   },
 );
 

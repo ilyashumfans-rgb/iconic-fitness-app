@@ -73,17 +73,17 @@ function StaffHomeContent() {
           setProfile(fresh);
         } else if (res.status === 401 || res.status === 403) {
           await clearStaffProfile();
-          router.replace("/(auth)/staff-login");
+          router.replace("/staff-login");
           return;
         } else if (!stored) {
           // Server error with nothing cached — never render a blank screen.
-          router.replace("/(auth)/staff-login");
+          router.replace("/staff-login");
           return;
         }
         // Network/server hiccup with a stored profile: keep showing it.
       } catch {
         if (!stored && !cancelled) {
-          router.replace("/(auth)/staff-login");
+          router.replace("/staff-login");
           return;
         }
       } finally {

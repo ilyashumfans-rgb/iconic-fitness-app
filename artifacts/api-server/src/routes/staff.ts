@@ -1,4 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
+import { getAuth, clerkClient } from "@clerk/express";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import {
   db,
@@ -28,18 +29,26 @@ const VALID_PARTNER_STATUSES = new Set(["pending", "active", "suspended"]);
 router.post(
   "/staff/login",
   async (req: Request, res: Response): Promise<void> => {
-    const { email, password } = (req.body ?? {}) as {
+    const { email, identifier, password } = (req.body ?? {}) as {
       email?: string;
+      identifier?: string;
       password?: string;
     };
-    if (!email || !password) {
-      res.status(400).json({ error: "Email and password required" });
+    const rawId = (identifier ?? email ?? "").toLowerCase().trim();
+    if (!rawId || !password) {
+      res.status(400).json({ error: "Email/username and password required" });
       return;
     }
+    // Staff can sign in with either their email address or the username the
+    // admin assigned to them.
     const [row] = await db
       .select()
       .from(staffTable)
-      .where(eq(staffTable.email, email.toLowerCase().trim()));
+      .where(
+        rawId.includes("@")
+          ? eq(staffTable.email, rawId)
+          : eq(staffTable.username, rawId),
+      );
     if (!row) {
       res.status(401).json({ error: "Invalid credentials" });
       return;
@@ -53,6 +62,70 @@ router.post(
     const ok = await verifyPassword(password, row.passwordHash);
     if (!ok) {
       res.status(401).json({ error: "Invalid credentials" });
+      return;
+    }
+    req.session.staffId = row.id;
+    req.session.staffEmail = row.email;
+    req.session.staffName = row.name;
+    req.session.staffPermissions = row.permissions ?? [];
+    res.json({
+      id: row.id,
+      email: row.email,
+      name: row.name,
+      permissions: row.permissions ?? [],
+    });
+  },
+);
+
+// Google (Clerk) sign-in for staff. Requires a verified Clerk session (the
+// mobile app sends a Bearer token, web sends the __session cookie). The
+// Google account's verified email must match an existing, active staff row —
+// there is NO just-in-time provisioning: only accounts the admin created
+// (e.g. trainer email IDs taken from the active members view) can get in.
+router.post(
+  "/staff/google-login",
+  async (req: Request, res: Response): Promise<void> => {
+    const auth = getAuth(req);
+    const clerkUserId = auth?.userId;
+    if (!clerkUserId) {
+      res.status(401).json({ error: "Sign in with Google first" });
+      return;
+    }
+    let email = "";
+    let verified = false;
+    try {
+      const u = await clerkClient.users.getUser(clerkUserId);
+      // Strictly the PRIMARY email — never fall back to a secondary address,
+      // since staff matching is by email and secondaries may be unverified.
+      const primary = u.emailAddresses.find(
+        (e) => e.id === u.primaryEmailAddressId,
+      );
+      email = (primary?.emailAddress ?? "").toLowerCase().trim();
+      verified = primary?.verification?.status === "verified";
+    } catch (err) {
+      req.log?.error({ err }, "Clerk user lookup failed in staff google-login");
+      res.status(502).json({ error: "Could not verify Google account" });
+      return;
+    }
+    if (!email || !verified) {
+      res.status(403).json({ error: "Email not verified by Google" });
+      return;
+    }
+    const [row] = await db
+      .select()
+      .from(staffTable)
+      .where(eq(staffTable.email, email));
+    if (!row) {
+      res.status(403).json({
+        error:
+          "This Google account isn't registered as staff. Ask the admin to add your email.",
+      });
+      return;
+    }
+    if (!row.isActive) {
+      res
+        .status(403)
+        .json({ error: "Your staff account has been deactivated." });
       return;
     }
     req.session.staffId = row.id;

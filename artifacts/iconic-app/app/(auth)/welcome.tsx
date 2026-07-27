@@ -111,7 +111,7 @@ function WelcomeContent() {
 
           {/* Studio login */}
           <Pressable
-            onPress={() => router.push("/(auth)/staff-login")}
+            onPress={() => router.push("/staff-login")}
             style={({ pressed }) => [
               styles.option,
               styles.optionOutline,

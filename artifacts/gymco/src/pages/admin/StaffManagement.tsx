@@ -8,6 +8,7 @@ type Staff = {
   id: number;
   name: string;
   email: string;
+  username: string | null;
   isActive: boolean;
   permissions: string[];
   createdAt: string;
@@ -70,6 +71,7 @@ function CreateStaffForm({ onCreated }: { onCreated: () => void }) {
   const [f, setF] = useState({
     name: "",
     email: "",
+    username: "",
     password: "",
     permissions: [] as string[],
   });
@@ -85,12 +87,13 @@ function CreateStaffForm({ onCreated }: { onCreated: () => void }) {
       await adminApi.staff.create({
         name: f.name,
         email: f.email,
+        username: f.username.trim() || undefined,
         password: f.password,
         permissions: f.permissions,
         isActive: true,
       });
       setOk(true);
-      setF({ name: "", email: "", password: "", permissions: [] });
+      setF({ name: "", email: "", username: "", password: "", permissions: [] });
       onCreated();
       setTimeout(() => setOk(false), 1500);
     } catch (e) {
@@ -133,7 +136,20 @@ function CreateStaffForm({ onCreated }: { onCreated: () => void }) {
               placeholder="staff@iconicfitnessindia.com"
             />
           </div>
-          <div className="sm:col-span-2">
+          <div>
+            <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+              Username <span className="text-slate-500 normal-case">(optional)</span>
+            </label>
+            <input
+              className={inputCls}
+              value={f.username}
+              onChange={(e) => setF({ ...f, username: e.target.value })}
+              placeholder="e.g. trainer.ananya"
+              pattern="[A-Za-z0-9][A-Za-z0-9._-]{2,29}"
+              title="3-30 characters: letters, numbers, dot, dash or underscore"
+            />
+          </div>
+          <div>
             <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
               Initial Password
             </label>
@@ -157,8 +173,10 @@ function CreateStaffForm({ onCreated }: { onCreated: () => void }) {
             onChange={(next) => setF({ ...f, permissions: next })}
           />
           <div className="text-[11px] text-slate-500 mt-2">
-            Staff will sign in at <code>/staff/login</code> and only see
-            features they have permission for.
+            Staff sign in at <code>/staff/login</code> or in the mobile app's
+            Studio Login — with their email or username + password, or with
+            Google using this email. For trainers, take the email IDs from Gym
+            Members → View Active.
           </div>
         </div>
         {err && (
@@ -185,6 +203,8 @@ function CreateStaffForm({ onCreated }: { onCreated: () => void }) {
 function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(row.name);
+  const [username, setUsername] = useState(row.username ?? "");
+  const [editErr, setEditErr] = useState<string | null>(null);
   const [perms, setPerms] = useState<string[]>(row.permissions ?? []);
   const [isActive, setIsActive] = useState(row.isActive);
   const [resetting, setResetting] = useState(false);
@@ -193,14 +213,18 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
 
   const save = async () => {
     setBusy(true);
+    setEditErr(null);
     try {
       await adminApi.staff.update(row.id, {
         name,
+        username: username.trim() || null,
         permissions: perms,
         isActive,
       });
       setEditing(false);
       onChanged();
+    } catch (e) {
+      setEditErr(e instanceof Error ? e.message : "Failed to save");
     } finally {
       setBusy(false);
     }
@@ -233,15 +257,31 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
     <tr className="border-b border-slate-800/60 align-top">
       <td className="px-5 py-4">
         {editing ? (
-          <input
-            className={inputCls}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+          <div className="space-y-2">
+            <input
+              className={inputCls}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <input
+              className={inputCls}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Username (optional)"
+            />
+            {editErr && (
+              <div className="text-xs text-red-400">{editErr}</div>
+            )}
+          </div>
         ) : (
           <div className="font-medium text-white">{row.name}</div>
         )}
         <div className="text-xs text-slate-400 mt-1">{row.email}</div>
+        {!editing && row.username ? (
+          <div className="text-[11px] text-lime-300/80 mt-0.5 font-mono">
+            @{row.username}
+          </div>
+        ) : null}
       </td>
       <td className="px-5 py-4">
         {editing ? (
@@ -298,8 +338,10 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
               <button
                 onClick={() => {
                   setName(row.name);
+                  setUsername(row.username ?? "");
                   setPerms(row.permissions ?? []);
                   setIsActive(row.isActive);
+                  setEditErr(null);
                   setEditing(false);
                 }}
                 className="text-xs px-3 py-1.5 rounded bg-slate-700/40 text-slate-300 border border-slate-600/40"
