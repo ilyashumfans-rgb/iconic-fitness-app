@@ -10,3 +10,7 @@ description: Third-party gym-management API (api.yoactiv.com) — auth quirks, s
 - Dates arrive as DD-MM-YYYY; statuses like Active/Expired plus freeze/hold variants (mapped to paused).
 - `/memberships/mine` prefers YoActiv (5-min success / 60s failure cache, 6s global deadline, parallel branch fetches) and falls back to the local DB row; DTO has optional `source: local|yoactiv`.
 - Sandbox: branch 7820, test mobile 9008003082. Mode = NODE_ENV or `YOACTIV_MODE` override.
+
+## PT packages
+- Member "Book your PT sessions" screen (`book-pt-sessions.tsx`) shows /api/trainer-packages filtered to PT (YoActiv `PT===1` flag OR name matching /pt|personal train/i — branches often forget the flag).
+- Packages are hidden-by-default in admin curation; a branch shows prices only when YoActiv has PT-named packages AND admin unhides them. As of Jul 2026 no branch had any PT package in YoActiv — flow falls back to enquiry until the gym creates them.
