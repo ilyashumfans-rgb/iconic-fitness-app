@@ -105,6 +105,10 @@ export const gymsTable = pgTable("gyms", {
   // Maps this branch to its YoActiv Branch_Id so branch-scoped trainer
   // rosters and PT-package pricing can be pulled from the right branch.
   yoactivBranchId: integer("yoactiv_branch_id"),
+  // Some gyms bill personal training through a separate dedicated YoActiv
+  // "PT Sales" branch. When set, PT packages and PT payments use this branch;
+  // memberships keep using yoactivBranchId.
+  yoactivPtBranchId: integer("yoactiv_pt_branch_id"),
 });
 
 // Paid personal-training session bookings made from the mobile app.

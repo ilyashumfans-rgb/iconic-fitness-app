@@ -4,10 +4,12 @@ import {
   getGetMyMembershipQueryKey,
   getGetMyPtProgramQueryKey,
   getListLiveTrainersQueryKey,
+  getListMyTrainerBookingsQueryKey,
   useGetMyMembership,
   useGetMyPtProgram,
   useListGyms,
   useListLiveTrainers,
+  useListMyTrainerBookings,
   type Gym,
   type LiveTrainer,
 } from "@workspace/api-client-react";
@@ -53,6 +55,18 @@ export default function TrainersScreen() {
   const membershipSettled =
     (!isSignedIn || membershipQuery.isSuccess || membershipQuery.isError) &&
     (!isSignedIn || ptProgramQuery.isSuccess || ptProgramQuery.isError);
+
+  // Once a member has sent their free kick-starter trial request, hide the
+  // trial CTA (only that button) — one trial per member.
+  const myBookingsQuery = useListMyTrainerBookings({
+    query: {
+      enabled: !!isSignedIn,
+      queryKey: getListMyTrainerBookingsQueryKey(),
+    },
+  });
+  const trialRequested = (myBookingsQuery.data ?? []).some(
+    (b) => b.status === "enquiry" && b.trainerName === "Trial session",
+  );
 
   const gyms = useMemo(() => gymsQuery.data ?? [], [gymsQuery.data]);
   const selectedGym = gyms.find((g) => g.id === gymId) ?? null;
@@ -189,46 +203,49 @@ export default function TrainersScreen() {
         )}
       </Pressable>
 
-      {/* Prominent kick-starter trial CTA — no need to pick a coach first. */}
-      <Pressable
-        onPress={() =>
-          router.push({
-            pathname: "/book-trainer",
-            params: {
-              trial: "1",
-              gymId: String(gymId),
-              gymName: selectedGym?.name ?? membershipQuery.data?.branchName ?? "",
-            },
-          })
-        }
-        style={{ marginBottom: 18 }}
-      >
-        {({ pressed }) => (
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-              backgroundColor: "#C7F000",
-              borderRadius: 16,
-              paddingHorizontal: 18,
-              paddingVertical: 16,
-              opacity: pressed ? 0.85 : 1,
-            }}
-          >
-            <Feather name="zap" size={20} color="#0A0C08" />
-            <View style={{ flex: 1 }}>
-              <AppText weight="700" size={16} color="#0A0C08">
-                Book your trial session
-              </AppText>
-              <AppText size={12} color="#0A0C08" style={{ opacity: 0.7 }}>
-                Free kick-starter PT trial — we'll match you with a coach
-              </AppText>
+      {/* Prominent kick-starter trial CTA — no need to pick a coach first.
+          Hidden once the member has already sent a trial request. */}
+      {trialRequested ? null : (
+        <Pressable
+          onPress={() =>
+            router.push({
+              pathname: "/book-trainer",
+              params: {
+                trial: "1",
+                gymId: String(gymId),
+                gymName: selectedGym?.name ?? membershipQuery.data?.branchName ?? "",
+              },
+            })
+          }
+          style={{ marginBottom: 18 }}
+        >
+          {({ pressed }) => (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12,
+                backgroundColor: "#C7F000",
+                borderRadius: 16,
+                paddingHorizontal: 18,
+                paddingVertical: 16,
+                opacity: pressed ? 0.85 : 1,
+              }}
+            >
+              <Feather name="zap" size={20} color="#0A0C08" />
+              <View style={{ flex: 1 }}>
+                <AppText weight="700" size={16} color="#0A0C08">
+                  Book your trial session
+                </AppText>
+                <AppText size={12} color="#0A0C08" style={{ opacity: 0.7 }}>
+                  Free kick-starter PT trial — we'll match you with a coach
+                </AppText>
+              </View>
+              <Feather name="arrow-right" size={20} color="#0A0C08" />
             </View>
-            <Feather name="arrow-right" size={20} color="#0A0C08" />
-          </View>
-        )}
-      </Pressable>
+          )}
+        </Pressable>
+      )}
 
       {liveQuery.isLoading ? (
         <LoadingView />

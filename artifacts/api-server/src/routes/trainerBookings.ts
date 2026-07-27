@@ -65,17 +65,23 @@ router.get("/trainer-packages", async (req, res): Promise<void> => {
     return;
   }
   const [gym] = await db
-    .select({ yoactivBranchId: gymsTable.yoactivBranchId })
+    .select({
+      yoactivBranchId: gymsTable.yoactivBranchId,
+      yoactivPtBranchId: gymsTable.yoactivPtBranchId,
+    })
     .from(gymsTable)
     .where(eq(gymsTable.id, parsed.data.gymId));
+  // PT sales may run through a dedicated YoActiv branch; fall back to the
+  // gym's main branch when no PT branch is mapped.
+  const ptBranchId = gym?.yoactivPtBranchId ?? gym?.yoactivBranchId;
   // No branch mapping → no paid packages; the app falls back to enquiries.
-  if (!gym?.yoactivBranchId) {
+  if (!ptBranchId) {
     res.json(ListTrainerPackagesResponse.parse([]));
     return;
   }
   const [packages, prefs] = await Promise.all([
-    fetchYoactivPackages(gym.yoactivBranchId),
-    packagePrefs(gym.yoactivBranchId),
+    fetchYoactivPackages(ptBranchId),
+    packagePrefs(ptBranchId),
   ]);
   res.json(
     ListTrainerPackagesResponse.parse(
@@ -117,6 +123,7 @@ router.post(
         id: gymsTable.id,
         name: gymsTable.name,
         yoactivBranchId: gymsTable.yoactivBranchId,
+        yoactivPtBranchId: gymsTable.yoactivPtBranchId,
       })
       .from(gymsTable)
       .where(eq(gymsTable.id, body.gymId));
@@ -124,7 +131,11 @@ router.post(
       res.status(404).json({ error: "Branch not found" });
       return;
     }
-    const target = await resolveBranchTarget(gym.yoactivBranchId);
+    // PT purchases bill through the gym's dedicated PT-sales branch when one
+    // is mapped, so the money lands in the right YoActiv account.
+    const target = await resolveBranchTarget(
+      gym.yoactivPtBranchId ?? gym.yoactivBranchId,
+    );
     if (!target) {
       res.status(409).json({
         error: "Online payment isn't available for this branch yet",
@@ -134,7 +145,7 @@ router.post(
     // Never trust the client's price — re-read the package from YoActiv.
     // Only admin-enabled (visible) packages are purchasable.
     const [packages, prefs] = await Promise.all([
-      fetchYoactivPackages(gym.yoactivBranchId),
+      fetchYoactivPackages(target.branchId),
       packagePrefs(target.branchId),
     ]);
     const rawPkg = packages.find(
