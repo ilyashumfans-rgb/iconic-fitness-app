@@ -67,7 +67,7 @@ function PermissionCheckboxes({
   );
 }
 
-export type StaffPrefill = { name: string; seq: number };
+export type StaffPrefill = { name: string; email: string | null; seq: number };
 
 function CreateStaffForm({
   onCreated,
@@ -93,7 +93,11 @@ function CreateStaffForm({
   // name here and jumps to the form so the admin only types email + password.
   useEffect(() => {
     if (!prefill) return;
-    setF((prev) => ({ ...prev, name: prefill.name }));
+    setF((prev) => ({
+      ...prev,
+      name: prefill.name,
+      email: prefill.email ?? prev.email,
+    }));
     cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     emailRef.current?.focus();
   }, [prefill]);
@@ -229,6 +233,8 @@ type YoactivRosterMember = {
   mobile: string;
   photoUrl: string | null;
   role: "trainer" | "staff";
+  /** Email from their YoActiv MEMBER registration (matched by mobile). */
+  memberEmail: string | null;
 };
 type RoleFilter = "all" | "trainer" | "staff";
 
@@ -243,7 +249,7 @@ function YoactivTrainersPanel({
   onCreateLogin,
 }: {
   staffRows: Staff[];
-  onCreateLogin: (name: string) => void;
+  onCreateLogin: (name: string, email: string | null) => void;
 }) {
   const [branches, setBranches] = useState<YoactivBranch[]>([]);
   const [branchId, setBranchId] = useState<number | null>(null);
@@ -387,6 +393,16 @@ function YoactivTrainersPanel({
                     </span>
                     <span>{t.mobile || "No mobile on record"}</span>
                   </div>
+                  {t.memberEmail ? (
+                    <div className="text-xs text-slate-300 mt-0.5 truncate">
+                      <span className="text-slate-500">Registered email:</span>{" "}
+                      {t.memberEmail}
+                    </div>
+                  ) : (
+                    <div className="text-[11px] text-slate-500 mt-0.5">
+                      No email in YoActiv (not registered as a member)
+                    </div>
+                  )}
                 </div>
                 {existing ? (
                   <div className="text-right">
@@ -401,7 +417,7 @@ function YoactivTrainersPanel({
                   </div>
                 ) : (
                   <button
-                    onClick={() => onCreateLogin(t.name.trim())}
+                    onClick={() => onCreateLogin(t.name.trim(), t.memberEmail)}
                     className="text-xs px-3 py-1.5 rounded bg-lime-500/20 text-lime-300 border border-lime-500/40 hover:bg-lime-500/30 shrink-0"
                   >
                     Create login
@@ -645,8 +661,8 @@ export default function AdminStaffManagement() {
 
         <YoactivTrainersPanel
           staffRows={rows}
-          onCreateLogin={(name) =>
-            setPrefill((p) => ({ name, seq: (p?.seq ?? 0) + 1 }))
+          onCreateLogin={(name, email) =>
+            setPrefill((p) => ({ name, email, seq: (p?.seq ?? 0) + 1 }))
           }
         />
 

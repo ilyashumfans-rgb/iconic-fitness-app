@@ -497,7 +497,10 @@ export const adminApi = {
       ),
     staff: (branchId: number) =>
       request<
-        (YoactivStaffTrainer & { role: "trainer" | "staff" })[]
+        (YoactivStaffTrainer & {
+          role: "trainer" | "staff";
+          memberEmail: string | null;
+        })[]
       >(`/admin/yoactiv/staff?branchId=${branchId}`),
     packages: (branchId: number) =>
       request<YoactivAdminPackage[]>(

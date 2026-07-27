@@ -40,6 +40,7 @@ import {
   fetchYoactivMemberList,
   fetchYoactivBranchTrainers,
   fetchYoactivBranchStaff,
+  normalizeMobile,
   fetchYoactivPackages,
   yoactivConfigured,
   yoactivKeyConfigs,
@@ -2771,9 +2772,29 @@ router.get(
       return;
     }
     const staff = await fetchYoactivBranchStaff(branchId);
-    const photos = await trainerPhotoMap(staff.map((s) => s.id));
+    const [photos, members] = await Promise.all([
+      trainerPhotoMap(staff.map((s) => s.id)),
+      // YoActiv attaches emails to MEMBER registrations only, never to staff
+      // records. Many trainers/MCs are also registered as members, so match
+      // by mobile number to surface the email they registered with.
+      fetchYoactivMemberList(branchId).catch(() => []),
+    ]);
+    const emailByMobile = new Map<string, string>();
+    for (const m of members) {
+      const key = normalizeMobile(m.mobile);
+      if (key && m.email && !emailByMobile.has(key)) {
+        emailByMobile.set(key, m.email);
+      }
+    }
     res.json(
-      staff.map((s) => ({ ...s, photoUrl: photos.get(s.id) ?? null })),
+      staff.map((s) => {
+        const key = normalizeMobile(s.mobile);
+        return {
+          ...s,
+          photoUrl: photos.get(s.id) ?? null,
+          memberEmail: (key && emailByMobile.get(key)) || null,
+        };
+      }),
     );
   },
 );
