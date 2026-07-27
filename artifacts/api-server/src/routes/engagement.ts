@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
 import {
+  adminsTable,
   db,
   leadsTable,
   memberBmiRecordsTable,
@@ -22,6 +23,7 @@ import {
   requireStaffPermission,
   loadStaffOrUnauthorized,
 } from "../lib/staffAuth";
+import { requireAdmin } from "../lib/adminAuth";
 import {
   ENGAGEMENT_TOTAL_DAYS,
   engagementDayNumber,
@@ -335,10 +337,7 @@ router.get(
 
 // ─── Staff: engagement overview + level assignment ──────────────────────────
 
-router.get(
-  "/staff/engagement/overview",
-  requireStaffPermission("pt.manage"),
-  async (_req: Request, res: Response): Promise<void> => {
+async function buildOverviewRows() {
     const programs = await db
       .select()
       .from(memberEngagementProgramsTable)
@@ -445,17 +444,16 @@ router.get(
     });
     // Low scores first — that's the follow-up list (step 16).
     rows.sort((a, b) => a.score - b.score);
-    res.json(rows);
-  },
-);
+    return rows;
+}
 
 // Enrol a member (by phone) or change their level. Body: { phone, level }.
-router.post(
-  "/staff/engagement/assign",
-  requireStaffPermission("pt.manage"),
-  async (req: Request, res: Response): Promise<void> => {
-    const me = await loadStaffOrUnauthorized(req, res);
-    if (!me) return;
+async function assignEngagement(
+  assigner: { id: number | null; name: string },
+  req: Request,
+  res: Response,
+): Promise<void> {
+    const me = assigner;
     const b = (req.body ?? {}) as Record<string, unknown>;
     const phone = normalizeMobile(String(b.phone ?? ""));
     const level = b.level;
@@ -515,6 +513,51 @@ router.post(
       // Best-effort only.
     }
     res.status(existing ? 200 : 201).json(row);
+}
+
+router.get(
+  "/staff/engagement/overview",
+  requireStaffPermission("pt.manage"),
+  async (_req: Request, res: Response): Promise<void> => {
+    res.json(await buildOverviewRows());
+  },
+);
+
+router.post(
+  "/staff/engagement/assign",
+  requireStaffPermission("pt.manage"),
+  async (req: Request, res: Response): Promise<void> => {
+    const me = await loadStaffOrUnauthorized(req, res);
+    if (!me) return;
+    await assignEngagement({ id: me.id, name: me.name }, req, res);
+  },
+);
+
+// ─── Admin (GYMCO web admin): same overview + assignment ────────────────────
+
+router.get(
+  "/admin/engagement/overview",
+  requireAdmin,
+  async (_req: Request, res: Response): Promise<void> => {
+    res.json(await buildOverviewRows());
+  },
+);
+
+router.post(
+  "/admin/engagement/assign",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const adminId = req.session.adminId!;
+    const [admin] = await db
+      .select({ name: adminsTable.name })
+      .from(adminsTable)
+      .where(eq(adminsTable.id, adminId));
+    // Enrolled-by is recorded as admin; staff FK column stays null.
+    await assignEngagement(
+      { id: null, name: admin?.name ?? "GYMCO admin" },
+      req,
+      res,
+    );
   },
 );
 

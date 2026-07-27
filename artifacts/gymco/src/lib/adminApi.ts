@@ -698,6 +698,30 @@ export const adminApi = {
         body: JSON.stringify(body),
       }),
   },
+  engagement: {
+    overview: () =>
+      request<
+        {
+          id: number;
+          userId: number;
+          memberName: string;
+          memberPhone: string;
+          level: "beginner" | "intermediate" | "advanced";
+          dayNumber: number;
+          totalDays: number;
+          gymName: string;
+          status: string;
+          score: number;
+          scoreBand: "green" | "yellow" | "red";
+          hasPaidPt: boolean;
+        }[]
+      >("/admin/engagement/overview"),
+    assign: (phone: string, level: string) =>
+      request<any>("/admin/engagement/assign", {
+        method: "POST",
+        body: JSON.stringify({ phone, level }),
+      }),
+  },
   reseedFromSnapshot: () =>
     request<{ ok: true; inserted: Record<string, number> }>(
       "/admin/reseed-from-snapshot",

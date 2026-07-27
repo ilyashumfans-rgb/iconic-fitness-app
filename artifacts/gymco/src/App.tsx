@@ -92,6 +92,7 @@ import AdminNotifications from "@/pages/admin/Notifications";
 import AdminLeads from "@/pages/admin/Leads";
 import AdminBlogManagement from "@/pages/admin/BlogManagement";
 import AdminPtManager from "@/pages/admin/PtManager";
+import AdminMemberEngagement from "@/pages/admin/MemberEngagement";
 import StaffLogin from "@/pages/staff/Login";
 import StaffDashboard from "@/pages/staff/Dashboard";
 import StaffPartnerOnboarding from "@/pages/staff/PartnerOnboarding";
@@ -385,6 +386,7 @@ function AppShell() {
         <Route path="/admin/home-slider" component={AdminHomeSlides} />
         <Route path="/admin/blogs" component={AdminBlogManagement} />
         <Route path="/admin/pt" component={AdminPtManager} />
+        <Route path="/admin/member-engagement" component={AdminMemberEngagement} />
         <Route path="/admin/tickets" component={AdminTickets} />
         <Route component={NotFound} />
       </Switch>

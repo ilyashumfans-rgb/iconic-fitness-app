@@ -192,6 +192,11 @@ const SECTIONS: Section[] = [
         icon: <Dumbbell className="h-4 w-4" />,
       },
       {
+        label: "Member Engagement",
+        href: "/admin/member-engagement",
+        icon: <Dumbbell className="h-4 w-4" />,
+      },
+      {
         label: "PT Bookings",
         href: "/admin/trainer-bookings",
         icon: <CalendarClock className="h-4 w-4" />,
