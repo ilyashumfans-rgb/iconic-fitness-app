@@ -83,6 +83,12 @@ const HEADER_MAP: Record<string, string> = {
   branch: "branchNo",
   branchcategorynumber: "branchNo",
   categorynumber: "branchNo",
+  employeeid: "employeeId",
+  employee: "employeeId",
+  employeeno: "employeeId",
+  employeenumber: "employeeId",
+  staffid: "employeeId",
+  staffno: "employeeId",
   kind: "kind",
   type: "kind",
   status: "status",
@@ -132,10 +138,13 @@ export default function AdminLeads() {
   const downloadTemplate = async () => {
     setImportErr(null);
     try {
-      const gyms = (await adminApi.gyms.list()) as {
-        id: number;
-        name: string;
-      }[];
+      const [gyms, staff] = await Promise.all([
+        adminApi.gyms.list() as Promise<{ id: number; name: string }[]>,
+        adminApi.staff.list() as Promise<
+          { id: number; name: string; isActive: boolean }[]
+        >,
+      ]);
+      const activeStaff = staff.filter((s) => s.isActive);
       const wb = XLSX.utils.book_new();
       const leadsSheet = XLSX.utils.aoa_to_sheet([
         [
@@ -144,6 +153,7 @@ export default function AdminLeads() {
           "Email",
           "City",
           "Branch No",
+          "Employee ID",
           "Kind",
           "Status",
           "Source",
@@ -155,6 +165,7 @@ export default function AdminLeads() {
           "ravi@example.com",
           "Bangalore",
           gyms[0]?.id ?? "",
+          activeStaff[0]?.id ?? "",
           "general",
           "new",
           "walk-in",
@@ -167,6 +178,11 @@ export default function AdminLeads() {
         ...gyms.map((g) => [g.id, g.name]),
       ]);
       XLSX.utils.book_append_sheet(wb, branchSheet, "Branch Numbers");
+      const staffSheet = XLSX.utils.aoa_to_sheet([
+        ["Employee ID", "Employee Name"],
+        ...activeStaff.map((s) => [s.id, s.name]),
+      ]);
+      XLSX.utils.book_append_sheet(wb, staffSheet, "Employee IDs");
       XLSX.writeFile(wb, "leads-import-template.xlsx");
     } catch (e: any) {
       setImportErr(e?.message ?? String(e));

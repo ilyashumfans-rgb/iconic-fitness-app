@@ -385,6 +385,14 @@ router.post(
       .select({ id: gymsTable.id, name: gymsTable.name })
       .from(gymsTable);
     const gymById = new Map(gyms.map((g) => [g.id, g.name]));
+    const staff = await db
+      .select({
+        id: staffTable.id,
+        name: staffTable.name,
+        isActive: staffTable.isActive,
+      })
+      .from(staffTable);
+    const staffById = new Map(staff.map((s) => [s.id, s]));
 
     const errors: { row: number; error: string }[] = [];
     const values: (typeof leadsTable.$inferInsert)[] = [];
@@ -416,6 +424,31 @@ router.post(
         gymId = branchNo;
         gymName = gymById.get(branchNo)!;
       }
+      // Optional "Employee ID" — assigns the lead to a staff member so they
+      // can follow up. Must match an active employee in the Staff section.
+      let assignedTo = "";
+      const employeeRaw = String(r.employeeId ?? "").trim();
+      if (employeeRaw !== "") {
+        const employeeId = Number(employeeRaw);
+        const emp = Number.isInteger(employeeId)
+          ? staffById.get(employeeId)
+          : undefined;
+        if (!emp) {
+          errors.push({
+            row: rowNo,
+            error: `Unknown employee ID "${employeeRaw}"`,
+          });
+          return;
+        }
+        if (!emp.isActive) {
+          errors.push({
+            row: rowNo,
+            error: `Employee "${emp.name}" (ID ${employeeId}) is deactivated`,
+          });
+          return;
+        }
+        assignedTo = emp.name;
+      }
       const kindRaw = String(r.kind ?? "").trim().toLowerCase();
       const statusRaw = String(r.status ?? "").trim().toLowerCase();
       values.push({
@@ -428,6 +461,7 @@ router.post(
         gymName,
         message: String(r.message ?? "").trim(),
         notes: String(r.notes ?? "").trim(),
+        assignedTo,
         source: String(r.source ?? "").trim() || "excel-import",
         status: VALID_STATUS.has(statusRaw) ? statusRaw : "new",
       });

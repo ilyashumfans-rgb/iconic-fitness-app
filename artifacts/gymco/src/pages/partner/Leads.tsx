@@ -111,6 +111,9 @@ export default function PartnerLeads() {
                       Source
                     </th>
                     <th className="text-left px-4 py-2 font-semibold">
+                      Assigned to
+                    </th>
+                    <th className="text-left px-4 py-2 font-semibold">
                       Status
                     </th>
                     <th className="text-left px-4 py-2 font-semibold">
@@ -146,6 +149,9 @@ export default function PartnerLeads() {
                         {r.gymName || "—"}
                       </td>
                       <td className="px-4 py-3 text-slate-600">{r.source}</td>
+                      <td className="px-4 py-3 text-slate-700">
+                        {r.assignedTo || "—"}
+                      </td>
                       <td className="px-4 py-3">
                         <span
                           className={`inline-flex px-2 py-0.5 rounded-full border text-xs font-semibold ${
