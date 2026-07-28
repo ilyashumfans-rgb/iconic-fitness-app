@@ -353,6 +353,91 @@ router.patch(
   },
 );
 
+// Bulk Excel import (rows parsed client-side). Each row may carry a
+// "branchNo" — the gym/branch id shown in the admin's branch list — which
+// scopes the lead to that branch so it shows up in the owning partner's panel.
+router.post(
+  "/admin/leads/import",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const rows = Array.isArray(b.rows) ? b.rows : null;
+    if (!rows || rows.length === 0) {
+      res.status(400).json({ error: "No rows to import" });
+      return;
+    }
+    if (rows.length > 1000) {
+      res.status(400).json({ error: "Maximum 1000 rows per import" });
+      return;
+    }
+    const gyms = await db
+      .select({ id: gymsTable.id, name: gymsTable.name })
+      .from(gymsTable);
+    const gymById = new Map(gyms.map((g) => [g.id, g.name]));
+
+    const errors: { row: number; error: string }[] = [];
+    const values: (typeof leadsTable.$inferInsert)[] = [];
+    rows.forEach((raw, i) => {
+      const r = (raw ?? {}) as Record<string, unknown>;
+      const rowNo = i + 2; // +2 = 1-based + header row in the sheet
+      const name = String(r.name ?? "").trim();
+      const phone = String(r.phone ?? "").trim();
+      if (name.length < 2) {
+        errors.push({ row: rowNo, error: "Name is required" });
+        return;
+      }
+      if (!/^[+0-9 ()-]{7,}$/.test(phone)) {
+        errors.push({ row: rowNo, error: "Valid phone number is required" });
+        return;
+      }
+      let gymId: number | null = null;
+      let gymName = "";
+      const branchRaw = String(r.branchNo ?? "").trim();
+      if (branchRaw !== "") {
+        const branchNo = Number(branchRaw);
+        if (!Number.isInteger(branchNo) || !gymById.has(branchNo)) {
+          errors.push({
+            row: rowNo,
+            error: `Unknown branch number "${branchRaw}"`,
+          });
+          return;
+        }
+        gymId = branchNo;
+        gymName = gymById.get(branchNo)!;
+      }
+      const kindRaw = String(r.kind ?? "").trim().toLowerCase();
+      const statusRaw = String(r.status ?? "").trim().toLowerCase();
+      values.push({
+        kind: VALID_KIND.has(kindRaw) ? kindRaw : "general",
+        name,
+        phone,
+        email: String(r.email ?? "").trim(),
+        city: String(r.city ?? "").trim(),
+        gymId,
+        gymName,
+        message: String(r.message ?? "").trim(),
+        notes: String(r.notes ?? "").trim(),
+        source: String(r.source ?? "").trim() || "excel-import",
+        status: VALID_STATUS.has(statusRaw) ? statusRaw : "new",
+      });
+    });
+
+    let inserted = 0;
+    if (values.length > 0) {
+      const created = await db
+        .insert(leadsTable)
+        .values(values)
+        .returning({ id: leadsTable.id });
+      inserted = created.length;
+    }
+    req.log?.info(
+      { inserted, failed: errors.length },
+      "admin lead excel import",
+    );
+    res.json({ inserted, failed: errors.length, errors });
+  },
+);
+
 router.delete(
   "/admin/leads/:id",
   requireAdmin,

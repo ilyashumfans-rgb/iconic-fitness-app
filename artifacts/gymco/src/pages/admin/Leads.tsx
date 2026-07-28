@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import * as XLSX from "xlsx";
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
 import { adminApi } from "@/lib/adminApi";
 import {
@@ -12,6 +13,8 @@ import {
   X,
   Search,
   Filter,
+  Upload,
+  Download,
 } from "lucide-react";
 
 type Lead = {
@@ -48,6 +51,39 @@ function statusClass(s: string) {
   return STATUSES.find((x) => x.key === s)?.color ?? "bg-slate-100 text-slate-600 border-slate-200";
 }
 
+// Map a sheet's header cell to our lead field (tolerant of spacing/case).
+const HEADER_MAP: Record<string, string> = {
+  name: "name",
+  fullname: "name",
+  phone: "phone",
+  mobile: "phone",
+  phonenumber: "phone",
+  mobilenumber: "phone",
+  email: "email",
+  city: "city",
+  branchno: "branchNo",
+  branchnumber: "branchNo",
+  branch: "branchNo",
+  branchcategorynumber: "branchNo",
+  categorynumber: "branchNo",
+  kind: "kind",
+  type: "kind",
+  status: "status",
+  source: "source",
+  notes: "notes",
+  message: "message",
+};
+
+function normalizeHeader(h: unknown): string {
+  return String(h ?? "").toLowerCase().replace(/[^a-z]/g, "");
+}
+
+type ImportResult = {
+  inserted: number;
+  failed: number;
+  errors: { row: number; error: string }[];
+};
+
 export default function AdminLeads() {
   const [rows, setRows] = useState<Lead[]>([]);
   const [busy, setBusy] = useState(false);
@@ -55,6 +91,102 @@ export default function AdminLeads() {
   const [filter, setFilter] = useState<string>("all");
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<Lead | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [importErr, setImportErr] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement | null>(null);
+
+  const downloadTemplate = async () => {
+    setImportErr(null);
+    try {
+      const gyms = (await adminApi.gyms.list()) as {
+        id: number;
+        name: string;
+      }[];
+      const wb = XLSX.utils.book_new();
+      const leadsSheet = XLSX.utils.aoa_to_sheet([
+        [
+          "Name",
+          "Phone",
+          "Email",
+          "City",
+          "Branch No",
+          "Kind",
+          "Status",
+          "Source",
+          "Notes",
+        ],
+        [
+          "Ravi Kumar",
+          "9876543210",
+          "ravi@example.com",
+          "Bangalore",
+          gyms[0]?.id ?? "",
+          "general",
+          "new",
+          "walk-in",
+          "Interested in annual plan",
+        ],
+      ]);
+      XLSX.utils.book_append_sheet(wb, leadsSheet, "Leads");
+      const branchSheet = XLSX.utils.aoa_to_sheet([
+        ["Branch No", "Branch Name"],
+        ...gyms.map((g) => [g.id, g.name]),
+      ]);
+      XLSX.utils.book_append_sheet(wb, branchSheet, "Branch Numbers");
+      XLSX.writeFile(wb, "leads-import-template.xlsx");
+    } catch (e: any) {
+      setImportErr(e?.message ?? String(e));
+    }
+  };
+
+  const handleFile = async (file: File) => {
+    setImporting(true);
+    setImportErr(null);
+    setImportResult(null);
+    try {
+      const wb = XLSX.read(await file.arrayBuffer());
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      if (!sheet) throw new Error("The file has no sheets");
+      const raw: unknown[][] = XLSX.utils.sheet_to_json(sheet, {
+        header: 1,
+        raw: false,
+        defval: "",
+      });
+      if (raw.length < 2) {
+        throw new Error("The sheet has no data rows below the header");
+      }
+      const fields = (raw[0] ?? []).map(
+        (h) => HEADER_MAP[normalizeHeader(h)] ?? null,
+      );
+      if (!fields.includes("name") || !fields.includes("phone")) {
+        throw new Error(
+          'The header row must include "Name" and "Phone" columns (use the template)',
+        );
+      }
+      const parsed = raw
+        .slice(1)
+        .map((cells) => {
+          const row: Record<string, unknown> = {};
+          fields.forEach((f, i) => {
+            if (f) row[f] = String(cells[i] ?? "").trim();
+          });
+          return row;
+        })
+        .filter((r) =>
+          Object.values(r).some((v) => String(v ?? "").trim() !== ""),
+        );
+      if (parsed.length === 0) throw new Error("No data rows found");
+      const result = await adminApi.leads.import(parsed);
+      setImportResult(result);
+      load();
+    } catch (e: any) {
+      setImportErr(e?.message ?? String(e));
+    } finally {
+      setImporting(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
 
   const load = () => {
     setBusy(true);
@@ -112,8 +244,82 @@ export default function AdminLeads() {
   };
 
   return (
-    <AdminLayout title="Leads (CRM)">
+    <AdminLayout
+      title="Leads (CRM)"
+      actions={
+        <div className="flex items-center gap-2">
+          <button
+            onClick={downloadTemplate}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-lime-200 text-slate-700 text-sm font-semibold hover:bg-lime-50"
+          >
+            <Download className="h-4 w-4" /> Excel template
+          </button>
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={importing}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-lime-500 to-green-500 text-white text-sm font-semibold shadow disabled:opacity-50"
+          >
+            {importing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Upload className="h-4 w-4" />
+            )}
+            {importing ? "Importing…" : "Upload Excel"}
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleFile(f);
+            }}
+          />
+        </div>
+      }
+    >
       <div className="space-y-6">
+        {(importErr || importResult) && (
+          <AdminCard className="p-4">
+            {importErr && (
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
+                {importErr}
+              </div>
+            )}
+            {importResult && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-semibold text-slate-800">
+                    Imported {importResult.inserted} lead
+                    {importResult.inserted === 1 ? "" : "s"}
+                    {importResult.failed > 0
+                      ? ` · ${importResult.failed} row${importResult.failed === 1 ? "" : "s"} skipped`
+                      : ""}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setImportResult(null);
+                      setImportErr(null);
+                    }}
+                    className="p-1.5 rounded-md hover:bg-lime-50 text-slate-500"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                {importResult.errors.length > 0 && (
+                  <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 max-h-40 overflow-y-auto space-y-1">
+                    {importResult.errors.map((e, i) => (
+                      <div key={i}>
+                        Row {e.row}: {e.error}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </AdminCard>
+        )}
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
           <button

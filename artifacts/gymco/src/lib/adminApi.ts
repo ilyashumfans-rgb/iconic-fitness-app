@@ -370,6 +370,15 @@ export const adminApi = {
       }),
     remove: (id: number) =>
       request<{ ok: true }>(`/admin/leads/${id}`, { method: "DELETE" }),
+    import: (rows: Record<string, unknown>[]) =>
+      request<{
+        inserted: number;
+        failed: number;
+        errors: { row: number; error: string }[];
+      }>("/admin/leads/import", {
+        method: "POST",
+        body: JSON.stringify({ rows }),
+      }),
   },
   blogs: {
     list: () => request<any[]>("/admin/blogs"),

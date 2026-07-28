@@ -358,6 +358,26 @@ export const partnerApi = {
   gxBookings: {
     list: () => request<PartnerGxBooking[]>("/partner/gx-bookings"),
   },
+  leads: {
+    list: () =>
+      request<
+        {
+          id: number;
+          kind: string;
+          gymId: number | null;
+          gymName: string;
+          name: string;
+          phone: string;
+          email: string;
+          city: string;
+          message: string;
+          status: string;
+          source: string;
+          assignedTo: string;
+          createdAt: string;
+        }[]
+      >("/partner/leads"),
+  },
   trainerBookings: {
     list: () => request<TrainerBookingRow[]>("/partner/trainer-bookings"),
     assign: (id: number, body: { trainerId?: string; trainerName: string }) =>

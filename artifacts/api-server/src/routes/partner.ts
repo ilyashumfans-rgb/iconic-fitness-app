@@ -719,6 +719,7 @@ const STAFF_PERMISSION_PREFIXES: ReadonlyArray<[string, string]> = [
   ["/partner/workouts", "gyms"],
   ["/partner/bookings", "bookings"],
   ["/partner/gx-bookings", "classes"],
+  ["/partner/leads", "bookings"],
   ["/partner/trainer-bookings", "classes"],
   ["/partner/package-bookings", "bookings"],
   ["/partner/yoactiv", "bookings"],
@@ -1552,6 +1553,41 @@ router.get(
         ),
       )
       .orderBy(desc(leadsTable.preferredDate), asc(leadsTable.preferredTime))
+      .limit(5000);
+    res.json(rows);
+  },
+);
+
+// CRM leads scoped to the partner's branches — includes leads imported by the
+// admin via Excel with a branch number. Read-only; the admin manages status.
+router.get(
+  "/partner/leads",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const gymIds = await ownedGymIds(req.session.partnerId!);
+    if (gymIds.length === 0) {
+      res.json([]);
+      return;
+    }
+    const rows = await db
+      .select({
+        id: leadsTable.id,
+        kind: leadsTable.kind,
+        gymId: leadsTable.gymId,
+        gymName: leadsTable.gymName,
+        name: leadsTable.name,
+        phone: leadsTable.phone,
+        email: leadsTable.email,
+        city: leadsTable.city,
+        message: leadsTable.message,
+        status: leadsTable.status,
+        source: leadsTable.source,
+        assignedTo: leadsTable.assignedTo,
+        createdAt: leadsTable.createdAt,
+      })
+      .from(leadsTable)
+      .where(inArray(leadsTable.gymId, gymIds))
+      .orderBy(desc(leadsTable.createdAt))
       .limit(5000);
     res.json(rows);
   },

@@ -51,6 +51,9 @@ app.use("/api", healthRouter);
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 
 app.use(cors({ origin: true, credentials: true }));
+// Excel lead imports post up to 1000 parsed rows in one JSON body; the
+// default 100kb body limit would reject them before route validation runs.
+app.use("/api/admin/leads/import", express.json({ limit: "5mb" }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(sessionMiddleware);
