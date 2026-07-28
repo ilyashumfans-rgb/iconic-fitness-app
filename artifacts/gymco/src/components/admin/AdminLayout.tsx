@@ -29,6 +29,7 @@ import {
   GalleryHorizontalEnd,
   CalendarClock,
   Gift as GiftIcon,
+  MessageSquare,
   Menu,
   X,
 } from "lucide-react";
@@ -210,6 +211,11 @@ const SECTIONS: Section[] = [
         label: "Refer & Earn",
         href: "/admin/referrals",
         icon: <GiftIcon className="h-4 w-4" />,
+      },
+      {
+        label: "Messaging (WhatsApp/SMS)",
+        href: "/admin/messaging",
+        icon: <MessageSquare className="h-4 w-4" />,
       },
     ],
   },

@@ -12,6 +12,7 @@ import {
 import { requireAdmin } from "../lib/adminAuth";
 import { resolveGymSchedule } from "../lib/resolveGymSchedule";
 import { TRAINER_ENQUIRY_SOURCE } from "../lib/trainerEnquiryLeads";
+import { sendLeadWelcome } from "../lib/messaging";
 
 const router: IRouter = Router();
 
@@ -165,6 +166,16 @@ router.post("/leads", async (req: Request, res: Response): Promise<void> => {
   req.log?.info(
     { leadId: row.id, kind, classId, gymId },
     "lead captured",
+  );
+
+  // Fire-and-forget welcome WhatsApp/SMS to the lead.
+  void sendLeadWelcome({
+    leadId: row.id,
+    name,
+    phone,
+    gymName: gymName || undefined,
+  }).catch((err) =>
+    req.log?.warn({ err, leadId: row.id }, "lead welcome message failed"),
   );
 
   // PT / trial session requests: alert every backend account (admins, staff,
@@ -423,17 +434,32 @@ router.post(
     });
 
     let inserted = 0;
+    let createdLeads: { id: number; name: string; phone: string; gymName: string }[] = [];
     if (values.length > 0) {
       const created = await db
         .insert(leadsTable)
         .values(values)
-        .returning({ id: leadsTable.id });
+        .returning({ id: leadsTable.id, name: leadsTable.name, phone: leadsTable.phone, gymName: leadsTable.gymName });
       inserted = created.length;
+      createdLeads = created;
     }
     req.log?.info(
       { inserted, failed: errors.length },
       "admin lead excel import",
     );
+
+    // Fire welcome messages for all successfully imported leads (fire-and-forget).
+    for (const lead of createdLeads) {
+      void sendLeadWelcome({
+        leadId: lead.id,
+        name: lead.name,
+        phone: lead.phone,
+        gymName: lead.gymName || undefined,
+      }).catch((err) =>
+        req.log?.warn({ err, leadId: lead.id }, "import lead welcome failed"),
+      );
+    }
+
     res.json({ inserted, failed: errors.length, errors });
   },
 );

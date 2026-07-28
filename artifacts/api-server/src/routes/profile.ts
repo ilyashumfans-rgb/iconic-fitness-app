@@ -4,6 +4,7 @@ import { db, usersTable, bookingsTable, classSessionsTable, gymsTable } from "@w
 import { GetMeResponse, UpdateMeBody, UpdateMeResponse } from "@workspace/api-zod";
 import { requireUser } from "../lib/currentUser";
 import { computeHealthMetrics } from "../lib/healthMetrics";
+import { sendMemberWelcome } from "../lib/messaging";
 
 const router: IRouter = Router();
 
@@ -95,8 +96,39 @@ router.patch("/me", requireUser, async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+
+  // Read the user before updating so we can detect when a phone number is
+  // being set for the first time and send a member welcome message.
+  const [priorUser] = await db
+    .select({ mobile: usersTable.mobile, welcomeSmsSent: usersTable.welcomeSmsSent, name: usersTable.name })
+    .from(usersTable)
+    .where(eq(usersTable.id, req.userId!));
+
   await db.update(usersTable).set(parsed.data).where(eq(usersTable.id, req.userId!));
   const data = await loadProfile(req.userId!);
+
+  // Send a welcome message the first time a member saves their phone number.
+  const newMobile =
+    typeof (parsed.data as Record<string, unknown>).mobile === "string"
+      ? ((parsed.data as Record<string, unknown>).mobile as string).trim()
+      : "";
+  const hadNoPhone = !priorUser?.mobile;
+  const welcomeNotSent = !priorUser?.welcomeSmsSent;
+  if (newMobile && hadNoPhone && welcomeNotSent) {
+    void sendMemberWelcome({
+      userId: req.userId!,
+      name: priorUser?.name ?? "Member",
+      phone: newMobile,
+    })
+      .then(() =>
+        db
+          .update(usersTable)
+          .set({ welcomeSmsSent: true })
+          .where(eq(usersTable.id, req.userId!)),
+      )
+      .catch(() => {/* fire-and-forget */});
+  }
+
   res.json(UpdateMeResponse.parse(data));
 });
 

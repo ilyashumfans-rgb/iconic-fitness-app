@@ -15,7 +15,24 @@ import {
   Filter,
   Upload,
   Download,
+  MessageSquare,
+  CheckCircle2,
+  XCircle,
+  Clock,
 } from "lucide-react";
+
+type LeadMessage = {
+  id: number;
+  leadId: number | null;
+  userId: number | null;
+  toNumber: string;
+  body: string;
+  channel: string;
+  status: string;
+  twilioSid: string | null;
+  errorMessage: string | null;
+  createdAt: string;
+};
 
 type Lead = {
   id: number;
@@ -91,10 +108,26 @@ export default function AdminLeads() {
   const [filter, setFilter] = useState<string>("all");
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<Lead | null>(null);
+  const [leadMessages, setLeadMessages] = useState<LeadMessage[]>([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [importErr, setImportErr] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
+
+  // Load delivery log whenever a lead drawer is opened.
+  useEffect(() => {
+    if (!editing) {
+      setLeadMessages([]);
+      return;
+    }
+    setMessagesLoading(true);
+    adminApi.messaging
+      .getLeadMessages(editing.id)
+      .then((msgs) => setLeadMessages(msgs))
+      .catch(() => setLeadMessages([]))
+      .finally(() => setMessagesLoading(false));
+  }, [editing?.id]);
 
   const downloadTemplate = async () => {
     setImportErr(null);
@@ -625,6 +658,86 @@ export default function AdminLeads() {
                 <div className="text-[10px] text-slate-400 mt-1">
                   Auto-saves when you click out of the field.
                 </div>
+              </div>
+
+              {/* Message delivery log */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <MessageSquare className="h-3.5 w-3.5 text-lime-500" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    WhatsApp / SMS
+                  </span>
+                </div>
+                {messagesLoading ? (
+                  <div className="text-xs text-slate-400 flex items-center gap-1.5 py-2">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Loading…
+                  </div>
+                ) : leadMessages.length === 0 ? (
+                  <div className="text-xs text-slate-400 italic py-1">
+                    No messages sent yet.{" "}
+                    <a
+                      href="/admin/messaging"
+                      className="text-lime-600 underline"
+                    >
+                      Configure messaging →
+                    </a>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {leadMessages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        className="rounded-xl border border-lime-50 bg-lime-50/40 p-3 text-xs"
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-1.5 font-semibold text-slate-700">
+                            {msg.status === "sent" || msg.status === "delivered" ? (
+                              <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                            ) : msg.status === "failed" ? (
+                              <XCircle className="h-3.5 w-3.5 text-red-500" />
+                            ) : (
+                              <Clock className="h-3.5 w-3.5 text-slate-400" />
+                            )}
+                            <span className="capitalize">{msg.channel}</span>
+                            <span className="text-slate-400">·</span>
+                            <span
+                              className={`capitalize ${
+                                msg.status === "sent" || msg.status === "delivered"
+                                  ? "text-green-600"
+                                  : msg.status === "failed"
+                                  ? "text-red-600"
+                                  : "text-slate-500"
+                              }`}
+                            >
+                              {msg.status}
+                            </span>
+                          </div>
+                          <span className="text-slate-400 font-mono">
+                            {new Date(msg.createdAt).toLocaleString("en-IN", {
+                              day: "2-digit",
+                              month: "short",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                        <div className="text-slate-600 border-l-2 border-lime-300 pl-2 italic">
+                          {msg.body}
+                        </div>
+                        {msg.errorMessage && (
+                          <div className="mt-1 text-red-600 text-[11px]">
+                            Error: {msg.errorMessage}
+                          </div>
+                        )}
+                        {msg.twilioSid && (
+                          <div className="mt-1 text-slate-400 font-mono text-[11px]">
+                            SID: {msg.twilioSid}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="text-[11px] text-slate-400">

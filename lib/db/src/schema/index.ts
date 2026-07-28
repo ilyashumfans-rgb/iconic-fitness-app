@@ -52,6 +52,9 @@ export const usersTable = pgTable(
   joinedAt: timestamp("joined_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
+  // Set to true once the WhatsApp/SMS member welcome message has been sent, so
+  // we never send a duplicate even if they save their phone number again.
+  welcomeSmsSent: boolean("welcome_sms_sent").notNull().default(false),
   },
   (t) => [
     uniqueIndex("users_referral_code_unique")
@@ -59,6 +62,50 @@ export const usersTable = pgTable(
       .where(sql`referral_code IS NOT NULL AND referral_code <> ''`),
   ],
 );
+
+// WhatsApp / SMS messaging config (single row, lazily created on first save).
+// Twilio credentials are stored here; both SMS and WhatsApp channels are
+// optional — the admin enables whichever they have provisioned.
+export const messagingConfigTable = pgTable("messaging_config", {
+  id: serial("id").primaryKey(),
+  twilioAccountSid: text("twilio_account_sid").notNull().default(""),
+  twilioAuthToken: text("twilio_auth_token").notNull().default(""),
+  smsFrom: text("sms_from").notNull().default(""),
+  whatsappFrom: text("whatsapp_from").notNull().default(""),
+  smsEnabled: boolean("sms_enabled").notNull().default(false),
+  whatsappEnabled: boolean("whatsapp_enabled").notNull().default(false),
+  leadWelcomeTemplate: text("lead_welcome_template")
+    .notNull()
+    .default(
+      "Hi {{name}}! 👋 Thanks for your interest in GYMCO{{gymInfo}}. Our team will reach out shortly to schedule your visit. 💪",
+    ),
+  memberWelcomeTemplate: text("member_welcome_template")
+    .notNull()
+    .default(
+      "Welcome to GYMCO, {{name}}! 🎉 Your fitness journey starts now. We'll be in touch to schedule your complimentary fitness assessment.",
+    ),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// Outbound message delivery log — one row per message sent (or attempted).
+// leadId and userId are both optional so the table covers both lead welcome
+// messages and member welcome messages from a single log.
+export const leadMessagesTable = pgTable("lead_messages", {
+  id: serial("id").primaryKey(),
+  leadId: integer("lead_id"),
+  userId: integer("user_id"),
+  toNumber: text("to_number").notNull(),
+  body: text("body").notNull(),
+  channel: text("channel").notNull().default("sms"), // 'sms' | 'whatsapp'
+  status: text("status").notNull().default("queued"), // 'queued'|'sent'|'failed'
+  twilioSid: text("twilio_sid"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
 
 // Refer & Earn admin configuration (single row, lazily created on first save).
 // rewardType 'fixed' → rewardValue is ₹ credited per successful referral;

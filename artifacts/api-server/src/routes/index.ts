@@ -29,6 +29,7 @@ import agencyRouter from "./agency";
 import trackingRouter from "./tracking";
 import challengesRouter from "./challenges";
 import homeSlidesRouter from "./homeSlides";
+import messagingRouter from "./messaging";
 
 const router: IRouter = Router();
 
@@ -62,5 +63,6 @@ router.use(agencyRouter);
 router.use(trackingRouter);
 router.use(challengesRouter);
 router.use(homeSlidesRouter);
+router.use(messagingRouter);
 
 export default router;

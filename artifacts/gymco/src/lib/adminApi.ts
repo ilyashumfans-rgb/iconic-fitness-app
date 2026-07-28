@@ -380,6 +380,39 @@ export const adminApi = {
         body: JSON.stringify({ rows }),
       }),
   },
+  messaging: {
+    getConfig: () =>
+      request<{
+        twilioAccountSid: string;
+        twilioAuthToken: string;
+        smsFrom: string;
+        whatsappFrom: string;
+        smsEnabled: boolean;
+        whatsappEnabled: boolean;
+        leadWelcomeTemplate: string;
+        memberWelcomeTemplate: string;
+      }>("/admin/messaging-config"),
+    saveConfig: (body: Record<string, unknown>) =>
+      request<{ ok: true }>("/admin/messaging-config", {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    getLeadMessages: (leadId: number) =>
+      request<
+        {
+          id: number;
+          leadId: number | null;
+          userId: number | null;
+          toNumber: string;
+          body: string;
+          channel: string;
+          status: string;
+          twilioSid: string | null;
+          errorMessage: string | null;
+          createdAt: string;
+        }[]
+      >(`/admin/lead-messages?leadId=${leadId}`),
+  },
   blogs: {
     list: () => request<any[]>("/admin/blogs"),
     create: (body: Record<string, unknown>) =>
