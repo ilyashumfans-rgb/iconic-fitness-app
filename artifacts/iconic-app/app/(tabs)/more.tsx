@@ -141,6 +141,12 @@ export default function MoreScreen() {
       icon: "user",
       action: () => router.push("/profile"),
     },
+    {
+      title: "Terms & Conditions",
+      subtitle: "Membership terms, refunds and policies",
+      icon: "file-text",
+      action: () => router.push("/terms"),
+    },
   ];
 
   const onToggleReminder = async (value: boolean) => {
