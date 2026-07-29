@@ -28,12 +28,15 @@ void ensureMessagingTables();
 router.get(
   "/admin/messaging-config",
   requireAdmin,
-  async (_req: Request, res: Response): Promise<void> => {
+  async (req: Request, res: Response): Promise<void> => {
     const cfg = await getMessagingConfig();
     res.json({
       ...cfg,
       // Redact auth token: show "***" if set, empty string if not
       twilioAuthToken: cfg.twilioAuthToken ? "***" : "",
+      // Status callback URL the admin should paste into their Twilio console
+      // so we receive real delivery statuses (delivered/read/failed).
+      statusWebhookUrl: `${req.protocol}://${req.get("host")}/api/webhooks/twilio-status`,
     });
   },
 );
@@ -72,6 +75,7 @@ router.put(
     res.json({
       ...saved,
       twilioAuthToken: saved.twilioAuthToken ? "***" : "",
+      statusWebhookUrl: `${req.protocol}://${req.get("host")}/api/webhooks/twilio-status`,
     });
   },
 );

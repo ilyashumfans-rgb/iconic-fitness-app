@@ -8,6 +8,9 @@ import {
   CheckCircle2,
   AlertCircle,
   Info,
+  Webhook,
+  Copy,
+  Check,
 } from "lucide-react";
 
 type Config = {
@@ -19,6 +22,7 @@ type Config = {
   whatsappEnabled: boolean;
   leadWelcomeTemplate: string;
   memberWelcomeTemplate: string;
+  statusWebhookUrl?: string;
 };
 
 const TEMPLATE_VARS = [
@@ -33,6 +37,18 @@ export default function AdminMessagingSettings() {
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const copyWebhookUrl = async () => {
+    if (!config?.statusWebhookUrl) return;
+    try {
+      await navigator.clipboard.writeText(config.statusWebhookUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard unavailable — the URL is selectable as a fallback.
+    }
+  };
 
   useEffect(() => {
     adminApi.messaging
@@ -270,6 +286,57 @@ export default function AdminMessagingSettings() {
                     />
                   </div>
                 )}
+              </div>
+            </AdminCard>
+
+            {/* Delivery status webhook */}
+            <AdminCard className="p-5 space-y-3">
+              <div className="flex items-center gap-2">
+                <Webhook className="h-4 w-4 text-lime-600" />
+                <div className="font-bold text-slate-800">
+                  Delivery Status Webhook
+                </div>
+              </div>
+              <div className="text-xs text-slate-500">
+                To see real delivery statuses (Delivered ✓ / Read ✓ / Failed ✗)
+                instead of just "sent", paste this URL into your Twilio console
+                as the <span className="font-semibold">status callback URL</span>:
+                for WhatsApp, under{" "}
+                <span className="font-semibold">
+                  Messaging → Settings → WhatsApp sandbox settings
+                </span>{" "}
+                (or your WhatsApp sender's configuration); for SMS, under your
+                phone number's <span className="font-semibold">Messaging</span>{" "}
+                configuration.
+              </div>
+              {config?.statusWebhookUrl ? (
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 px-3 py-2.5 rounded-xl bg-slate-50 border border-lime-100 text-xs font-mono text-slate-700 break-all select-all">
+                    {config.statusWebhookUrl}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={copyWebhookUrl}
+                    className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-white border border-lime-200 text-slate-700 text-xs font-semibold hover:bg-lime-50 flex-shrink-0"
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="h-3.5 w-3.5 text-green-600" /> Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3.5 w-3.5" /> Copy
+                      </>
+                    )}
+                  </button>
+                </div>
+              ) : (
+                <div className="text-xs text-slate-400 italic">Loading…</div>
+              )}
+              <div className="text-[11px] text-slate-400">
+                Set the HTTP method to POST. Twilio will call this URL as each
+                message progresses (sent → delivered → read), and the lead's
+                delivery log updates automatically.
               </div>
             </AdminCard>
 

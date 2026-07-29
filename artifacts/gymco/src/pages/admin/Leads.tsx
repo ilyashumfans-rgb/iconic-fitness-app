@@ -17,6 +17,7 @@ import {
   Download,
   MessageSquare,
   CheckCircle2,
+  CheckCheck,
   XCircle,
   Clock,
   Send,
@@ -750,9 +751,13 @@ export default function AdminLeads() {
                       >
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-1.5 font-semibold text-slate-700">
-                            {msg.status === "sent" || msg.status === "delivered" ? (
+                            {msg.status === "delivered" || msg.status === "read" ? (
+                              <CheckCheck
+                                className={`h-3.5 w-3.5 ${msg.status === "read" ? "text-blue-500" : "text-green-500"}`}
+                              />
+                            ) : msg.status === "sent" ? (
                               <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-                            ) : msg.status === "failed" ? (
+                            ) : msg.status === "failed" || msg.status === "undelivered" ? (
                               <XCircle className="h-3.5 w-3.5 text-red-500" />
                             ) : (
                               <Clock className="h-3.5 w-3.5 text-slate-400" />
@@ -760,15 +765,27 @@ export default function AdminLeads() {
                             <span className="capitalize">{msg.channel}</span>
                             <span className="text-slate-400">·</span>
                             <span
-                              className={`capitalize ${
-                                msg.status === "sent" || msg.status === "delivered"
+                              className={
+                                msg.status === "read"
+                                  ? "text-blue-600"
+                                  : msg.status === "delivered"
                                   ? "text-green-600"
-                                  : msg.status === "failed"
+                                  : msg.status === "sent"
+                                  ? "text-green-600"
+                                  : msg.status === "failed" || msg.status === "undelivered"
                                   ? "text-red-600"
                                   : "text-slate-500"
-                              }`}
+                              }
                             >
-                              {msg.status}
+                              {msg.status === "delivered"
+                                ? "Delivered ✓"
+                                : msg.status === "read"
+                                ? "Read ✓"
+                                : msg.status === "failed" || msg.status === "undelivered"
+                                ? "Failed ✗"
+                                : msg.status === "sent"
+                                ? "Sent"
+                                : msg.status.charAt(0).toUpperCase() + msg.status.slice(1)}
                             </span>
                           </div>
                           <span className="text-slate-400 font-mono">

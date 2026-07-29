@@ -10,6 +10,7 @@
  *   fail the lead-capture or member-join request.
  */
 
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { db, messagingConfigTable, leadMessagesTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 
@@ -359,6 +360,95 @@ export async function sendMemberWelcome(opts: {
       errorMessage: result.ok ? null : result.error,
     });
   }
+}
+
+// ── Delivery status updates (Twilio status webhook) ──────────────────────────
+
+/**
+ * Progression rank for message statuses. Twilio callbacks can arrive out of
+ * order (e.g. "sent" after "delivered"), so we never downgrade a status —
+ * except that "failed"/"undelivered" always win since they are terminal errors.
+ */
+const STATUS_RANK: Record<string, number> = {
+  queued: 0,
+  accepted: 0,
+  sending: 1,
+  sent: 2,
+  delivered: 3,
+  read: 4,
+  undelivered: 5,
+  failed: 5,
+};
+
+/**
+ * Update the lead_messages row matching a Twilio message SID with the real
+ * delivery status reported by Twilio's status callback.
+ * Returns true when a row was updated.
+ */
+export async function updateMessageStatus(opts: {
+  twilioSid: string;
+  status: string;
+  errorCode?: string | null;
+}): Promise<boolean> {
+  await ensureMessagingTables();
+  const status = opts.status.toLowerCase().trim();
+  if (!(status in STATUS_RANK)) return false;
+
+  try {
+    const [row] = await db
+      .select()
+      .from(leadMessagesTable)
+      .where(eq(leadMessagesTable.twilioSid, opts.twilioSid))
+      .limit(1);
+    if (!row) return false;
+
+    const currentRank = STATUS_RANK[row.status] ?? 0;
+    if (STATUS_RANK[status]! < currentRank) return false; // out-of-order callback
+
+    await db
+      .update(leadMessagesTable)
+      .set({
+        status,
+        ...(opts.errorCode
+          ? { errorMessage: `Twilio error ${opts.errorCode}` }
+          : {}),
+      })
+      .where(eq(leadMessagesTable.id, row.id));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Validate Twilio's X-Twilio-Signature header.
+ * Twilio signs: full webhook URL + POST params (keys sorted alphabetically,
+ * each appended as key+value), HMAC-SHA1 with the account's auth token,
+ * base64-encoded. https://www.twilio.com/docs/usage/security#validating-requests
+ */
+export function validateTwilioSignature(opts: {
+  authToken: string;
+  signature: string;
+  url: string;
+  params: Record<string, string>;
+}): boolean {
+  const data =
+    opts.url +
+    Object.keys(opts.params)
+      .sort()
+      .map((k) => k + opts.params[k])
+      .join("");
+  const expected = createHmac("sha1", opts.authToken)
+    .update(Buffer.from(data, "utf-8"))
+    .digest();
+  let provided: Buffer;
+  try {
+    provided = Buffer.from(opts.signature, "base64");
+  } catch {
+    return false;
+  }
+  if (provided.length !== expected.length) return false;
+  return timingSafeEqual(provided, expected);
 }
 
 /** Retrieve all messages for a given lead. */
