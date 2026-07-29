@@ -695,6 +695,51 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/MyEngagementPlan" }
 
+  /assessment/mine:
+    get:
+      operationId: getMyAssessment
+      tags: [trainers]
+      summary: The caller's empty-stomach fitness assessment booking, eligibility and bookable morning slot times
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MyAssessment" }
+
+  /assessment/book:
+    post:
+      operationId: bookAssessment
+      tags: [trainers]
+      summary: Book (or reschedule) the early-morning empty-stomach fitness assessment slot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BookAssessmentRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AssessmentBooking" }
+
+  /assessment/cancel:
+    post:
+      operationId: cancelAssessment
+      tags: [trainers]
+      summary: Cancel the caller's upcoming fitness assessment booking
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok: { type: boolean }
+
   /membership-packages:
     get:
       operationId: listMembershipPackages
@@ -1624,6 +1669,39 @@ components:
         days:
           type: array
           items: { $ref: "#/components/schemas/EngagementDayCard" }
+    AssessmentBooking:
+      type: object
+      required: [id, slotDate, slotTime, status, gymName, createdAt]
+      properties:
+        id: { type: integer }
+        slotDate: { type: string, description: "YYYY-MM-DD (IST)" }
+        slotTime: { type: string, description: "HH:MM 24h (IST), early morning" }
+        status: { type: string, enum: [booked, completed, cancelled] }
+        gymName: { type: string }
+        createdAt: { type: string, format: date-time }
+    MyAssessment:
+      type: object
+      required: [eligible, slotTimes]
+      properties:
+        eligible: { type: boolean, description: "True once the member's kick-starter trial request has been accepted" }
+        slotTimes:
+          type: array
+          items: { type: string }
+          description: "Bookable early-morning slot times (HH:MM, IST)"
+        booking:
+          allOf: [{ $ref: "#/components/schemas/AssessmentBooking" }]
+          nullable: true
+          description: "The member's upcoming (booked) assessment, if any"
+        lastCompleted:
+          allOf: [{ $ref: "#/components/schemas/AssessmentBooking" }]
+          nullable: true
+          description: "Most recent completed assessment, if any"
+    BookAssessmentRequest:
+      type: object
+      required: [slotDate, slotTime]
+      properties:
+        slotDate: { type: string, description: "YYYY-MM-DD (IST); today or later" }
+        slotTime: { type: string, description: "One of the bookable morning slot times" }
     SubmitPtTrialFeedbackRequest:
       type: object
       required: [sessionNo, rating]

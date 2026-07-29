@@ -291,6 +291,39 @@ export const assignEngagement = async (phone: string, level: string) =>
     }),
   );
 
+// ── Fitness assessments (empty-stomach BMI roster) ──────────────────────────
+
+export type AssessmentRow = {
+  id: number;
+  userId: number;
+  memberName: string;
+  memberPhone: string;
+  gymName: string;
+  slotDate: string;
+  slotTime: string;
+  status: "booked" | "completed" | "cancelled";
+  isToday: boolean;
+  recordedBy: string;
+  bmi: { id: number; heightCm: number | null; weightKg: number | null; bmi: number | null } | null;
+};
+
+export const assessmentsApi = {
+  roster: async () =>
+    asJson<{ upcoming: AssessmentRow[]; recent: AssessmentRow[] }>(
+      await staffFetch("/staff/assessments"),
+    ),
+  record: async (
+    id: number,
+    body: { heightCm: number; weightKg: number; note: string },
+  ) =>
+    asJson<{ booking: AssessmentRow; bmiRecord: BmiRecord }>(
+      await staffFetch(`/staff/assessments/${id}/record`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    ),
+};
+
 // ── Staff notification polling with sound ───────────────────────────────────
 
 const LAST_SEEN_KEY = "staffNotifyLastSeen:v1";

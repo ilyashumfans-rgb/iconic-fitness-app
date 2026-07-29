@@ -533,6 +533,44 @@ export interface MyEngagementPlan {
   days: EngagementDayCard[];
 }
 
+export type AssessmentBookingStatus = typeof AssessmentBookingStatus[keyof typeof AssessmentBookingStatus];
+
+
+export const AssessmentBookingStatus = {
+  booked: 'booked',
+  completed: 'completed',
+  cancelled: 'cancelled',
+} as const;
+
+export interface AssessmentBooking {
+  id: number;
+  /** YYYY-MM-DD (IST) */
+  slotDate: string;
+  /** HH:MM 24h (IST), early morning */
+  slotTime: string;
+  status: AssessmentBookingStatus;
+  gymName: string;
+  createdAt: string;
+}
+
+export interface MyAssessment {
+  /** True once the member's kick-starter trial request has been accepted */
+  eligible: boolean;
+  /** Bookable early-morning slot times (HH:MM, IST) */
+  slotTimes: string[];
+  /** The member's upcoming (booked) assessment, if any */
+  booking?: AssessmentBooking | null;
+  /** Most recent completed assessment, if any */
+  lastCompleted?: AssessmentBooking | null;
+}
+
+export interface BookAssessmentRequest {
+  /** YYYY-MM-DD (IST); today or later */
+  slotDate: string;
+  /** One of the bookable morning slot times */
+  slotTime: string;
+}
+
 export interface SubmitPtTrialFeedbackRequest {
   /**
      * @minimum 1
@@ -1101,6 +1139,10 @@ gymId?: number;
 
 export type ListTrainerPackagesParams = {
 gymId: number;
+};
+
+export type CancelAssessment200 = {
+  ok: boolean;
 };
 
 export type ListMembershipPackagesParams = {

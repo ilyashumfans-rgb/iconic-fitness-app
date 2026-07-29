@@ -23,8 +23,11 @@ import type {
   AiChatInput,
   AiChatOutput,
   ApplyReferralCodeBody,
+  AssessmentBooking,
+  BookAssessmentRequest,
   Booking,
   BookingInput,
+  CancelAssessment200,
   CategoryCount,
   Challenge,
   ChallengeDetail,
@@ -65,6 +68,7 @@ import type {
   MembershipLookupResult,
   MembershipPayment,
   MembershipPlan,
+  MyAssessment,
   MyEngagement,
   MyEngagementPlan,
   MyMembership,
@@ -3230,6 +3234,224 @@ export function useGetMyEngagementPlan<TData = Awaited<ReturnType<typeof getMyEn
 
 
 
+
+export const getGetMyAssessmentUrl = () => {
+
+
+
+
+  return `/api/assessment/mine`
+}
+
+/**
+ * @summary The caller's empty-stomach fitness assessment booking, eligibility and bookable morning slot times
+ */
+export const getMyAssessment = async ( options?: RequestInit): Promise<MyAssessment> => {
+
+  return customFetch<MyAssessment>(getGetMyAssessmentUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyAssessmentQueryKey = () => {
+    return [
+    `/api/assessment/mine`
+    ] as const;
+    }
+
+
+export const getGetMyAssessmentQueryOptions = <TData = Awaited<ReturnType<typeof getMyAssessment>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyAssessment>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyAssessmentQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyAssessment>>> = ({ signal }) => getMyAssessment({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyAssessment>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMyAssessmentQueryResult = NonNullable<Awaited<ReturnType<typeof getMyAssessment>>>
+export type GetMyAssessmentQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary The caller's empty-stomach fitness assessment booking, eligibility and bookable morning slot times
+ */
+
+export function useGetMyAssessment<TData = Awaited<ReturnType<typeof getMyAssessment>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyAssessment>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMyAssessmentQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getBookAssessmentUrl = () => {
+
+
+
+
+  return `/api/assessment/book`
+}
+
+/**
+ * @summary Book (or reschedule) the early-morning empty-stomach fitness assessment slot
+ */
+export const bookAssessment = async (bookAssessmentRequest: BookAssessmentRequest, options?: RequestInit): Promise<AssessmentBooking> => {
+
+  return customFetch<AssessmentBooking>(getBookAssessmentUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      bookAssessmentRequest,)
+  }
+);}
+
+
+
+
+export const getBookAssessmentMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bookAssessment>>, TError,{data: BodyType<BookAssessmentRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof bookAssessment>>, TError,{data: BodyType<BookAssessmentRequest>}, TContext> => {
+
+const mutationKey = ['bookAssessment'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bookAssessment>>, {data: BodyType<BookAssessmentRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  bookAssessment(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BookAssessmentMutationResult = NonNullable<Awaited<ReturnType<typeof bookAssessment>>>
+    export type BookAssessmentMutationBody = BodyType<BookAssessmentRequest>
+    export type BookAssessmentMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Book (or reschedule) the early-morning empty-stomach fitness assessment slot
+ */
+export const useBookAssessment = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bookAssessment>>, TError,{data: BodyType<BookAssessmentRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof bookAssessment>>,
+        TError,
+        {data: BodyType<BookAssessmentRequest>},
+        TContext
+      > => {
+      return useMutation(getBookAssessmentMutationOptions(options));
+    }
+
+export const getCancelAssessmentUrl = () => {
+
+
+
+
+  return `/api/assessment/cancel`
+}
+
+/**
+ * @summary Cancel the caller's upcoming fitness assessment booking
+ */
+export const cancelAssessment = async ( options?: RequestInit): Promise<CancelAssessment200> => {
+
+  return customFetch<CancelAssessment200>(getCancelAssessmentUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getCancelAssessmentMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelAssessment>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof cancelAssessment>>, TError,void, TContext> => {
+
+const mutationKey = ['cancelAssessment'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancelAssessment>>, void> = () => {
+
+
+          return  cancelAssessment(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CancelAssessmentMutationResult = NonNullable<Awaited<ReturnType<typeof cancelAssessment>>>
+
+    export type CancelAssessmentMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Cancel the caller's upcoming fitness assessment booking
+ */
+export const useCancelAssessment = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelAssessment>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof cancelAssessment>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCancelAssessmentMutationOptions(options));
+    }
 
 export const getListMembershipPackagesUrl = (params: ListMembershipPackagesParams,) => {
   const normalizedParams = new URLSearchParams();

@@ -937,6 +937,57 @@ export const GetMyEngagementPlanResponse = zod.object({
 
 
 /**
+ * @summary The caller's empty-stomach fitness assessment booking, eligibility and bookable morning slot times
+ */
+export const GetMyAssessmentResponse = zod.object({
+  "eligible": zod.boolean().describe('True once the member\'s kick-starter trial request has been accepted'),
+  "slotTimes": zod.array(zod.string()).describe('Bookable early-morning slot times (HH:MM, IST)'),
+  "booking": zod.object({
+  "id": zod.number(),
+  "slotDate": zod.string().describe('YYYY-MM-DD (IST)'),
+  "slotTime": zod.string().describe('HH:MM 24h (IST), early morning'),
+  "status": zod.enum(['booked', 'completed', 'cancelled']),
+  "gymName": zod.string(),
+  "createdAt": zod.coerce.date()
+}).nullish().describe('The member\'s upcoming (booked) assessment, if any'),
+  "lastCompleted": zod.object({
+  "id": zod.number(),
+  "slotDate": zod.string().describe('YYYY-MM-DD (IST)'),
+  "slotTime": zod.string().describe('HH:MM 24h (IST), early morning'),
+  "status": zod.enum(['booked', 'completed', 'cancelled']),
+  "gymName": zod.string(),
+  "createdAt": zod.coerce.date()
+}).nullish().describe('Most recent completed assessment, if any')
+})
+
+
+/**
+ * @summary Book (or reschedule) the early-morning empty-stomach fitness assessment slot
+ */
+export const BookAssessmentBody = zod.object({
+  "slotDate": zod.string().describe('YYYY-MM-DD (IST); today or later'),
+  "slotTime": zod.string().describe('One of the bookable morning slot times')
+})
+
+export const BookAssessmentResponse = zod.object({
+  "id": zod.number(),
+  "slotDate": zod.string().describe('YYYY-MM-DD (IST)'),
+  "slotTime": zod.string().describe('HH:MM 24h (IST), early morning'),
+  "status": zod.enum(['booked', 'completed', 'cancelled']),
+  "gymName": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Cancel the caller's upcoming fitness assessment booking
+ */
+export const CancelAssessmentResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
  * @summary Purchasable membership packages for a branch (live prices from the gym-management system)
  */
 export const ListMembershipPackagesQueryParams = zod.object({

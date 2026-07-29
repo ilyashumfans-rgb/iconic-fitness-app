@@ -286,6 +286,38 @@ export const memberEngagementProgramsTable = pgTable(
   ],
 );
 
+// Early-morning empty-stomach fitness assessment bookings (Member Success
+// Journey: BMI + measurements before breakfast). Members book a slot after
+// trial acceptance; staff/admin record results as a member_bmi_records row
+// (bmiRecordId links back). reminder_sent_at guards the lazy evening-before
+// reminder notification. One active ("booked") row per member.
+export const assessmentBookingsTable = pgTable(
+  "assessment_bookings",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").notNull(),
+    memberName: text("member_name").notNull().default(""),
+    memberPhone: text("member_phone").notNull().default(""),
+    gymId: integer("gym_id"),
+    gymName: text("gym_name").notNull().default(""),
+    slotDate: text("slot_date").notNull(), // YYYY-MM-DD (IST)
+    slotTime: text("slot_time").notNull(), // HH:MM 24h (IST), early morning
+    status: text("status").notNull().default("booked"), // booked | completed | cancelled
+    bmiRecordId: integer("bmi_record_id"),
+    recordedByStaffId: integer("recorded_by_staff_id"),
+    recordedByStaffName: text("recorded_by_staff_name").notNull().default(""),
+    reminderSentAt: timestamp("reminder_sent_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("assessment_bookings_active_user_unique")
+      .on(t.userId)
+      .where(sql`status = 'booked'`),
+  ],
+);
+
 // Diet plans a trainer writes for a member (linked to a pt_program).
 export const memberDietPlansTable = pgTable("member_diet_plans", {
   id: serial("id").primaryKey(),

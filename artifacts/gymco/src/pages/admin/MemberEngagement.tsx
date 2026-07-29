@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { adminApi } from "@/lib/adminApi";
+import { adminApi, type AdminAssessmentRow } from "@/lib/adminApi";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { HeartPulse, Phone, UserPlus } from "lucide-react";
+import { Activity, HeartPulse, Phone, UserPlus } from "lucide-react";
 
 type Row = Awaited<ReturnType<typeof adminApi.engagement.overview>>[number];
 
@@ -136,6 +136,7 @@ export default function MemberEngagement() {
   return (
     <AdminLayout title="Member Engagement">
       <div className="space-y-4">
+        <AssessmentsPanel />
         <div className="bg-white border border-lime-200 rounded-2xl p-5 shadow-sm">
           <div className="flex items-center gap-2 text-slate-800 font-bold mb-4">
             <UserPlus className="h-4 w-4 text-lime-500" />
@@ -217,5 +218,186 @@ export default function MemberEngagement() {
         </div>
       </div>
     </AdminLayout>
+  );
+}
+
+function fmtTime(t: string): string {
+  const [h, m] = t.split(":");
+  const hn = Number(h);
+  const hour12 = hn % 12 === 0 ? 12 : hn % 12;
+  return `${hour12}:${m} ${hn >= 12 ? "PM" : "AM"}`;
+}
+
+/**
+ * Upcoming empty-stomach fitness assessments + inline result recording
+ * (creates a BMI record and completes the booking).
+ */
+function AssessmentsPanel() {
+  const [upcoming, setUpcoming] = useState<AdminAssessmentRow[]>([]);
+  const [recent, setRecent] = useState<AdminAssessmentRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [openId, setOpenId] = useState<number | null>(null);
+  const [heightCm, setHeightCm] = useState("");
+  const [weightKg, setWeightKg] = useState("");
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const data = await adminApi.assessments.roster();
+      setUpcoming(data.upcoming);
+      setRecent(data.recent);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    load();
+  }, []);
+
+  const record = async (id: number) => {
+    setErr(null);
+    setSaving(true);
+    try {
+      await adminApi.assessments.record(id, {
+        heightCm: Number(heightCm),
+        weightKg: Number(weightKg),
+        note,
+      });
+      setOpenId(null);
+      setHeightCm("");
+      setWeightKg("");
+      setNote("");
+      await load();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Failed to save results");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="bg-white border border-lime-100 rounded-2xl overflow-hidden shadow-sm">
+      <div className="px-5 py-3 border-b border-lime-100 flex items-center gap-2 text-slate-800 font-bold">
+        <Activity className="h-4 w-4 text-lime-500" />
+        Empty-stomach fitness assessments
+        <span className="text-xs font-normal text-slate-500">
+          (early-morning BMI & measurements)
+        </span>
+      </div>
+      {err && (
+        <div className="m-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
+          {err}
+        </div>
+      )}
+      {loading ? (
+        <div className="p-8 text-center text-slate-500">Loading…</div>
+      ) : upcoming.length === 0 && recent.length === 0 ? (
+        <div className="p-8 text-center text-slate-500">
+          No assessments booked yet.
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-sm">
+            <thead className="bg-lime-50/60 text-slate-600">
+              <tr>
+                <th className="text-left px-4 py-2 font-semibold">Member</th>
+                <th className="text-left px-4 py-2 font-semibold">Slot</th>
+                <th className="text-left px-4 py-2 font-semibold">Status</th>
+                <th className="text-left px-4 py-2 font-semibold">Results</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[...upcoming, ...recent.slice(0, 10)].map((r) => (
+                <tr key={r.id} className="border-t border-lime-50 align-top">
+                  <td className="px-4 py-3">
+                    <div className="font-semibold text-slate-800">
+                      {r.memberName || "Member"}
+                      {r.isToday && r.status === "booked" && (
+                        <span className="ml-2 text-[10px] font-bold text-lime-700 bg-lime-100 border border-lime-200 rounded-full px-2 py-0.5">
+                          TODAY
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      {r.memberPhone}
+                      {r.gymName ? ` · ${r.gymName}` : ""}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-slate-700">
+                    {r.slotDate} · {fmtTime(r.slotTime)}
+                  </td>
+                  <td className="px-4 py-3 text-slate-600 capitalize">
+                    {r.status}
+                    {r.status === "completed" && r.recordedBy
+                      ? ` · by ${r.recordedBy}`
+                      : ""}
+                  </td>
+                  <td className="px-4 py-3">
+                    {r.status === "completed" ? (
+                      <span className="text-slate-700">
+                        {r.bmi?.bmi != null ? `BMI ${r.bmi.bmi}` : "Recorded"}
+                      </span>
+                    ) : openId === r.id ? (
+                      <div className="flex flex-col gap-2 max-w-xs">
+                        <div className="flex gap-2">
+                          <input
+                            value={heightCm}
+                            onChange={(e) => setHeightCm(e.target.value)}
+                            placeholder="Height (cm)"
+                            className="w-28 px-2 py-1.5 rounded-lg bg-lime-50/60 border border-lime-200 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
+                          />
+                          <input
+                            value={weightKg}
+                            onChange={(e) => setWeightKg(e.target.value)}
+                            placeholder="Weight (kg)"
+                            className="w-28 px-2 py-1.5 rounded-lg bg-lime-50/60 border border-lime-200 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
+                          />
+                        </div>
+                        <input
+                          value={note}
+                          onChange={(e) => setNote(e.target.value)}
+                          placeholder="Measurements / notes"
+                          className="px-2 py-1.5 rounded-lg bg-lime-50/60 border border-lime-200 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => record(r.id)}
+                            disabled={saving || !heightCm || !weightKg}
+                            className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-lime-500 to-green-500 text-white text-xs font-semibold disabled:opacity-50"
+                          >
+                            {saving ? "Saving…" : "Save results"}
+                          </button>
+                          <button
+                            onClick={() => setOpenId(null)}
+                            className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-semibold"
+                          >
+                            Close
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setOpenId(r.id);
+                          setHeightCm("");
+                          setWeightKg("");
+                          setNote("");
+                        }}
+                        className="px-3 py-1.5 rounded-lg border border-lime-300 text-lime-700 text-xs font-semibold hover:bg-lime-50"
+                      >
+                        Record results
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   );
 }

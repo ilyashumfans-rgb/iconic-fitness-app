@@ -13,6 +13,7 @@ import { requirePartner } from "../lib/partnerAuth";
 import { requireStaff } from "../lib/staffAuth";
 import { requireUser } from "../lib/currentUser";
 import { ensureRenewalReminders } from "../lib/renewalReminders";
+import { ensureAssessmentReminder } from "./assessment";
 
 const router: IRouter = Router();
 
@@ -250,6 +251,8 @@ router.get(
     // reminder row is picked up by the next poll (bell polls every 60s).
     // ensureRenewalReminders never throws.
     void ensureRenewalReminders(req.userId!);
+    // Same lazy pattern: assessment evening-before reminder. Never throws.
+    void ensureAssessmentReminder(req.userId!);
     const rows = await db
       .select()
       .from(notificationsTable)

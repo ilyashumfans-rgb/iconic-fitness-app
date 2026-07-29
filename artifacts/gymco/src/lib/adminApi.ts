@@ -90,6 +90,25 @@ export type ReferralSettings = {
   isActive: boolean;
 };
 
+export type AdminAssessmentRow = {
+  id: number;
+  userId: number;
+  memberName: string;
+  memberPhone: string;
+  gymName: string;
+  slotDate: string;
+  slotTime: string;
+  status: "booked" | "completed" | "cancelled";
+  isToday: boolean;
+  recordedBy: string;
+  bmi: {
+    id: number;
+    heightCm: number | null;
+    weightKg: number | null;
+    bmi: number | null;
+  } | null;
+};
+
 export type AgencyAccount = {
   id: number;
   username: string;
@@ -783,6 +802,21 @@ export const adminApi = {
         method: "POST",
         body: JSON.stringify({ phone, level }),
       }),
+  },
+  assessments: {
+    roster: () =>
+      request<{
+        upcoming: AdminAssessmentRow[];
+        recent: AdminAssessmentRow[];
+      }>("/admin/assessments"),
+    record: (
+      id: number,
+      body: { heightCm: number; weightKg: number; note: string },
+    ) =>
+      request<{ booking: AdminAssessmentRow }>(
+        `/admin/assessments/${id}/record`,
+        { method: "POST", body: JSON.stringify(body) },
+      ),
   },
   reseedFromSnapshot: () =>
     request<{ ok: true; inserted: Record<string, number> }>(

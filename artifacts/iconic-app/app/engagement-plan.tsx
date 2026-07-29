@@ -5,6 +5,8 @@ import {
   useGetMyEngagement,
   getGetMyEngagementPlanQueryKey,
   useGetMyEngagementPlan,
+  getGetMyAssessmentQueryKey,
+  useGetMyAssessment,
 } from "@workspace/api-client-react";
 import { useRouter, Redirect } from "expo-router";
 import { useState } from "react";
@@ -46,6 +48,47 @@ export default function EngagementPlanScreen() {
     },
   });
 
+  const assessmentQuery = useGetMyAssessment({
+    query: {
+      enabled: isLoaded && !!isSignedIn,
+      queryKey: getGetMyAssessmentQueryKey(),
+    },
+  });
+
+  const assessment = assessmentQuery.data;
+  const assessmentCard =
+    assessment?.eligible ? (
+      <Card
+        style={
+          assessment.booking
+            ? undefined
+            : { borderColor: "#C7F000", borderWidth: 1 }
+        }
+      >
+        <Pressable
+          onPress={() => router.push("/assessment")}
+          style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
+        >
+          <View style={[styles.iconBox, { backgroundColor: colors.primary + "1A" }]}>
+            <Feather name="activity" size={20} color={colors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <AppText weight="700" size={16}>
+              {assessment.booking
+                ? "Fitness assessment booked"
+                : "Book your fitness assessment"}
+            </AppText>
+            <AppText size={13} color={colors.mutedForeground} style={{ marginTop: 2 }}>
+              {assessment.booking
+                ? `${assessment.booking.slotDate} at ${assessment.booking.slotTime} — come on an empty stomach.`
+                : "Early-morning BMI & measurements — done on an empty stomach."}
+            </AppText>
+          </View>
+          <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
+        </Pressable>
+      </Card>
+    ) : null;
+
   if (isLoaded && !isSignedIn) {
     return <Redirect href="/(auth)/sign-in" />;
   }
@@ -82,6 +125,9 @@ export default function EngagementPlanScreen() {
           title="Plan locked"
           message="Your 45-day plan unlocks after your kick-starter trial."
         />
+        {assessmentCard ? (
+          <View style={{ paddingHorizontal: 16, marginTop: 16 }}>{assessmentCard}</View>
+        ) : null}
         <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
           <Button label="View Trainers" onPress={() => router.push("/trainers")} />
         </View>
@@ -163,6 +209,9 @@ export default function EngagementPlanScreen() {
             <View style={[styles.fill, { width: `${progress}%`, backgroundColor: "#C7F000" }]} />
           </View>
         </Card>
+
+        {/* Empty-stomach fitness assessment */}
+        {assessmentCard}
 
         {/* Dietician Row */}
         {engagement.dieticianName && (
