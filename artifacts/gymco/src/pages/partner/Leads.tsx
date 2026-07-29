@@ -5,6 +5,14 @@ import { Inbox, Loader2, Mail, MapPin, Phone, Search } from "lucide-react";
 
 type PartnerLead = Awaited<ReturnType<typeof partnerApi.leads.list>>[number];
 
+const STATUS_OPTIONS = [
+  "new",
+  "contacted",
+  "qualified",
+  "converted",
+  "lost",
+] as const;
+
 const STATUS_STYLES: Record<string, string> = {
   new: "bg-blue-100 text-blue-700 border-blue-200",
   contacted: "bg-green-100 text-green-700 border-green-200",
@@ -19,6 +27,22 @@ export default function PartnerLeads() {
   const [err, setErr] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [branch, setBranch] = useState<string>("all");
+  const [savingId, setSavingId] = useState<number | null>(null);
+
+  const changeStatus = (id: number, status: string) => {
+    const prev = rows;
+    setSavingId(id);
+    setErr(null);
+    // Optimistic update; roll back on failure.
+    setRows((rs) => rs.map((r) => (r.id === id ? { ...r, status } : r)));
+    partnerApi.leads
+      .setStatus(id, status)
+      .catch((e) => {
+        setRows(prev);
+        setErr(e instanceof Error ? e.message : String(e));
+      })
+      .finally(() => setSavingId((s) => (s === id ? null : s)));
+  };
 
   useEffect(() => {
     partnerApi.leads
@@ -153,14 +177,26 @@ export default function PartnerLeads() {
                         {r.assignedTo || "—"}
                       </td>
                       <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex px-2 py-0.5 rounded-full border text-xs font-semibold ${
+                        <select
+                          value={r.status}
+                          disabled={savingId === r.id}
+                          onChange={(e) => changeStatus(r.id, e.target.value)}
+                          className={`px-2 py-1 rounded-full border text-xs font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-lime-500/60 disabled:opacity-50 ${
                             STATUS_STYLES[r.status] ??
                             "bg-slate-100 text-slate-600 border-slate-200"
                           }`}
                         >
-                          {r.status}
-                        </span>
+                          {STATUS_OPTIONS.includes(
+                            r.status as (typeof STATUS_OPTIONS)[number],
+                          ) ? null : (
+                            <option value={r.status}>{r.status}</option>
+                          )}
+                          {STATUS_OPTIONS.map((s) => (
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
+                          ))}
+                        </select>
                       </td>
                       <td className="px-4 py-3 text-slate-500 text-xs">
                         {new Date(r.createdAt).toLocaleDateString()}

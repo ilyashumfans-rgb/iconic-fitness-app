@@ -377,6 +377,11 @@ export const partnerApi = {
           createdAt: string;
         }[]
       >("/partner/leads"),
+    setStatus: (id: number, status: string) =>
+      request<{ id: number; status: string }>(`/partner/leads/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      }),
   },
   trainerBookings: {
     list: () => request<TrainerBookingRow[]>("/partner/trainer-bookings"),

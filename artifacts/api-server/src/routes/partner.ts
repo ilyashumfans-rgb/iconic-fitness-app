@@ -1559,7 +1559,8 @@ router.get(
 );
 
 // CRM leads scoped to the partner's branches — includes leads imported by the
-// admin via Excel with a branch number. Read-only; the admin manages status.
+// admin via Excel with a branch number. Status is editable via the PATCH
+// route below; everything else stays admin-managed.
 router.get(
   "/partner/leads",
   requirePartner,
@@ -1590,6 +1591,55 @@ router.get(
       .orderBy(desc(leadsTable.createdAt))
       .limit(5000);
     res.json(rows);
+  },
+);
+
+// Branch owners can update the status of leads for their own branches so the
+// CRM reflects reality without waiting for the admin. Scoped by ownedGymIds;
+// staff access is gated to the "bookings" permission via the router-level
+// STAFF_PERMISSION_PREFIXES guard ("/partner/leads" prefix).
+const PARTNER_LEAD_STATUSES = [
+  "new",
+  "contacted",
+  "qualified",
+  "converted",
+  "lost",
+] as const;
+
+router.patch(
+  "/partner/leads/:id",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ error: "Invalid lead id" });
+      return;
+    }
+    const { status } = (req.body ?? {}) as { status?: string };
+    if (
+      !status ||
+      !(PARTNER_LEAD_STATUSES as readonly string[]).includes(status)
+    ) {
+      res.status(400).json({
+        error: `Status must be one of: ${PARTNER_LEAD_STATUSES.join(", ")}`,
+      });
+      return;
+    }
+    const gymIds = await ownedGymIds(req.session.partnerId!);
+    if (gymIds.length === 0) {
+      res.status(404).json({ error: "Lead not found" });
+      return;
+    }
+    const [updated] = await db
+      .update(leadsTable)
+      .set({ status })
+      .where(and(eq(leadsTable.id, id), inArray(leadsTable.gymId, gymIds)))
+      .returning({ id: leadsTable.id, status: leadsTable.status });
+    if (!updated) {
+      res.status(404).json({ error: "Lead not found" });
+      return;
+    }
+    res.json(updated);
   },
 );
 
