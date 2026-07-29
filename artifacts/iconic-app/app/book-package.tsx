@@ -37,8 +37,11 @@ export default function BookPackageScreen() {
   const router = useRouter();
   const colors = useColors();
   const { isLoaded, isSignedIn } = useAuth();
-  const params = useLocalSearchParams<{ planName?: string }>();
+  const params = useLocalSearchParams<{ planName?: string; gymId?: string }>();
   const interestedIn = (params.planName ?? "").trim();
+  // A branch page can deep-link here with its gymId preselected so the
+  // member lands straight on that branch's price list.
+  const paramGymId = Number(params.gymId);
 
   const gymsQuery = useListGyms({});
   // Branches with online purchase first so the paid path is front and center.
@@ -49,7 +52,9 @@ export default function BookPackageScreen() {
     );
     return list;
   }, [gymsQuery.data]);
-  const [gymId, setGymId] = useState<number | null>(null);
+  const [gymId, setGymId] = useState<number | null>(
+    Number.isInteger(paramGymId) && paramGymId > 0 ? paramGymId : null,
+  );
   const selectedGym = gyms.find((g) => g.id === gymId) ?? null;
 
   const pkgParams = gymId !== null ? { gymId } : { gymId: 0 };

@@ -215,7 +215,7 @@ function SignInContent() {
         >
           {/* Brand logo — top, centered */}
           <Image
-            source={require("@/assets/images/auth-full-logo.png")}
+            source={require("@/assets/images/auth-logo-mark.png")}
             style={styles.logo}
             resizeMode="contain"
           />

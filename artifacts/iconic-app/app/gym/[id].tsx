@@ -1,5 +1,11 @@
+import { useAuth } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
-import { useGetGym, getGetGymQueryKey } from "@workspace/api-client-react";
+import {
+  useGetGym,
+  getGetGymQueryKey,
+  useGetMyMembership,
+  getGetMyMembershipQueryKey,
+} from "@workspace/api-client-react";
 import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
@@ -20,6 +26,7 @@ import { Card } from "@/components/Card";
 import { Screen, WEB_NOTCH_TOP } from "@/components/Screen";
 import { ErrorView, LoadingView } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
+import { useGuest } from "@/hooks/useGuest";
 import { resolveImageUrl } from "@/lib/images";
 
 function openDirections(name: string, address: string, city: string) {
@@ -49,6 +56,23 @@ export default function GymDetailScreen() {
     query: { queryKey: getGetGymQueryKey(gymId), enabled: Number.isFinite(gymId) },
   });
   const gym = query.data;
+
+  // "Book with this branch" is only for people NOT already enrolled with a
+  // gym. Guests are never enrolled; signed-in members are checked against
+  // their membership. Gate on the settled query (not just missing data) so
+  // enrolled members never see the CTA flash while loading.
+  const { isGuest } = useGuest();
+  const { isLoaded, isSignedIn } = useAuth();
+  const membershipQuery = useGetMyMembership({
+    query: {
+      queryKey: getGetMyMembershipQueryKey(),
+      enabled: !isGuest && isLoaded && !!isSignedIn,
+    },
+  });
+  const notEnrolled =
+    isGuest ||
+    (isLoaded && !isSignedIn) ||
+    (membershipQuery.isSuccess && !membershipQuery.data);
 
   const [photoIndex, setPhotoIndex] = useState(0);
 
@@ -273,6 +297,44 @@ export default function GymDetailScreen() {
               </AppText>
             </Pressable>
           </Card>
+
+          {/* Not enrolled anywhere yet? Jump straight to this branch's
+              price list with the branch preselected. */}
+          {notEnrolled ? (
+            <Card>
+              <AppText weight="700" size={16} style={{ marginBottom: 4 }}>
+                New to Iconic Fitness?
+              </AppText>
+              <AppText muted size={13} style={{ lineHeight: 20 }}>
+                See this branch's membership prices and join in a couple of
+                taps.
+              </AppText>
+              <Pressable
+                onPress={() =>
+                  router.push({
+                    pathname: "/book-package",
+                    params: { gymId: String(gym.id) },
+                  })
+                }
+                style={({ pressed }) => [
+                  styles.directionsBtn,
+                  {
+                    backgroundColor: colors.primary,
+                    opacity: pressed ? 0.85 : 1,
+                  },
+                ]}
+              >
+                <Feather
+                  name="arrow-right-circle"
+                  size={16}
+                  color={colors.primaryForeground}
+                />
+                <AppText weight="700" size={14} color={colors.primaryForeground}>
+                  Book with this branch
+                </AppText>
+              </Pressable>
+            </Card>
+          ) : null}
         </View>
       </ScrollView>
     </Screen>

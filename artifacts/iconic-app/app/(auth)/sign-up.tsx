@@ -124,9 +124,9 @@ export default function SignUpScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Image
-          source={require("@/assets/images/icon.png")}
+          source={require("@/assets/images/auth-logo-mark.png")}
           style={styles.logo}
-          resizeMode="cover"
+          resizeMode="contain"
         />
 
         {stage === "form" ? (
@@ -283,10 +283,8 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { paddingHorizontal: 24 },
   logo: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
-    overflow: "hidden",
+    width: 84,
+    height: 84,
   },
   form: { gap: 16 },
   divider: { flexDirection: "row", alignItems: "center", gap: 12 },
