@@ -132,7 +132,7 @@ function WelcomeContent() {
             </View>
             <View style={styles.optionText}>
               <AppText weight="700" size={17} color={colors.foreground}>
-                Studio Login
+                Staff Login
               </AppText>
               <AppText size={13} color={colors.mutedForeground}>
                 Trainers, MCs & studio team

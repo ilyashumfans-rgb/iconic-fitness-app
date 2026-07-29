@@ -163,48 +163,8 @@ export default function TrainersScreen() {
         )}
       </Pressable>
 
-      {/* Paid PT packages for this branch — live prices + online payment. */}
-      <Pressable
-        onPress={() =>
-          router.push({
-            pathname: "/book-pt-sessions",
-            params: {
-              gymId: String(gymId),
-              gymName: selectedGym?.name ?? membershipQuery.data?.branchName ?? "",
-            },
-          })
-        }
-        style={{ marginBottom: 12 }}
-      >
-        {({ pressed }) => (
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-              backgroundColor: colors.primary,
-              borderRadius: 16,
-              paddingHorizontal: 18,
-              paddingVertical: 16,
-              opacity: pressed ? 0.85 : 1,
-            }}
-          >
-            <Feather name="credit-card" size={20} color="#fff" />
-            <View style={{ flex: 1 }}>
-              <AppText weight="700" size={16} color="#fff">
-                Book your PT sessions
-              </AppText>
-              <AppText size={12} color="#fff" style={{ opacity: 0.8 }}>
-                See this branch's PT prices and pay online
-              </AppText>
-            </View>
-            <Feather name="arrow-right" size={20} color="#fff" />
-          </View>
-        )}
-      </Pressable>
-
-      {/* Prominent kick-starter trial CTA — no need to pick a coach first.
-          Hidden once the member has already sent a trial request. */}
+      {/* Prominent kick-starter trial CTA — shown FIRST, no need to pick a
+          coach. Hidden once the member has already sent a trial request. */}
       {trialRequested ? null : (
         <Pressable
           onPress={() =>
@@ -217,7 +177,7 @@ export default function TrainersScreen() {
               },
             })
           }
-          style={{ marginBottom: 18 }}
+          style={{ marginBottom: 12 }}
         >
           {({ pressed }) => (
             <View
@@ -246,6 +206,46 @@ export default function TrainersScreen() {
           )}
         </Pressable>
       )}
+
+      {/* Paid PT packages for this branch — live prices + online payment. */}
+      <Pressable
+        onPress={() =>
+          router.push({
+            pathname: "/book-pt-sessions",
+            params: {
+              gymId: String(gymId),
+              gymName: selectedGym?.name ?? membershipQuery.data?.branchName ?? "",
+            },
+          })
+        }
+        style={{ marginBottom: 18 }}
+      >
+        {({ pressed }) => (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 12,
+              backgroundColor: colors.primary,
+              borderRadius: 16,
+              paddingHorizontal: 18,
+              paddingVertical: 16,
+              opacity: pressed ? 0.85 : 1,
+            }}
+          >
+            <Feather name="credit-card" size={20} color="#fff" />
+            <View style={{ flex: 1 }}>
+              <AppText weight="700" size={16} color="#fff">
+                Book your PT sessions
+              </AppText>
+              <AppText size={12} color="#fff" style={{ opacity: 0.8 }}>
+                See this branch's PT prices and pay online
+              </AppText>
+            </View>
+            <Feather name="arrow-right" size={20} color="#fff" />
+          </View>
+        )}
+      </Pressable>
 
       {liveQuery.isLoading ? (
         <LoadingView />
