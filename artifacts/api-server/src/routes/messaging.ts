@@ -13,9 +13,10 @@ import {
   saveMessagingConfig,
   getLeadMessages,
   ensureMessagingTables,
+  sendLeadWelcome,
 } from "../lib/messaging";
-import { db, leadMessagesTable } from "@workspace/db";
-import { desc } from "drizzle-orm";
+import { db, leadMessagesTable, leadsTable, gymsTable } from "@workspace/db";
+import { desc, eq } from "drizzle-orm";
 
 const router: IRouter = Router();
 
@@ -98,6 +99,79 @@ router.get(
       .orderBy(desc(leadMessagesTable.createdAt))
       .limit(100);
     res.json(rows);
+  },
+);
+
+// Manual (re)send of the lead welcome template from the CRM drawer.
+// Returns the outcome plus the refreshed message log for the lead.
+router.post(
+  "/admin/lead-messages/:leadId/send",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const leadId = Number(req.params.leadId);
+    if (!Number.isInteger(leadId) || leadId <= 0) {
+      res.status(400).json({ error: "Invalid lead id" });
+      return;
+    }
+
+    const [lead] = await db
+      .select({
+        id: leadsTable.id,
+        name: leadsTable.name,
+        phone: leadsTable.phone,
+        gymId: leadsTable.gymId,
+      })
+      .from(leadsTable)
+      .where(eq(leadsTable.id, leadId))
+      .limit(1);
+    if (!lead) {
+      res.status(404).json({ error: "Lead not found" });
+      return;
+    }
+    if (!lead.phone || !lead.phone.trim()) {
+      res.status(400).json({ error: "This lead has no phone number" });
+      return;
+    }
+
+    let gymName: string | undefined;
+    if (lead.gymId) {
+      const [gym] = await db
+        .select({ name: gymsTable.name })
+        .from(gymsTable)
+        .where(eq(gymsTable.id, lead.gymId))
+        .limit(1);
+      gymName = gym?.name ?? undefined;
+    }
+
+    const outcome = await sendLeadWelcome({
+      leadId: lead.id,
+      name: lead.name,
+      phone: lead.phone,
+      gymName,
+    });
+
+    // Every staff-triggered attempt must leave an audit-trail row — even when
+    // the send was blocked by missing/disabled config and Twilio was never hit.
+    if (!outcome.attempted) {
+      await db.insert(leadMessagesTable).values({
+        leadId: lead.id,
+        toNumber: lead.phone.trim(),
+        body: "(manual send — welcome template)",
+        channel: "sms",
+        status: "failed",
+        errorMessage: outcome.reason,
+      });
+      const messages = await getLeadMessages(leadId);
+      res.status(409).json({ error: outcome.reason, messages });
+      return;
+    }
+
+    const messages = await getLeadMessages(leadId);
+    res.json({
+      ok: outcome.ok,
+      error: outcome.ok ? null : (outcome.error ?? null),
+      messages,
+    });
   },
 );
 

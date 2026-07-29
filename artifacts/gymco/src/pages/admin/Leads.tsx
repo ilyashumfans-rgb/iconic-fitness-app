@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
+  Send,
 } from "lucide-react";
 
 type LeadMessage = {
@@ -116,6 +117,8 @@ export default function AdminLeads() {
   const [editing, setEditing] = useState<Lead | null>(null);
   const [leadMessages, setLeadMessages] = useState<LeadMessage[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendErr, setSendErr] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [importErr, setImportErr] = useState<string | null>(null);
@@ -123,6 +126,7 @@ export default function AdminLeads() {
 
   // Load delivery log whenever a lead drawer is opened.
   useEffect(() => {
+    setSendErr(null);
     if (!editing) {
       setLeadMessages([]);
       return;
@@ -134,6 +138,26 @@ export default function AdminLeads() {
       .catch(() => setLeadMessages([]))
       .finally(() => setMessagesLoading(false));
   }, [editing?.id]);
+
+  // Manually (re)send the lead welcome WhatsApp/SMS and refresh the log.
+  const sendMessage = async (leadId: number) => {
+    setSending(true);
+    setSendErr(null);
+    try {
+      const result = await adminApi.messaging.sendToLead(leadId);
+      setLeadMessages(result.messages);
+      if (!result.ok && result.error) setSendErr(result.error);
+    } catch (e: any) {
+      setSendErr(e?.message ?? String(e));
+      // The attempt may still have been logged — refresh the history.
+      adminApi.messaging
+        .getLeadMessages(leadId)
+        .then((msgs) => setLeadMessages(msgs))
+        .catch(() => {});
+    } finally {
+      setSending(false);
+    }
+  };
 
   const downloadTemplate = async () => {
     setImportErr(null);
@@ -678,12 +702,31 @@ export default function AdminLeads() {
 
               {/* Message delivery log */}
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <MessageSquare className="h-3.5 w-3.5 text-lime-500" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                    WhatsApp / SMS
-                  </span>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="h-3.5 w-3.5 text-lime-500" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                      WhatsApp / SMS
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => sendMessage(editing.id)}
+                    disabled={sending}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-lime-500 to-green-500 text-white text-[11px] font-bold shadow disabled:opacity-50"
+                  >
+                    {sending ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Send className="h-3 w-3" />
+                    )}
+                    {sending ? "Sending…" : "Send WhatsApp/SMS"}
+                  </button>
                 </div>
+                {sendErr && (
+                  <div className="mb-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                    {sendErr}
+                  </div>
+                )}
                 {messagesLoading ? (
                   <div className="text-xs text-slate-400 flex items-center gap-1.5 py-2">
                     <Loader2 className="h-3 w-3 animate-spin" /> Loading…

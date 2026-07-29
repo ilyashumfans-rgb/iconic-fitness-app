@@ -218,16 +218,28 @@ async function twilioSend(opts: {
 
 // ── High-level helpers ────────────────────────────────────────────────────────
 
+export type LeadWelcomeOutcome =
+  | { attempted: true; ok: boolean; error?: string }
+  | { attempted: false; reason: string };
+
 /** Send a welcome WhatsApp/SMS to a new lead. Fire-and-forget safe. */
 export async function sendLeadWelcome(opts: {
   leadId: number;
   name: string;
   phone: string;
   gymName?: string;
-}): Promise<void> {
+}): Promise<LeadWelcomeOutcome> {
   const cfg = await getMessagingConfig();
-  if (!cfg.smsEnabled && !cfg.whatsappEnabled) return;
-  if (!cfg.twilioAccountSid || !cfg.twilioAuthToken) return;
+  if (!cfg.smsEnabled && !cfg.whatsappEnabled)
+    return {
+      attempted: false,
+      reason: "Messaging is disabled — enable WhatsApp or SMS in Messaging settings.",
+    };
+  if (!cfg.twilioAccountSid || !cfg.twilioAuthToken)
+    return {
+      attempted: false,
+      reason: "Twilio credentials are not configured in Messaging settings.",
+    };
 
   const gymInfo = opts.gymName ? ` at ${opts.gymName}` : "";
   const body = renderTemplate(cfg.leadWelcomeTemplate, {
@@ -258,6 +270,11 @@ export async function sendLeadWelcome(opts: {
       twilioSid: result.ok ? result.sid : null,
       errorMessage: result.ok ? null : result.error,
     });
+    return {
+      attempted: true,
+      ok: result.ok,
+      ...(result.ok ? {} : { error: result.error }),
+    };
   } else if (cfg.smsEnabled && cfg.smsFrom) {
     const result = await twilioSend({
       accountSid: cfg.twilioAccountSid,
@@ -275,7 +292,17 @@ export async function sendLeadWelcome(opts: {
       twilioSid: result.ok ? result.sid : null,
       errorMessage: result.ok ? null : result.error,
     });
+    return {
+      attempted: true,
+      ok: result.ok,
+      ...(result.ok ? {} : { error: result.error }),
+    };
   }
+  return {
+    attempted: false,
+    reason:
+      "No sender number configured — set a WhatsApp or SMS 'from' number in Messaging settings.",
+  };
 }
 
 /** Send a welcome WhatsApp/SMS to a newly registered member. Fire-and-forget. */

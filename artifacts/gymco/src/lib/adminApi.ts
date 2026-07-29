@@ -412,6 +412,23 @@ export const adminApi = {
           createdAt: string;
         }[]
       >(`/admin/lead-messages?leadId=${leadId}`),
+    sendToLead: (leadId: number) =>
+      request<{
+        ok: boolean;
+        error: string | null;
+        messages: {
+          id: number;
+          leadId: number | null;
+          userId: number | null;
+          toNumber: string;
+          body: string;
+          channel: string;
+          status: string;
+          twilioSid: string | null;
+          errorMessage: string | null;
+          createdAt: string;
+        }[];
+      }>(`/admin/lead-messages/${leadId}/send`, { method: "POST" }),
   },
   blogs: {
     list: () => request<any[]>("/admin/blogs"),
