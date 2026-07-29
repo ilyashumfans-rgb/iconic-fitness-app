@@ -90,19 +90,19 @@ async function validateGxBooking(
 // ─────────────────────────── Public capture ───────────────────────────
 
 router.post("/leads", async (req: Request, res: Response): Promise<void> => {
-    const b = (req.body ?? {}) as Record<string, unknown>;
-      const name = String(r.name ?? "").trim();
-      const phone = String(r.phone ?? "").trim();
+  const b = (req.body ?? {}) as Record<string, unknown>;
+  const name = typeof b.name === "string" ? b.name.trim() : "";
+  const phone = typeof b.phone === "string" ? b.phone.trim() : "";
   const email = typeof b.email === "string" ? b.email.trim() : "";
   const city = typeof b.city === "string" ? b.city.trim() : "";
   const kind = VALID_KIND.has(String(b.kind)) ? String(b.kind) : "class";
   const classId = Number.isFinite(Number(b.classId))
     ? Number(b.classId)
     : null;
-      let gymId: number | null = null;
+  const gymId = Number.isFinite(Number(b.gymId)) ? Number(b.gymId) : null;
   const planId = Number.isFinite(Number(b.planId)) ? Number(b.planId) : null;
   const className = typeof b.className === "string" ? b.className : "";
-      let gymName = "";
+  const gymName = typeof b.gymName === "string" ? b.gymName : "";
   const planName = typeof b.planName === "string" ? b.planName : "";
   const planPriceInr = Number.isFinite(Number(b.planPriceInr))
     ? Number(b.planPriceInr)
@@ -141,11 +141,27 @@ router.post("/leads", async (req: Request, res: Response): Promise<void> => {
     }
   }
 
-    const [row] = await db
-      .update(leadsTable)
-      .set(patch)
-      .where(eq(leadsTable.id, id))
-      .returning();
+  const [row] = await db
+    .insert(leadsTable)
+    .values({
+      kind,
+      name,
+      phone,
+      email,
+      city,
+      classId,
+      gymId,
+      planId,
+      className,
+      gymName,
+      planName,
+      planPriceInr,
+      preferredDate,
+      preferredTime,
+      message,
+      source,
+    })
+    .returning();
 
   req.log?.info(
     { leadId: row.id, kind, classId, gymId },
@@ -299,7 +315,15 @@ router.get(
     );
     const status =
       typeof req.query.status === "string" ? req.query.status : null;
-    const rows = Array.isArray(b.rows) ? b.rows : null;
+    const rows = await db
+      .select()
+      .from(leadsTable)
+      .where(
+        status && VALID_STATUS.has(status)
+          ? eq(leadsTable.status, status)
+          : undefined,
+      )
+      .orderBy(desc(leadsTable.createdAt));
     res.json(rows);
   },
 );
@@ -308,7 +332,13 @@ router.get(
   "/admin/leads/stats",
   requireAdmin,
   async (_req: Request, res: Response): Promise<void> => {
-    const rows = Array.isArray(b.rows) ? b.rows : null;
+    const rows = await db
+      .select({
+        status: leadsTable.status,
+        count: sql<number>`cast(count(*) as int)`,
+      })
+      .from(leadsTable)
+      .groupBy(leadsTable.status);
     const total = rows.reduce((s, r) => s + Number(r.count), 0);
     res.json({ total, byStatus: rows });
   },

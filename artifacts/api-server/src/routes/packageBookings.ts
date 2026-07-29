@@ -138,8 +138,14 @@ router.post(
     // Snapshot the curated display name so purchase history matches what
     // the member saw when buying; price always comes from live YoActiv data.
     const pkg = applyPackagePref(rawPkg, prefs);
-    let email: string | null = null;
-    if (req.userId) {
+    // Prefer the email typed into the purchase form; fall back to the
+    // signed-in account's email so the gym system still gets one.
+    let email: string | null = body.email?.trim() || null;
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      res.status(400).json({ error: "Please enter a valid email address" });
+      return;
+    }
+    if (!email && req.userId) {
       const [user] = await db
         .select({ email: usersTable.email })
         .from(usersTable)

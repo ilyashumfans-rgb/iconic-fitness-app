@@ -1717,6 +1717,9 @@ components:
         packageId: { type: integer }
         name: { type: string, minLength: 2 }
         mobile: { type: string, minLength: 10 }
+        email:
+          type: string
+          description: "Optional email to enroll with — attached to the member record in the gym system"
         startDate: { type: string, description: "ISO date (YYYY-MM-DD)" }
         redeemPoints:
           type: integer

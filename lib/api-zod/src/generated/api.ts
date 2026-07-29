@@ -1024,6 +1024,7 @@ export const CreatePackageBookingBody = zod.object({
   "packageId": zod.number(),
   "name": zod.string().min(createPackageBookingBodyNameMin),
   "mobile": zod.string().min(createPackageBookingBodyMobileMin),
+  "email": zod.string().optional().describe('Optional email to enroll with — attached to the member record in the gym system'),
   "startDate": zod.string().describe('ISO date (YYYY-MM-DD)'),
   "redeemPoints": zod.number().min(createPackageBookingBodyRedeemPointsMin).optional().describe('Wallet points (₹) to apply as a discount — signed-in members only; clamped server-side')
 })

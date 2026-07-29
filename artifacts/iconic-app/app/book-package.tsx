@@ -99,6 +99,8 @@ export default function BookPackageScreen() {
   const [pkgId, setPkgId] = useState<number | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [date, setDate] = useState(dateOptions[0]);
   const [busy, setBusy] = useState(false);
   const [bookingId, setBookingId] = useState<number | null>(null);
@@ -110,6 +112,7 @@ export default function BookPackageScreen() {
     if (!me) return;
     setName((prev) => (prev ? prev : (me.name ?? "")));
     setPhone((prev) => (prev ? prev : (me.mobile ?? "")));
+    setEmail((prev) => (prev ? prev : (me.email ?? "")));
   }, [meQuery.data]);
 
   const createBooking = useCreatePackageBooking();
@@ -164,6 +167,17 @@ export default function BookPackageScreen() {
       return;
     }
     if (!validateContact()) return;
+    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      Alert.alert("Check your email", "Please enter a valid email address.");
+      return;
+    }
+    if (!termsAccepted) {
+      Alert.alert(
+        "Terms & Conditions",
+        "Please accept the Terms & Conditions to continue with the payment.",
+      );
+      return;
+    }
     setBusy(true);
     try {
       const created = await createBooking.mutateAsync({
@@ -172,6 +186,7 @@ export default function BookPackageScreen() {
           packageId: selectedPkg.id,
           name: name.trim(),
           mobile: phone.trim(),
+          ...(email.trim() ? { email: email.trim() } : {}),
           startDate: date,
           ...(usePoints && pointsDiscount > 0
             ? { redeemPoints: pointsDiscount }
@@ -374,6 +389,19 @@ export default function BookPackageScreen() {
           placeholder="Your phone number"
           keyboardType="phone-pad"
         />
+        {paidFlow ? (
+          <>
+            <View style={{ height: 12 }} />
+            <Field
+              label="Email (for your membership record)"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="you@email.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </>
+        ) : null}
 
         <AppText
           weight="600"
@@ -423,6 +451,42 @@ export default function BookPackageScreen() {
                   : `You have ${pointsAvailable.toLocaleString("en-IN")} points (₹${pointsAvailable.toLocaleString("en-IN")}).`}
               </AppText>
             </View>
+          </Pressable>
+        ) : null}
+
+        {paidFlow ? (
+          <Pressable
+            onPress={() => setTermsAccepted((v) => !v)}
+            style={{
+              marginTop: 18,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 10,
+              padding: 12,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: termsAccepted ? colors.primary : colors.border,
+              backgroundColor: termsAccepted
+                ? `${colors.primary}14`
+                : "transparent",
+            }}
+          >
+            <Feather
+              name={termsAccepted ? "check-square" : "square"}
+              size={20}
+              color={termsAccepted ? colors.primary : colors.mutedForeground}
+            />
+            <AppText size={13} style={{ flex: 1, lineHeight: 18 }}>
+              I agree to the{" "}
+              <AppText
+                size={13}
+                weight="700"
+                color={colors.primary}
+                onPress={() => router.push("/terms")}
+              >
+                Terms & Conditions
+              </AppText>
+            </AppText>
           </Pressable>
         ) : null}
 

@@ -593,6 +593,8 @@ export interface CreatePackageBookingRequest {
   name: string;
   /** @minLength 10 */
   mobile: string;
+  /** Optional email to enroll with — attached to the member record in the gym system */
+  email?: string;
   /** ISO date (YYYY-MM-DD) */
   startDate: string;
   /**
