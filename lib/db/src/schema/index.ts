@@ -84,6 +84,14 @@ export const messagingConfigTable = pgTable("messaging_config", {
     .default(
       "Welcome to GYMCO, {{name}}! 🎉 Your fitness journey starts now. We'll be in touch to schedule your complimentary fitness assessment.",
     ),
+  // Automated follow-up nudge for leads that go cold after the welcome.
+  nudgeEnabled: boolean("nudge_enabled").notNull().default(false),
+  nudgeDelayHours: integer("nudge_delay_hours").notNull().default(24),
+  leadNudgeTemplate: text("lead_nudge_template")
+    .notNull()
+    .default(
+      "Hi {{name}}! 👋 Just checking in — we'd love to help you get started{{gymInfo}}. Reply here or drop by any time for a free tour. 💪",
+    ),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -99,6 +107,7 @@ export const leadMessagesTable = pgTable("lead_messages", {
   toNumber: text("to_number").notNull(),
   body: text("body").notNull(),
   channel: text("channel").notNull().default("sms"), // 'sms' | 'whatsapp'
+  messageType: text("message_type").notNull().default("welcome"), // 'welcome'|'nudge'|'manual'
   status: text("status").notNull().default("queued"), // 'queued'|'sent'|'failed'
   twilioSid: text("twilio_sid"),
   errorMessage: text("error_message"),

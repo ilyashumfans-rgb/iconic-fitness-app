@@ -391,6 +391,9 @@ export const adminApi = {
         whatsappEnabled: boolean;
         leadWelcomeTemplate: string;
         memberWelcomeTemplate: string;
+        nudgeEnabled: boolean;
+        nudgeDelayHours: number;
+        leadNudgeTemplate: string;
       }>("/admin/messaging-config"),
     saveConfig: (body: Record<string, unknown>) =>
       request<{ ok: true }>("/admin/messaging-config", {

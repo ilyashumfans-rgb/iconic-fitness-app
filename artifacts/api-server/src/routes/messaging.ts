@@ -70,6 +70,11 @@ router.put(
       b.memberWelcomeTemplate.trim()
     )
       patch.memberWelcomeTemplate = b.memberWelcomeTemplate.trim();
+    if (typeof b.nudgeEnabled === "boolean") patch.nudgeEnabled = b.nudgeEnabled;
+    if (typeof b.nudgeDelayHours === "number" && Number.isFinite(b.nudgeDelayHours))
+      patch.nudgeDelayHours = Math.min(720, Math.max(1, Math.round(b.nudgeDelayHours)));
+    if (typeof b.leadNudgeTemplate === "string" && b.leadNudgeTemplate.trim())
+      patch.leadNudgeTemplate = b.leadNudgeTemplate.trim();
 
     const saved = await saveMessagingConfig(patch);
     res.json({
@@ -85,10 +90,7 @@ router.get(
   "/admin/lead-messages",
   requireAdmin,
   async (req: Request, res: Response): Promise<void> => {
-    const leadId =
-      typeof req.query.leadId === "string" && req.query.leadId
-        ? Number(req.query.leadId)
-        : null;
+    const leadId = Number(req.params.leadId);
 
     if (leadId !== null && !Number.isNaN(leadId)) {
       const msgs = await getLeadMessages(leadId);
@@ -165,7 +167,7 @@ router.post(
         status: "failed",
         errorMessage: outcome.reason,
       });
-      const messages = await getLeadMessages(leadId);
+    const messages = await getLeadMessages(leadId);
       res.status(409).json({ error: outcome.reason, messages });
       return;
     }

@@ -22,6 +22,9 @@ type Config = {
   whatsappEnabled: boolean;
   leadWelcomeTemplate: string;
   memberWelcomeTemplate: string;
+  nudgeEnabled: boolean;
+  nudgeDelayHours: number;
+  leadNudgeTemplate: string;
   statusWebhookUrl?: string;
 };
 
@@ -60,7 +63,7 @@ export default function AdminMessagingSettings() {
       .catch((e) => setErr(e?.message ?? String(e)));
   }, []);
 
-  const set = (key: keyof Config, value: string | boolean) => {
+  const set = (key: keyof Config, value: string | boolean | number) => {
     if (!form) return;
     setForm({ ...form, [key]: value });
     setSaved(false);
@@ -394,6 +397,76 @@ export default function AdminMessagingSettings() {
                   time.
                 </div>
               </div>
+            </AdminCard>
+
+            {/* Follow-up nudge */}
+            <AdminCard className="p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-bold text-slate-800">
+                    Follow-up Nudge
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    Automatically message leads still marked "new" who haven't
+                    responded after the welcome.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => set("nudgeEnabled", !form.nudgeEnabled)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    form.nudgeEnabled ? "bg-lime-500" : "bg-slate-200"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                      form.nudgeEnabled ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {form.nudgeEnabled && (
+                <>
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                      Send after (hours)
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={720}
+                      value={form.nudgeDelayHours}
+                      onChange={(e) =>
+                        set("nudgeDelayHours", Number(e.target.value))
+                      }
+                      className="w-32 px-3 py-2 rounded-xl border border-lime-100 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
+                    />
+                    <div className="text-[11px] text-slate-400 mt-1">
+                      Hours after the welcome message before the nudge is sent
+                      (default 24). Only leads still in "new" status get nudged,
+                      and each lead is nudged at most once.
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                      Follow-up Nudge Message
+                    </label>
+                    <textarea
+                      value={form.leadNudgeTemplate}
+                      onChange={(e) =>
+                        set("leadNudgeTemplate", e.target.value)
+                      }
+                      rows={4}
+                      className="w-full px-3 py-2.5 rounded-xl border border-lime-100 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
+                    />
+                    <div className="text-[11px] text-slate-400 mt-1">
+                      Supports the same variables as the lead welcome message.
+                    </div>
+                  </div>
+                </>
+              )}
             </AdminCard>
 
             <div className="flex justify-end">

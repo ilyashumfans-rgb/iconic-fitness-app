@@ -53,6 +53,19 @@ export async function ensureMessagingTables(): Promise<void> {
     await db.execute(sql`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS welcome_sms_sent BOOLEAN NOT NULL DEFAULT FALSE
     `);
+    // Follow-up nudge config + message-type tag (additive, idempotent).
+    await db.execute(sql`
+      ALTER TABLE messaging_config ADD COLUMN IF NOT EXISTS nudge_enabled BOOLEAN NOT NULL DEFAULT FALSE
+    `);
+    await db.execute(sql`
+      ALTER TABLE messaging_config ADD COLUMN IF NOT EXISTS nudge_delay_hours INTEGER NOT NULL DEFAULT 24
+    `);
+    await db.execute(sql`
+      ALTER TABLE messaging_config ADD COLUMN IF NOT EXISTS lead_nudge_template TEXT NOT NULL DEFAULT 'Hi {{name}}! 👋 Just checking in — we''d love to help you get started{{gymInfo}}. Reply here or drop by any time for a free tour. 💪'
+    `);
+    await db.execute(sql`
+      ALTER TABLE lead_messages ADD COLUMN IF NOT EXISTS message_type TEXT NOT NULL DEFAULT 'welcome'
+    `);
   } catch {
     // Non-fatal: tables may already exist
     migrationRan = false; // allow retry next call if it was a transient error
@@ -70,6 +83,9 @@ export type MessagingConfig = {
   whatsappEnabled: boolean;
   leadWelcomeTemplate: string;
   memberWelcomeTemplate: string;
+  nudgeEnabled: boolean;
+  nudgeDelayHours: number;
+  leadNudgeTemplate: string;
 };
 
 const DEFAULT_CONFIG: MessagingConfig = {
@@ -83,6 +99,10 @@ const DEFAULT_CONFIG: MessagingConfig = {
     "Hi {{name}}! 👋 Thanks for your interest in GYMCO{{gymInfo}}. Our team will reach out shortly to schedule your visit. 💪",
   memberWelcomeTemplate:
     "Welcome to GYMCO, {{name}}! 🎉 Your fitness journey starts now. We'll be in touch to schedule your complimentary fitness assessment.",
+  nudgeEnabled: false,
+  nudgeDelayHours: 24,
+  leadNudgeTemplate:
+    "Hi {{name}}! 👋 Just checking in — we'd love to help you get started{{gymInfo}}. Reply here or drop by any time for a free tour. 💪",
 };
 
 export async function getMessagingConfig(): Promise<MessagingConfig> {
@@ -99,6 +119,9 @@ export async function getMessagingConfig(): Promise<MessagingConfig> {
       whatsappEnabled: row.whatsappEnabled,
       leadWelcomeTemplate: row.leadWelcomeTemplate,
       memberWelcomeTemplate: row.memberWelcomeTemplate,
+      nudgeEnabled: row.nudgeEnabled,
+      nudgeDelayHours: row.nudgeDelayHours,
+      leadNudgeTemplate: row.leadNudgeTemplate,
     };
   } catch {
     return DEFAULT_CONFIG;
@@ -130,6 +153,15 @@ export async function saveMessagingConfig(
     }),
     ...(patch.memberWelcomeTemplate !== undefined && {
       memberWelcomeTemplate: patch.memberWelcomeTemplate,
+    }),
+    ...(patch.nudgeEnabled !== undefined && {
+      nudgeEnabled: patch.nudgeEnabled,
+    }),
+    ...(patch.nudgeDelayHours !== undefined && {
+      nudgeDelayHours: patch.nudgeDelayHours,
+    }),
+    ...(patch.leadNudgeTemplate !== undefined && {
+      leadNudgeTemplate: patch.leadNudgeTemplate,
     }),
     updatedAt: new Date(),
   };
@@ -362,6 +394,69 @@ export async function sendMemberWelcome(opts: {
   }
 }
 
+/** Send a follow-up nudge WhatsApp/SMS to a cold lead. Fire-and-forget safe. */
+export async function sendLeadNudge(opts: {
+  leadId: number;
+  name: string;
+  phone: string;
+  gymName?: string;
+}): Promise<void> {
+  const cfg = await getMessagingConfig();
+  if (!cfg.nudgeEnabled) return;
+  if (!cfg.smsEnabled && !cfg.whatsappEnabled) return;
+  if (!cfg.twilioAccountSid || !cfg.twilioAuthToken) return;
+
+  const gymInfo = opts.gymName ? ` at ${opts.gymName}` : "";
+  const body = renderTemplate(cfg.leadNudgeTemplate, {
+    name: opts.name.split(" ")[0] || opts.name,
+    gymInfo,
+    gymName: opts.gymName ?? "",
+  });
+  const toRaw = normalizePhone(opts.phone);
+
+  if (cfg.whatsappEnabled && cfg.whatsappFrom) {
+    const to = `whatsapp:${toRaw}`;
+    const from = cfg.whatsappFrom.startsWith("whatsapp:")
+      ? cfg.whatsappFrom
+      : `whatsapp:${cfg.whatsappFrom}`;
+    const result = await twilioSend({
+      accountSid: cfg.twilioAccountSid,
+      authToken: cfg.twilioAuthToken,
+      from,
+      to,
+      body,
+    });
+    await db.insert(leadMessagesTable).values({
+      leadId: opts.leadId,
+      toNumber: to,
+      body,
+      channel: "whatsapp",
+      messageType: "nudge",
+      status: result.ok ? "sent" : "failed",
+      twilioSid: result.ok ? result.sid : null,
+      errorMessage: result.ok ? null : result.error,
+    });
+  } else if (cfg.smsEnabled && cfg.smsFrom) {
+    const result = await twilioSend({
+      accountSid: cfg.twilioAccountSid,
+      authToken: cfg.twilioAuthToken,
+      from: cfg.smsFrom,
+      to: toRaw,
+      body,
+    });
+    await db.insert(leadMessagesTable).values({
+      leadId: opts.leadId,
+      toNumber: toRaw,
+      body,
+      channel: "sms",
+      messageType: "nudge",
+      status: result.ok ? "sent" : "failed",
+      twilioSid: result.ok ? result.sid : null,
+      errorMessage: result.ok ? null : result.error,
+    });
+  }
+}
+
 // ── Delivery status updates (Twilio status webhook) ──────────────────────────
 
 /**
@@ -464,3 +559,57 @@ export async function getLeadMessages(leadId: number) {
     return [];
   }
 }
+
+let nudgeSweepRunning = false;
+
+export async function runNudgeSweep(): Promise<void> {
+  const now = Date.now();
+  if (nudgeSweepRunning || now - lastNudgeSweepAt < NUDGE_SWEEP_MIN_INTERVAL_MS)
+    return;
+  nudgeSweepRunning = true;
+  lastNudgeSweepAt = now;
+  try {
+    const cfg = await getMessagingConfig();
+    if (!cfg.nudgeEnabled) return;
+    if (!cfg.smsEnabled && !cfg.whatsappEnabled) return;
+    if (!cfg.twilioAccountSid || !cfg.twilioAuthToken) return;
+
+    const delayHours = Math.max(1, cfg.nudgeDelayHours || 24);
+    const rows = await db.execute(sql`
+      SELECT l.id, l.name, l.phone, l.gym_name
+      FROM leads l
+      WHERE l.status = 'new'
+        AND l.updated_at < NOW() - make_interval(hours => ${delayHours})
+        AND EXISTS (
+          SELECT 1 FROM lead_messages m
+          WHERE m.lead_id = l.id
+            AND m.message_type = 'welcome'
+            AND m.status = 'sent'
+            AND m.created_at < NOW() - make_interval(hours => ${delayHours})
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM lead_messages n
+          WHERE n.lead_id = l.id AND n.message_type = 'nudge'
+        )
+      ORDER BY l.id
+      LIMIT 50
+    `);
+    const leads = rows.rows as Record<string, unknown>[];
+    for (const r of leads) {
+      await sendLeadNudge({
+        leadId: Number(r.id),
+        name: String(r.name ?? ""),
+        phone: String(r.phone ?? ""),
+        gymName: String(r.gym_name ?? "") || undefined,
+      });
+    }
+  } catch {
+    // Never let the sweep break the calling request.
+  } finally {
+    nudgeSweepRunning = false;
+  }
+}
+
+const NUDGE_SWEEP_MIN_INTERVAL_MS = 5 * 60 * 1000;
+
+let lastNudgeSweepAt = 0;
