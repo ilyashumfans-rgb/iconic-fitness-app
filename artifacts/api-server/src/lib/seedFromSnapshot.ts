@@ -15,6 +15,7 @@ import {
   classSessionsTable,
   productsTable,
   uploadedImagesTable,
+  yoactivPackagePrefsTable,
 } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { logger } from "./logger";
@@ -171,6 +172,16 @@ async function seedAll(dbx: Executor): Promise<Record<string, number>> {
     uploadedImagesTable,
     snap.uploaded_images ?? [],
   );
+  // Which YoActiv package variations are member-visible per branch. Packages
+  // are default-hidden, so without these rows every branch's paid purchase
+  // flow would show an empty plan list and fall back to enquiries.
+  results.yoactiv_package_prefs = await seedTable(
+    dbx,
+    "yoactiv_package_prefs",
+    yoactivPackagePrefsTable,
+    snap.yoactiv_package_prefs ?? [],
+    ["updatedAt"],
+  );
 
   return results;
 }
@@ -212,6 +223,7 @@ const CATALOG_TABLES = [
   "class_sessions",
   "products",
   "uploaded_images",
+  "yoactiv_package_prefs",
 ];
 
 /**
