@@ -3,7 +3,7 @@ import { customFetch, getGetMeQueryKey, useUpdateMe } from "@workspace/api-clien
 import { useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
-import { ActivityIndicator, Alert, Image, Platform, Pressable, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Linking, Platform, Pressable, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { useColors } from "@/hooks/useColors";
@@ -16,6 +16,33 @@ function notify(title: string, message: string) {
     return;
   }
   Alert.alert(title, message);
+}
+
+/**
+ * Permission-denied alert. On native, when the OS won't re-prompt
+ * (user previously tapped "Don't Allow"), offer an "Open Settings" button
+ * that deep-links to the app's entry in system Settings.
+ */
+function notifyPermissionDenied(message: string, canAskAgain: boolean) {
+  if (Platform.OS === "web") {
+    notify("Permission needed", message);
+    return;
+  }
+  if (canAskAgain) {
+    Alert.alert("Permission needed", message);
+    return;
+  }
+  Alert.alert(
+    "Permission needed",
+    `${message} Access was previously denied, so please enable it in Settings.`,
+    [
+      { text: "Not now", style: "cancel" },
+      {
+        text: "Open Settings",
+        onPress: () => void Linking.openSettings(),
+      },
+    ],
+  );
 }
 
 const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
@@ -102,7 +129,7 @@ export function ProfilePhotoPicker({
   async function pickFromGallery() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      notify("Permission needed", "Allow photo access to choose a picture.");
+      notifyPermissionDenied("Allow photo access to choose a picture.", perm.canAskAgain);
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync(PICKER_OPTIONS);
@@ -119,7 +146,7 @@ export function ProfilePhotoPicker({
     }
     const perm = await ImagePicker.requestCameraPermissionsAsync();
     if (!perm.granted) {
-      notify("Permission needed", "Allow camera access to take your photo.");
+      notifyPermissionDenied("Allow camera access to take your photo.", perm.canAskAgain);
       return;
     }
     const result = await ImagePicker.launchCameraAsync(PICKER_OPTIONS);
