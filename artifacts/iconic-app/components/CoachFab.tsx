@@ -26,7 +26,7 @@ export function CoachFab() {
     >
       <View style={styles.inner}>
         <Image
-          source={require("@/assets/chatbot.gif")}
+          source={require("@/assets/chatbot.webp")}
           style={StyleSheet.absoluteFill}
           contentFit="cover"
         />

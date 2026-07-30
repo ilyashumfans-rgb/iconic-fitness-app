@@ -172,7 +172,7 @@ function SignInContent() {
     <View style={[styles.flex, { backgroundColor: colors.background }]}>
       {/* Cinematic hero background */}
       <ImageBackground
-        source={require("@/assets/images/auth-hero.png")}
+        source={require("@/assets/images/auth-hero.webp")}
         style={StyleSheet.absoluteFill}
         resizeMode="cover"
       >

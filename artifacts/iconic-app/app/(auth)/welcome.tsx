@@ -42,7 +42,7 @@ function WelcomeContent() {
   return (
     <View style={[styles.flex, { backgroundColor: colors.background }]}>
       <ImageBackground
-        source={require("@/assets/images/auth-hero.png")}
+        source={require("@/assets/images/auth-hero.webp")}
         style={StyleSheet.absoluteFill}
         resizeMode="cover"
       >

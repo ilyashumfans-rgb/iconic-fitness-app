@@ -17,7 +17,7 @@ import Animated, {
 import { AppText } from "@/components/AppText";
 import { useColors } from "@/hooks/useColors";
 
-const COACH_IMG = require("../assets/images/ai-coach-robot.gif");
+const COACH_IMG = require("../assets/images/ai-coach-robot.webp");
 
 /** Soft outer float/depth shadow (web boxShadow / native shadow*). */
 const CARD_SHADOW: ViewStyle = Platform.select({

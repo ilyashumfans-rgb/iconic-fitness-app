@@ -36,4 +36,5 @@
 - [Member engagement 45-day program](member-engagement-program.md) — code-default plan, lazy auto-start + milestone cursors on GET /engagement/mine, batched staff overview; prod needs the CREATE TABLE.
 - [Empty-stomach assessment bookings](assessment-bookings.md) — partial unique active-booking index, lazy 5pm-IST evening-before reminder from notification poll, record = BMI row + one-shot status flip.
 - [EAS Android APK builds](eas-android-build.md) — expo.dev builds from GitHub need pnpm/node/image pins + slug=EAS project; each miss fails with a misleading deep-log error.
+- [DB image compression](db-image-compression.md) — bundled GIFs→animated WebP; `uploaded_images` batch-recompressed in place (run script from lib/db); uploads store raw so table regrows.
 - [Admin Excel lead import](leads-excel-import.md) — client-side xlsx parse → /admin/leads/import (5mb body limit before global json); new /partner/* routes need STAFF_PERMISSION_PREFIXES entry.
