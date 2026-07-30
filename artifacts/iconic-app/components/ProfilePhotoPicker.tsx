@@ -46,12 +46,22 @@ export function ProfilePhotoPicker({
   const [busy, setBusy] = useState(false);
   // Show the fresh photo immediately after upload (before the /me refetch).
   const [localUrl, setLocalUrl] = useState<string | null>(null);
+  // Remember the last picked image if its upload failed, so the member can
+  // retry without re-picking the photo (important on flaky gym connections).
+  const [failedUri, setFailedUri] = useState<string | null>(null);
 
   const shownUrl = localUrl ?? (avatarUrl ? resolveImageUrl(avatarUrl) : undefined);
   const initial = (name ?? "").trim().charAt(0).toUpperCase() || "?";
 
+  const UPLOAD_TIMEOUT_MS = 30_000;
+
   async function uploadFromUri(uri: string) {
     setBusy(true);
+    setFailedUri(null);
+    // Abort the upload if it stalls (slow/dead mobile connection) so the
+    // spinner never hangs indefinitely.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
     try {
       const fetched = await fetch(uri);
       const blob = await fetched.blob();
@@ -60,6 +70,7 @@ export function ProfilePhotoPicker({
         {
           method: "POST",
           body: blob,
+          signal: controller.signal,
           headers: {
             "x-filename": "profile-photo.jpg",
             "content-type": "application/octet-stream",
@@ -70,11 +81,20 @@ export function ProfilePhotoPicker({
       setLocalUrl(resolveImageUrl(uploaded.url) ?? null);
       await queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
     } catch (err) {
+      setFailedUri(uri);
+      const aborted =
+        controller.signal.aborted ||
+        (err instanceof Error && err.name === "AbortError");
       notify(
         "Photo not saved",
-        err instanceof Error ? err.message : "Please try again.",
+        aborted
+          ? "Upload timed out — check your connection and tap Retry."
+          : err instanceof Error && err.message
+            ? err.message
+            : "Please try again.",
       );
     } finally {
+      clearTimeout(timer);
       setBusy(false);
     }
   }
@@ -146,6 +166,25 @@ export function ProfilePhotoPicker({
           </View>
         ) : null}
       </View>
+      {failedUri && !busy ? (
+        <Pressable
+          onPress={() => void uploadFromUri(failedUri)}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+            paddingHorizontal: 14,
+            paddingVertical: 8,
+            borderRadius: 999,
+            backgroundColor: colors.primary,
+          }}
+        >
+          <Feather name="refresh-cw" size={15} color={colors.primaryForeground} />
+          <AppText weight="600" size={13} color={colors.primaryForeground}>
+            Retry upload
+          </AppText>
+        </Pressable>
+      ) : null}
       <View style={{ flexDirection: "row", gap: 10 }}>
         <Pressable
           onPress={() => void takePhoto()}
