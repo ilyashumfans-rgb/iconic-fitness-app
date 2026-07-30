@@ -9,7 +9,8 @@
       "node": "22.14.0",
       "pnpm": "10.26.1",
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "image": "latest"
       }
     },
     "production": {
@@ -17,7 +18,8 @@
       "node": "22.14.0",
       "pnpm": "10.26.1",
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "app-bundle",
+        "image": "latest"
       }
     }
   },
