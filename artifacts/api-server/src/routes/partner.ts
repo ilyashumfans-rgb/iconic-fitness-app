@@ -65,6 +65,7 @@ import {
   setTrainerPhoto,
   removeTrainerPhoto,
 } from "../lib/trainerPhotos";
+import { notifyMemberOfComplaintUpdate } from "../lib/complaintMemberNotify";
 
 const router: IRouter = Router();
 
@@ -1712,6 +1713,21 @@ router.patch(
       res.status(404).json({ error: "Complaint not found" });
       return;
     }
+    // Read the row first (with the same ownership scope) so the member is
+    // only pinged on an actual change, not on every re-save.
+    const [before] = await db
+      .select()
+      .from(complaintsTable)
+      .where(
+        and(
+          eq(complaintsTable.id, id),
+          inArray(complaintsTable.gymId, gymIds),
+        ),
+      );
+    if (!before) {
+      res.status(404).json({ error: "Complaint not found" });
+      return;
+    }
     const [updated] = await db
       .update(complaintsTable)
       .set(patch)
@@ -1726,6 +1742,7 @@ router.patch(
       res.status(404).json({ error: "Complaint not found" });
       return;
     }
+    void notifyMemberOfComplaintUpdate(before, updated);
     res.json(updated);
   },
 );

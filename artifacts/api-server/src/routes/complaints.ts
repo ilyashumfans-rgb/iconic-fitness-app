@@ -16,6 +16,7 @@ import {
 } from "@workspace/api-zod";
 import { requireUser } from "../lib/currentUser";
 import { requireAdmin } from "../lib/adminAuth";
+import { notifyMemberOfComplaintUpdate } from "../lib/complaintMemberNotify";
 
 const router: IRouter = Router();
 
@@ -207,6 +208,16 @@ router.patch(
       }
       patch.response = response.trim();
     }
+    // Read the row first so we only ping the member on an actual change
+    // (new reply text or a fresh resolve), not on every re-save.
+    const [before] = await db
+      .select()
+      .from(complaintsTable)
+      .where(eq(complaintsTable.id, id));
+    if (!before) {
+      res.status(404).json({ error: "Complaint not found" });
+      return;
+    }
     const [updated] = await db
       .update(complaintsTable)
       .set(patch)
@@ -216,6 +227,7 @@ router.patch(
       res.status(404).json({ error: "Complaint not found" });
       return;
     }
+    void notifyMemberOfComplaintUpdate(before, updated);
     res.json(updated);
   },
 );
