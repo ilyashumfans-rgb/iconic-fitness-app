@@ -34,4 +34,5 @@
 - [Pre-auth stash linking](pre-auth-stash-linking.md) — data captured before login and auto-applied after must be TTL'd and never overwrite an existing differing profile value (shared devices).
 - [Member engagement 45-day program](member-engagement-program.md) — code-default plan, lazy auto-start + milestone cursors on GET /engagement/mine, batched staff overview; prod needs the CREATE TABLE.
 - [Empty-stomach assessment bookings](assessment-bookings.md) — partial unique active-booking index, lazy 5pm-IST evening-before reminder from notification poll, record = BMI row + one-shot status flip.
+- [EAS Android APK builds](eas-android-build.md) — expo.dev builds from GitHub need pnpm/node/image pins + slug=EAS project; each miss fails with a misleading deep-log error.
 - [Admin Excel lead import](leads-excel-import.md) — client-side xlsx parse → /admin/leads/import (5mb body limit before global json); new /partner/* routes need STAFF_PERMISSION_PREFIXES entry.
