@@ -41,8 +41,13 @@ export function isSameDayIso(isoA: string, isoB: string): boolean {
 
 /** Friendly IST date label for a YYYY-MM-DD string, e.g. "Mon, Jun 23". */
 export function istDateLabel(dateStr: string): string {
-  // Anchor at midday UTC so the IST calendar day is unambiguous.
-  const d = new Date(`${dateStr}T12:00:00Z`);
+  // Accept both plain YYYY-MM-DD dates (anchor at midday UTC so the IST
+  // calendar day is unambiguous) and full ISO timestamps. Never throw on
+  // bad input — a bad date label must not crash a whole screen.
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(dateStr)
+    ? new Date(`${dateStr}T12:00:00Z`)
+    : new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return "";
   return new Intl.DateTimeFormat("en-US", {
     timeZone: IST,
     weekday: "short",

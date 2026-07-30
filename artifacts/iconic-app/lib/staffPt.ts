@@ -56,6 +56,18 @@ export type BmiRecord = {
   createdAt: string;
 };
 
+export type AssignedExercise = {
+  id: number;
+  programId: number | null;
+  staffName: string;
+  exerciseSlug: string;
+  exerciseName: string;
+  sets: string;
+  reps: string;
+  note: string;
+  createdAt: string;
+};
+
 export type DietPlan = {
   id: number;
   programId: number | null;
@@ -118,9 +130,12 @@ export const staffPtApi = {
       ),
     ),
   program: async (id: number) =>
-    asJson<{ program: PtProgram; bmi: BmiRecord[]; diets: DietPlan[] }>(
-      await staffFetch(`/staff/pt/programs/${id}`),
-    ),
+    asJson<{
+      program: PtProgram;
+      bmi: BmiRecord[];
+      diets: DietPlan[];
+      exercises: AssignedExercise[];
+    }>(await staffFetch(`/staff/pt/programs/${id}`)),
   addBmi: async (body: {
     programId: number;
     heightCm: number;
@@ -139,6 +154,24 @@ export const staffPtApi = {
         method: "POST",
         body: JSON.stringify(body),
       }),
+    ),
+  addExercise: async (body: {
+    programId: number;
+    exerciseSlug: string;
+    exerciseName: string;
+    sets: string;
+    reps: string;
+    note: string;
+  }) =>
+    asJson<AssignedExercise>(
+      await staffFetch("/staff/pt/exercises", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    ),
+  removeExercise: async (id: number) =>
+    asJson<{ ok: boolean }>(
+      await staffFetch(`/staff/pt/exercises/${id}`, { method: "DELETE" }),
     ),
 };
 

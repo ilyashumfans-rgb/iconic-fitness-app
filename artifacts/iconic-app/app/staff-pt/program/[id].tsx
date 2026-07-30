@@ -17,8 +17,10 @@ import { AppText } from "@/components/AppText";
 import { useColors } from "@/hooks/useColors";
 import { ThemeContext } from "@/hooks/useTheme";
 import { istDateLabel } from "@/lib/dates";
+import { EXERCISES, type Exercise } from "@/lib/exercises";
 import {
   staffPtApi,
+  type AssignedExercise,
   type BmiRecord,
   type DietPlan,
   type PtProgram,
@@ -58,6 +60,7 @@ function Content() {
   const [program, setProgram] = useState<PtProgram | null>(null);
   const [bmi, setBmi] = useState<BmiRecord[]>([]);
   const [diets, setDiets] = useState<DietPlan[]>([]);
+  const [exercises, setExercises] = useState<AssignedExercise[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -68,6 +71,12 @@ function Content() {
   // Diet form
   const [dietTitle, setDietTitle] = useState("");
   const [dietContent, setDietContent] = useState("");
+  // Exercise form
+  const [exSearch, setExSearch] = useState("");
+  const [exPicked, setExPicked] = useState<Exercise | null>(null);
+  const [exSets, setExSets] = useState("");
+  const [exReps, setExReps] = useState("");
+  const [exNote, setExNote] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -75,6 +84,7 @@ function Content() {
       setProgram(data.program);
       setBmi(data.bmi);
       setDiets(data.diets);
+      setExercises(Array.isArray(data.exercises) ? data.exercises : []);
     } catch (e) {
       notify("Could not load", e instanceof Error ? e.message : "");
     } finally {
@@ -140,6 +150,48 @@ function Content() {
       "Diet plan saved — the member can see it in their app.",
     );
   }, [act, programId, dietTitle, dietContent]);
+
+  const addExercise = useCallback(async () => {
+    if (!exPicked) {
+      notify("Pick an exercise", "Search the library and tap an exercise first.");
+      return;
+    }
+    await act(
+      "exercise",
+      async () => {
+        await staffPtApi.addExercise({
+          programId,
+          exerciseSlug: exPicked.slug,
+          exerciseName: exPicked.name,
+          sets: exSets.trim(),
+          reps: exReps.trim(),
+          note: exNote.trim(),
+        });
+        setExPicked(null);
+        setExSearch("");
+        setExSets("");
+        setExReps("");
+        setExNote("");
+      },
+      "Exercise assigned — the member can see it in their app.",
+    );
+  }, [act, programId, exPicked, exSets, exReps, exNote]);
+
+  const removeExercise = useCallback(
+    (id: number) =>
+      act(`removeEx${id}`, () => staffPtApi.removeExercise(id)),
+    [act],
+  );
+
+  const exMatches =
+    exSearch.trim().length >= 2 && !exPicked
+      ? EXERCISES.filter((e) => {
+          const q = exSearch.trim().toLowerCase();
+          return (
+            e.name.toLowerCase().includes(q) || e.muscle.toLowerCase().includes(q)
+          );
+        }).slice(0, 6)
+      : [];
 
   const inputStyle = [
     styles.input,
@@ -298,6 +350,120 @@ function Content() {
                   {r.note ? (
                     <AppText size={13} color={colors.mutedForeground}>
                       {r.note}
+                    </AppText>
+                  ) : null}
+                </View>
+              ))}
+            </View>
+
+            {/* Assigned exercises */}
+            <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <AppText weight="700" size={15}>
+                Assigned exercises
+              </AppText>
+              {exPicked ? (
+                <View style={[styles.subCard, { borderColor: colors.border, borderTopWidth: 0 }]}>
+                  <View style={styles.rowBetween}>
+                    <AppText weight="700" size={14}>
+                      {exPicked.name}{" "}
+                      <AppText size={12} color={colors.mutedForeground}>
+                        · {exPicked.muscle}
+                      </AppText>
+                    </AppText>
+                    <Pressable onPress={() => setExPicked(null)} hitSlop={8}>
+                      <Feather name="x" size={18} color={colors.mutedForeground} />
+                    </Pressable>
+                  </View>
+                </View>
+              ) : (
+                <TextInput
+                  style={inputStyle}
+                  placeholder="Search exercise library (e.g. bench, squat)…"
+                  placeholderTextColor="#777"
+                  value={exSearch}
+                  onChangeText={setExSearch}
+                />
+              )}
+              {exMatches.map((e) => (
+                <Pressable
+                  key={e.slug}
+                  onPress={() => setExPicked(e)}
+                  style={[styles.subCard, { borderColor: colors.border }]}
+                >
+                  <AppText weight="700" size={14}>
+                    {e.name}{" "}
+                    <AppText size={12} color={colors.mutedForeground}>
+                      · {e.muscle}
+                    </AppText>
+                  </AppText>
+                </Pressable>
+              ))}
+              {exSearch.trim().length >= 2 && !exPicked && exMatches.length === 0 ? (
+                <AppText size={12} color={colors.mutedForeground}>
+                  No exercise matches "{exSearch.trim()}".
+                </AppText>
+              ) : null}
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <TextInput
+                  style={[...inputStyle, { flex: 1 }]}
+                  placeholder="Sets (e.g. 3)"
+                  placeholderTextColor="#777"
+                  value={exSets}
+                  onChangeText={setExSets}
+                />
+                <TextInput
+                  style={[...inputStyle, { flex: 1 }]}
+                  placeholder="Reps (e.g. 10-12)"
+                  placeholderTextColor="#777"
+                  value={exReps}
+                  onChangeText={setExReps}
+                />
+              </View>
+              <TextInput
+                style={[...inputStyle, styles.multiline]}
+                placeholder="Coaching note for the member (optional)"
+                placeholderTextColor="#777"
+                multiline
+                value={exNote}
+                onChangeText={setExNote}
+              />
+              <ActionButton
+                label="Assign exercise"
+                busy={busy === "exercise"}
+                color={colors.primary}
+                onPress={addExercise}
+              />
+              {exercises.map((e) => (
+                <View key={e.id} style={[styles.subCard, { borderColor: colors.border }]}>
+                  <View style={styles.rowBetween}>
+                    <AppText weight="700" size={14}>
+                      {e.exerciseName}{" "}
+                      <AppText size={12} color={colors.mutedForeground}>
+                        · {istDateLabel(e.createdAt)}
+                      </AppText>
+                    </AppText>
+                    <Pressable
+                      onPress={() => removeExercise(e.id)}
+                      disabled={busy !== null}
+                      hitSlop={8}
+                    >
+                      {busy === `removeEx${e.id}` ? (
+                        <ActivityIndicator size="small" color={colors.mutedForeground} />
+                      ) : (
+                        <Feather name="trash-2" size={16} color={colors.mutedForeground} />
+                      )}
+                    </Pressable>
+                  </View>
+                  {e.sets || e.reps ? (
+                    <AppText size={13} color={colors.mutedForeground}>
+                      {e.sets ? `${e.sets} sets` : ""}
+                      {e.sets && e.reps ? " × " : ""}
+                      {e.reps ? `${e.reps} reps` : ""}
+                    </AppText>
+                  ) : null}
+                  {e.note ? (
+                    <AppText size={13} color={colors.mutedForeground}>
+                      {e.note}
                     </AppText>
                   ) : null}
                 </View>

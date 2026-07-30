@@ -6,9 +6,9 @@ import {
   type PtSession,
 } from "@workspace/api-client-react";
 import { customFetch } from "@workspace/api-client-react";
-import { Redirect } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
@@ -238,23 +238,38 @@ type TrainerDiet = {
   content: string;
   createdAt: string;
 };
+type TrainerExercise = {
+  id: number;
+  staffName: string;
+  exerciseSlug: string;
+  exerciseName: string;
+  sets: string;
+  reps: string;
+  note: string;
+  createdAt: string;
+};
 
 /** BMI records & diet plans the member's trainer logged for them. */
 function TrainerRecords() {
   const colors = useColors();
+  const router = useRouter();
   const [bmi, setBmi] = useState<TrainerBmi[]>([]);
   const [diets, setDiets] = useState<TrainerDiet[]>([]);
+  const [exercises, setExercises] = useState<TrainerExercise[]>([]);
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       try {
-        const data = await customFetch<{ bmi: TrainerBmi[]; diets: TrainerDiet[] }>(
-          "/api/pt/records/mine",
-        );
+        const data = await customFetch<{
+          bmi: TrainerBmi[];
+          diets: TrainerDiet[];
+          exercises: TrainerExercise[];
+        }>("/api/pt/records/mine");
         if (!cancelled) {
           setBmi(Array.isArray(data.bmi) ? data.bmi : []);
           setDiets(Array.isArray(data.diets) ? data.diets : []);
+          setExercises(Array.isArray(data.exercises) ? data.exercises : []);
         }
       } catch {
         // Section simply stays hidden if the fetch fails.
@@ -265,10 +280,60 @@ function TrainerRecords() {
     };
   }, []);
 
-  if (bmi.length === 0 && diets.length === 0) return null;
+  if (bmi.length === 0 && diets.length === 0 && exercises.length === 0)
+    return null;
 
   return (
     <View style={{ gap: 12, marginTop: 12 }}>
+      {exercises.length > 0 ? (
+        <Card>
+          <AppText weight="700" size={15} style={{ marginBottom: 8 }}>
+            Exercises from your trainer
+          </AppText>
+          <View style={{ gap: 12 }}>
+            {exercises.map((e) => (
+              <Pressable
+                key={e.id}
+                onPress={() => router.push(`/exercise/${e.exerciseSlug}`)}
+                style={{ gap: 2 }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <AppText weight="700" size={14} style={{ flex: 1 }}>
+                    {e.exerciseName}{" "}
+                    <AppText size={12} color={colors.mutedForeground}>
+                      · {istDateLabel(e.createdAt)}
+                      {e.staffName ? ` · by ${e.staffName}` : ""}
+                    </AppText>
+                  </AppText>
+                  <Feather
+                    name="chevron-right"
+                    size={16}
+                    color={colors.mutedForeground}
+                  />
+                </View>
+                {e.sets || e.reps ? (
+                  <AppText size={13} color={colors.mutedForeground}>
+                    {e.sets ? `${e.sets} sets` : ""}
+                    {e.sets && e.reps ? " × " : ""}
+                    {e.reps ? `${e.reps} reps` : ""}
+                  </AppText>
+                ) : null}
+                {e.note ? (
+                  <AppText size={13} color={colors.mutedForeground}>
+                    {e.note}
+                  </AppText>
+                ) : null}
+              </Pressable>
+            ))}
+          </View>
+        </Card>
+      ) : null}
       {bmi.length > 0 ? (
         <Card>
           <AppText weight="700" size={15} style={{ marginBottom: 8 }}>

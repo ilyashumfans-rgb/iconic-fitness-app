@@ -13,6 +13,7 @@
 - [Deploy typechecks ALL artifacts](deploy-builds-all-artifacts.md) — publish fails if ANY artifact has a TS error (dev/vite doesn't typecheck); Vite artifacts need `dom` lib; bare `vite build` PORT error is not a real blocker.
 - [RN guided-timer state machine](rn-timer-state-machine.md) — interval steppers (set/rest player): idempotent advance via ref guard, advance from effect not setState updater, "Next" = steps[index+1].
 - [IST date-label drift](ist-date-label-drift.md) — render YYYY-MM-DD via IST-anchored helpers (istDateLabel/istWeekdayShort), never bare formatDateLabel/new Date(str) (shows prev day on non-IST devices).
+- [Phone-fallback record reads](phone-fallback-first-claim.md) — member reads of trainer records use last-10 phone fallback for userId-NULL rows; reads must first-claim backfill userId so recycled numbers can't leak PT/health data.
 - [Trainer booking = leads enquiry](trainer-booking-leads.md) — no booking table + db push forbidden; "book a trainer" posts to public /api/leads kind="general" (skips GX validation; needs name≥2, valid phone, non-empty date+time).
 - [RN/web bottom-anchored auth layout](rn-login-scroll-anchor.md) — logo top + form bottom: ScrollView contentContainer flexGrow:1 + form marginTop:auto; never a flex:1 spacer child (drifts/clips on web).
 - [Sanitize AsyncStorage data on load](local-persisted-data-sanitize.md) — local-first stored blobs are untrusted; whitelist finite>0 on load + null-not-NaN derived helpers; don't re-sanitize on save (breaks clear-to-blank).

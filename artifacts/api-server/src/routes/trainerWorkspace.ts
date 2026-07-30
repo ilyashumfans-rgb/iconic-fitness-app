@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { Router, type IRouter, type Request, type Response } from "express";
-import { and, desc, eq, ne, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import {
   db,
   leadsTable,
+  memberAssignedExercisesTable,
   memberBmiRecordsTable,
   memberDietPlansTable,
   notificationsTable,
@@ -409,7 +410,7 @@ router.get(
       res.status(404).json({ error: "Not found" });
       return;
     }
-    const [bmi, diets] = await Promise.all([
+    const [bmi, diets, exercises] = await Promise.all([
       db
         .select()
         .from(memberBmiRecordsTable)
@@ -420,8 +421,13 @@ router.get(
         .from(memberDietPlansTable)
         .where(eq(memberDietPlansTable.programId, id))
         .orderBy(desc(memberDietPlansTable.createdAt)),
+      db
+        .select()
+        .from(memberAssignedExercisesTable)
+        .where(eq(memberAssignedExercisesTable.programId, id))
+        .orderBy(desc(memberAssignedExercisesTable.createdAt)),
     ]);
-    res.json({ program, bmi, diets });
+    res.json({ program, bmi, diets, exercises });
   },
 );
 
@@ -521,6 +527,87 @@ router.post(
   },
 );
 
+// ── Assigned exercises ──────────────────────────────────────────────────────
+
+router.post(
+  "/staff/pt/exercises",
+  requireStaffPermission("pt.manage"),
+  async (req: Request, res: Response): Promise<void> => {
+    const me = await loadStaffOrUnauthorized(req, res);
+    if (!me) return;
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const programId = Number(b.programId);
+    const exerciseSlug =
+      typeof b.exerciseSlug === "string" ? b.exerciseSlug.trim() : "";
+    const exerciseName =
+      typeof b.exerciseName === "string" ? b.exerciseName.trim() : "";
+    const sets = typeof b.sets === "string" ? b.sets.trim() : "";
+    const reps = typeof b.reps === "string" ? b.reps.trim() : "";
+    const note = typeof b.note === "string" ? b.note.trim() : "";
+    if (!Number.isInteger(programId)) {
+      res.status(400).json({ error: "programId required" });
+      return;
+    }
+    // Slugs come from the app's bundled exercise library; keep the format
+    // strict so free text can't sneak in.
+    if (!/^[a-z0-9-]{2,64}$/.test(exerciseSlug)) {
+      res.status(400).json({ error: "Pick an exercise from the library" });
+      return;
+    }
+    const [program] = await db
+      .select()
+      .from(ptProgramsTable)
+      .where(
+        and(eq(ptProgramsTable.id, programId), eq(ptProgramsTable.staffId, me.id)),
+      );
+    if (!program) {
+      res.status(404).json({ error: "Program not found" });
+      return;
+    }
+    const [row] = await db
+      .insert(memberAssignedExercisesTable)
+      .values({
+        programId,
+        staffId: me.id,
+        staffName: me.name,
+        memberPhone: program.memberPhone,
+        userId: program.userId,
+        exerciseSlug,
+        exerciseName: exerciseName || exerciseSlug,
+        sets,
+        reps,
+        note,
+      })
+      .returning();
+    res.status(201).json(row);
+  },
+);
+
+router.delete(
+  "/staff/pt/exercises/:id",
+  requireStaffPermission("pt.manage"),
+  async (req: Request, res: Response): Promise<void> => {
+    const me = await loadStaffOrUnauthorized(req, res);
+    if (!me) return;
+    const id = Number(req.params.id);
+    const [deleted] = await db
+      .delete(memberAssignedExercisesTable)
+      .where(
+        and(
+          eq(memberAssignedExercisesTable.id, id),
+          // Only the trainer who assigned it can remove it.
+          eq(memberAssignedExercisesTable.staffId, me.id),
+        ),
+      )
+      .returning();
+    if (!deleted) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    res.json({ ok: true });
+  },
+);
+
 // ── Member side: my BMI records & diet plans from my trainer ────────────────
 
 router.get(
@@ -542,11 +629,16 @@ router.get(
     }
     const norm = normalizeMobile(user.mobile);
     const last10 = norm ? norm.slice(-10) : "";
-    const phoneMatch = (table: typeof memberBmiRecordsTable | typeof memberDietPlansTable) =>
+    const phoneMatch = (
+      table:
+        | typeof memberBmiRecordsTable
+        | typeof memberDietPlansTable
+        | typeof memberAssignedExercisesTable,
+    ) =>
       last10.length === 10
         ? sql`(${table.userId} = ${user.id} OR (${table.userId} IS NULL AND length(regexp_replace(${table.memberPhone}, '[^0-9]', '', 'g')) >= 10 AND right(regexp_replace(${table.memberPhone}, '[^0-9]', '', 'g'), 10) = ${last10}))`
         : sql`${table.userId} = ${user.id}`;
-    const [bmi, diets] = await Promise.all([
+    const [bmi, diets, exercises] = await Promise.all([
       db
         .select()
         .from(memberBmiRecordsTable)
@@ -559,8 +651,43 @@ router.get(
         .where(phoneMatch(memberDietPlansTable))
         .orderBy(desc(memberDietPlansTable.createdAt))
         .limit(100),
+      db
+        .select()
+        .from(memberAssignedExercisesTable)
+        .where(phoneMatch(memberAssignedExercisesTable))
+        .orderBy(desc(memberAssignedExercisesTable.createdAt))
+        .limit(100),
     ]);
-    res.json({ bmi, diets });
+    // First-claim backfill: rows matched only by phone (userId NULL) are
+    // permanently bound to this account, so a later account that happens to
+    // share/recycle the same number can never see them. Best-effort — a
+    // failed backfill must not fail the read.
+    try {
+      const claim = async (
+        table:
+          | typeof memberBmiRecordsTable
+          | typeof memberDietPlansTable
+          | typeof memberAssignedExercisesTable,
+        ids: number[],
+      ) => {
+        if (ids.length === 0) return;
+        await db
+          .update(table)
+          .set({ userId: user.id })
+          .where(and(inArray(table.id, ids), sql`${table.userId} IS NULL`));
+      };
+      await Promise.all([
+        claim(memberBmiRecordsTable, bmi.filter((r) => r.userId == null).map((r) => r.id)),
+        claim(memberDietPlansTable, diets.filter((r) => r.userId == null).map((r) => r.id)),
+        claim(
+          memberAssignedExercisesTable,
+          exercises.filter((r) => r.userId == null).map((r) => r.id),
+        ),
+      ]);
+    } catch {
+      // Best-effort only.
+    }
+    res.json({ bmi, diets, exercises });
   },
 );
 

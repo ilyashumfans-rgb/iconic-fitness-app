@@ -333,6 +333,26 @@ export const memberDietPlansTable = pgTable("member_diet_plans", {
     .defaultNow(),
 });
 
+// Exercises a trainer assigns to a PT member. exerciseSlug references the
+// app's bundled exercise library (lib/exercises.ts); name is snapshotted so
+// history survives library edits. Prescription overrides are free text.
+export const memberAssignedExercisesTable = pgTable("member_assigned_exercises", {
+  id: serial("id").primaryKey(),
+  programId: integer("program_id"),
+  staffId: integer("staff_id").notNull(),
+  staffName: text("staff_name").notNull().default(""),
+  memberPhone: text("member_phone").notNull().default(""),
+  userId: integer("user_id"),
+  exerciseSlug: text("exercise_slug").notNull(),
+  exerciseName: text("exercise_name").notNull().default(""),
+  sets: text("sets").notNull().default(""),
+  reps: text("reps").notNull().default(""),
+  note: text("note").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // PT memberships (trainer dashboard roster). Rows come from manual trainer
 // entry, optionally prefilled from the YoActiv member list. Session
 // deduction is computed from elapsed days (originalSessions/durationDays
