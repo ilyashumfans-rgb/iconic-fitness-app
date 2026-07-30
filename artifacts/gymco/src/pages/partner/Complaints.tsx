@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { PartnerLayout } from "@/components/partner/PartnerLayout";
 import { partnerApi, type PartnerComplaintRow } from "@/lib/partnerApi";
-import { Inbox, Loader2, MapPin, Phone, Search } from "lucide-react";
+import { Inbox, Loader2, MapPin, Phone, RotateCcw, Search } from "lucide-react";
 
 const STATUS_OPTIONS = ["open", "in_progress", "resolved"] as const;
 
@@ -17,11 +17,24 @@ const STATUS_LABELS: Record<string, string> = {
   resolved: "Resolved",
 };
 
+function isReopened(r: PartnerComplaintRow) {
+  const last = r.followUps?.[r.followUps.length - 1];
+  return Boolean(last?.reopened) && r.status !== "resolved";
+}
+
+function lastActivityAt(r: PartnerComplaintRow) {
+  const last = r.followUps?.[r.followUps.length - 1];
+  const created = new Date(r.createdAt).getTime() || 0;
+  const followed = last ? new Date(last.at).getTime() || 0 : 0;
+  return Math.max(created, followed);
+}
+
 export default function PartnerComplaints() {
   const [rows, setRows] = useState<PartnerComplaintRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [q, setQ] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [savingId, setSavingId] = useState<number | null>(null);
   const [openId, setOpenId] = useState<number | null>(null);
   const [draft, setDraft] = useState("");
@@ -62,21 +75,33 @@ export default function PartnerComplaints() {
 
   const filtered = useMemo(() => {
     const ql = q.toLowerCase().trim();
-    if (!ql) return rows;
-    return rows.filter(
-      (r) =>
+    const list = rows.filter((r) => {
+      if (statusFilter === "reopened") {
+        if (!isReopened(r)) return false;
+      } else if (statusFilter !== "all" && r.status !== statusFilter) {
+        return false;
+      }
+      if (!ql) return true;
+      return (
         r.memberName.toLowerCase().includes(ql) ||
         r.mobile.includes(ql) ||
         r.subject.toLowerCase().includes(ql) ||
-        r.gymName.toLowerCase().includes(ql),
-    );
-  }, [rows, q]);
+        r.gymName.toLowerCase().includes(ql)
+      );
+    });
+    return [...list].sort((a, b) => {
+      const ra = isReopened(a) ? 1 : 0;
+      const rb = isReopened(b) ? 1 : 0;
+      if (ra !== rb) return rb - ra;
+      return lastActivityAt(b) - lastActivityAt(a);
+    });
+  }, [rows, q, statusFilter]);
 
   return (
     <PartnerLayout title="Complaints">
       <div className="space-y-4">
-        <div className="bg-white border border-lime-100 rounded-2xl p-3 shadow-sm">
-          <div className="relative">
+        <div className="bg-white border border-lime-100 rounded-2xl p-3 shadow-sm flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               value={q}
@@ -85,6 +110,19 @@ export default function PartnerComplaints() {
               className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-lime-100 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-lime-500/60 text-sm"
             />
           </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="rounded-xl border border-lime-100 px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-lime-500/60"
+          >
+            <option value="all">All statuses</option>
+            <option value="reopened">Reopened</option>
+            {STATUS_OPTIONS.map((s) => (
+              <option key={s} value={s}>
+                {STATUS_LABELS[s]}
+              </option>
+            ))}
+          </select>
         </div>
 
         {err && (
@@ -144,6 +182,11 @@ export default function PartnerComplaints() {
                         </span>
                       </div>
                     </div>
+                    {isReopened(r) && (
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold border rounded-full px-2.5 py-1 bg-orange-100 text-orange-700 border-orange-200">
+                        <RotateCcw className="h-3 w-3" /> Reopened
+                      </span>
+                    )}
                     <span
                       className={`text-xs font-medium border rounded-full px-2.5 py-1 ${STATUS_STYLES[r.status] ?? "bg-slate-100 text-slate-600 border-slate-200"}`}
                     >

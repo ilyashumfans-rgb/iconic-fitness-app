@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
 import { adminApi } from "@/lib/adminApi";
-import { Loader2, MapPin, MessageCircleWarning, Phone, Search } from "lucide-react";
+import {
+  Loader2,
+  MapPin,
+  MessageCircleWarning,
+  Phone,
+  RotateCcw,
+  Search,
+} from "lucide-react";
 
 type Complaint = {
   id: number;
@@ -31,6 +38,18 @@ const STATUS_LABELS: Record<string, string> = {
   in_progress: "In progress",
   resolved: "Resolved",
 };
+
+function isReopened(r: Complaint) {
+  const last = r.followUps?.[r.followUps.length - 1];
+  return Boolean(last?.reopened) && r.status !== "resolved";
+}
+
+function lastActivityAt(r: Complaint) {
+  const last = r.followUps?.[r.followUps.length - 1];
+  const created = new Date(r.createdAt).getTime() || 0;
+  const followed = last ? new Date(last.at).getTime() || 0 : 0;
+  return Math.max(created, followed);
+}
 
 export default function AdminComplaints() {
   const [rows, setRows] = useState<Complaint[]>([]);
@@ -64,8 +83,12 @@ export default function AdminComplaints() {
 
   const filtered = useMemo(() => {
     const ql = q.toLowerCase().trim();
-    return rows.filter((r) => {
-      if (statusFilter !== "all" && r.status !== statusFilter) return false;
+    const list = rows.filter((r) => {
+      if (statusFilter === "reopened") {
+        if (!isReopened(r)) return false;
+      } else if (statusFilter !== "all" && r.status !== statusFilter) {
+        return false;
+      }
       if (!ql) return true;
       return (
         r.memberName.toLowerCase().includes(ql) ||
@@ -73,6 +96,12 @@ export default function AdminComplaints() {
         r.subject.toLowerCase().includes(ql) ||
         r.gymName.toLowerCase().includes(ql)
       );
+    });
+    return [...list].sort((a, b) => {
+      const ra = isReopened(a) ? 1 : 0;
+      const rb = isReopened(b) ? 1 : 0;
+      if (ra !== rb) return rb - ra;
+      return lastActivityAt(b) - lastActivityAt(a);
     });
   }, [rows, q, statusFilter]);
 
@@ -95,6 +124,7 @@ export default function AdminComplaints() {
             className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm"
           >
             <option value="all">All statuses</option>
+            <option value="reopened">Reopened</option>
             {STATUS_OPTIONS.map((s) => (
               <option key={s} value={s}>
                 {STATUS_LABELS[s]}
@@ -156,6 +186,11 @@ export default function AdminComplaints() {
                         </span>
                       </div>
                     </div>
+                    {isReopened(r) && (
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold border rounded-full px-2.5 py-1 bg-orange-100 text-orange-700 border-orange-200">
+                        <RotateCcw className="h-3 w-3" /> Reopened
+                      </span>
+                    )}
                     <span
                       className={`text-xs font-medium border rounded-full px-2.5 py-1 ${STATUS_STYLES[r.status] ?? "bg-slate-100 text-slate-600 border-slate-200"}`}
                     >
