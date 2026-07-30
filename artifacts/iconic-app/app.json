@@ -19,7 +19,7 @@
     "android": {
       "package": "com.iconicfitness.app",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/adaptive-icon-safe.png",
         "backgroundColor": "#000000"
       }
     },
