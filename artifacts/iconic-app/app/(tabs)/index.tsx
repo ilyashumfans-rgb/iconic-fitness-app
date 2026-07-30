@@ -1269,8 +1269,10 @@ export default function HomeScreen() {
       {/* Watch our story (member testimonials) */}
       <StorySection />
 
-      {/* Top rated gyms — everyone */}
-      <>
+      {/* Top rated gyms — hidden for active members (waits for the
+          membership check to settle so it never flashes in for members) */}
+      {membershipSettled && !isMember ? (
+        <>
           <SectionHeader
             title="Top rated gyms"
             action="View all"
@@ -1314,6 +1316,7 @@ export default function HomeScreen() {
             </ScrollView>
           )}
         </>
+      ) : null}
 
       {/* Book a class */}
       <SectionHeader

@@ -98,6 +98,7 @@ export * from './packageCategory';
 export * from './progressDay';
 export * from './progressReport';
 export * from './ptProgram';
+export * from './ptProgramPlan';
 export * from './ptSession';
 export * from './ptSessionStatus';
 export * from './ptTrialFeedback';

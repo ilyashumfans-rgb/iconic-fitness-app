@@ -834,6 +834,16 @@ export const GetMyPtProgramResponse = zod.object({
   "active": zod.boolean().describe('True when the caller has a PT enrolment with an assigned trainer'),
   "kickstarterCompleted": zod.boolean().optional().describe('True when the free kick-starter (2 trial sessions) is completed'),
   "hasPaidPlan": zod.boolean().optional().describe('True when the caller already has a paid PT booking'),
+  "plan": zod.object({
+  "packageName": zod.string(),
+  "gymName": zod.string(),
+  "trainerName": zod.string().describe('Trainer managing the plan (\'\' when not assigned yet)'),
+  "totalSessions": zod.number().describe('Sessions included in the plan'),
+  "sessionsDelivered": zod.number().describe('Sessions completed so far (trainer attendance)'),
+  "startDate": zod.string().describe('YYYY-MM-DD'),
+  "endDate": zod.string().describe('YYYY-MM-DD'),
+  "expired": zod.boolean()
+}).nullish().describe('The caller\'s paid PT plan — present only after the plan payment landed'),
   "gymId": zod.number().nullish().describe('Branch of the current PT enrolment (for booking a paid plan)'),
   "trainerName": zod.string(),
   "trainerPhotoUrl": zod.string().optional().describe('Staff-uploaded photo of the assigned trainer (\'\' when none)'),

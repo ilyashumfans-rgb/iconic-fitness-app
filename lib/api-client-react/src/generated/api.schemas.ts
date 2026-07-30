@@ -444,6 +444,25 @@ export interface PtSession {
   status: PtSessionStatus;
 }
 
+/**
+ * The caller's paid PT plan — present only after the plan payment landed
+ */
+export type PtProgramPlan = {
+  packageName: string;
+  gymName: string;
+  /** Trainer managing the plan ('' when not assigned yet) */
+  trainerName: string;
+  /** Sessions included in the plan */
+  totalSessions: number;
+  /** Sessions completed so far (trainer attendance) */
+  sessionsDelivered: number;
+  /** YYYY-MM-DD */
+  startDate: string;
+  /** YYYY-MM-DD */
+  endDate: string;
+  expired: boolean;
+} | null;
+
 export interface PtProgram {
   /** True when the caller has a PT enrolment with an assigned trainer */
   active: boolean;
@@ -451,6 +470,8 @@ export interface PtProgram {
   kickstarterCompleted?: boolean;
   /** True when the caller already has a paid PT booking */
   hasPaidPlan?: boolean;
+  /** The caller's paid PT plan — present only after the plan payment landed */
+  plan?: PtProgramPlan;
   /** Branch of the current PT enrolment (for booking a paid plan) */
   gymId?: number | null;
   trainerName: string;

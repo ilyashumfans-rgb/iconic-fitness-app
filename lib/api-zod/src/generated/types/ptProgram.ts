@@ -5,6 +5,7 @@
  * GYMCO customer API — multi-gym memberships, classes, bookings, check-ins, and fitness tracking.
  * OpenAPI spec version: 0.1.0
  */
+import type { PtProgramPlan } from './ptProgramPlan';
 import type { PtSession } from './ptSession';
 
 export interface PtProgram {
@@ -14,6 +15,8 @@ export interface PtProgram {
   kickstarterCompleted?: boolean;
   /** True when the caller already has a paid PT booking */
   hasPaidPlan?: boolean;
+  /** The caller's paid PT plan — present only after the plan payment landed */
+  plan?: PtProgramPlan;
   /** Branch of the current PT enrolment (for booking a paid plan) */
   gymId?: number | null;
   trainerName: string;

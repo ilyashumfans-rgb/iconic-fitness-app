@@ -161,51 +161,98 @@ export default function PtDetailsScreen() {
             </View>
           </Card>
 
-          <Card>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <View style={{ flex: 1 }}>
-                <AppText weight="700" size={15}>
-                  Monthly sessions
-                </AppText>
-                <AppText size={13} color={colors.mutedForeground} style={{ marginTop: 2 }}>
-                  {program.totalSessions} sessions per month
+          {/* Monthly sessions — only once the paid PT plan has started. */}
+          {program.plan ? (
+            <Card>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <View style={{ flex: 1 }}>
+                  <AppText weight="700" size={15}>
+                    Monthly sessions
+                  </AppText>
+                  <AppText size={13} color={colors.mutedForeground} style={{ marginTop: 2 }}>
+                    {program.plan.packageName || "PT plan"} ·{" "}
+                    {istDateLabel(program.plan.startDate)} –{" "}
+                    {istDateLabel(program.plan.endDate)}
+                  </AppText>
+                </View>
+                <AppText weight="700" size={22} color={colors.primary}>
+                  {program.plan.sessionsDelivered}/{program.plan.totalSessions}
                 </AppText>
               </View>
-              <AppText weight="700" size={22} color={colors.primary}>
-                {program.completedCount}/{program.totalSessions}
-              </AppText>
-            </View>
-            <View
-              style={{
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: colors.border,
-                marginTop: 12,
-                overflow: "hidden",
-              }}
-            >
               <View
                 style={{
-                  height: "100%",
-                  width: `${Math.min(
-                    100,
-                    Math.round(
-                      (program.completedCount /
-                        Math.max(program.totalSessions, 1)) *
-                        100,
-                    ),
-                  )}%`,
-                  backgroundColor: colors.primary,
+                  height: 8,
                   borderRadius: 4,
+                  backgroundColor: colors.border,
+                  marginTop: 12,
+                  overflow: "hidden",
                 }}
-              />
-            </View>
-            <AppText size={12} color={colors.mutedForeground} style={{ marginTop: 8 }}>
-              {program.completedCount} completed ·{" "}
-              {Math.max(program.totalSessions - program.completedCount, 0)}{" "}
-              remaining this month
-            </AppText>
-          </Card>
+              >
+                <View
+                  style={{
+                    height: "100%",
+                    width: `${Math.min(
+                      100,
+                      Math.round(
+                        (program.plan.sessionsDelivered /
+                          Math.max(program.plan.totalSessions, 1)) *
+                          100,
+                      ),
+                    )}%`,
+                    backgroundColor: colors.primary,
+                    borderRadius: 4,
+                  }}
+                />
+              </View>
+              <AppText size={12} color={colors.mutedForeground} style={{ marginTop: 8 }}>
+                {program.plan.expired
+                  ? "This plan has ended — talk to your trainer about renewing."
+                  : `${program.plan.sessionsDelivered} completed · ${Math.max(
+                      program.plan.totalSessions -
+                        program.plan.sessionsDelivered,
+                      0,
+                    )} remaining`}
+              </AppText>
+            </Card>
+          ) : null}
+
+          {/* Kick Start trial — its own section; marked completed when done. */}
+          {program.kickstarterCompleted || !program.plan ? (
+            <Card>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                <Feather
+                  name={program.kickstarterCompleted ? "check-circle" : "zap"}
+                  size={18}
+                  color={
+                    program.kickstarterCompleted
+                      ? colors.primary
+                      : colors.mutedForeground
+                  }
+                />
+                <View style={{ flex: 1 }}>
+                  <AppText weight="700" size={15}>
+                    Kick Start trial
+                  </AppText>
+                  <AppText size={13} color={colors.mutedForeground} style={{ marginTop: 2 }}>
+                    2 free trial sessions with your trainer
+                  </AppText>
+                </View>
+                <AppText
+                  weight="700"
+                  size={13}
+                  color={
+                    program.kickstarterCompleted
+                      ? colors.primary
+                      : colors.mutedForeground
+                  }
+                >
+                  {program.kickstarterCompleted
+                    ? "Completed"
+                    : `${Math.min(program.completedCount, 2)}/2`}
+                </AppText>
+              </View>
+            </Card>
+          ) : null}
 
           <Card>
             <AppText weight="700" size={15} style={{ marginBottom: 10 }}>

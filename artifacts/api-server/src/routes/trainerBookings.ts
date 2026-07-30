@@ -4,6 +4,7 @@ import { and, eq, isNull, ne, or } from "drizzle-orm";
 import {
   db,
   gymsTable,
+  ptAttendanceTable,
   ptMembershipsTable,
   ptProgramsTable,
   ptTrialFeedbackTable,
@@ -187,6 +188,70 @@ async function autoEnrolPtMembership(
     // Never break the payment landing page — staff can add the member by hand.
     console.error("PT auto-enrol failed", err);
   }
+}
+
+// The member's paid PT plan from the staff PT dashboard (pt_memberships):
+// exact userId match via the originating booking wins; the phone fallback only
+// covers manually-added rows. Newest paid row; attendance count = delivered.
+async function fetchMyPtPlan(
+  userId: number,
+  last10: string,
+): Promise<{
+  packageName: string;
+  gymName: string;
+  trainerName: string;
+  totalSessions: number;
+  sessionsDelivered: number;
+  startDate: string;
+  endDate: string;
+  expired: boolean;
+} | null> {
+  // Paid rows only; phone fallback is restricted to rows with NO originating
+  // booking (manually-added by staff) so a recycled/shared number can never
+  // surface a plan that belongs to a different account.
+  const rows = await db
+    .select({
+      m: ptMembershipsTable,
+      bookingUserId: trainerBookingsTable.userId,
+    })
+    .from(ptMembershipsTable)
+    .leftJoin(
+      trainerBookingsTable,
+      eq(ptMembershipsTable.bookingId, trainerBookingsTable.id),
+    )
+    .where(
+      and(
+        eq(ptMembershipsTable.paymentStatus, "paid"),
+        or(
+          eq(trainerBookingsTable.userId, userId),
+          last10
+            ? and(
+                isNull(ptMembershipsTable.bookingId),
+                sql`right(regexp_replace(${ptMembershipsTable.mobile}, '\\D', '', 'g'), 10) = ${last10}`,
+              )
+            : sql`false`,
+        ),
+      ),
+    )
+    .orderBy(desc(ptMembershipsTable.createdAt));
+  // Newest paid row, preferring an account-linked one over a phone match.
+  const pick =
+    rows.find((r) => r.bookingUserId === userId)?.m ?? rows[0]?.m;
+  if (!pick) return null;
+  const [att] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(ptAttendanceTable)
+    .where(eq(ptAttendanceTable.membershipId, pick.id));
+  return {
+    packageName: pick.packageName,
+    gymName: pick.gymName,
+    trainerName: pick.staffName,
+    totalSessions: pick.originalSessions,
+    sessionsDelivered: att?.count ?? 0,
+    startDate: pick.startDate,
+    endDate: pick.endDate,
+    expired: istTodayStr() > pick.endDate,
+  };
 }
 
 // Start a paid booking: verify the package server-side, register the member in
@@ -418,6 +483,7 @@ router.get(
       kickstarterCompleted: false,
       hasPaidPlan: false,
       gymId: null,
+      plan: null,
       trainerName: "",
       gymName: "",
       packageName: "",
@@ -557,8 +623,27 @@ router.get(
         })),
     ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
+    // Paid plan from the staff PT dashboard — the member's monthly sessions
+    // start only once this exists (i.e. after the plan payment landed).
+    const plan = await fetchMyPtPlan(req.userId!, mobile ?? "");
+
     const current = candidates[0];
     if (!current) {
+      if (plan) {
+        res.json(
+          GetMyPtProgramResponse.parse({
+            ...empty,
+            active: true,
+            hasPaidPlan: true,
+            plan,
+            trainerName: plan.trainerName,
+            gymName: plan.gymName,
+            packageName: plan.packageName,
+            totalSessions: plan.totalSessions,
+          }),
+        );
+        return;
+      }
       res.json(GetMyPtProgramResponse.parse(empty));
       return;
     }
@@ -605,9 +690,10 @@ router.get(
         // "Book your PT plan" CTA: the free kick-starter is done and the
         // member hasn't bought a paid plan yet.
         kickstarterCompleted: program?.status === "completed",
-        hasPaidPlan: bookings.length > 0,
+        hasPaidPlan: bookings.length > 0 || plan !== null,
         gymId: current.gymId,
-        trainerName: current.trainerName,
+        plan,
+        trainerName: plan?.trainerName || current.trainerName,
         trainerPhotoUrl: photos.get(current.trainerId) ?? "",
         gymName: current.gymName,
         packageName: current.packageName,
