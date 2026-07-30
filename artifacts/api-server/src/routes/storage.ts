@@ -4,6 +4,7 @@ import { Readable } from "stream";
 import { db, uploadedImagesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
+import sharp from "sharp";
 
 const router: IRouter = Router();
 const svc = new ObjectStorageService();
@@ -41,6 +42,37 @@ function sniffMimeType(buf: Buffer): string | null {
   return null;
 }
 
+const MAX_IMAGE_DIMENSION = 1280;
+const WEBP_QUALITY = 80;
+
+// Resize to <=1280px and re-encode as (animated) WebP. Keeps the original
+// bytes only when they are already WebP and smaller than the re-encode.
+async function compressImage(
+  body: Buffer,
+  mimeType: string,
+): Promise<{ data: Buffer; mimeType: string }> {
+  const animated = mimeType === "image/gif" || mimeType === "image/webp";
+  const image = sharp(body, { animated, failOn: "error" });
+  const meta = await image.metadata();
+  if (!meta.width || !meta.height) {
+    throw new Error("Could not read image dimensions");
+  }
+  const out = await image
+    .resize({
+      width: MAX_IMAGE_DIMENSION,
+      height: MAX_IMAGE_DIMENSION,
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .webp({ quality: WEBP_QUALITY, effort: 4 })
+    .toBuffer();
+  // If the original was already a smaller WebP, keep it as-is.
+  if (mimeType === "image/webp" && body.length <= out.length) {
+    return { data: body, mimeType };
+  }
+  return { data: out, mimeType: "image/webp" };
+}
+
 router.post(
   "/storage/uploads/inline",
   express.raw({ type: () => true, limit: MAX_UPLOAD_BYTES }),
@@ -60,19 +92,33 @@ router.post(
       return;
     }
     // Derive the MIME type from the actual bytes, not the client header.
-    const mimeType = sniffMimeType(body);
-    if (!mimeType) {
+    const sniffedType = sniffMimeType(body);
+    if (!sniffedType) {
       res.status(415).json({ error: "Only PNG, JPEG, GIF, WebP images and PDF files are allowed" });
       return;
+    }
+    // Compress images before storing so raw multi-MB blobs never hit the DB.
+    // PDFs are stored as-is.
+    let stored = { data: body, mimeType: sniffedType };
+    if (sniffedType !== "application/pdf") {
+      try {
+        stored = await compressImage(body, sniffedType);
+      } catch (error) {
+        req.log.error({ err: error }, "Failed to process uploaded image");
+        res.status(422).json({
+          error: "Could not process this image. Please upload a valid PNG, JPEG, GIF or WebP file.",
+        });
+        return;
+      }
     }
     try {
       const id = randomUUID();
       await db.insert(uploadedImagesTable).values({
         id,
         fileName,
-        mimeType,
-        sizeBytes: body.length,
-        dataBase64: body.toString("base64"),
+        mimeType: stored.mimeType,
+        sizeBytes: stored.data.length,
+        dataBase64: stored.data.toString("base64"),
       });
       res.json({ objectPath: `/db-images/${id}`, url: `/api/storage/db-images/${id}` });
     } catch (error) {
