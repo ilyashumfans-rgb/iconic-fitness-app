@@ -64,7 +64,7 @@ export default function MoreScreen() {
 
   const links: MoreLink[] = [
     {
-      title: "Train",
+      title: "Train YourSelf",
       subtitle: "Workouts, programs and guided sessions",
       icon: "activity",
       action: () => router.push("/train"),

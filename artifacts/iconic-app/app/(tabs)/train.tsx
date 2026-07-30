@@ -52,7 +52,7 @@ export default function TrainScreen() {
     <Screen contentContainerStyle={{ paddingTop: 8 }}>
       <View style={{ marginBottom: 18 }}>
         <AppText weight="700" size={28}>
-          Train
+          Train YourSelf
         </AppText>
         <AppText muted size={14} style={{ marginTop: 2 }}>
           Browse exercises or start a ready-made workout.
