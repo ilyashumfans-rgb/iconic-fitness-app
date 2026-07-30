@@ -50,7 +50,17 @@
         }
       ],
       "expo-video",
-      "@clerk/expo"
+      "@clerk/expo",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "useLegacyPackaging": false
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

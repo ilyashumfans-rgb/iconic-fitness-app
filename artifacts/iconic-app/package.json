@@ -59,6 +59,7 @@
     "zod-validation-error": "^3.4.0"
   },
   "dependencies": {
+    "expo-build-properties": "~1.0.10",
     "expo-notifications": "~0.32.17",
     "expo-print": "~15.0.8",
     "expo-sharing": "~14.0.8",
