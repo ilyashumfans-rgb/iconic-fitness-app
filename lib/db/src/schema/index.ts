@@ -361,6 +361,27 @@ export const memberAssignedExercisesTable = pgTable("member_assigned_exercises",
 // entry, optionally prefilled from the YoActiv member list. Session
 // deduction is computed from elapsed days (originalSessions/durationDays
 // per day, zero after endDate); delivered sessions come from pt_attendance.
+// Member-raised complaint tickets, visible to admins (all) and to the branch
+// partner owning the gym the complaint is about.
+export const complaintsTable = pgTable("complaints", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  memberName: text("member_name").notNull().default(""),
+  mobile: text("mobile").notNull().default(""),
+  gymId: integer("gym_id"),
+  gymName: text("gym_name").notNull().default(""),
+  subject: text("subject").notNull(),
+  message: text("message").notNull(),
+  status: text("status").notNull().default("open"), // open | in_progress | resolved
+  response: text("response").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const ptMembershipsTable = pgTable("pt_memberships", {
   id: serial("id").primaryKey(),
   source: text("source").notNull().default("manual"), // manual | yoactiv

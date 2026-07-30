@@ -2,6 +2,21 @@ import type { Ticket, TicketDetail, NewTicketInput } from "./tickets";
 
 const BASE = "/api";
 
+export type PartnerComplaintRow = {
+  id: number;
+  userId: number;
+  memberName: string;
+  mobile: string;
+  gymId: number | null;
+  gymName: string;
+  subject: string;
+  message: string;
+  status: string;
+  response: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type Partner = {
   id: number;
   email: string;
@@ -357,6 +372,14 @@ export const partnerApi = {
   },
   gxBookings: {
     list: () => request<PartnerGxBooking[]>("/partner/gx-bookings"),
+  },
+  complaints: {
+    list: () => request<PartnerComplaintRow[]>("/partner/complaints"),
+    update: (id: number, body: { status?: string; response?: string }) =>
+      request<PartnerComplaintRow>(`/partner/complaints/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
   },
   leads: {
     list: () =>

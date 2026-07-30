@@ -1,0 +1,218 @@
+import { useEffect, useMemo, useState } from "react";
+import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
+import { adminApi } from "@/lib/adminApi";
+import { Loader2, MapPin, MessageCircleWarning, Phone, Search } from "lucide-react";
+
+type Complaint = {
+  id: number;
+  userId: number;
+  memberName: string;
+  mobile: string;
+  gymId: number | null;
+  gymName: string;
+  subject: string;
+  message: string;
+  status: string;
+  response: string;
+  createdAt: string;
+};
+
+const STATUS_OPTIONS = ["open", "in_progress", "resolved"] as const;
+
+const STATUS_STYLES: Record<string, string> = {
+  open: "bg-red-100 text-red-700 border-red-200",
+  in_progress: "bg-amber-100 text-amber-700 border-amber-200",
+  resolved: "bg-emerald-100 text-emerald-700 border-emerald-200",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  open: "Open",
+  in_progress: "In progress",
+  resolved: "Resolved",
+};
+
+export default function AdminComplaints() {
+  const [rows, setRows] = useState<Complaint[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+  const [q, setQ] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [savingId, setSavingId] = useState<number | null>(null);
+  const [openId, setOpenId] = useState<number | null>(null);
+  const [draft, setDraft] = useState("");
+
+  useEffect(() => {
+    adminApi.complaints
+      .list()
+      .then((r) => setRows(r as Complaint[]))
+      .catch((e) => setErr(e instanceof Error ? e.message : String(e)))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const update = (id: number, patch: { status?: string; response?: string }) => {
+    setSavingId(id);
+    setErr(null);
+    adminApi.complaints
+      .update(id, patch)
+      .then((updated) =>
+        setRows((rs) => rs.map((r) => (r.id === id ? (updated as Complaint) : r))),
+      )
+      .catch((e) => setErr(e instanceof Error ? e.message : String(e)))
+      .finally(() => setSavingId((s) => (s === id ? null : s)));
+  };
+
+  const filtered = useMemo(() => {
+    const ql = q.toLowerCase().trim();
+    return rows.filter((r) => {
+      if (statusFilter !== "all" && r.status !== statusFilter) return false;
+      if (!ql) return true;
+      return (
+        r.memberName.toLowerCase().includes(ql) ||
+        r.mobile.includes(ql) ||
+        r.subject.toLowerCase().includes(ql) ||
+        r.gymName.toLowerCase().includes(ql)
+      );
+    });
+  }, [rows, q, statusFilter]);
+
+  return (
+    <AdminLayout title="Complaints">
+      <div className="space-y-4">
+        <AdminCard className="p-3 flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search by member, phone, subject, branch..."
+              className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400/50"
+            />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm"
+          >
+            <option value="all">All statuses</option>
+            {STATUS_OPTIONS.map((s) => (
+              <option key={s} value={s}>
+                {STATUS_LABELS[s]}
+              </option>
+            ))}
+          </select>
+        </AdminCard>
+
+        {err && (
+          <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
+            {err}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex items-center justify-center py-16 text-slate-400">
+            <Loader2 className="h-6 w-6 animate-spin" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <AdminCard className="p-12 text-center text-slate-500">
+            <MessageCircleWarning className="h-8 w-8 mx-auto mb-2 opacity-40" />
+            No complaints found.
+          </AdminCard>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map((r) => {
+              const expanded = openId === r.id;
+              return (
+                <AdminCard key={r.id} className="overflow-hidden">
+                  <button
+                    className="w-full text-left px-4 py-3 flex flex-wrap items-center gap-2"
+                    onClick={() => {
+                      setOpenId(expanded ? null : r.id);
+                      setDraft(r.response);
+                    }}
+                  >
+                    <div className="flex-1 min-w-[200px]">
+                      <div className="font-semibold text-slate-900 text-sm">
+                        {r.subject}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-0.5 flex flex-wrap gap-3">
+                        <span>{r.memberName || "Member"}</span>
+                        {r.mobile && (
+                          <span className="inline-flex items-center gap-1">
+                            <Phone className="h-3 w-3" /> {r.mobile}
+                          </span>
+                        )}
+                        {r.gymName && (
+                          <span className="inline-flex items-center gap-1">
+                            <MapPin className="h-3 w-3" /> {r.gymName}
+                          </span>
+                        )}
+                        <span>
+                          {new Date(r.createdAt).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                    <span
+                      className={`text-xs font-medium border rounded-full px-2.5 py-1 ${STATUS_STYLES[r.status] ?? "bg-slate-100 text-slate-600 border-slate-200"}`}
+                    >
+                      {STATUS_LABELS[r.status] ?? r.status}
+                    </span>
+                  </button>
+                  {expanded && (
+                    <div className="border-t border-slate-100 px-4 py-3 space-y-3 bg-slate-50/60">
+                      <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                        {r.message}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {STATUS_OPTIONS.map((s) => (
+                          <button
+                            key={s}
+                            disabled={savingId === r.id || r.status === s}
+                            onClick={() => update(r.id, { status: s })}
+                            className={`text-xs font-medium rounded-full px-3 py-1.5 border transition ${
+                              r.status === s
+                                ? STATUS_STYLES[s]
+                                : "bg-white text-slate-600 border-slate-200 hover:border-slate-400"
+                            }`}
+                          >
+                            {STATUS_LABELS[s]}
+                          </button>
+                        ))}
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-slate-500">
+                          Reply to member (shown in their app)
+                        </label>
+                        <textarea
+                          value={draft}
+                          onChange={(e) => setDraft(e.target.value)}
+                          rows={3}
+                          maxLength={2000}
+                          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400/50"
+                          placeholder="Write a short reply..."
+                        />
+                        <button
+                          disabled={savingId === r.id}
+                          onClick={() => update(r.id, { response: draft })}
+                          className="mt-2 inline-flex items-center gap-2 rounded-xl bg-slate-900 text-white text-xs font-semibold px-4 py-2 hover:bg-slate-700 disabled:opacity-50"
+                        >
+                          {savingId === r.id && (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          )}
+                          Save reply
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </AdminCard>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </AdminLayout>
+  );
+}

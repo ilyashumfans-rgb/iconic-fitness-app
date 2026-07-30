@@ -640,6 +640,36 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/PtProgram" }
 
+  /complaints:
+    post:
+      operationId: createComplaint
+      tags: [complaints]
+      summary: Raise a complaint ticket (goes to admins and the branch partner)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ComplaintCreate" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Complaint" }
+  /complaints/mine:
+    get:
+      operationId: listMyComplaints
+      tags: [complaints]
+      summary: The caller's complaint tickets, newest first
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Complaint" }
+
   /pt/trial-feedback/mine:
     get:
       operationId: listMyPtTrialFeedback
@@ -1628,6 +1658,24 @@ components:
         sessions:
           type: array
           items: { $ref: "#/components/schemas/PtSession" }
+    ComplaintCreate:
+      type: object
+      required: [subject, message]
+      properties:
+        subject: { type: string, minLength: 3, maxLength: 120 }
+        message: { type: string, minLength: 10, maxLength: 2000 }
+        gymId: { type: integer, nullable: true, description: "Branch the complaint is about (optional)" }
+    Complaint:
+      type: object
+      required: [id, subject, message, status, gymName, response, createdAt]
+      properties:
+        id: { type: integer }
+        subject: { type: string }
+        message: { type: string }
+        status: { type: string, enum: [open, in_progress, resolved] }
+        gymName: { type: string }
+        response: { type: string, description: "Reply from the gym team ('' when none yet)" }
+        createdAt: { type: string, format: date-time }
     PtTrialFeedback:
       type: object
       required: [sessionNo, rating, comment]

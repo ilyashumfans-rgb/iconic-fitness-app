@@ -35,6 +35,8 @@ import type {
   CheckinInput,
   ClassSession,
   ClassSessionDetail,
+  Complaint,
+  ComplaintCreate,
   CreateMembershipRenewal409,
   CreatePackageBookingRequest,
   CreateTrainerBookingRequest,
@@ -2921,6 +2923,154 @@ export function useGetMyPtProgram<TData = Awaited<ReturnType<typeof getMyPtProgr
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetMyPtProgramQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateComplaintUrl = () => {
+
+
+
+
+  return `/api/complaints`
+}
+
+/**
+ * @summary Raise a complaint ticket (goes to admins and the branch partner)
+ */
+export const createComplaint = async (complaintCreate: ComplaintCreate, options?: RequestInit): Promise<Complaint> => {
+
+  return customFetch<Complaint>(getCreateComplaintUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      complaintCreate,)
+  }
+);}
+
+
+
+
+export const getCreateComplaintMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createComplaint>>, TError,{data: BodyType<ComplaintCreate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createComplaint>>, TError,{data: BodyType<ComplaintCreate>}, TContext> => {
+
+const mutationKey = ['createComplaint'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createComplaint>>, {data: BodyType<ComplaintCreate>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createComplaint(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateComplaintMutationResult = NonNullable<Awaited<ReturnType<typeof createComplaint>>>
+    export type CreateComplaintMutationBody = BodyType<ComplaintCreate>
+    export type CreateComplaintMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Raise a complaint ticket (goes to admins and the branch partner)
+ */
+export const useCreateComplaint = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createComplaint>>, TError,{data: BodyType<ComplaintCreate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createComplaint>>,
+        TError,
+        {data: BodyType<ComplaintCreate>},
+        TContext
+      > => {
+      return useMutation(getCreateComplaintMutationOptions(options));
+    }
+
+export const getListMyComplaintsUrl = () => {
+
+
+
+
+  return `/api/complaints/mine`
+}
+
+/**
+ * @summary The caller's complaint tickets, newest first
+ */
+export const listMyComplaints = async ( options?: RequestInit): Promise<Complaint[]> => {
+
+  return customFetch<Complaint[]>(getListMyComplaintsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyComplaintsQueryKey = () => {
+    return [
+    `/api/complaints/mine`
+    ] as const;
+    }
+
+
+export const getListMyComplaintsQueryOptions = <TData = Awaited<ReturnType<typeof listMyComplaints>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyComplaints>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyComplaintsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyComplaints>>> = ({ signal }) => listMyComplaints({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyComplaints>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMyComplaintsQueryResult = NonNullable<Awaited<ReturnType<typeof listMyComplaints>>>
+export type ListMyComplaintsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary The caller's complaint tickets, newest first
+ */
+
+export function useListMyComplaints<TData = Awaited<ReturnType<typeof listMyComplaints>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyComplaints>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMyComplaintsQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

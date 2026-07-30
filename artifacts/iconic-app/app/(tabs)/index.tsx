@@ -1239,8 +1239,9 @@ export default function HomeScreen() {
         </>
       ) : null}
 
-      {/* Shop by category — everyone */}
-      <ShopByCategory />
+      {/* Shop by category — hidden for active members (waits for the
+          membership check to settle so it never flashes in for members) */}
+      {membershipSettled && !isMember ? <ShopByCategory /> : null}
 
       {/* Home banner slider (admin-managed) */}
       <HeroSlider

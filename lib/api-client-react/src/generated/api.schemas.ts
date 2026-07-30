@@ -464,6 +464,41 @@ export interface PtProgram {
   sessions: PtSession[];
 }
 
+export interface ComplaintCreate {
+  /**
+     * @minLength 3
+     * @maxLength 120
+     */
+  subject: string;
+  /**
+     * @minLength 10
+     * @maxLength 2000
+     */
+  message: string;
+  /** Branch the complaint is about (optional) */
+  gymId?: number | null;
+}
+
+export type ComplaintStatus = typeof ComplaintStatus[keyof typeof ComplaintStatus];
+
+
+export const ComplaintStatus = {
+  open: 'open',
+  in_progress: 'in_progress',
+  resolved: 'resolved',
+} as const;
+
+export interface Complaint {
+  id: number;
+  subject: string;
+  message: string;
+  status: ComplaintStatus;
+  gymName: string;
+  /** Reply from the gym team ('' when none yet) */
+  response: string;
+  createdAt: string;
+}
+
 export interface PtTrialFeedback {
   /** Trial session number (1 or 2) */
   sessionNo: number;
@@ -1199,3 +1234,4 @@ export type GetProgressParams = {
  */
 days?: number;
 };
+

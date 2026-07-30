@@ -373,6 +373,14 @@ export const adminApi = {
     remove: (id: number) =>
       request<{ ok: true }>(`/admin/workouts/${id}`, { method: "DELETE" }),
   },
+  complaints: {
+    list: () => request<any[]>("/admin/complaints"),
+    update: (id: number, body: Record<string, unknown>) =>
+      request<any>(`/admin/complaints/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      }),
+  },
   leads: {
     list: (status?: string) =>
       request<any[]>(

@@ -129,6 +129,16 @@ export default function MoreScreen() {
           } as MoreLink,
         ]
       : []),
+    ...(!isGuest
+      ? [
+          {
+            title: "Complaint",
+            subtitle: "Raise a ticket — we'll get it sorted",
+            icon: "alert-circle",
+            action: () => router.push("/complaint"),
+          } as MoreLink,
+        ]
+      : []),
     {
       title: "Notifications",
       subtitle: "Updates, offers and announcements",

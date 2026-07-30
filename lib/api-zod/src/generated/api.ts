@@ -577,6 +577,7 @@ export const ListPackageCategoriesResponse = zod.array(ListPackageCategoriesResp
 export const lookupMembershipBodyMobileMin = 10;
 
 
+
 export const LookupMembershipBody = zod.object({
   "mobile": zod.string().min(lookupMembershipBodyMobileMin)
 })
@@ -772,6 +773,7 @@ export const createTrainerBookingBodyNameMin = 2;
 export const createTrainerBookingBodyMobileMin = 10;
 
 
+
 export const CreateTrainerBookingBody = zod.object({
   "gymId": zod.number(),
   "packageId": zod.number(),
@@ -849,9 +851,53 @@ export const GetMyPtProgramResponse = zod.object({
 
 
 /**
+ * @summary Raise a complaint ticket (goes to admins and the branch partner)
+ */
+export const createComplaintBodySubjectMin = 3;
+export const createComplaintBodySubjectMax = 120;
+
+export const createComplaintBodyMessageMin = 10;
+export const createComplaintBodyMessageMax = 2000;
+
+
+
+export const CreateComplaintBody = zod.object({
+  "subject": zod.string().min(createComplaintBodySubjectMin).max(createComplaintBodySubjectMax),
+  "message": zod.string().min(createComplaintBodyMessageMin).max(createComplaintBodyMessageMax),
+  "gymId": zod.number().nullish().describe('Branch the complaint is about (optional)')
+})
+
+export const CreateComplaintResponse = zod.object({
+  "id": zod.number(),
+  "subject": zod.string(),
+  "message": zod.string(),
+  "status": zod.enum(['open', 'in_progress', 'resolved']),
+  "gymName": zod.string(),
+  "response": zod.string().describe('Reply from the gym team (\'\' when none yet)'),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary The caller's complaint tickets, newest first
+ */
+export const ListMyComplaintsResponseItem = zod.object({
+  "id": zod.number(),
+  "subject": zod.string(),
+  "message": zod.string(),
+  "status": zod.enum(['open', 'in_progress', 'resolved']),
+  "gymName": zod.string(),
+  "response": zod.string().describe('Reply from the gym team (\'\' when none yet)'),
+  "createdAt": zod.coerce.date()
+})
+export const ListMyComplaintsResponse = zod.array(ListMyComplaintsResponseItem)
+
+
+/**
  * @summary The caller's kick-starter trial session feedback entries
  */
 export const listMyPtTrialFeedbackResponseRatingMax = 5;
+
 
 
 export const ListMyPtTrialFeedbackResponseItem = zod.object({
@@ -872,6 +918,7 @@ export const submitPtTrialFeedbackBodyRatingMax = 5;
 export const submitPtTrialFeedbackBodyCommentMax = 1000;
 
 
+
 export const SubmitPtTrialFeedbackBody = zod.object({
   "sessionNo": zod.number().min(1).max(submitPtTrialFeedbackBodySessionNoMax),
   "rating": zod.number().min(1).max(submitPtTrialFeedbackBodyRatingMax),
@@ -879,6 +926,7 @@ export const SubmitPtTrialFeedbackBody = zod.object({
 })
 
 export const submitPtTrialFeedbackResponseRatingMax = 5;
+
 
 
 export const SubmitPtTrialFeedbackResponse = zod.object({
@@ -1017,6 +1065,7 @@ export const createPackageBookingBodyMobileMin = 10;
 export const createPackageBookingBodyRedeemPointsMin = 0;
 
 
+
 export const CreatePackageBookingBody = zod.object({
   "gymId": zod.number(),
   "packageId": zod.number(),
@@ -1101,6 +1150,7 @@ export const GetMyReferralInfoResponse = zod.object({
  * @summary Apply another member's referral code to the caller's account (once)
  */
 export const applyReferralCodeBodyCodeMin = 4;
+
 
 
 export const ApplyReferralCodeBody = zod.object({
@@ -1548,3 +1598,5 @@ export const CreateCheckinBody = zod.object({
   "gymId": zod.number(),
   "method": zod.enum(['qr', 'manual']).default(createCheckinBodyMethodDefault)
 })
+
+

@@ -46,6 +46,7 @@ const NAV: Item[] = [
   { label: "Package Purchases", href: "/partner/package-bookings", icon: <ClipboardList className="h-4 w-4" />, perm: "bookings" },
   { label: "Products", href: "/partner/products", icon: <Package className="h-4 w-4" />, perm: "products" },
   { label: "Tickets", href: "/partner/tickets", icon: <LifeBuoy className="h-4 w-4" /> },
+  { label: "Complaints", href: "/partner/complaints", icon: <Inbox className="h-4 w-4" />, perm: "bookings" },
   { label: "Team", href: "/partner/staff", icon: <Users className="h-4 w-4" />, ownerOnly: true },
   { label: "Profile & Settings", href: "/partner/settings", icon: <Settings className="h-4 w-4" />, ownerOnly: true },
 ];

@@ -26,6 +26,7 @@ import {
   leadsTable,
   trainerBookingsTable,
   packageBookingsTable,
+  complaintsTable,
 } from "@workspace/db";
 import {
   hashPassword,
@@ -720,6 +721,7 @@ const STAFF_PERMISSION_PREFIXES: ReadonlyArray<[string, string]> = [
   ["/partner/bookings", "bookings"],
   ["/partner/gx-bookings", "classes"],
   ["/partner/leads", "bookings"],
+  ["/partner/complaints", "bookings"],
   ["/partner/trainer-bookings", "classes"],
   ["/partner/package-bookings", "bookings"],
   ["/partner/yoactiv", "bookings"],
@@ -1637,6 +1639,91 @@ router.patch(
       .returning({ id: leadsTable.id, status: leadsTable.status });
     if (!updated) {
       res.status(404).json({ error: "Lead not found" });
+      return;
+    }
+    res.json(updated);
+  },
+);
+
+// Member complaints for the partner's branches. Every read/write is scoped by
+// ownedGymIds so a branch owner can never see another brand's complaints;
+// staff access is gated to "bookings" via STAFF_PERMISSION_PREFIXES.
+const PARTNER_COMPLAINT_STATUSES = [
+  "open",
+  "in_progress",
+  "resolved",
+] as const;
+
+router.get(
+  "/partner/complaints",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const gymIds = await ownedGymIds(req.session.partnerId!);
+    if (gymIds.length === 0) {
+      res.json([]);
+      return;
+    }
+    const rows = await db
+      .select()
+      .from(complaintsTable)
+      .where(inArray(complaintsTable.gymId, gymIds))
+      .orderBy(desc(complaintsTable.createdAt))
+      .limit(5000);
+    res.json(rows);
+  },
+);
+
+router.patch(
+  "/partner/complaints/:id",
+  requirePartner,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ error: "Invalid complaint id" });
+      return;
+    }
+    const { status, response } = (req.body ?? {}) as {
+      status?: string;
+      response?: string;
+    };
+    const patch: Partial<typeof complaintsTable.$inferInsert> = {
+      updatedAt: new Date(),
+    };
+    if (status !== undefined) {
+      if (
+        !(PARTNER_COMPLAINT_STATUSES as readonly string[]).includes(status)
+      ) {
+        res.status(400).json({
+          error: `Status must be one of: ${PARTNER_COMPLAINT_STATUSES.join(", ")}`,
+        });
+        return;
+      }
+      patch.status = status;
+    }
+    if (response !== undefined) {
+      if (typeof response !== "string" || response.length > 2000) {
+        res.status(400).json({ error: "Invalid response" });
+        return;
+      }
+      patch.response = response.trim();
+    }
+    const gymIds = await ownedGymIds(req.session.partnerId!);
+    if (gymIds.length === 0) {
+      res.status(404).json({ error: "Complaint not found" });
+      return;
+    }
+    const [updated] = await db
+      .update(complaintsTable)
+      .set(patch)
+      .where(
+        and(
+          eq(complaintsTable.id, id),
+          inArray(complaintsTable.gymId, gymIds),
+        ),
+      )
+      .returning();
+    if (!updated) {
+      res.status(404).json({ error: "Complaint not found" });
       return;
     }
     res.json(updated);

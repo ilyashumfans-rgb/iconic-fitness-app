@@ -188,6 +188,11 @@ const SECTIONS: Section[] = [
         icon: <LifeBuoy className="h-4 w-4" />,
       },
       {
+        label: "Complaints",
+        href: "/admin/complaints",
+        icon: <LifeBuoy className="h-4 w-4" />,
+      },
+      {
         label: "PT Manager",
         href: "/admin/pt",
         icon: <Dumbbell className="h-4 w-4" />,

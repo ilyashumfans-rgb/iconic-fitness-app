@@ -109,6 +109,8 @@ import Support from "@/pages/Support";
 import AdminTickets from "@/pages/admin/Tickets";
 import StaffTickets from "@/pages/staff/Tickets";
 import PartnerTickets from "@/pages/partner/Tickets";
+import PartnerComplaints from "@/pages/partner/Complaints";
+import AdminComplaints from "@/pages/admin/Complaints";
 
 const queryClient = new QueryClient();
 
@@ -333,6 +335,7 @@ function AppShell() {
         <Route path="/partner/products" component={PartnerProducts} />
         <Route path="/partner/staff" component={PartnerTeam} />
         <Route path="/partner/tickets" component={PartnerTickets} />
+        <Route path="/partner/complaints" component={PartnerComplaints} />
         <Route path="/partner/settings" component={PartnerSettings} />
         <Route component={NotFound} />
       </Switch>
@@ -392,6 +395,7 @@ function AppShell() {
         <Route path="/admin/member-engagement" component={AdminMemberEngagement} />
         <Route path="/admin/messaging" component={AdminMessagingSettings} />
         <Route path="/admin/tickets" component={AdminTickets} />
+        <Route path="/admin/complaints" component={AdminComplaints} />
         <Route component={NotFound} />
       </Switch>
     );
