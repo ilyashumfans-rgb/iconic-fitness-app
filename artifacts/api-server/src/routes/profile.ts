@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, eq, gte } from "drizzle-orm";
-import { db, usersTable, bookingsTable, classSessionsTable, gymsTable } from "@workspace/db";
+import { db, usersTable, bookingsTable, classSessionsTable, gymsTable, uploadedImagesTable } from "@workspace/db";
 import { GetMeResponse, UpdateMeBody, UpdateMeResponse } from "@workspace/api-zod";
 import { requireUser } from "../lib/currentUser";
 import { computeHealthMetrics } from "../lib/healthMetrics";
@@ -96,15 +96,22 @@ router.patch("/me", requireUser, async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  // The avatar must be a real uploaded image on our server (the payment flow
-  // requires a member photo — a free-text URL would bypass that rule).
+  // The avatar must be a real uploaded image on our server — a free-text URL
+  // would let arbitrary content appear on the member card gym staff see.
   const avatarUrl = (parsed.data as Record<string, unknown>).avatarUrl;
-  if (
-    typeof avatarUrl === "string" &&
-    !/^\/api\/storage\/db-images\/[0-9a-f-]{36}$/i.test(avatarUrl)
-  ) {
-    res.status(400).json({ error: "Please upload your photo from the app" });
-    return;
+  if (typeof avatarUrl === "string" && avatarUrl.trim()) {
+    const match = /^\/api\/storage\/db-images\/([0-9a-f-]{36})$/i.exec(avatarUrl);
+    const [image] = match
+      ? await db
+          .select({ id: uploadedImagesTable.id, mimeType: uploadedImagesTable.mimeType })
+          .from(uploadedImagesTable)
+          .where(eq(uploadedImagesTable.id, match[1]))
+          .limit(1)
+      : [];
+    if (!image || !image.mimeType.startsWith("image/")) {
+      res.status(400).json({ error: "Please upload your photo from the app" });
+      return;
+    }
   }
 
   // Read the user before updating so we can detect when a phone number is

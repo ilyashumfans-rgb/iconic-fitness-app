@@ -1199,4 +1199,3 @@ export type GetProgressParams = {
  */
 days?: number;
 };
-

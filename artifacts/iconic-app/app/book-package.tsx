@@ -179,14 +179,6 @@ export default function BookPackageScreen() {
       );
       return;
     }
-    // A profile photo is required before payment — it goes on the member card.
-    if (isSignedIn && !meQuery.data?.avatarUrl) {
-      Alert.alert(
-        "Photo required",
-        "Please add your profile photo before payment — it will appear on your member card.",
-      );
-      return;
-    }
     setBusy(true);
     try {
       const created = await createBooking.mutateAsync({
@@ -271,6 +263,32 @@ export default function BookPackageScreen() {
                   ? "The payment didn't go through. No money was taken — you can try again."
                   : "Complete the payment in the browser window, then come back here."}
             </AppText>
+            {paid && isSignedIn && !meQuery.data?.avatarUrl ? (
+              <View
+                style={{
+                  alignSelf: "stretch",
+                  marginTop: 4,
+                  padding: 14,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  gap: 10,
+                }}
+              >
+                <AppText weight="600" size={13} style={{ textAlign: "center" }}>
+                  Add your profile photo
+                </AppText>
+                <AppText muted size={11} style={{ textAlign: "center" }}>
+                  It goes on your member card — you can also add it later from
+                  your Account.
+                </AppText>
+                <ProfilePhotoPicker
+                  avatarUrl={meQuery.data?.avatarUrl}
+                  name={name || meQuery.data?.name}
+                  size={84}
+                />
+              </View>
+            ) : null}
             {paid ? (
               <Button label="Done" onPress={() => router.back()} />
             ) : failed ? (
@@ -470,16 +488,16 @@ export default function BookPackageScreen() {
               padding: 14,
               borderRadius: 12,
               borderWidth: 1,
-              borderColor: meQuery.data?.avatarUrl ? colors.border : colors.primary,
+              borderColor: colors.border,
               gap: 10,
             }}
           >
             <AppText weight="600" size={13}>
-              Your profile photo{" "}
-              {meQuery.data?.avatarUrl ? "✅" : "(required before payment)"}
+              Your profile photo{meQuery.data?.avatarUrl ? " ✅" : " (optional)"}
             </AppText>
             <AppText muted size={11}>
-              This photo goes on your member card and your account.
+              This photo goes on your member card and your account. You can also
+              add it after payment.
             </AppText>
             <ProfilePhotoPicker
               avatarUrl={meQuery.data?.avatarUrl}

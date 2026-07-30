@@ -577,7 +577,6 @@ export const ListPackageCategoriesResponse = zod.array(ListPackageCategoriesResp
 export const lookupMembershipBodyMobileMin = 10;
 
 
-
 export const LookupMembershipBody = zod.object({
   "mobile": zod.string().min(lookupMembershipBodyMobileMin)
 })
@@ -773,7 +772,6 @@ export const createTrainerBookingBodyNameMin = 2;
 export const createTrainerBookingBodyMobileMin = 10;
 
 
-
 export const CreateTrainerBookingBody = zod.object({
   "gymId": zod.number(),
   "packageId": zod.number(),
@@ -856,7 +854,6 @@ export const GetMyPtProgramResponse = zod.object({
 export const listMyPtTrialFeedbackResponseRatingMax = 5;
 
 
-
 export const ListMyPtTrialFeedbackResponseItem = zod.object({
   "sessionNo": zod.number().describe('Trial session number (1 or 2)'),
   "rating": zod.number().min(1).max(listMyPtTrialFeedbackResponseRatingMax),
@@ -875,7 +872,6 @@ export const submitPtTrialFeedbackBodyRatingMax = 5;
 export const submitPtTrialFeedbackBodyCommentMax = 1000;
 
 
-
 export const SubmitPtTrialFeedbackBody = zod.object({
   "sessionNo": zod.number().min(1).max(submitPtTrialFeedbackBodySessionNoMax),
   "rating": zod.number().min(1).max(submitPtTrialFeedbackBodyRatingMax),
@@ -883,7 +879,6 @@ export const SubmitPtTrialFeedbackBody = zod.object({
 })
 
 export const submitPtTrialFeedbackResponseRatingMax = 5;
-
 
 
 export const SubmitPtTrialFeedbackResponse = zod.object({
@@ -1022,7 +1017,6 @@ export const createPackageBookingBodyMobileMin = 10;
 export const createPackageBookingBodyRedeemPointsMin = 0;
 
 
-
 export const CreatePackageBookingBody = zod.object({
   "gymId": zod.number(),
   "packageId": zod.number(),
@@ -1107,7 +1101,6 @@ export const GetMyReferralInfoResponse = zod.object({
  * @summary Apply another member's referral code to the caller's account (once)
  */
 export const applyReferralCodeBodyCodeMin = 4;
-
 
 
 export const ApplyReferralCodeBody = zod.object({
@@ -1555,5 +1548,4 @@ export const CreateCheckinBody = zod.object({
   "gymId": zod.number(),
   "method": zod.enum(['qr', 'manual']).default(createCheckinBodyMethodDefault)
 })
-
 

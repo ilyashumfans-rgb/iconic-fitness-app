@@ -50,6 +50,13 @@
         }
       ],
       "expo-video",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Iconic Fitness needs access to your photos so you can set a profile picture.",
+          "cameraPermission": "Iconic Fitness needs your camera so you can take a profile photo."
+        }
+      ],
       "@clerk/expo",
       [
         "expo-build-properties",
