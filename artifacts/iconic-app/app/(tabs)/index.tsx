@@ -319,11 +319,14 @@ const PREMIUM = {
 function MembershipStatusCard({
   membership,
   memberName,
+  memberPhotoUrl,
   onManage,
   embedded = false,
 }: {
   membership: MyMembership;
   memberName: string;
+  /** The member's own uploaded profile photo (preferred over the gym record photo). */
+  memberPhotoUrl?: string | null;
   onManage: () => void;
   /** Render as a slide inside the top card pager: outer margin handled by the pager. */
   embedded?: boolean;
@@ -489,9 +492,9 @@ function MembershipStatusCard({
           }}
         >
           <View style={styles.premiumAvatarRing}>
-            {membership.photoUrl ? (
+            {memberPhotoUrl || membership.photoUrl ? (
               <Image
-                source={{ uri: membership.photoUrl }}
+                source={{ uri: memberPhotoUrl || membership.photoUrl || undefined }}
                 style={styles.premiumAvatar}
               />
             ) : (
@@ -994,6 +997,7 @@ export default function HomeScreen() {
         <MembershipStatusCard
           membership={membership}
           memberName={meQuery.data?.name ?? ""}
+          memberPhotoUrl={resolveImageUrl(meQuery.data?.avatarUrl)}
           onManage={() => router.push("/book-package")}
         />
       ) : isSignedIn && myMembershipQuery.isFetched ? (

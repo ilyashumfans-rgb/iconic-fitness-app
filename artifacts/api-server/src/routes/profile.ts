@@ -96,6 +96,16 @@ router.patch("/me", requireUser, async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+  // The avatar must be a real uploaded image on our server (the payment flow
+  // requires a member photo — a free-text URL would bypass that rule).
+  const avatarUrl = (parsed.data as Record<string, unknown>).avatarUrl;
+  if (
+    typeof avatarUrl === "string" &&
+    !/^\/api\/storage\/db-images\/[0-9a-f-]{36}$/i.test(avatarUrl)
+  ) {
+    res.status(400).json({ error: "Please upload your photo from the app" });
+    return;
+  }
 
   // Read the user before updating so we can detect when a phone number is
   // being set for the first time and send a member welcome message.

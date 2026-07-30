@@ -10,6 +10,12 @@ import type { PtSession } from './ptSession';
 export interface PtProgram {
   /** True when the caller has a PT enrolment with an assigned trainer */
   active: boolean;
+  /** True when the free kick-starter (2 trial sessions) is completed */
+  kickstarterCompleted?: boolean;
+  /** True when the caller already has a paid PT booking */
+  hasPaidPlan?: boolean;
+  /** Branch of the current PT enrolment (for booking a paid plan) */
+  gymId?: number | null;
   trainerName: string;
   /** Staff-uploaded photo of the assigned trainer ('' when none) */
   trainerPhotoUrl?: string;

@@ -25,6 +25,7 @@ import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Field } from "@/components/Field";
 import { ModalHeader } from "@/components/ModalHeader";
+import { ProfilePhotoPicker } from "@/components/ProfilePhotoPicker";
 import { Screen } from "@/components/Screen";
 import { Chip, EmptyState, ErrorView, LoadingView } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
@@ -175,6 +176,14 @@ export default function BookPackageScreen() {
       Alert.alert(
         "Terms & Conditions",
         "Please accept the Terms & Conditions to continue with the payment.",
+      );
+      return;
+    }
+    // A profile photo is required before payment — it goes on the member card.
+    if (isSignedIn && !meQuery.data?.avatarUrl) {
+      Alert.alert(
+        "Photo required",
+        "Please add your profile photo before payment — it will appear on your member card.",
       );
       return;
     }
@@ -452,6 +461,32 @@ export default function BookPackageScreen() {
               </AppText>
             </View>
           </Pressable>
+        ) : null}
+
+        {paidFlow && isSignedIn ? (
+          <View
+            style={{
+              marginTop: 18,
+              padding: 14,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: meQuery.data?.avatarUrl ? colors.border : colors.primary,
+              gap: 10,
+            }}
+          >
+            <AppText weight="600" size={13}>
+              Your profile photo{" "}
+              {meQuery.data?.avatarUrl ? "✅" : "(required before payment)"}
+            </AppText>
+            <AppText muted size={11}>
+              This photo goes on your member card and your account.
+            </AppText>
+            <ProfilePhotoPicker
+              avatarUrl={meQuery.data?.avatarUrl}
+              name={name || meQuery.data?.name}
+              size={84}
+            />
+          </View>
         ) : null}
 
         {paidFlow ? (

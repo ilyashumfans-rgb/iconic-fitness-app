@@ -23,6 +23,7 @@ import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Field } from "@/components/Field";
+import { ProfilePhotoPicker } from "@/components/ProfilePhotoPicker";
 import { Screen } from "@/components/Screen";
 import { Chip, ChipRow, SectionHeader } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
@@ -255,13 +256,14 @@ export default function ProfileScreen() {
 
   return (
     <Screen contentContainerStyle={{ paddingTop: 8 }}>
-      {/* Profile header — photo comes from the gym's YoActiv record when
-          available (display-only; members can't upload their own). */}
+      {/* Profile header — the member's own uploaded photo comes first, then
+          the gym's YoActiv record photo as a fallback. Signed-in members can
+          change their photo (camera or gallery) right here. */}
       <View style={styles.profileHead}>
-        {membershipQuery.data?.photoUrl ? (
-          <Image
-            source={{ uri: membershipQuery.data.photoUrl }}
-            style={styles.avatarImage}
+        {!isGuest ? (
+          <ProfilePhotoPicker
+            avatarUrl={me?.avatarUrl || membershipQuery.data?.photoUrl || null}
+            name={name}
           />
         ) : (
           <View style={[styles.avatar, { backgroundColor: colors.primary }]}>

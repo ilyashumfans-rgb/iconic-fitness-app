@@ -39,6 +39,7 @@ function statusColor(
 
 export default function PtDetailsScreen() {
   const colors = useColors();
+  const router = useRouter();
   const { isLoaded, isSignedIn } = useAuth();
 
   const query = useGetMyPtProgram({
@@ -69,6 +70,54 @@ export default function PtDetailsScreen() {
         />
       ) : (
         <View style={{ gap: 12 }}>
+          {/* Kick-starter done → invite the member to buy the paid PT plan. */}
+          {program.kickstarterCompleted && !program.hasPaidPlan ? (
+            <Card>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                <View
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    backgroundColor: colors.primary + "22",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Feather name="award" size={20} color={colors.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <AppText weight="700" size={15}>
+                    Trial sessions completed! 🎉
+                  </AppText>
+                  <AppText size={13} color={colors.mutedForeground} style={{ marginTop: 2 }}>
+                    Ready to keep going? Book your PT plan and your trainer
+                    will start your monthly sessions.
+                  </AppText>
+                </View>
+              </View>
+              <Pressable
+                onPress={() =>
+                  router.push({
+                    pathname: "/book-pt-plan",
+                    params: program.gymId ? { gymId: String(program.gymId) } : {},
+                  })
+                }
+                style={({ pressed }) => ({
+                  marginTop: 12,
+                  borderRadius: 12,
+                  paddingVertical: 12,
+                  alignItems: "center",
+                  backgroundColor: colors.primary,
+                  opacity: pressed ? 0.85 : 1,
+                })}
+              >
+                <AppText weight="700" size={14} color="#000">
+                  Book PT plan
+                </AppText>
+              </Pressable>
+            </Card>
+          ) : null}
           <Card>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
               <View

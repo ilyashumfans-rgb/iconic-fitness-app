@@ -5,6 +5,7 @@ import { db, uploadedImagesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
 import sharp from "sharp";
+import { getAuth } from "@clerk/express";
 
 const router: IRouter = Router();
 const svc = new ObjectStorageService();
@@ -12,10 +13,16 @@ const svc = new ObjectStorageService();
 const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
 const ALLOWED_PREFIXES = ["image/", "application/pdf"];
 
-// Uploads are for signed-in staff (admin/partner/staff sessions) only.
+// Uploads are for signed-in users: staff sessions (admin/partner/staff) or
+// authenticated Clerk members (profile photo uploads from the mobile app).
 function isSignedIn(req: Request): boolean {
   const s = req.session as { adminId?: number; partnerId?: number; staffId?: number };
-  return Boolean(s.adminId || s.partnerId || s.staffId);
+  if (s.adminId || s.partnerId || s.staffId) return true;
+  try {
+    return Boolean(getAuth(req)?.userId);
+  } catch {
+    return false;
+  }
 }
 
 // Detect the real file type from magic bytes instead of trusting the

@@ -14,6 +14,7 @@ export interface UserProfileUpdate {
   heightCm?: number;
   weightKg?: number;
   fitnessGoal?: string;
+  avatarUrl?: string;
   city?: string;
   weeklyGoal?: number;
 }

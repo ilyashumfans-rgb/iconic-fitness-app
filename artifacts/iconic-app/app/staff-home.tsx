@@ -256,6 +256,37 @@ function StaffHomeContent() {
         </View>
         ) : null}
 
+        {/* Leads CRM (needs the leads permission) — lives right in the app */}
+        {perms.includes("lead.manage") ? (
+        <View
+          style={[
+            styles.card,
+            styles.cardColumn,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
+        >
+          <AppText weight="700" size={15}>
+            Leads
+          </AppText>
+          <AppText size={13} color={colors.mutedForeground}>
+            Call new enquiries, update their status and jot call notes —
+            without leaving the app.
+          </AppText>
+          <Pressable
+            onPress={() => router.push("/staff-leads")}
+            style={({ pressed }) => [
+              styles.portalBtn,
+              { borderColor: colors.primary, opacity: pressed ? 0.8 : 1 },
+            ]}
+          >
+            <Feather name="phone-call" size={16} color={colors.primary} />
+            <AppText weight="700" size={14} color={colors.primary}>
+              Open leads
+            </AppText>
+          </Pressable>
+        </View>
+        ) : null}
+
         {/* Open the full staff portal in the browser */}
         <View
           style={[
@@ -268,8 +299,8 @@ function StaffHomeContent() {
             Staff portal
           </AppText>
           <AppText size={13} color={colors.mutedForeground}>
-            Leads, GX bookings, partner onboarding and the rest of the staff
-            tools live in the web portal.
+            Partner onboarding, gym management, blogs and the rest of the
+            admin tools live in the web portal.
           </AppText>
           <Pressable
             onPress={() =>

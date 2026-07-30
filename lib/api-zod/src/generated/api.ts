@@ -91,6 +91,7 @@ export const UpdateMeBody = zod.object({
   "heightCm": zod.number().optional(),
   "weightKg": zod.number().optional(),
   "fitnessGoal": zod.string().optional(),
+  "avatarUrl": zod.string().optional(),
   "city": zod.string().optional(),
   "weeklyGoal": zod.number().optional()
 })
@@ -831,6 +832,9 @@ export const GetTrainerBookingResponse = zod.object({
  */
 export const GetMyPtProgramResponse = zod.object({
   "active": zod.boolean().describe('True when the caller has a PT enrolment with an assigned trainer'),
+  "kickstarterCompleted": zod.boolean().optional().describe('True when the free kick-starter (2 trial sessions) is completed'),
+  "hasPaidPlan": zod.boolean().optional().describe('True when the caller already has a paid PT booking'),
+  "gymId": zod.number().nullish().describe('Branch of the current PT enrolment (for booking a paid plan)'),
   "trainerName": zod.string(),
   "trainerPhotoUrl": zod.string().optional().describe('Staff-uploaded photo of the assigned trainer (\'\' when none)'),
   "gymName": zod.string(),

@@ -10,3 +10,9 @@ description: Trainer PT dashboard — session auto-deduction, incentive rule, re
 - Incentive: monthly paid sales by startDate month; <₹1,00,000 → 20%, ≥ → 40%; + admin adjustments; approvalStatus pending|approved.
 - Drizzle wraps pg errors — detect unique violations via `error.cause.code === "23505"` (shared `isUniqueViolation` in ptDashboard.ts), not message regex.
 - Staff endpoints under /staff/pt/* gated by `pt.manage` + row ownership (staffId = me); admin manager endpoints /admin/pt/* via requireAdmin.
+
+## Paid PT plan auto-enrol (Kick Start → PT Plan)
+- Rule: when a paid in-app PT booking flips to `paid` (payment landing route), a `pt_memberships` row is auto-created for the member's kick-start trainer. Idempotent via `pt_memberships.booking_id` partial unique index + ON CONFLICT DO NOTHING.
+- **Why:** trainer/staff should see monthly sessions start immediately after payment with no manual add; landing-page reloads must not duplicate.
+- **How to apply:** trainer match = exact userId first; phone fallback only for userId-NULL programs scoped to the SAME gym (recycled-number safety). trainer_bookings snapshots `sessions`/`duration_days` at purchase because YoActiv duration is a label string. No kick-start program found → skip (booking still appears in staff PT requests).
+- Member CTA: `/pt/mine` returns `kickstarterCompleted` + `hasPaidPlan` + `gymId`; app shows "Book PT plan" only when completed && !paid.

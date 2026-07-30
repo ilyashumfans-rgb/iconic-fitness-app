@@ -103,6 +103,22 @@ router.post(
       res.status(400).json({ error: "Invalid start date" });
       return;
     }
+    // Signed-in members must have a profile photo before paying — it goes on
+    // their member card. (Guests are identified in the gym system by
+    // name+mobile and add a photo after signing in.)
+    if (req.userId) {
+      const [me] = await db
+        .select({ avatarUrl: usersTable.avatarUrl })
+        .from(usersTable)
+        .where(eq(usersTable.id, req.userId));
+      if (me && !me.avatarUrl.trim()) {
+        res.status(400).json({
+          error:
+            "Please add your profile photo before payment — it will appear on your member card.",
+        });
+        return;
+      }
+    }
     const [gym] = await db
       .select({
         id: gymsTable.id,

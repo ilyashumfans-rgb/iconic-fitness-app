@@ -1,9 +1,10 @@
 import { randomBytes } from "node:crypto";
 import { Router, type IRouter, type Request, type Response } from "express";
-import { and, eq, ne, or } from "drizzle-orm";
+import { and, eq, isNull, ne, or } from "drizzle-orm";
 import {
   db,
   gymsTable,
+  ptMembershipsTable,
   ptProgramsTable,
   ptTrialFeedbackTable,
   trainerBookingsTable,
@@ -92,6 +93,101 @@ router.get("/trainer-packages", async (req, res): Promise<void> => {
     ),
   );
 });
+
+// Best-effort parse of a YoActiv duration label ("1 Month", "3 Months",
+// "45 Days", "1 Year") into whole days; 30 when unrecognised.
+function durationToDays(duration: string): number {
+  const m = /(\d+)\s*(day|week|month|year)/i.exec(duration);
+  if (!m) return 30;
+  const n = Number(m[1]);
+  const unit = m[2].toLowerCase();
+  const per =
+    unit === "day" ? 1 : unit === "week" ? 7 : unit === "month" ? 30 : 365;
+  return Math.max(1, n * per);
+}
+
+function istTodayStr(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(
+    new Date(),
+  );
+}
+
+/** endDate = start + durationDays − 1 (matches the staff PT dashboard rule). */
+function ptEndDate(startDate: string, durationDays: number): string {
+  const t = Date.parse(`${startDate}T00:00:00Z`);
+  return new Date(t + (durationDays - 1) * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+}
+
+// Once a PT plan payment lands, enrol the member on the staff PT dashboard so
+// the trainer can run monthly sessions immediately — no manual add needed.
+// The trainer who ran the member's kick-starter owns the enrolment; when no
+// kick-starter exists, the paid booking still shows up under PT requests for
+// a trainer to accept. Idempotent via the booking_id partial unique index.
+async function autoEnrolPtMembership(
+  booking: typeof trainerBookingsTable.$inferSelect,
+): Promise<void> {
+  try {
+    // Deterministic trainer match: an exact account match always wins; the
+    // phone fallback (for userId-NULL rows) is scoped to the same gym so a
+    // recycled/shared number can never pull in another member's trainer.
+    const last10 = normalizeMobile(booking.mobile);
+    let program: typeof ptProgramsTable.$inferSelect | undefined;
+    if (booking.userId) {
+      [program] = await db
+        .select()
+        .from(ptProgramsTable)
+        .where(eq(ptProgramsTable.userId, booking.userId))
+        .orderBy(desc(ptProgramsTable.acceptedAt))
+        .limit(1);
+    }
+    if (!program && last10) {
+      [program] = await db
+        .select()
+        .from(ptProgramsTable)
+        .where(
+          and(
+            isNull(ptProgramsTable.userId),
+            eq(ptProgramsTable.gymId, booking.gymId),
+            sql`right(regexp_replace(${ptProgramsTable.memberPhone}, '\\D', '', 'g'), 10) = ${last10}`,
+          ),
+        )
+        .orderBy(desc(ptProgramsTable.acceptedAt))
+        .limit(1);
+    }
+    if (!program) return; // no kick-starter trainer — staff accepts manually
+    const startDate = /^\d{4}-\d{2}-\d{2}$/.test(booking.preferredDate)
+      ? booking.preferredDate
+      : istTodayStr();
+    const durationDays =
+      booking.durationDays > 0 ? booking.durationDays : 30;
+    await db
+      .insert(ptMembershipsTable)
+      .values({
+        source: "yoactiv",
+        bookingId: booking.id,
+        staffId: program.staffId,
+        staffName: program.staffName,
+        memberName: booking.memberName,
+        mobile: booking.mobile,
+        gymId: booking.gymId,
+        gymName: booking.gymName,
+        packageName: booking.packageName,
+        durationDays,
+        originalSessions: booking.sessions > 0 ? booking.sessions : 12,
+        amountPaidInr: booking.amountInr,
+        paymentStatus: "paid",
+        startDate,
+        endDate: ptEndDate(startDate, durationDays),
+        notes: "Auto-enrolled from in-app PT plan payment",
+      })
+      .onConflictDoNothing();
+  } catch (err) {
+    // Never break the payment landing page — staff can add the member by hand.
+    console.error("PT auto-enrol failed", err);
+  }
+}
 
 // Start a paid booking: verify the package server-side, register the member in
 // the gym-management system if needed, create a pending booking row, and hand
@@ -192,6 +288,9 @@ router.post(
         packageName: pkg.name,
         serviceName: pkg.serviceName,
         amountInr: Math.round(pkg.amountInr),
+        // Snapshot for the staff PT dashboard auto-enrol once payment lands.
+        sessions: pkg.sessions ?? 0,
+        durationDays: durationToDays(pkg.duration),
         preferredDate: body.preferredDate,
         status: "pending",
       })
@@ -316,6 +415,9 @@ router.get(
   async (req: Request, res: Response): Promise<void> => {
     const empty = {
       active: false,
+      kickstarterCompleted: false,
+      hasPaidPlan: false,
+      gymId: null,
       trainerName: "",
       gymName: "",
       packageName: "",
@@ -329,6 +431,7 @@ router.get(
     const bookings = await db
       .select({
         id: trainerBookingsTable.id,
+        gymId: trainerBookingsTable.gymId,
         gymName: trainerBookingsTable.gymName,
         packageName: trainerBookingsTable.packageName,
         createdAt: trainerBookingsTable.createdAt,
@@ -351,6 +454,7 @@ router.get(
       ? await db
           .select({
             id: leadsTable.id,
+            gymId: leadsTable.gymId,
             gymName: leadsTable.gymName,
             createdAt: leadsTable.createdAt,
             preferredDate: leadsTable.preferredDate,
@@ -411,6 +515,7 @@ router.get(
       refId: number;
       trainerId: string;
       trainerName: string;
+      gymId: number | null;
       gymName: string;
       packageName: string;
       createdAt: Date;
@@ -429,6 +534,7 @@ router.get(
           trainerName:
             bookingAssign.get(b.id)?.trainerName ??
             programByRef.get(`booking:${b.id}`)!.staffName,
+          gymId: b.gymId,
           gymName: b.gymName,
           packageName: b.packageName,
           createdAt: b.createdAt,
@@ -444,6 +550,7 @@ router.get(
           trainerName:
             enquiryAssign.get(l.id)?.trainerName ??
             programByRef.get(`enquiry:${l.id}`)!.staffName,
+          gymId: l.gymId ?? null,
           gymName: l.gymName ?? "",
           packageName: "Personal training",
           createdAt: l.createdAt,
@@ -495,6 +602,11 @@ router.get(
     res.json(
       GetMyPtProgramResponse.parse({
         active: true,
+        // "Book your PT plan" CTA: the free kick-starter is done and the
+        // member hasn't bought a paid plan yet.
+        kickstarterCompleted: program?.status === "completed",
+        hasPaidPlan: bookings.length > 0,
+        gymId: current.gymId,
         trainerName: current.trainerName,
         trainerPhotoUrl: photos.get(current.trainerId) ?? "",
         gymName: current.gymName,
@@ -638,6 +750,7 @@ router.get(
       // first purchase (credited once per referred user, idempotent).
       if (flipped && outcome === "paid") {
         await creditReferralRewardOnce(flipped.userId, flipped.amountInr);
+        await autoEnrolPtMembership(flipped);
       }
     }
     res.setHeader("Cache-Control", "no-store");

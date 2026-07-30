@@ -185,6 +185,9 @@ export const trainerBookingsTable = pgTable("trainer_bookings", {
   packageName: text("package_name").notNull().default(""),
   serviceName: text("service_name").notNull().default(""),
   amountInr: integer("amount_inr").notNull().default(0),
+  // Package snapshot for the staff PT dashboard auto-enrol on payment.
+  sessions: integer("sessions").notNull().default(0),
+  durationDays: integer("duration_days").notNull().default(0),
   preferredDate: text("preferred_date").notNull().default(""),
   status: text("status").notNull().default("pending"), // pending | paid | failed
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -361,6 +364,9 @@ export const memberAssignedExercisesTable = pgTable("member_assigned_exercises",
 export const ptMembershipsTable = pgTable("pt_memberships", {
   id: serial("id").primaryKey(),
   source: text("source").notNull().default("manual"), // manual | yoactiv
+  // Set when the row was auto-created from a paid in-app PT booking
+  // (trainer_bookings.id); partial unique index keeps the auto-enrol idempotent.
+  bookingId: integer("booking_id"),
   staffId: integer("staff_id").notNull(), // owning trainer
   staffName: text("staff_name").notNull().default(""),
   memberName: text("member_name").notNull().default(""),
