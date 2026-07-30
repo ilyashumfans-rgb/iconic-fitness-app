@@ -1,6 +1,7 @@
 import "@/lib/silenceExpoGoPushWarning";
 
 import { ClerkProvider, useAuth } from "@clerk/expo";
+import { Text, View } from "react-native";
 import { tokenCache } from "@clerk/expo/token-cache";
 import {
   Inter_400Regular,
@@ -46,7 +47,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
-const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
 const proxyUrl = process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined;
 
 // Supply the Clerk session token as a bearer to every generated API call,
@@ -183,6 +184,45 @@ export default function RootLayout() {
   useEffect(() => {
     void ensureDefaultReminders();
   }, []);
+
+  // A build without the Clerk key must not hard-crash at launch ("app opens
+  // then instantly closes"). Show a readable message instead so the problem
+  // is obvious on a real device.
+  if (!publishableKey) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 32,
+          backgroundColor: "#0B0B0F",
+        }}
+      >
+        <Text
+          style={{
+            color: "#fff",
+            fontSize: 16,
+            fontWeight: "700",
+            textAlign: "center",
+          }}
+        >
+          App build is missing its login key
+        </Text>
+        <Text
+          style={{
+            color: "#9CA3AF",
+            fontSize: 13,
+            textAlign: "center",
+            marginTop: 8,
+          }}
+        >
+          Add EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY as an environment variable in
+          the Expo build settings and rebuild the app.
+        </Text>
+      </View>
+    );
+  }
 
   // IMPORTANT: do NOT gate the whole app on font loading (`return null`). Doing
   // so leaves a permanent blank screen if the font assets are slow to download
