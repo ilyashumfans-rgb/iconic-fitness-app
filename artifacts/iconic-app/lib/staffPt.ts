@@ -24,6 +24,7 @@ export type PtRequest = {
   preferredDate: string;
   createdAt: string | null;
   paid: boolean;
+  avatarUrl?: string | null;
 };
 
 export type PtProgram = {
@@ -43,6 +44,7 @@ export type PtProgram = {
   acceptedAt: string;
   startedAt: string | null;
   completedAt: string | null;
+  avatarUrl?: string | null;
 };
 
 export type BmiRecord = {
@@ -203,6 +205,7 @@ export type PtMembership = {
   sessionsDelivered: number;
   lastSessionDate: string;
   todayAttendance: boolean;
+  avatarUrl?: string | null;
 };
 
 export type PtSummary = {
@@ -301,6 +304,7 @@ export const ptDashboardApi = {
 export type EngagementMember = {
   id: number;
   userId: number;
+  avatarUrl?: string | null;
   memberName: string;
   memberPhone: string;
   level: "beginner" | "intermediate" | "advanced";
@@ -329,6 +333,7 @@ export const assignEngagement = async (phone: string, level: string) =>
 export type AssessmentRow = {
   id: number;
   userId: number;
+  avatarUrl?: string | null;
   memberName: string;
   memberPhone: string;
   gymName: string;

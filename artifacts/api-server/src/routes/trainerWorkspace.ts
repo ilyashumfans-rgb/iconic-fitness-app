@@ -13,6 +13,7 @@ import {
   usersTable,
 } from "@workspace/db";
 import { requireStaffPermission, loadStaffOrUnauthorized } from "../lib/staffAuth";
+import { avatarsByPhone, avatarsByUserId, pickAvatar } from "../lib/memberAvatars";
 import { requireUser } from "../lib/currentUser";
 import { TRAINER_ENQUIRY_SOURCE } from "../lib/trainerEnquiryLeads";
 import { normalizeMobile } from "../lib/yoactiv";
@@ -147,7 +148,21 @@ router.get(
       // Requests accepted by OTHER trainers disappear from this inbox —
       // only the accepting trainer works them.
     }
-    res.json({ pending, mine });
+    // Member photo so the trainer can visually verify the person.
+    const [byUser, byPhone] = await Promise.all([
+      avatarsByUserId(mine.map((r) => r.program.userId)),
+      avatarsByPhone([...pending, ...mine].map((r) => r.mobile)),
+    ]);
+    res.json({
+      pending: pending.map((r) => ({
+        ...r,
+        avatarUrl: pickAvatar(byUser, byPhone, null, r.mobile),
+      })),
+      mine: mine.map((r) => ({
+        ...r,
+        avatarUrl: pickAvatar(byUser, byPhone, r.program.userId, r.mobile),
+      })),
+    });
   },
 );
 
@@ -384,13 +399,20 @@ router.get(
         return label === month;
       });
     }
+    const [byUser, byPhone] = await Promise.all([
+      avatarsByUserId(programs.map((p) => p.userId)),
+      avatarsByPhone(programs.map((p) => p.memberPhone)),
+    ]);
     res.json({
       counts: {
         accepted: programs.filter((p) => p.status === "accepted").length,
         ongoing: programs.filter((p) => p.status === "ongoing").length,
         completed: programs.filter((p) => p.status === "completed").length,
       },
-      programs,
+      programs: programs.map((p) => ({
+        ...p,
+        avatarUrl: pickAvatar(byUser, byPhone, p.userId, p.memberPhone),
+      })),
     });
   },
 );
@@ -427,7 +449,19 @@ router.get(
         .where(eq(memberAssignedExercisesTable.programId, id))
         .orderBy(desc(memberAssignedExercisesTable.createdAt)),
     ]);
-    res.json({ program, bmi, diets, exercises });
+    const [byUser, byPhone] = await Promise.all([
+      avatarsByUserId([program.userId]),
+      avatarsByPhone([program.memberPhone]),
+    ]);
+    res.json({
+      program: {
+        ...program,
+        avatarUrl: pickAvatar(byUser, byPhone, program.userId, program.memberPhone),
+      },
+      bmi,
+      diets,
+      exercises,
+    });
   },
 );
 

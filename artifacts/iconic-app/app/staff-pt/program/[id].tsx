@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/AppText";
+import { MemberAvatar } from "@/components/MemberAvatar";
 import { useColors } from "@/hooks/useColors";
 import { ThemeContext } from "@/hooks/useTheme";
 import { istDateLabel } from "@/lib/dates";
@@ -211,6 +212,11 @@ function Content() {
       >
         <Pressable onPress={() => router.back()} style={styles.backRow}>
           <Feather name="arrow-left" size={20} color={colors.foreground} />
+          <MemberAvatar
+            name={program?.memberName}
+            avatarUrl={program?.avatarUrl}
+            size={34}
+          />
           <AppText weight="700" size={18}>
             {program?.memberName || "Member"}
           </AppText>

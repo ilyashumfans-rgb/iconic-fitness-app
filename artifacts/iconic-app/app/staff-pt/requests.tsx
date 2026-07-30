@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/AppText";
+import { MemberAvatar } from "@/components/MemberAvatar";
 import { useColors } from "@/hooks/useColors";
 import { ThemeContext } from "@/hooks/useTheme";
 import {
@@ -247,30 +248,33 @@ function RequestInfo({
   primary: string;
 }) {
   return (
-    <View style={{ gap: 3 }}>
-      <View style={styles.rowBetween}>
-        <AppText weight="700" size={16}>
-          {r.memberName || "Member"}
+    <View style={{ flexDirection: "row", gap: 12, alignItems: "flex-start" }}>
+      <MemberAvatar name={r.memberName} avatarUrl={r.avatarUrl} size={44} />
+      <View style={{ gap: 3, flex: 1 }}>
+        <View style={styles.rowBetween}>
+          <AppText weight="700" size={16}>
+            {r.memberName || "Member"}
+          </AppText>
+          {r.paid ? (
+            <AppText size={11} weight="700" color={primary}>
+              PAID
+            </AppText>
+          ) : (
+            <AppText size={11} weight="700" color={muted}>
+              ENQUIRY
+            </AppText>
+          )}
+        </View>
+        <AppText size={13} color={muted}>
+          {r.mobile ? `${r.mobile} · ` : ""}
+          {r.gymName || "Any branch"}
         </AppText>
-        {r.paid ? (
-          <AppText size={11} weight="700" color={primary}>
-            PAID
-          </AppText>
-        ) : (
-          <AppText size={11} weight="700" color={muted}>
-            ENQUIRY
-          </AppText>
-        )}
+        <AppText size={13} color={muted}>
+          {r.packageName}
+          {r.trainerName ? ` · asked for ${r.trainerName}` : ""}
+          {r.preferredDate ? ` · ${r.preferredDate}` : ""}
+        </AppText>
       </View>
-      <AppText size={13} color={muted}>
-        {r.mobile ? `${r.mobile} · ` : ""}
-        {r.gymName || "Any branch"}
-      </AppText>
-      <AppText size={13} color={muted}>
-        {r.packageName}
-        {r.trainerName ? ` · asked for ${r.trainerName}` : ""}
-        {r.preferredDate ? ` · ${r.preferredDate}` : ""}
-      </AppText>
     </View>
   );
 }

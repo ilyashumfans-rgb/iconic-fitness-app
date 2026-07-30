@@ -1548,4 +1548,3 @@ export const CreateCheckinBody = zod.object({
   "gymId": zod.number(),
   "method": zod.enum(['qr', 'manual']).default(createCheckinBodyMethodDefault)
 })
-

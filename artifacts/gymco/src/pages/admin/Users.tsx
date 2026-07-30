@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
 import { adminApi } from "@/lib/adminApi";
+import { MemberAvatar } from "@/components/admin/MemberAvatar";
 
 export default function AdminUsers() {
   const [rows, setRows] = useState<any[]>([]);
@@ -55,7 +56,12 @@ export default function AdminUsers() {
                 key={u.id}
                 className="border-b border-slate-800/60 hover:bg-slate-800/30"
               >
-                <td className="px-5 py-3 font-medium text-white">{u.name}</td>
+                <td className="px-5 py-3 font-medium text-white">
+                  <div className="flex items-center gap-2.5">
+                    <MemberAvatar name={u.name} avatarUrl={u.avatarUrl} />
+                    <span>{u.name}</span>
+                  </div>
+                </td>
                 <td className="px-5 py-3 text-slate-300">{u.email}</td>
                 <td className="px-5 py-3 text-slate-400">{u.mobile}</td>
                 <td className="px-5 py-3 text-slate-400">{u.city}</td>

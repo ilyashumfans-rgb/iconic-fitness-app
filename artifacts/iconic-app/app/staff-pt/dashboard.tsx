@@ -11,6 +11,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/AppText";
+import { MemberAvatar } from "@/components/MemberAvatar";
 import { useColors } from "@/hooks/useColors";
 import { ThemeContext } from "@/hooks/useTheme";
 import {
@@ -306,9 +307,12 @@ function Content() {
                   style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
                 >
                   <View style={styles.rowBetween}>
-                    <AppText weight="700" size={15}>
-                      {p.memberName || "Member"}
-                    </AppText>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
+                      <MemberAvatar name={p.memberName} avatarUrl={p.avatarUrl} size={36} />
+                      <AppText weight="700" size={15}>
+                        {p.memberName || "Member"}
+                      </AppText>
+                    </View>
                     <AppText
                       size={11}
                       weight="700"

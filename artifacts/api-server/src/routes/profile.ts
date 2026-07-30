@@ -97,7 +97,8 @@ router.patch("/me", requireUser, async (req, res): Promise<void> => {
     return;
   }
   // The avatar must be a real uploaded image on our server — a free-text URL
-  // would let arbitrary content appear on the member card gym staff see.
+  // would bypass the payment flow's member-photo rule and could put arbitrary
+  // content on the member card gym staff see.
   const avatarUrl = (parsed.data as Record<string, unknown>).avatarUrl;
   if (typeof avatarUrl === "string" && avatarUrl.trim()) {
     const match = /^\/api\/storage\/db-images\/([0-9a-f-]{36})$/i.exec(avatarUrl);

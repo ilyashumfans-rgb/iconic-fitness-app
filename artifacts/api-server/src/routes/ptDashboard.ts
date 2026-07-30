@@ -15,6 +15,7 @@ import {
   requireStaffPermission,
 } from "../lib/staffAuth";
 import { fetchYoactivMemberList } from "../lib/yoactiv";
+import { avatarsByPhone, pickAvatar } from "../lib/memberAvatars";
 
 /**
  * Trainer PT dashboard (per the Iconic Fitness requirements doc):
@@ -233,7 +234,15 @@ router.get(
     if (filter === "active" || filter === "expired") {
       rows = rows.filter((r) => r.status === filter);
     }
-    res.json({ rows });
+    // Member profile photo (uploaded in the app) so trainers can visually
+    // verify the person; UI falls back to initials when null.
+    const byPhone = await avatarsByPhone(rows.map((r) => r.mobile));
+    res.json({
+      rows: rows.map((r) => ({
+        ...r,
+        avatarUrl: pickAvatar(new Map(), byPhone, null, r.mobile),
+      })),
+    });
   },
 );
 

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as XLSX from "xlsx";
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
 import { adminApi } from "@/lib/adminApi";
+import { MemberAvatar } from "@/components/admin/MemberAvatar";
 import {
   Inbox,
   Loader2,
@@ -56,6 +57,7 @@ type Lead = {
   notes: string;
   createdAt: string;
   updatedAt: string;
+  avatarUrl?: string | null;
 };
 
 const STATUSES = [
@@ -489,12 +491,17 @@ export default function AdminLeads() {
                       onClick={() => setEditing(r)}
                     >
                       <td className="px-4 py-3">
-                        <div className="font-bold text-slate-900">{r.name}</div>
-                        {r.city ? (
-                          <div className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                            <MapPin className="h-3 w-3" /> {r.city}
+                        <div className="flex items-center gap-2.5">
+                          <MemberAvatar name={r.name} avatarUrl={r.avatarUrl} />
+                          <div>
+                            <div className="font-bold text-slate-900">{r.name}</div>
+                            {r.city ? (
+                              <div className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                                <MapPin className="h-3 w-3" /> {r.city}
+                              </div>
+                            ) : null}
                           </div>
-                        ) : null}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <div className="font-medium">

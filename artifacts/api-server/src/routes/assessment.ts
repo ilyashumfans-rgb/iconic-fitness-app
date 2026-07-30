@@ -22,6 +22,7 @@ import {
 import { requireAdmin } from "../lib/adminAuth";
 import { istToday } from "../lib/engagementPlan";
 import { normalizeMobile } from "../lib/yoactiv";
+import { avatarsByUserId } from "../lib/memberAvatars";
 
 /**
  * Empty-stomach fitness assessment (Member Success Journey): after the
@@ -314,9 +315,14 @@ async function rosterRows() {
         .where(inArray(memberBmiRecordsTable.id, bmiIds))
     : [];
   const bmiById = new Map(bmiRows.map((r) => [r.id, r]));
+  // Member profile photo so staff can visually verify the person at the door.
+  const avatarMap = await avatarsByUserId(
+    [...upcoming, ...recent].map((b) => b.userId),
+  );
   const json = (b: typeof assessmentBookingsTable.$inferSelect) => ({
     id: b.id,
     userId: b.userId,
+    avatarUrl: avatarMap.get(b.userId) ?? null,
     memberName: b.memberName,
     memberPhone: b.memberPhone,
     gymName: b.gymName,

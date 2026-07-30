@@ -1773,6 +1773,7 @@ router.get(
           name: u.name,
           email: u.email,
           mobile: u.mobile,
+          avatarUrl: u.avatarUrl || null,
           city: u.city,
           joinedAt: u.joinedAt,
           streakDays: u.streakDays,

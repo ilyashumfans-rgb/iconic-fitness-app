@@ -13,6 +13,7 @@ import { requireAdmin } from "../lib/adminAuth";
 import { resolveGymSchedule } from "../lib/resolveGymSchedule";
 import { TRAINER_ENQUIRY_SOURCE } from "../lib/trainerEnquiryLeads";
 import { sendLeadWelcome, runNudgeSweep } from "../lib/messaging";
+import { avatarsByPhone, pickAvatar } from "../lib/memberAvatars";
 
 const router: IRouter = Router();
 
@@ -324,7 +325,15 @@ router.get(
           : undefined,
       )
       .orderBy(desc(leadsTable.createdAt));
-    res.json(rows);
+    // Show the lead's app profile photo (matched by phone) so staff can
+    // recognise the person; unambiguous matches only, else null → initials.
+    const byPhone = await avatarsByPhone(rows.map((r) => r.phone));
+    res.json(
+      rows.map((r) => ({
+        ...r,
+        avatarUrl: pickAvatar(new Map(), byPhone, null, r.phone),
+      })),
+    );
   },
 );
 
