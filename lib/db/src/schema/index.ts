@@ -8,6 +8,7 @@ import {
   timestamp,
   jsonb,
   uniqueIndex,
+  index,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -598,7 +599,11 @@ export const bookingsTable = pgTable("bookings", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+}, (t) => [
+  // Per-class booked counts (class listings) and per-member booking lists.
+  index("bookings_class_id_idx").on(t.classId),
+  index("bookings_user_id_idx").on(t.userId),
+]);
 
 export const checkinsTable = pgTable("checkins", {
   id: serial("id").primaryKey(),
@@ -943,7 +948,11 @@ export const leadsTable = pgTable("leads", {
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+}, (t) => [
+  // Admin/partner lead lists sort by newest and filter by branch (gym).
+  index("leads_created_at_idx").on(t.createdAt),
+  index("leads_gym_id_idx").on(t.gymId),
+]);
 
 export const partnerLoginTokensTable = pgTable("partner_login_tokens", {
   id: serial("id").primaryKey(),
@@ -1024,7 +1033,15 @@ export const notificationsTable = pgTable("notifications", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+}, (t) => [
+  // The per-recipient feed poll (every member's bell) is the single hottest
+  // query in the app — it must be an index scan, not a table scan.
+  index("notifications_recipient_created_idx").on(
+    t.recipientType,
+    t.recipientId,
+    t.createdAt,
+  ),
+]);
 
 export const partnerDocumentsTable = pgTable("partner_documents", {
   id: serial("id").primaryKey(),

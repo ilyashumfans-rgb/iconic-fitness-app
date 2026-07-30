@@ -248,7 +248,7 @@ router.get(
     // Lazily generate plan-renewal reminders (7/3/1/0 days before the member's
     // YoActiv plan expiry) as the app polls the feed. Fire-and-forget so the
     // feed response never waits on the external YoActiv lookup — any new
-    // reminder row is picked up by the next poll (bell polls every 60s).
+    // reminder row is picked up by the next poll (bell polls every 2 min).
     // ensureRenewalReminders never throws.
     void ensureRenewalReminders(req.userId!);
     // Same lazy pattern: assessment evening-before reminder. Never throws.

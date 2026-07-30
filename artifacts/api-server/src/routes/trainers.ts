@@ -12,12 +12,16 @@ import {
 import { gymsTable } from "@workspace/db";
 import { fetchYoactivTrainers, yoactivConfigured } from "../lib/yoactiv";
 import { trainerPhotoMap } from "../lib/trainerPhotos";
+import { microCache } from "../lib/microCache";
 
 const router: IRouter = Router();
 
+// 30s micro-cache: trainer rosters are public and identical for everyone.
+const TRAINERS_TTL_MS = 30_000;
+
 // NOTE: must be registered before /trainers/:trainerId so "live" isn't
 // captured as a trainer id.
-router.get("/trainers/live", async (req, res): Promise<void> => {
+router.get("/trainers/live", microCache(TRAINERS_TTL_MS), async (req, res): Promise<void> => {
   if (!yoactivConfigured()) {
     res.json(ListLiveTrainersResponse.parse([]));
     return;
@@ -46,7 +50,7 @@ router.get("/trainers/live", async (req, res): Promise<void> => {
   );
 });
 
-router.get("/trainers", async (req, res): Promise<void> => {
+router.get("/trainers", microCache(TRAINERS_TTL_MS), async (req, res): Promise<void> => {
   const parsed = ListTrainersQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });

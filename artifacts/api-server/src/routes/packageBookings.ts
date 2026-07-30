@@ -12,6 +12,7 @@ import {
   ListMyPackageBookingsResponse,
 } from "@workspace/api-zod";
 import { optionalUser, requireUser } from "../lib/currentUser";
+import { microCache } from "../lib/microCache";
 import {
   creditReferralRewardOnce,
   debitWallet,
@@ -44,7 +45,7 @@ function publicBaseUrl(req: Request): string {
 
 // Purchasable membership packages (live prices) for a branch: every paid
 // non-PT service variation, cheapest first.
-router.get("/membership-packages", async (req, res): Promise<void> => {
+router.get("/membership-packages", microCache(30_000), async (req, res): Promise<void> => {
   const parsed = ListMembershipPackagesQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });

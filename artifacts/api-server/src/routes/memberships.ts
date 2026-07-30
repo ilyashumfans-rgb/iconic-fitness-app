@@ -20,6 +20,7 @@ import {
   LookupMembershipResponse,
 } from "@workspace/api-zod";
 import { requireUser } from "../lib/currentUser";
+import { microCache } from "../lib/microCache";
 import {
   createYoactivPaymentUrl,
   ensureYoactivMemberId,
@@ -32,13 +33,16 @@ import {
 
 const router: IRouter = Router();
 
-router.get("/memberships", async (_req, res): Promise<void> => {
+// 30s micro-cache for the public plan/category catalogs (admin edits rare).
+const CATALOG_TTL_MS = 30_000;
+
+router.get("/memberships", microCache(CATALOG_TTL_MS), async (_req, res): Promise<void> => {
   const rows = await db.select().from(membershipsTable);
   res.json(ListMembershipsResponse.parse(rows));
 });
 
 // Active admin-managed categories for the app's Packages tab, in admin order.
-router.get("/package-categories", async (_req, res): Promise<void> => {
+router.get("/package-categories", microCache(CATALOG_TTL_MS), async (_req, res): Promise<void> => {
   const rows = await db
     .select()
     .from(packageCategoriesTable)

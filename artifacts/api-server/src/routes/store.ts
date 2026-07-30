@@ -10,6 +10,7 @@ import {
 } from "@workspace/db";
 import { DEFAULT_PRODUCT_CATEGORIES } from "../lib/productCategories.js";
 import { optionalUser, requireUser } from "../lib/currentUser";
+import { microCache } from "../lib/microCache";
 import {
   creditReferralRewardOnce,
   debitWallet,
@@ -20,8 +21,12 @@ const router: IRouter = Router();
 
 // ── Categories (public) ──
 
+// 30s micro-cache: public storefront catalog is identical for everyone.
+const STORE_TTL_MS = 30_000;
+
 router.get(
   "/store/categories",
+  microCache(STORE_TTL_MS),
   async (_req: Request, res: Response): Promise<void> => {
     const rows = await db
       .select()
@@ -49,6 +54,7 @@ router.get(
 
 router.get(
   "/store/products",
+  microCache(STORE_TTL_MS),
   async (req: Request, res: Response): Promise<void> => {
     const { category, q, vendorId } = req.query as Record<string, string | undefined>;
     const all = await db
@@ -69,6 +75,7 @@ router.get(
 
 router.get(
   "/store/products/:slug",
+  microCache(STORE_TTL_MS),
   async (req: Request, res: Response): Promise<void> => {
     const slug = String(req.params.slug);
     const [p] = await db
@@ -93,6 +100,7 @@ router.get(
 
 router.get(
   "/store/vendors",
+  microCache(STORE_TTL_MS),
   async (_req: Request, res: Response): Promise<void> => {
     // Vendors that have at least one active product
     const products = await db

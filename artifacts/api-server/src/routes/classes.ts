@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { asc, desc, eq, gte, sql } from "drizzle-orm";
 import { db, classSessionsTable, gymsTable, trainersTable, bookingsTable } from "@workspace/db";
 import { isClassVisibleToMembers } from "../lib/classVisibility";
+import { microCache } from "../lib/microCache";
 import {
   ListClassesQueryParams,
   ListClassesResponse,
@@ -13,9 +14,24 @@ import {
 const router: IRouter = Router();
 
 async function buildSessionDtos(rows: typeof classSessionsTable.$inferSelect[]) {
-  const gyms = await db.select().from(gymsTable);
-  const trainers = await db.select().from(trainersTable);
-  const bookings = await db.select().from(bookingsTable);
+  // Aggregate booked counts in SQL instead of loading the whole bookings
+  // table into memory — with lakhs of members the bookings table is by far
+  // the largest of the three, and we only ever need per-class counts.
+  const [gyms, trainers, bookedCounts] = await Promise.all([
+    db.select().from(gymsTable),
+    db.select().from(trainersTable),
+    rows.length === 0
+      ? Promise.resolve([] as { classId: number; booked: number }[])
+      : db
+          .select({
+            classId: bookingsTable.classId,
+            booked: sql<number>`count(*)::int`,
+          })
+          .from(bookingsTable)
+          .where(sql`${bookingsTable.status} <> 'cancelled'`)
+          .groupBy(bookingsTable.classId),
+  ]);
+  const bookedByClass = new Map(bookedCounts.map((b) => [b.classId, b.booked]));
   const now = Date.now();
   return rows
     .filter((c) => {
@@ -27,7 +43,7 @@ async function buildSessionDtos(rows: typeof classSessionsTable.$inferSelect[]) 
     .map((c) => {
     const g = gyms.find((x) => x.id === c.gymId);
     const t = trainers.find((x) => x.id === c.trainerId);
-    const booked = bookings.filter((b) => b.classId === c.id && b.status !== "cancelled").length;
+    const booked = bookedByClass.get(c.id) ?? 0;
     return {
       id: c.id,
       title: c.title,
@@ -46,7 +62,11 @@ async function buildSessionDtos(rows: typeof classSessionsTable.$inferSelect[]) 
   });
 }
 
-router.get("/classes", async (req, res): Promise<void> => {
+// 30s micro-cache: class listings are hot, public, and identical for every
+// member; booked counts being up to 30s stale is invisible in the UI.
+const CLASSES_TTL_MS = 30_000;
+
+router.get("/classes", microCache(CLASSES_TTL_MS), async (req, res): Promise<void> => {
   const parsed = ListClassesQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -68,7 +88,7 @@ router.get("/classes", async (req, res): Promise<void> => {
   res.json(ListClassesResponse.parse(dtos));
 });
 
-router.get("/classes/trending", async (_req, res): Promise<void> => {
+router.get("/classes/trending", microCache(CLASSES_TTL_MS), async (_req, res): Promise<void> => {
   const rows = await db
     .select()
     .from(classSessionsTable)
@@ -78,7 +98,7 @@ router.get("/classes/trending", async (_req, res): Promise<void> => {
   res.json(ListTrendingClassesResponse.parse(dtos));
 });
 
-router.get("/classes/:classId", async (req, res): Promise<void> => {
+router.get("/classes/:classId", microCache(CLASSES_TTL_MS), async (req, res): Promise<void> => {
   const params = GetClassParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });

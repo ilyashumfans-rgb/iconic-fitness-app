@@ -29,7 +29,11 @@ export function NotificationBell() {
     query: {
       queryKey: getListMyNotificationsQueryKey(),
       enabled: !!isSignedIn,
-      refetchInterval: 60_000,
+      // 2 min between polls: with lakhs of signed-in members even the bell
+      // poll is the single highest-volume endpoint, so keep it gentle.
+      // refetchOnWindowFocus still gives an instant refresh when the member
+      // returns to the app, so alerts don't feel delayed.
+      refetchInterval: 120_000,
       refetchOnWindowFocus: true,
     },
   });

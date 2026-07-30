@@ -1,5 +1,6 @@
 import express, { type Express } from "express";
 import cors from "cors";
+import compression from "compression";
 import pinoHttp from "pino-http";
 import { clerkMiddleware } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
@@ -49,6 +50,11 @@ app.use(
 app.use("/api", healthRouter);
 
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
+
+// Gzip/brotli response compression — JSON list payloads (gyms, classes,
+// store catalog) shrink ~5-10x on the wire, which matters a lot on Indian
+// mobile networks and cuts egress under heavy load.
+app.use(compression());
 
 app.use(cors({ origin: true, credentials: true }));
 // Excel lead imports post up to 1000 parsed rows in one JSON body; the

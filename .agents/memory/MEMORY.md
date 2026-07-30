@@ -13,7 +13,6 @@
 - [Deploy typechecks ALL artifacts](deploy-builds-all-artifacts.md) — publish fails if ANY artifact has a TS error (dev/vite doesn't typecheck); Vite artifacts need `dom` lib; bare `vite build` PORT error is not a real blocker.
 - [RN guided-timer state machine](rn-timer-state-machine.md) — interval steppers (set/rest player): idempotent advance via ref guard, advance from effect not setState updater, "Next" = steps[index+1].
 - [IST date-label drift](ist-date-label-drift.md) — render YYYY-MM-DD via IST-anchored helpers (istDateLabel/istWeekdayShort), never bare formatDateLabel/new Date(str) (shows prev day on non-IST devices).
-- [Phone-fallback record reads](phone-fallback-first-claim.md) — member reads of trainer records use last-10 phone fallback for userId-NULL rows; reads must first-claim backfill userId so recycled numbers can't leak PT/health data.
 - [Trainer booking = leads enquiry](trainer-booking-leads.md) — no booking table + db push forbidden; "book a trainer" posts to public /api/leads kind="general" (skips GX validation; needs name≥2, valid phone, non-empty date+time).
 - [RN/web bottom-anchored auth layout](rn-login-scroll-anchor.md) — logo top + form bottom: ScrollView contentContainer flexGrow:1 + form marginTop:auto; never a flex:1 spacer child (drifts/clips on web).
 - [Sanitize AsyncStorage data on load](local-persisted-data-sanitize.md) — local-first stored blobs are untrusted; whitelist finite>0 on load + null-not-NaN derived helpers; don't re-sanitize on save (breaks clear-to-blank).
@@ -36,5 +35,7 @@
 - [Member engagement 45-day program](member-engagement-program.md) — code-default plan, lazy auto-start + milestone cursors on GET /engagement/mine, batched staff overview; prod needs the CREATE TABLE.
 - [Empty-stomach assessment bookings](assessment-bookings.md) — partial unique active-booking index, lazy 5pm-IST evening-before reminder from notification poll, record = BMI row + one-shot status flip.
 - [EAS Android APK builds](eas-android-build.md) — expo.dev builds from GitHub need pnpm/node/image pins + slug=EAS project; each miss fails with a misleading deep-log error.
-- [DB image compression](db-image-compression.md) — bundled GIFs→animated WebP; `uploaded_images` batch-recompressed in place (run script from lib/db); uploads store raw so table regrows.
+- [API micro-cache + perf setup](api-microcache.md) — 30s in-process cache on public GETs only; compression on; perf indexes applied to dev DB but NOT prod yet.
 - [Admin Excel lead import](leads-excel-import.md) — client-side xlsx parse → /admin/leads/import (5mb body limit before global json); new /partner/* routes need STAFF_PERMISSION_PREFIXES entry.
+- [Phone-fallback record reads](phone-fallback-first-claim.md) — member reads of trainer records use last-10 phone fallback for userId-NULL rows; reads must first-claim backfill userId so recycled numbers can't leak PT/health data.
+- [DB image compression](db-image-compression.md) — bundled GIFs→animated WebP; `uploaded_images` batch-recompressed in place (run script from lib/db); uploads store raw so table regrows.

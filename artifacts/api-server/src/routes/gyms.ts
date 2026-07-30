@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, eq, sql, asc, desc } from "drizzle-orm";
+import { microCache } from "../lib/microCache";
 import { isClassVisibleToMembers } from "../lib/classVisibility";
 import { resolveGymSchedule } from "../lib/resolveGymSchedule";
 import {
@@ -28,7 +29,13 @@ import {
 
 const router: IRouter = Router();
 
-router.get("/gyms", async (req, res): Promise<void> => {
+// Micro-cache TTL for hot public gym endpoints. 30s is invisible to members
+// (gym catalog changes rarely) but collapses the read load under heavy
+// traffic. NOTE: /gyms with lat/lng in the query is cached per rounded
+// coordinate via the URL, which is fine — clients send stable values.
+const GYMS_TTL_MS = 30_000;
+
+router.get("/gyms", microCache(GYMS_TTL_MS), async (req, res): Promise<void> => {
   const parsed = ListGymsQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -91,7 +98,7 @@ router.get("/gyms", async (req, res): Promise<void> => {
   );
 });
 
-router.get("/gyms/featured", async (_req, res): Promise<void> => {
+router.get("/gyms/featured", microCache(GYMS_TTL_MS), async (_req, res): Promise<void> => {
   const rows = await db
     .select()
     .from(gymsTable)
@@ -103,7 +110,7 @@ router.get("/gyms/featured", async (_req, res): Promise<void> => {
   );
 });
 
-router.get("/gyms/categories", async (_req, res): Promise<void> => {
+router.get("/gyms/categories", microCache(GYMS_TTL_MS), async (_req, res): Promise<void> => {
   const rows = await db
     .select()
     .from(gymsTable)
@@ -136,7 +143,7 @@ router.get("/gyms/categories", async (_req, res): Promise<void> => {
   res.json(ListGymCategoriesResponse.parse(list));
 });
 
-router.get("/gyms/:gymId", async (req, res): Promise<void> => {
+router.get("/gyms/:gymId", microCache(GYMS_TTL_MS), async (req, res): Promise<void> => {
   const params = GetGymParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -208,7 +215,7 @@ async function assertVerifiedGym(gymId: number): Promise<boolean> {
   return !!g && g.isVerified === true;
 }
 
-router.get("/gyms/:gymId/amenities", async (req, res): Promise<void> => {
+router.get("/gyms/:gymId/amenities", microCache(GYMS_TTL_MS), async (req, res): Promise<void> => {
   const gymId = Number(req.params.gymId);
   if (!gymId) {
     res.status(400).json({ error: "Invalid gymId" });
@@ -247,7 +254,7 @@ router.get("/gyms/:gymId/amenities", async (req, res): Promise<void> => {
   res.json({ catalog: selected, custom });
 });
 
-router.get("/gyms/:gymId/hours", async (req, res): Promise<void> => {
+router.get("/gyms/:gymId/hours", microCache(GYMS_TTL_MS), async (req, res): Promise<void> => {
   const gymId = Number(req.params.gymId);
   if (!gymId) {
     res.status(400).json({ error: "Invalid gymId" });
@@ -276,7 +283,7 @@ router.get("/gyms/:gymId/hours", async (req, res): Promise<void> => {
   res.json(out);
 });
 
-router.get("/gyms/:gymId/workouts", async (req, res): Promise<void> => {
+router.get("/gyms/:gymId/workouts", microCache(GYMS_TTL_MS), async (req, res): Promise<void> => {
   const gymId = Number(req.params.gymId);
   if (!gymId) {
     res.status(400).json({ error: "Invalid gymId" });
@@ -313,6 +320,7 @@ router.get("/gyms/:gymId/workouts", async (req, res): Promise<void> => {
 
 router.get(
   "/gyms/:gymId/workouts/sessions",
+  microCache(GYMS_TTL_MS),
   async (req, res): Promise<void> => {
     const gymId = Number(req.params.gymId);
     if (!gymId) {
@@ -359,7 +367,7 @@ router.get(
   },
 );
 
-router.get("/gyms/:gymId/classes", async (req, res): Promise<void> => {
+router.get("/gyms/:gymId/classes", microCache(GYMS_TTL_MS), async (req, res): Promise<void> => {
   const params = ListGymClassesParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -410,7 +418,7 @@ router.get("/gyms/:gymId/classes", async (req, res): Promise<void> => {
 // Public weekly group-class (GX) timetable for a gym. Returns the gym's own
 // customised rows if a partner has saved any, otherwise the shared default
 // template so every branch shows a schedule out of the box.
-router.get("/gyms/:id/schedule", async (req, res): Promise<void> => {
+router.get("/gyms/:id/schedule", microCache(GYMS_TTL_MS), async (req, res): Promise<void> => {
   const gymId = Number(req.params.id);
   if (!gymId) {
     res.status(400).json({ error: "Invalid gym id" });
