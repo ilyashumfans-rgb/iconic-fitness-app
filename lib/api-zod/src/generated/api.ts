@@ -884,6 +884,11 @@ export const CreateComplaintResponse = zod.object({
   "status": zod.enum(['open', 'in_progress', 'resolved']),
   "gymName": zod.string(),
   "response": zod.string().describe('Reply from the gym team (\'\' when none yet)'),
+  "followUps": zod.array(zod.object({
+  "message": zod.string().describe('Member\'s follow-up text (\'\' when they only tapped reopen)'),
+  "reopened": zod.boolean().describe('True when this follow-up reopened the ticket'),
+  "at": zod.coerce.date()
+})).describe('Member follow-up messages, oldest first'),
   "createdAt": zod.coerce.date()
 })
 
@@ -898,9 +903,46 @@ export const ListMyComplaintsResponseItem = zod.object({
   "status": zod.enum(['open', 'in_progress', 'resolved']),
   "gymName": zod.string(),
   "response": zod.string().describe('Reply from the gym team (\'\' when none yet)'),
+  "followUps": zod.array(zod.object({
+  "message": zod.string().describe('Member\'s follow-up text (\'\' when they only tapped reopen)'),
+  "reopened": zod.boolean().describe('True when this follow-up reopened the ticket'),
+  "at": zod.coerce.date()
+})).describe('Member follow-up messages, oldest first'),
   "createdAt": zod.coerce.date()
 })
 export const ListMyComplaintsResponse = zod.array(ListMyComplaintsResponseItem)
+
+
+/**
+ * @summary Add a member follow-up message and/or reopen a resolved complaint
+ */
+export const AddComplaintFollowUpParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const addComplaintFollowUpBodyMessageMax = 2000;
+
+
+
+export const AddComplaintFollowUpBody = zod.object({
+  "message": zod.string().max(addComplaintFollowUpBodyMessageMax).optional().describe('Optional follow-up text'),
+  "reopen": zod.boolean().optional().describe('Set true to flip a resolved ticket back to open')
+})
+
+export const AddComplaintFollowUpResponse = zod.object({
+  "id": zod.number(),
+  "subject": zod.string(),
+  "message": zod.string(),
+  "status": zod.enum(['open', 'in_progress', 'resolved']),
+  "gymName": zod.string(),
+  "response": zod.string().describe('Reply from the gym team (\'\' when none yet)'),
+  "followUps": zod.array(zod.object({
+  "message": zod.string().describe('Member\'s follow-up text (\'\' when they only tapped reopen)'),
+  "reopened": zod.boolean().describe('True when this follow-up reopened the ticket'),
+  "at": zod.coerce.date()
+})).describe('Member follow-up messages, oldest first'),
+  "createdAt": zod.coerce.date()
+})
 
 
 /**

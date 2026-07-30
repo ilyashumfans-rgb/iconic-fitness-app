@@ -374,6 +374,12 @@ export const complaintsTable = pgTable("complaints", {
   message: text("message").notNull(),
   status: text("status").notNull().default("open"), // open | in_progress | resolved
   response: text("response").notNull().default(""),
+  // Member follow-up thread: [{ message, reopened, at }] — lets a member reply
+  // back or reopen a resolved ticket without raising a brand-new complaint.
+  followUps: jsonb("follow_ups")
+    .$type<Array<{ message: string; reopened: boolean; at: string }>>()
+    .notNull()
+    .default([]),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

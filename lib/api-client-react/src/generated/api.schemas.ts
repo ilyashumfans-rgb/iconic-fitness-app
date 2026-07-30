@@ -509,6 +509,14 @@ export const ComplaintStatus = {
   resolved: 'resolved',
 } as const;
 
+export interface ComplaintFollowUp {
+  /** Member's follow-up text ('' when they only tapped reopen) */
+  message: string;
+  /** True when this follow-up reopened the ticket */
+  reopened: boolean;
+  at: string;
+}
+
 export interface Complaint {
   id: number;
   subject: string;
@@ -517,7 +525,19 @@ export interface Complaint {
   gymName: string;
   /** Reply from the gym team ('' when none yet) */
   response: string;
+  /** Member follow-up messages, oldest first */
+  followUps: ComplaintFollowUp[];
   createdAt: string;
+}
+
+export interface ComplaintFollowUpRequest {
+  /**
+     * Optional follow-up text
+     * @maxLength 2000
+     */
+  message?: string;
+  /** Set true to flip a resolved ticket back to open */
+  reopen?: boolean;
 }
 
 export interface PtTrialFeedback {

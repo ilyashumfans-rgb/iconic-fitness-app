@@ -3,6 +3,7 @@ import { Feather } from "@expo/vector-icons";
 import {
   getListGymsQueryKey,
   getListMyComplaintsQueryKey,
+  useAddComplaintFollowUp,
   useCreateComplaint,
   useListGyms,
   useListMyComplaints,
@@ -57,6 +58,42 @@ export default function ComplaintScreen() {
     },
   });
   const createComplaint = useCreateComplaint();
+  const addFollowUp = useAddComplaintFollowUp();
+  // Per-ticket follow-up drafts + which ticket is currently sending.
+  const [followUpDrafts, setFollowUpDrafts] = useState<Record<number, string>>({});
+  const [followUpBusyId, setFollowUpBusyId] = useState<number | null>(null);
+
+  async function sendFollowUp(id: number, reopen: boolean) {
+    const draft = (followUpDrafts[id] ?? "").trim();
+    if (!reopen && !draft) {
+      notify("Write a message", "Add a short message before sending.");
+      return;
+    }
+    setFollowUpBusyId(id);
+    try {
+      await addFollowUp.mutateAsync({
+        id,
+        data: { message: draft, ...(reopen ? { reopen: true } : {}) },
+      });
+      setFollowUpDrafts((d) => ({ ...d, [id]: "" }));
+      await queryClient.invalidateQueries({
+        queryKey: getListMyComplaintsQueryKey(),
+      });
+      notify(
+        reopen ? "Ticket reopened" : "Message sent",
+        reopen
+          ? "We've reopened your ticket and told the gym team it isn't fixed."
+          : "Your message was added to the ticket and the gym team was notified.",
+      );
+    } catch (err) {
+      notify(
+        "Could not send",
+        err instanceof Error ? err.message : "Please try again.",
+      );
+    } finally {
+      setFollowUpBusyId(null);
+    }
+  }
 
   if (isLoaded && !isSignedIn) {
     return <Redirect href="/(auth)/sign-in" />;
@@ -263,6 +300,65 @@ export default function ComplaintScreen() {
                     </AppText>
                   </View>
                 ) : null}
+                {(c.followUps ?? []).map((f, i) => (
+                  <View
+                    key={i}
+                    style={{
+                      marginTop: 10,
+                      borderLeftWidth: 3,
+                      borderLeftColor: colors.border,
+                      paddingLeft: 10,
+                    }}
+                  >
+                    <AppText size={11} weight="700" color={colors.mutedForeground}>
+                      {f.reopened ? "You reopened this ticket" : "Your follow-up"}
+                      {f.at ? ` · ${istDateLabel(f.at.slice(0, 10))}` : ""}
+                    </AppText>
+                    {f.message ? (
+                      <AppText size={13} style={{ marginTop: 2 }}>
+                        {f.message}
+                      </AppText>
+                    ) : null}
+                  </View>
+                ))}
+                <View style={{ marginTop: 12, gap: 8 }}>
+                  <TextInput
+                    value={followUpDrafts[c.id] ?? ""}
+                    onChangeText={(t) =>
+                      setFollowUpDrafts((d) => ({ ...d, [c.id]: t }))
+                    }
+                    placeholder={
+                      done
+                        ? "Still not fixed? Tell the team..."
+                        : "Add more details for the team..."
+                    }
+                    placeholderTextColor={colors.mutedForeground}
+                    maxLength={2000}
+                    multiline
+                    style={[inputStyle, { minHeight: 60, textAlignVertical: "top" }]}
+                  />
+                  <View style={{ flexDirection: "row", gap: 8 }}>
+                    <View style={{ flex: 1 }}>
+                      <Button
+                        label="Send"
+                        icon="send"
+                        onPress={() => void sendFollowUp(c.id, false)}
+                        loading={followUpBusyId === c.id}
+                      />
+                    </View>
+                    {done ? (
+                      <View style={{ flex: 1 }}>
+                        <Button
+                          label="This isn't fixed"
+                          icon="rotate-ccw"
+                          variant="secondary"
+                          onPress={() => void sendFollowUp(c.id, true)}
+                          loading={followUpBusyId === c.id}
+                        />
+                      </View>
+                    ) : null}
+                  </View>
+                </View>
               </Card>
             );
           })}

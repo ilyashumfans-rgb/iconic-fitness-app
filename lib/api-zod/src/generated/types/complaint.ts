@@ -5,6 +5,7 @@
  * GYMCO customer API — multi-gym memberships, classes, bookings, check-ins, and fitness tracking.
  * OpenAPI spec version: 0.1.0
  */
+import type { ComplaintFollowUp } from './complaintFollowUp';
 import type { ComplaintStatus } from './complaintStatus';
 
 export interface Complaint {
@@ -15,5 +16,7 @@ export interface Complaint {
   gymName: string;
   /** Reply from the gym team ('' when none yet) */
   response: string;
+  /** Member follow-up messages, oldest first */
+  followUps: ComplaintFollowUp[];
   createdAt: Date;
 }

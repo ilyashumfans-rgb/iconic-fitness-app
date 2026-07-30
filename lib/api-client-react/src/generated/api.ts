@@ -37,6 +37,7 @@ import type {
   ClassSessionDetail,
   Complaint,
   ComplaintCreate,
+  ComplaintFollowUpRequest,
   CreateMembershipRenewal409,
   CreatePackageBookingRequest,
   CreateTrainerBookingRequest,
@@ -3082,6 +3083,78 @@ export function useListMyComplaints<TData = Awaited<ReturnType<typeof listMyComp
 
 
 
+
+export const getAddComplaintFollowUpUrl = (id: number,) => {
+
+
+
+
+  return `/api/complaints/${id}/follow-up`
+}
+
+/**
+ * @summary Add a member follow-up message and/or reopen a resolved complaint
+ */
+export const addComplaintFollowUp = async (id: number,
+    complaintFollowUpRequest: ComplaintFollowUpRequest, options?: RequestInit): Promise<Complaint> => {
+
+  return customFetch<Complaint>(getAddComplaintFollowUpUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      complaintFollowUpRequest,)
+  }
+);}
+
+
+
+
+export const getAddComplaintFollowUpMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addComplaintFollowUp>>, TError,{id: number;data: BodyType<ComplaintFollowUpRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addComplaintFollowUp>>, TError,{id: number;data: BodyType<ComplaintFollowUpRequest>}, TContext> => {
+
+const mutationKey = ['addComplaintFollowUp'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addComplaintFollowUp>>, {id: number;data: BodyType<ComplaintFollowUpRequest>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  addComplaintFollowUp(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddComplaintFollowUpMutationResult = NonNullable<Awaited<ReturnType<typeof addComplaintFollowUp>>>
+    export type AddComplaintFollowUpMutationBody = BodyType<ComplaintFollowUpRequest>
+    export type AddComplaintFollowUpMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add a member follow-up message and/or reopen a resolved complaint
+ */
+export const useAddComplaintFollowUp = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addComplaintFollowUp>>, TError,{id: number;data: BodyType<ComplaintFollowUpRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addComplaintFollowUp>>,
+        TError,
+        {id: number;data: BodyType<ComplaintFollowUpRequest>},
+        TContext
+      > => {
+      return useMutation(getAddComplaintFollowUpMutationOptions(options));
+    }
 
 export const getListMyPtTrialFeedbackUrl = () => {
 

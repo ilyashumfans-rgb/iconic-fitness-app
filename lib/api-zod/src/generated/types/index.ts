@@ -33,6 +33,8 @@ export * from './classSessionDetail';
 export * from './classSessionIntensity';
 export * from './complaint';
 export * from './complaintCreate';
+export * from './complaintFollowUp';
+export * from './complaintFollowUpRequest';
 export * from './complaintStatus';
 export * from './createMembershipRenewal409';
 export * from './createPackageBookingRequest';

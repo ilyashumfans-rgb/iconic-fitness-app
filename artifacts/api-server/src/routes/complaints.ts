@@ -10,6 +10,8 @@ import {
   usersTable,
 } from "@workspace/db";
 import {
+  AddComplaintFollowUpBody,
+  AddComplaintFollowUpResponse,
   CreateComplaintBody,
   CreateComplaintResponse,
   ListMyComplaintsResponse,
@@ -50,6 +52,11 @@ function toApi(row: typeof complaintsTable.$inferSelect) {
     status: row.status as (typeof COMPLAINT_STATUSES)[number],
     gymName: row.gymName,
     response: row.response,
+    followUps: (row.followUps ?? []).map((f) => ({
+      message: f.message,
+      reopened: f.reopened,
+      at: f.at,
+    })),
     createdAt: row.createdAt.toISOString(),
   };
 }
@@ -59,9 +66,15 @@ function toApi(row: typeof complaintsTable.$inferSelect) {
 // on a notification hiccup.
 async function notifyComplaint(
   complaint: typeof complaintsTable.$inferSelect,
+  kind: "new" | "follow_up" | "reopened" = "new",
 ): Promise<void> {
   try {
-    const title = "New member complaint";
+    const title =
+      kind === "reopened"
+        ? "Complaint reopened by member"
+        : kind === "follow_up"
+          ? "Member replied on a complaint"
+          : "New member complaint";
     const body = `${complaint.memberName || "A member"}: ${complaint.subject}${
       complaint.gymName ? ` (${complaint.gymName})` : ""
     }`;
@@ -164,6 +177,76 @@ router.get(
       .where(eq(complaintsTable.userId, req.userId!))
       .orderBy(desc(complaintsTable.createdAt));
     res.json(ListMyComplaintsResponse.parse(rows.map(toApi)));
+  },
+);
+
+// Member follow-up on their own ticket: add a message to the thread and/or
+// reopen a resolved complaint ("This isn't fixed"). Staff get the same fan-out
+// as a new complaint so the reply doesn't go unnoticed.
+router.post(
+  "/complaints/:id/follow-up",
+  requireUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ error: "Invalid complaint id" });
+      return;
+    }
+    const parsed = AddComplaintFollowUpBody.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid follow-up" });
+      return;
+    }
+    const message = (parsed.data.message ?? "").trim();
+    const wantsReopen = parsed.data.reopen === true;
+    if (!message && !wantsReopen) {
+      res
+        .status(400)
+        .json({ error: "Write a short message or choose to reopen the ticket." });
+      return;
+    }
+    if (!allowCreate(req.userId!)) {
+      res.status(429).json({
+        error:
+          "You've sent a few updates just now — please wait a little while before sending another.",
+      });
+      return;
+    }
+    const [row] = await db
+      .select()
+      .from(complaintsTable)
+      .where(eq(complaintsTable.id, id));
+    // Only the ticket's owner may follow up.
+    if (!row || row.userId !== req.userId!) {
+      res.status(404).json({ error: "Complaint not found" });
+      return;
+    }
+    // Reopen only makes sense on a resolved ticket; a follow-up message is
+    // fine at any status.
+    const reopened = wantsReopen && row.status === "resolved";
+    if (wantsReopen && row.status !== "resolved") {
+      res.status(400).json({ error: "Only a resolved complaint can be reopened." });
+      return;
+    }
+    const followUps = [
+      ...(row.followUps ?? []),
+      { message, reopened, at: new Date().toISOString() },
+    ];
+    const [updated] = await db
+      .update(complaintsTable)
+      .set({
+        followUps,
+        ...(reopened ? { status: "open" } : {}),
+        updatedAt: new Date(),
+      })
+      .where(eq(complaintsTable.id, id))
+      .returning();
+    if (!updated) {
+      res.status(404).json({ error: "Complaint not found" });
+      return;
+    }
+    void notifyComplaint(updated, reopened ? "reopened" : "follow_up");
+    res.json(AddComplaintFollowUpResponse.parse(toApi(updated)));
   },
 );
 

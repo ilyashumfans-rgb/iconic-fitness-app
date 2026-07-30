@@ -670,6 +670,28 @@ paths:
                 type: array
                 items: { $ref: "#/components/schemas/Complaint" }
 
+  /complaints/{id}/follow-up:
+    post:
+      operationId: addComplaintFollowUp
+      tags: [complaints]
+      summary: Add a member follow-up message and/or reopen a resolved complaint
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ComplaintFollowUpRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Complaint" }
+
   /pt/trial-feedback/mine:
     get:
       operationId: listMyPtTrialFeedback
@@ -1681,7 +1703,7 @@ components:
         gymId: { type: integer, nullable: true, description: "Branch the complaint is about (optional)" }
     Complaint:
       type: object
-      required: [id, subject, message, status, gymName, response, createdAt]
+      required: [id, subject, message, status, gymName, response, followUps, createdAt]
       properties:
         id: { type: integer }
         subject: { type: string }
@@ -1689,7 +1711,23 @@ components:
         status: { type: string, enum: [open, in_progress, resolved] }
         gymName: { type: string }
         response: { type: string, description: "Reply from the gym team ('' when none yet)" }
+        followUps:
+          type: array
+          description: "Member follow-up messages, oldest first"
+          items: { $ref: "#/components/schemas/ComplaintFollowUp" }
         createdAt: { type: string, format: date-time }
+    ComplaintFollowUp:
+      type: object
+      required: [message, reopened, at]
+      properties:
+        message: { type: string, description: "Member's follow-up text ('' when they only tapped reopen)" }
+        reopened: { type: boolean, description: "True when this follow-up reopened the ticket" }
+        at: { type: string, format: date-time }
+    ComplaintFollowUpRequest:
+      type: object
+      properties:
+        message: { type: string, maxLength: 2000, description: "Optional follow-up text" }
+        reopen: { type: boolean, description: "Set true to flip a resolved ticket back to open" }
     PtTrialFeedback:
       type: object
       required: [sessionNo, rating, comment]

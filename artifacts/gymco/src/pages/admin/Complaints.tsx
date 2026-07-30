@@ -14,6 +14,7 @@ type Complaint = {
   message: string;
   status: string;
   response: string;
+  followUps: Array<{ message: string; reopened: boolean; at: string }> | null;
   createdAt: string;
 };
 
@@ -166,6 +167,29 @@ export default function AdminComplaints() {
                       <p className="text-sm text-slate-700 whitespace-pre-wrap">
                         {r.message}
                       </p>
+                      {(r.followUps ?? []).map((f, i) => (
+                        <div
+                          key={i}
+                          className="border-l-2 border-slate-300 pl-3 text-sm"
+                        >
+                          <div className="text-xs font-medium text-slate-500">
+                            {f.reopened
+                              ? "Member reopened this ticket"
+                              : "Member follow-up"}
+                            {" · "}
+                            {new Date(f.at).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </div>
+                          {f.message && (
+                            <p className="text-slate-700 whitespace-pre-wrap mt-0.5">
+                              {f.message}
+                            </p>
+                          )}
+                        </div>
+                      ))}
                       <div className="flex flex-wrap gap-2">
                         {STATUS_OPTIONS.map((s) => (
                           <button

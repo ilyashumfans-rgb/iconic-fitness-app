@@ -13,6 +13,7 @@ export type PartnerComplaintRow = {
   message: string;
   status: string;
   response: string;
+  followUps: Array<{ message: string; reopened: boolean; at: string }> | null;
   createdAt: string;
   updatedAt: string;
 };
