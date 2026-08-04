@@ -2261,10 +2261,10 @@ function PackageCategoryTile({
     >
       <View style={styles.pkgCatMedia}>
         {uri ? (
-          <Image
+          <ExpoImage
             source={{ uri }}
             style={StyleSheet.absoluteFill}
-            resizeMode="cover"
+            contentFit="cover"
           />
         ) : (
           <LinearGradient

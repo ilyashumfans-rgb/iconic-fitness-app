@@ -2,7 +2,8 @@ import { Feather } from "@expo/vector-icons";
 import { type MembershipPlan } from "@workspace/api-client-react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { Image, Pressable, StyleSheet, View } from "react-native";
+import { Image as ExpoImage } from "expo-image";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { useColors } from "@/hooks/useColors";
@@ -35,7 +36,7 @@ export function PackageCard({
     >
       <View style={styles.media}>
         {uri ? (
-          <Image source={{ uri }} style={styles.image} resizeMode="cover" />
+          <ExpoImage source={{ uri }} style={styles.image} contentFit="cover" />
         ) : (
           <LinearGradient
             colors={[colors.primary + "33", colors.card]}
