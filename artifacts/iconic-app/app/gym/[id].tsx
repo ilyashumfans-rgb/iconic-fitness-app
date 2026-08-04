@@ -25,6 +25,17 @@ import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
 import { Screen, WEB_NOTCH_TOP } from "@/components/Screen";
 import { ErrorView, LoadingView } from "@/components/ui-bits";
+import { YouTubeInline } from "@/components/YouTubeInline";
+import { openExternal } from "@/lib/links";
+
+/** Extract a YouTube video id from a watch/share/embed/shorts URL. */
+function youtubeId(url: string): string | undefined {
+  const m = url.match(
+    /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/,
+  );
+  const id = m ? m[1] : /^[\w-]{11}$/.test(url.trim()) ? url.trim() : null;
+  return id ?? undefined;
+}
 import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/hooks/useGuest";
 import { resolveImageUrl } from "@/lib/images";
@@ -86,6 +97,8 @@ export default function GymDetailScreen() {
 
   const topPad =
     insets.top > 0 ? insets.top : Platform.OS === "web" ? WEB_NOTCH_TOP : 12;
+
+  const gymVideoId = gym?.videoUrl ? youtubeId(gym.videoUrl) : undefined;
 
   if (query.isLoading) {
     return (
@@ -247,6 +260,31 @@ export default function GymDetailScreen() {
               <AppText muted size={13} style={{ lineHeight: 20 }}>
                 {gym.about}
               </AppText>
+            </Card>
+          ) : null}
+
+          {/* Branch video (admin-managed YouTube link) */}
+          {gymVideoId ? (
+            <Card>
+              <AppText weight="700" size={16} style={{ marginBottom: 10 }}>
+                Branch tour
+              </AppText>
+              <Pressable
+                onPress={() => gym.videoUrl && openExternal(gym.videoUrl)}
+                style={{
+                  height: 200,
+                  borderRadius: 14,
+                  overflow: "hidden",
+                  backgroundColor: "#000",
+                }}
+              >
+                <YouTubeInline
+                  videoId={gymVideoId}
+                  active
+                  loop
+                  style={StyleSheet.absoluteFill}
+                />
+              </Pressable>
             </Card>
           ) : null}
 

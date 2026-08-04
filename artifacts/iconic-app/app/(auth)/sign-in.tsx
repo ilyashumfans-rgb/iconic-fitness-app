@@ -143,16 +143,40 @@ function SignInContent() {
     setError(null);
     setGoogleLoading(true);
     try {
-      const { createdSessionId, setActive } = await startSSOFlow({
-        strategy: "oauth_google",
-        redirectUrl: AuthSession.makeRedirectUri(),
-      });
-      if (createdSessionId && setActive) {
+      const { createdSessionId, setActive, signUp, authSessionResult } =
+        await startSSOFlow({
+          strategy: "oauth_google",
+          redirectUrl: AuthSession.makeRedirectUri(),
+        });
+      let sessionId = createdSessionId;
+      // First-time Google users come back as an incomplete sign-up instead of
+      // a session. When nothing is actually missing, completing the sign-up
+      // with an empty update yields the session (silently "going back" to the
+      // login screen otherwise).
+      if (
+        !sessionId &&
+        signUp &&
+        signUp.status === "missing_requirements" &&
+        (signUp.missingFields?.length ?? 0) === 0
+      ) {
+        const res = await signUp.update({});
+        if (res.status === "complete") sessionId = res.createdSessionId;
+      }
+      if (sessionId && setActive) {
         exitGuest();
         await setActive({
-          session: createdSessionId,
+          session: sessionId,
           navigate: () => router.replace("/(tabs)"),
         });
+      } else if (
+        authSessionResult?.type !== "cancel" &&
+        authSessionResult?.type !== "dismiss"
+      ) {
+        // Don't fail silently — the user picked an account and expects to be
+        // signed in. Surface a readable message instead of "nothing happens".
+        setError(
+          "Google sign-in could not finish. Please try again, or log in with your email.",
+        );
       }
     } catch (err: unknown) {
       setError(clerkError(err));
