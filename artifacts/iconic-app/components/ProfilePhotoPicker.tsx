@@ -58,16 +58,11 @@ const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
  * (compressed there), saved as the member's avatar, and synced everywhere
  * the member's photo is shown (member card, account page).
  */
-export function ProfilePhotoPicker({
-  avatarUrl,
-  name,
-  size = 96,
-}: {
-  avatarUrl?: string | null;
-  name?: string;
-  size?: number;
-}) {
-  const colors = useColors();
+/**
+ * Shared profile-photo upload logic (camera / gallery / upload / retry) so any
+ * avatar in the app (profile page, member card) can change the photo.
+ */
+export function useProfilePhotoUpload() {
   const queryClient = useQueryClient();
   const updateMe = useUpdateMe();
   const [busy, setBusy] = useState(false);
@@ -76,9 +71,6 @@ export function ProfilePhotoPicker({
   // Remember the last picked image if its upload failed, so the member can
   // retry without re-picking the photo (important on flaky gym connections).
   const [failedUri, setFailedUri] = useState<string | null>(null);
-
-  const shownUrl = localUrl ?? (avatarUrl ? resolveImageUrl(avatarUrl) : undefined);
-  const initial = (name ?? "").trim().charAt(0).toUpperCase() || "?";
 
   const UPLOAD_TIMEOUT_MS = 30_000;
 
@@ -153,6 +145,52 @@ export function ProfilePhotoPicker({
     const uri = result.canceled ? null : result.assets?.[0]?.uri;
     if (uri) await uploadFromUri(uri);
   }
+
+  /** Ask Camera-or-Gallery in one tap (used by tappable avatars). */
+  function choosePhoto() {
+    if (Platform.OS === "web") {
+      void pickFromGallery();
+      return;
+    }
+    Alert.alert("Change profile photo", "Where do you want to pick it from?", [
+      { text: "Camera", onPress: () => void takePhoto() },
+      { text: "Gallery", onPress: () => void pickFromGallery() },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  }
+
+  return {
+    busy,
+    localUrl,
+    failedUri,
+    uploadFromUri,
+    pickFromGallery,
+    takePhoto,
+    choosePhoto,
+  };
+}
+
+export function ProfilePhotoPicker({
+  avatarUrl,
+  name,
+  size = 96,
+}: {
+  avatarUrl?: string | null;
+  name?: string;
+  size?: number;
+}) {
+  const colors = useColors();
+  const {
+    busy,
+    localUrl,
+    failedUri,
+    uploadFromUri,
+    pickFromGallery,
+    takePhoto,
+  } = useProfilePhotoUpload();
+
+  const shownUrl = localUrl ?? (avatarUrl ? resolveImageUrl(avatarUrl) : undefined);
+  const initial = (name ?? "").trim().charAt(0).toUpperCase() || "?";
 
   return (
     <View style={{ alignItems: "center", gap: 10 }}>

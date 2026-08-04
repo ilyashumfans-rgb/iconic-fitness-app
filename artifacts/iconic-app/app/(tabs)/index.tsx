@@ -52,6 +52,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   Modal,
@@ -71,6 +72,7 @@ import { EngagementPlanCard } from "@/components/EngagementPlanCard";
 import { FitnessJourneyCard } from "@/components/FitnessJourneyCard";
 import { WelcomeCelebration } from "@/components/WelcomeCelebration";
 import { AppText } from "@/components/AppText";
+import { useProfilePhotoUpload } from "@/components/ProfilePhotoPicker";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { CoachFab } from "@/components/CoachFab";
@@ -410,6 +412,8 @@ function MembershipStatusCard({
     }
   }, [renew, onManage]);
 
+  const photo = useProfilePhotoUpload();
+
   const initials = (memberName || "M")
     .split(/\s+/)
     .map((w) => w[0] ?? "")
@@ -491,10 +495,21 @@ function MembershipStatusCard({
             marginTop: 16,
           }}
         >
-          <View style={styles.premiumAvatarRing}>
-            {memberPhotoUrl || membership.photoUrl ? (
+          {/* Tappable avatar: Camera / Gallery chooser to change the photo */}
+          <Pressable
+            onPress={photo.busy ? undefined : photo.choosePhoto}
+            style={styles.premiumAvatarRing}
+            hitSlop={6}
+          >
+            {photo.localUrl || memberPhotoUrl || membership.photoUrl ? (
               <Image
-                source={{ uri: memberPhotoUrl || membership.photoUrl || undefined }}
+                source={{
+                  uri:
+                    photo.localUrl ||
+                    memberPhotoUrl ||
+                    membership.photoUrl ||
+                    undefined,
+                }}
                 style={styles.premiumAvatar}
               />
             ) : (
@@ -513,7 +528,26 @@ function MembershipStatusCard({
                 </AppText>
               </View>
             )}
-          </View>
+            {photo.busy ? (
+              <View
+                style={[
+                  StyleSheet.absoluteFill,
+                  {
+                    borderRadius: 27,
+                    backgroundColor: "rgba(0,0,0,0.45)",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  },
+                ]}
+              >
+                <ActivityIndicator color="#fff" size="small" />
+              </View>
+            ) : (
+              <View style={styles.premiumAvatarCamBadge}>
+                <Feather name="camera" size={10} color="#0B0B0F" />
+              </View>
+            )}
+          </Pressable>
           <View style={{ flex: 1 }}>
             <AppText weight="700" size={18} color={PREMIUM.text}>
               {memberName || "Iconic Member"}
@@ -2804,6 +2838,17 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
     borderWidth: 1,
+  },
+  premiumAvatarCamBadge: {
+    position: "absolute",
+    right: -2,
+    bottom: -2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: PREMIUM.gold,
+    alignItems: "center",
+    justifyContent: "center",
   },
   premiumAvatarRing: {
     width: 66,

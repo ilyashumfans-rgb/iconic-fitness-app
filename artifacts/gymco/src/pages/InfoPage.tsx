@@ -254,7 +254,11 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         q: "What are your operating hours?",
-        a: "5:00 AM to 11:00 PM (some branches open till 12:00 AM). We're open all 7 days, 365 days a year.",
+        a: "Clubs are open 5:00 AM – 11:00 PM, 365 days a year (may vary by location; some branches open till 12:00 AM).",
+      },
+      {
+        q: "Can I access all branches?",
+        a: "Yes, with an All Club Access membership you can use all participating branches.",
       },
       {
         q: "What membership plans do you offer?",
@@ -275,6 +279,30 @@ const CONTENT: Record<string, InfoContent> = {
       {
         q: "Do you have a dietician?",
         a: "Yes, we have an in-house dietician who provides customized meal plans for weight loss, muscle gain, and fitness goals.",
+      },
+      {
+        q: "Are group classes included?",
+        a: "Yes, if included in your plan. Class availability and timings may vary.",
+      },
+      {
+        q: "Can I pause my membership?",
+        a: "Yes, but only as per your plan terms and subject to management approval.",
+      },
+      {
+        q: "Are facilities like steam and showers available?",
+        a: "Available at selected branches only. Please check with your location.",
+      },
+      {
+        q: "Can I transfer my membership?",
+        a: "Yes, subject to these conditions: the membership can be transferred only to a non-member of Iconic Fitness (existing members are not eligible); only the gym membership can be transferred — Personal Training packages, diet plans, promotional benefits, add-on services, merchandise or other packages are not transferable; a minimum of 60 days of active membership validity must be remaining at the time of the transfer request; the applicable membership transfer fee must be paid; and all transfers are subject to management approval and verification.",
+      },
+      {
+        q: "What should I bring to the gym?",
+        a: "Bring your app/QR code, workout attire, clean shoes, and a water bottle.",
+      },
+      {
+        q: "How do I contact support?",
+        a: "Contact your branch directly or use the support option in the Iconic Fitness App.",
       },
     ],
   },
@@ -320,12 +348,8 @@ const CONTENT: Record<string, InfoContent> = {
     subtitle: "Last updated · May 2026",
     sections: [
       {
-        heading: "No refunds",
-        body: "All membership payments are non-refundable. Once a membership is purchased, the amount paid cannot be refunded under normal circumstances. You can cancel your membership to stop future billing, but no refund will be issued for the current or remaining period.",
-      },
-      {
-        heading: "Emergencies",
-        body: "If you have a genuine emergency or exceptional circumstance, please contact our support team and we'll do our best to help. Reach us on WhatsApp at +91 94800 00248 or email iconicfitnessindia@gmail.com, and our team will review your case.",
+        heading: "No Refund Policy",
+        body: "All payments made for memberships, Personal Training, diet plans, merchandise, registration fees, transfer fees, or any other services at Iconic Fitness are strictly non-refundable. Once payment is completed, no refunds (full or partial) will be issued under any circumstances, including but not limited to: change of mind, relocation or travel, medical reasons, non-usage of services, schedule changes, personal reasons, or membership cancellation by the member. By completing payment, the member confirms that they have read, understood, and accepted the Terms & Conditions and this No Refund Policy.",
       },
       {
         heading: "Class & trainer credits",
@@ -383,15 +407,23 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         heading: "Membership",
-        body: "Plans renew automatically until cancelled. Pricing may change with 30 days' notice. Plan benefits are subject to fair-use limits stated in your plan.",
+        body: "Membership is valid only for the selected plan duration. Plans renew automatically until cancelled. Pricing may change with 30 days' notice. Plan benefits are subject to fair-use limits stated in your plan. Membership freezes, extensions, and special requests are subject to company policy and management approval. Promotional offers cannot be combined unless specifically stated by Iconic Fitness. Facilities, amenities, and services may vary from branch to branch, and management may change operating hours, schedules, facilities, or policies without prior notice.",
       },
       {
-        heading: "Conduct",
-        body: "Be respectful to staff and members at every partner facility. Repeated violations may result in account suspension without refund.",
+        heading: "Membership transfer",
+        body: "Membership is intended for personal use. A membership may be transferred only under the following conditions: the transferee must be a new (non-existing) Iconic Fitness member — existing members are not eligible to receive transferred memberships; only the membership can be transferred — Personal Training packages, diet plans, promotional offers, add-on services, and any other purchased packages are non-transferable; a minimum of 60 days of active membership validity must be available at the time of the transfer request; the applicable membership transfer fee must be paid; and membership transfer is subject to management approval and verification.",
+      },
+      {
+        heading: "Conduct & club rules",
+        body: "Members must follow all gym rules, safety guidelines, and staff instructions. Be respectful to staff and members at every facility. Lockers are provided for temporary use only during workouts, and Iconic Fitness is not responsible for the loss, theft, or damage of members' personal belongings. Any damage caused to gym equipment due to negligence or misuse may be charged to the member. Misconduct, abusive behaviour, or violation of club policies may result in suspension or cancellation of membership without refund. Members should consult a qualified medical practitioner before starting any fitness program.",
       },
       {
         heading: "Liability",
         body: "Exercise carries inherent risk. By using Iconic Fitness you acknowledge that Iconic Fitness and its partners are not liable for injury sustained during workouts. Always train within your ability.",
+      },
+      {
+        heading: "Legal Waiver, Declaration & Indemnity",
+        body: "By purchasing a membership and using any Iconic Fitness facility, the member declares they are physically and mentally fit to exercise (and will consult a doctor about any medical condition first); understands that exercise, strength training, cardio, group classes and gym equipment involve inherent risks including injury, illness, permanent disability or, in rare cases, death; participates voluntarily at their own risk; agrees to follow all safety instructions, gym rules and staff/trainer directions; and, to the fullest extent permitted by law, releases Iconic Fitness, its directors, shareholders, management, employees, trainers, agents and affiliates from any claims arising from use of the facilities or fitness activities, except where caused by the proven negligence or willful misconduct of Iconic Fitness. Iconic Fitness does not provide medical treatment or supervision and is not responsible for pre-existing conditions or health issues arising during or after workouts. Members are responsible for their personal belongings; Iconic Fitness is not liable for loss, theft or damage to personal property. Members agree to indemnify and hold harmless Iconic Fitness from third-party claims arising from their actions or rule violations. Payment and/or use of the Iconic Fitness App or facilities constitutes electronic acceptance of this agreement, including the Terms & Conditions and No Refund Policy, and is legally binding to the extent permitted under applicable law.",
       },
       {
         heading: "Governing law",

@@ -530,7 +530,7 @@ export default function BookPackageScreen() {
               color={termsAccepted ? colors.primary : colors.mutedForeground}
             />
             <AppText size={13} style={{ flex: 1, lineHeight: 18 }}>
-              I agree to the{" "}
+              I have read and agree to the{" "}
               <AppText
                 size={13}
                 weight="700"
@@ -539,6 +539,9 @@ export default function BookPackageScreen() {
               >
                 Terms & Conditions
               </AppText>
+              , No Refund Policy, and Legal Waiver & Declaration of Iconic
+              Fitness. I understand that I participate in fitness activities at
+              my own risk.
             </AppText>
           </Pressable>
         ) : null}

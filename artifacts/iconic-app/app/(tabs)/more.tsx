@@ -152,6 +152,12 @@ export default function MoreScreen() {
       action: () => router.push("/profile"),
     },
     {
+      title: "FAQs",
+      subtitle: "Hours, branches, transfers and more",
+      icon: "help-circle",
+      action: () => router.push("/faq"),
+    },
+    {
       title: "Terms & Conditions",
       subtitle: "Membership terms, refunds and policies",
       icon: "file-text",
