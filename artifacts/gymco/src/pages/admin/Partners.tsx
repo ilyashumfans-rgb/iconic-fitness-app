@@ -70,33 +70,46 @@ export default function AdminPartners() {
     setEditGyms([]);
     setGymBranchForm({});
     setEditGymsLoading(true);
+    const applyLoaded = (gyms: any[], branches: YoactivBranchOption[]) => {
+      setYoBranches(branches);
+      const mine = gyms.filter((g: any) => g.ownerPartnerId === p.id);
+      setEditGyms(mine);
+      const form: Record<
+        number,
+        { yoactivBranchId: string; yoactivPtBranchId: string }
+      > = {};
+      for (const g of mine) {
+        form[g.id] = {
+          yoactivBranchId:
+            g.yoactivBranchId === null || g.yoactivBranchId === undefined
+              ? ""
+              : String(g.yoactivBranchId),
+          yoactivPtBranchId:
+            g.yoactivPtBranchId === null || g.yoactivPtBranchId === undefined
+              ? ""
+              : String(g.yoactivPtBranchId),
+        };
+      }
+      setGymBranchForm(form);
+    };
     Promise.all([
       adminApi.gyms.list(),
       yoBranches.length > 0
         ? Promise.resolve(yoBranches)
-        : adminApi.yoactiv.branches().catch(() => [] as YoactivBranchOption[]),
+        : adminApi.yoactiv.branches().catch((e) => {
+            setErr(
+              "Could not load YoActiv branch list — branch dropdowns may be empty. " +
+                (e instanceof Error ? e.message : String(e)),
+            );
+            return [] as YoactivBranchOption[];
+          }),
     ])
       .then(([gyms, branches]) => {
-        setYoBranches(branches);
-        const mine = gyms.filter((g: any) => g.ownerPartnerId === p.id);
-        setEditGyms(mine);
-        const form: Record<
-          number,
-          { yoactivBranchId: string; yoactivPtBranchId: string }
-        > = {};
-        for (const g of mine) {
-          form[g.id] = {
-            yoactivBranchId:
-              g.yoactivBranchId === null || g.yoactivBranchId === undefined
-                ? ""
-                : String(g.yoactivBranchId),
-            yoactivPtBranchId:
-              g.yoactivPtBranchId === null || g.yoactivPtBranchId === undefined
-                ? ""
-                : String(g.yoactivPtBranchId),
-          };
-        }
-        setGymBranchForm(form);
+        // Ignore late responses if the admin has switched to another partner.
+        setEditing((cur: any) => {
+          if (cur && cur.id === p.id) applyLoaded(gyms, branches);
+          return cur;
+        });
       })
       .catch((e) => setErr(e instanceof Error ? e.message : String(e)))
       .finally(() => setEditGymsLoading(false));
@@ -349,7 +362,13 @@ export default function AdminPartners() {
                   ) =>
                     setGymBranchForm((prev) => ({
                       ...prev,
-                      [g.id]: { ...f, [key]: value },
+                      [g.id]: {
+                        ...(prev[g.id] ?? {
+                          yoactivBranchId: "",
+                          yoactivPtBranchId: "",
+                        }),
+                        [key]: value,
+                      },
                     }));
                   const renderSelect = (
                     key: "yoactivBranchId" | "yoactivPtBranchId",
