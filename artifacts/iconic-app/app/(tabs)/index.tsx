@@ -38,6 +38,7 @@ import {
   type StoreProduct,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Image as ExpoImage } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
@@ -1762,10 +1763,12 @@ function HeroSlider({
                     style={StyleSheet.absoluteFill}
                   />
                 ) : mediaUri ? (
-                  <Image
+                  // expo-image: stock RN <Image> can't play GIF/animated-WebP
+                  // on Android APKs (shows a frozen first frame).
+                  <ExpoImage
                     source={{ uri: mediaUri }}
                     style={StyleSheet.absoluteFill}
-                    resizeMode="cover"
+                    contentFit="cover"
                   />
                 ) : null}
                 <LinearGradient
