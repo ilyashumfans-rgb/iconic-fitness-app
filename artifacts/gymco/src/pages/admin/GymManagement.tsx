@@ -46,6 +46,11 @@ function GymForm({
       initial?.yoactivBranchId === undefined || initial?.yoactivBranchId === null
         ? ""
         : String(initial.yoactivBranchId),
+    yoactivPtBranchId:
+      initial?.yoactivPtBranchId === undefined ||
+      initial?.yoactivPtBranchId === null
+        ? ""
+        : String(initial.yoactivPtBranchId),
   });
   const [busy, setBusy] = useState(false);
   const [yoactivBranches, setYoactivBranches] = useState<YoactivBranchOption[]>([]);
@@ -69,6 +74,10 @@ function GymForm({
         ownerPartnerId: f.ownerPartnerId === "" ? null : Number(f.ownerPartnerId),
         yoactivBranchId:
           f.yoactivBranchId.trim() === "" ? null : Number(f.yoactivBranchId),
+        yoactivPtBranchId:
+          f.yoactivPtBranchId.trim() === ""
+            ? null
+            : Number(f.yoactivPtBranchId),
         videoUrl: f.videoUrl.trim() === "" ? null : f.videoUrl.trim(),
         categories: String(f.categories)
           .split(",")
@@ -150,6 +159,50 @@ function GymForm({
             The branch in the YoActiv gym-management system this gym maps to.
             Needed so members can see this branch's live trainer roster and pay
             for PT packages online. Leave as "Not connected" if not on YoActiv.
+          </div>
+        </div>
+        <div className="sm:col-span-2">
+          {yoactivBranches.length > 0 ? (
+            <>
+              <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+                YoActiv PT branch (optional — only if PT is a separate branch)
+              </label>
+              <select
+                value={f.yoactivPtBranchId}
+                onChange={(e) =>
+                  setF({ ...f, yoactivPtBranchId: e.target.value })
+                }
+                className={inputCls}
+              >
+                <option value="">— Same as YoActiv branch above —</option>
+                {f.yoactivPtBranchId !== "" &&
+                  !yoactivBranches.some(
+                    (b) => String(b.branchId) === f.yoactivPtBranchId,
+                  ) && (
+                    <option value={f.yoactivPtBranchId}>
+                      {f.yoactivPtBranchId} — (not in configured branch list)
+                    </option>
+                  )}
+                {yoactivBranches.map((b) => (
+                  <option key={b.branchId} value={String(b.branchId)}>
+                    {b.branchId} — {b.branchName ?? "Unnamed branch"}
+                    {b.gymLabel ? ` · mapped to ${b.gymLabel}` : ""}
+                  </option>
+                ))}
+              </select>
+            </>
+          ) : (
+            <Input
+              label="YoActiv PT branch ID (optional)"
+              value={f.yoactivPtBranchId}
+              onChange={(v) => setF({ ...f, yoactivPtBranchId: v })}
+            />
+          )}
+          <div className="text-[11px] text-slate-500 mt-1">
+            If your PT packages live in a different YoActiv branch than the gym
+            memberships, pick that PT branch here. PT bookings and payments
+            will use this branch. Leave as "Same as above" if PT is in the same
+            branch.
           </div>
         </div>
         <div className="sm:col-span-2">

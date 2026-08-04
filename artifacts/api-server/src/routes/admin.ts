@@ -1084,6 +1084,12 @@ router.post(
           b.yoactivBranchId === ""
             ? null
             : Number(b.yoactivBranchId),
+        yoactivPtBranchId:
+          b.yoactivPtBranchId === undefined ||
+          b.yoactivPtBranchId === null ||
+          b.yoactivPtBranchId === ""
+            ? null
+            : Number(b.yoactivPtBranchId),
       })
       .returning();
     res.status(201).json(created);
@@ -1142,6 +1148,12 @@ router.patch(
         b.yoactivBranchId === null || b.yoactivBranchId === ""
           ? null
           : Number(b.yoactivBranchId);
+    }
+    if (b.yoactivPtBranchId !== undefined) {
+      patch.yoactivPtBranchId =
+        b.yoactivPtBranchId === null || b.yoactivPtBranchId === ""
+          ? null
+          : Number(b.yoactivPtBranchId);
     }
     const [updated] = await db
       .update(gymsTable)
