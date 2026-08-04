@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
-import { adminApi } from "@/lib/adminApi";
+import { adminApi, type YoactivBranchOption } from "@/lib/adminApi";
 import {
   KeyRound,
   LogIn,
@@ -30,6 +30,12 @@ export default function AdminPartners() {
     city: "",
   });
   const [editBusy, setEditBusy] = useState(false);
+  const [editGyms, setEditGyms] = useState<any[]>([]);
+  const [editGymsLoading, setEditGymsLoading] = useState(false);
+  const [gymBranchForm, setGymBranchForm] = useState<
+    Record<number, { yoactivBranchId: string; yoactivPtBranchId: string }>
+  >({});
+  const [yoBranches, setYoBranches] = useState<YoactivBranchOption[]>([]);
   const [docsFor, setDocsFor] = useState<any | null>(null);
   const [docs, setDocs] = useState<
     Awaited<ReturnType<typeof adminApi.partners.documents>>["documents"]
@@ -61,6 +67,39 @@ export default function AdminPartners() {
     });
     setMsg(null);
     setErr(null);
+    setEditGyms([]);
+    setGymBranchForm({});
+    setEditGymsLoading(true);
+    Promise.all([
+      adminApi.gyms.list(),
+      yoBranches.length > 0
+        ? Promise.resolve(yoBranches)
+        : adminApi.yoactiv.branches().catch(() => [] as YoactivBranchOption[]),
+    ])
+      .then(([gyms, branches]) => {
+        setYoBranches(branches);
+        const mine = gyms.filter((g: any) => g.ownerPartnerId === p.id);
+        setEditGyms(mine);
+        const form: Record<
+          number,
+          { yoactivBranchId: string; yoactivPtBranchId: string }
+        > = {};
+        for (const g of mine) {
+          form[g.id] = {
+            yoactivBranchId:
+              g.yoactivBranchId === null || g.yoactivBranchId === undefined
+                ? ""
+                : String(g.yoactivBranchId),
+            yoactivPtBranchId:
+              g.yoactivPtBranchId === null || g.yoactivPtBranchId === undefined
+                ? ""
+                : String(g.yoactivPtBranchId),
+          };
+        }
+        setGymBranchForm(form);
+      })
+      .catch((e) => setErr(e instanceof Error ? e.message : String(e)))
+      .finally(() => setEditGymsLoading(false));
   };
 
   const submitEdit = async (e: React.FormEvent) => {
@@ -74,6 +113,20 @@ export default function AdminPartners() {
         phone: editForm.phone.trim(),
         city: editForm.city.trim(),
       });
+      for (const g of editGyms) {
+        const f = gymBranchForm[g.id];
+        if (!f) continue;
+        const nextBranch = f.yoactivBranchId.trim() === "" ? null : Number(f.yoactivBranchId);
+        const nextPt = f.yoactivPtBranchId.trim() === "" ? null : Number(f.yoactivPtBranchId);
+        const curBranch = g.yoactivBranchId ?? null;
+        const curPt = g.yoactivPtBranchId ?? null;
+        if (nextBranch !== curBranch || nextPt !== curPt) {
+          await adminApi.gyms.update(g.id, {
+            yoactivBranchId: nextBranch,
+            yoactivPtBranchId: nextPt,
+          });
+        }
+      }
       setMsg(`Updated ${editForm.name}.`);
       setEditing(null);
       load();
@@ -267,6 +320,94 @@ export default function AdminPartners() {
               </button>
             </div>
           </form>
+          <div className="mt-4 border-t border-slate-800 pt-4">
+            <h4 className="text-sm font-semibold text-white mb-1">
+              YoActiv branch mapping
+            </h4>
+            <p className="text-xs text-slate-500 mb-3">
+              Pick the YoActiv branch for members plans and (optionally) a
+              different branch for PT plans, for each gym branch. Click "Save
+              changes" above to apply.
+            </p>
+            {editGymsLoading ? (
+              <p className="text-sm text-slate-500">Loading branches…</p>
+            ) : editGyms.length === 0 ? (
+              <p className="text-sm text-slate-500">
+                This partner has no gym branches yet. Use "Add branch" on the
+                row to create one.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {editGyms.map((g) => {
+                  const f = gymBranchForm[g.id] ?? {
+                    yoactivBranchId: "",
+                    yoactivPtBranchId: "",
+                  };
+                  const setField = (
+                    key: "yoactivBranchId" | "yoactivPtBranchId",
+                    value: string,
+                  ) =>
+                    setGymBranchForm((prev) => ({
+                      ...prev,
+                      [g.id]: { ...f, [key]: value },
+                    }));
+                  const renderSelect = (
+                    key: "yoactivBranchId" | "yoactivPtBranchId",
+                    emptyLabel: string,
+                  ) => (
+                    <select
+                      value={f[key]}
+                      onChange={(e) => setField(key, e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-lime-500/60"
+                    >
+                      <option value="">{emptyLabel}</option>
+                      {f[key] !== "" &&
+                        !yoBranches.some(
+                          (b) => String(b.branchId) === f[key],
+                        ) && (
+                          <option value={f[key]}>
+                            {f[key]} — (not in configured branch list)
+                          </option>
+                        )}
+                      {yoBranches.map((b) => (
+                        <option key={b.branchId} value={String(b.branchId)}>
+                          {b.branchName ?? b.gymLabel ?? "Branch"} (#
+                          {b.branchId})
+                        </option>
+                      ))}
+                    </select>
+                  );
+                  return (
+                    <div
+                      key={g.id}
+                      className="rounded-lg border border-slate-800 bg-slate-900/40 p-3"
+                    >
+                      <div className="font-medium text-white text-sm mb-2">
+                        {g.name}
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] uppercase tracking-wide text-slate-400 font-bold mb-1 block">
+                            YoActiv branch (members plans)
+                          </label>
+                          {renderSelect("yoactivBranchId", "Not linked")}
+                        </div>
+                        <div>
+                          <label className="text-[10px] uppercase tracking-wide text-slate-400 font-bold mb-1 block">
+                            YoActiv PT branch (optional)
+                          </label>
+                          {renderSelect(
+                            "yoactivPtBranchId",
+                            "Same as members branch",
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
           <p className="mt-3 text-xs text-slate-500">
             Email is the login identifier and can't be changed here. To reset
             the password, use the orange Reset button on the row.
