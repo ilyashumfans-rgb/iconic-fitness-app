@@ -2,6 +2,7 @@ import { useAuth } from "@clerk/expo";
 import { Redirect, Tabs, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View, Platform, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { TabIcon } from "@/components/TabIcon";
 import { useColors } from "@/hooks/useColors";
@@ -12,6 +13,11 @@ export default function TabsLayout() {
   const router = useRouter();
   const { isLoaded, isSignedIn } = useAuth();
   const { isGuest } = useGuest();
+  const insets = useSafeAreaInsets();
+  // Edge-to-edge Android: the tab bar must clear the system nav bar, or the
+  // labels get overlapped/clipped by the gesture/3-button navigation area.
+  const bottomInset =
+    Platform.OS === "ios" ? 28 : Math.max(insets.bottom, 12);
 
   // Fail-safe: if Clerk can't finish loading (slow/blocked network on a real
   // device), don't trap the user on a spinner forever — fall through to sign-in,
@@ -52,9 +58,9 @@ export default function TabsLayout() {
           backgroundColor: colors.background, // Match premium dark theme seamlessly
           borderTopColor: colors.border,
           borderTopWidth: StyleSheet.hairlineWidth,
-          height: Platform.OS === "ios" ? 88 : 76,
+          height: (Platform.OS === "ios" ? 60 : 64) + bottomInset,
           paddingTop: 8,
-          paddingBottom: Platform.OS === "ios" ? 28 : 12,
+          paddingBottom: bottomInset,
           elevation: 0, // Remove android shadow for flatter premium look
         },
         tabBarLabelStyle: {
