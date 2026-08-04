@@ -1012,9 +1012,12 @@ export default function HomeScreen() {
         />
       )}
 
-      {/* Kick-starter PT trial journey — signed-in members only; the card
-          hides itself once every step (both trials + feedbacks) is done. */}
-      {isSignedIn ? <FitnessJourneyCard /> : null}
+      {/* Kick-starter PT trial journey — only for ACTIVE members (waits for
+          the membership check to settle so it never flashes for others); the
+          card hides itself once every step (both trials + feedbacks) is done. */}
+      {isSignedIn && membershipSettled && isMember ? (
+        <FitnessJourneyCard />
+      ) : null}
 
       {/* Engagement 45-day plan */}
       {isSignedIn ? <EngagementPlanCard /> : null}
