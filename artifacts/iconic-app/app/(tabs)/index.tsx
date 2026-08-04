@@ -1355,7 +1355,9 @@ export default function HomeScreen() {
         </>
       ) : null}
 
-      {/* Book a class */}
+      {/* Book a class — members only: book upcoming classes and track them here */}
+      {membershipSettled && isMember ? (
+        <>
       <SectionHeader
         title="Book your next session"
         action="See all"
@@ -1393,6 +1395,8 @@ export default function HomeScreen() {
           ))}
         </ScrollView>
       )}
+        </>
+      ) : null}
 
       {/* Guest sign-in nudge */}
       {!isSignedIn ? (
