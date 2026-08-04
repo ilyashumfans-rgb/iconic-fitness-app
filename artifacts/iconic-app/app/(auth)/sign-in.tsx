@@ -69,7 +69,10 @@ function SignInContent() {
   const [mode, setMode] = useState<"otp" | "password">("otp");
   const [pwMobile, setPwMobile] = useState("");
   const [pwPassword, setPwPassword] = useState("");
-  const [pwStage, setPwStage] = useState<"login" | "reset">("login");
+  const [pwStage, setPwStage] = useState<"login" | "resetEmail" | "resetVerify">(
+    "login",
+  );
+  const [resetEmail, setResetEmail] = useState("");
   const [resetCode, setResetCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [pwBusy, setPwBusy] = useState(false);
@@ -137,17 +140,6 @@ function SignInContent() {
     }
   }, [signIn, otpCode, finalizeSignIn]);
 
-  const lookupAccountEmail = useCallback(async (mobile: string) => {
-    return customFetch<{ found: boolean; email: string; emailMasked: string }>(
-      "/api/auth/password-lookup",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile }),
-      },
-    );
-  }, []);
-
   const onPasswordLogin = useCallback(async () => {
     setError(null);
     setPwInfo(null);
@@ -156,25 +148,35 @@ function SignInContent() {
       setError("Enter your gym-registered mobile number.");
       return;
     }
-    if (pwPassword.length < 8) {
-      setError("Enter your password (at least 8 characters).");
+    if (pwPassword.length < 1) {
+      setError("Enter your password.");
       return;
     }
     setPwBusy(true);
     try {
-      const lookup = await lookupAccountEmail(mobile);
-      if (!lookup.found) {
-        setError(
-          "No account found for this mobile number. Create an account first, or log in with your email.",
-        );
-        return;
+      // Password is checked server-side; on success we get a short-lived
+      // one-time sign-in ticket (the account email is never exposed).
+      const result = await customFetch<{ ticket: string }>(
+        "/api/auth/password-login",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mobile, password: pwPassword }),
+        },
+      );
+      if (signIn.status !== null) {
+        try {
+          await signIn.reset();
+        } catch {
+          // A stale attempt shouldn't block a fresh ticket sign-in.
+        }
       }
-      const { error: pwError } = await signIn.password({
-        identifier: lookup.email,
-        password: pwPassword,
+      const { error: ticketError } = await signIn.create({
+        strategy: "ticket",
+        ticket: result.ticket,
       });
-      if (pwError) {
-        setError(clerkError(pwError));
+      if (ticketError) {
+        setError(clerkError(ticketError));
         return;
       }
       if (signIn.status === "complete") {
@@ -183,29 +185,23 @@ function SignInContent() {
         setError("Additional verification is required to sign in.");
       }
     } catch (err: unknown) {
-      setError(clerkError(err));
+      const apiMessage = (err as { body?: { error?: string } })?.body?.error;
+      setError(apiMessage ?? clerkError(err));
     } finally {
       setPwBusy(false);
     }
-  }, [signIn, pwMobile, pwPassword, lookupAccountEmail, finalizeSignIn]);
+  }, [signIn, pwMobile, pwPassword, finalizeSignIn]);
 
   const onStartPasswordReset = useCallback(async () => {
     setError(null);
     setPwInfo(null);
-    const mobile = pwMobile.replace(/\D/g, "");
-    if (mobile.length < 10) {
-      setError("Enter your gym-registered mobile number first.");
+    const address = resetEmail.trim();
+    if (!address.includes("@")) {
+      setError("Enter the email address you signed up with.");
       return;
     }
     setPwBusy(true);
     try {
-      const lookup = await lookupAccountEmail(mobile);
-      if (!lookup.found) {
-        setError(
-          "No account found for this mobile number. Create an account first, or log in with your email.",
-        );
-        return;
-      }
       if (signIn.status !== null) {
         try {
           await signIn.reset();
@@ -214,7 +210,7 @@ function SignInContent() {
         }
       }
       const { error: createError } = await signIn.create({
-        identifier: lookup.email,
+        identifier: address,
       });
       if (createError) {
         setError(clerkError(createError));
@@ -226,18 +222,16 @@ function SignInContent() {
         setError(clerkError(sendError));
         return;
       }
-      setPwStage("reset");
+      setPwStage("resetVerify");
       setResetCode("");
       setNewPassword("");
-      setPwInfo(
-        `We emailed a 6-digit code to ${lookup.emailMasked} (the email registered on this account).`,
-      );
+      setPwInfo(`We emailed a 6-digit code to ${address}.`);
     } catch (err: unknown) {
       setError(clerkError(err));
     } finally {
       setPwBusy(false);
     }
-  }, [signIn, pwMobile, lookupAccountEmail]);
+  }, [signIn, resetEmail]);
 
   const onSubmitPasswordReset = useCallback(async () => {
     setError(null);
@@ -288,6 +282,7 @@ function SignInContent() {
       setOtpSent(false);
       setOtpCode("");
       setPwStage("login");
+      setResetEmail("");
       setResetCode("");
       setNewPassword("");
       if (signIn.status !== null) {
@@ -463,24 +458,35 @@ function SignInContent() {
               </>
             ) : (
               <>
-                <Field
-                  label="Mobile number"
-                  value={pwMobile}
-                  onChangeText={setPwMobile}
-                  placeholder="Gym-registered mobile number"
-                  keyboardType="phone-pad"
-                  autoComplete="tel"
-                  editable={pwStage === "login"}
-                />
                 {pwStage === "login" ? (
+                  <>
+                    <Field
+                      label="Mobile number"
+                      value={pwMobile}
+                      onChangeText={setPwMobile}
+                      placeholder="Gym-registered mobile number"
+                      keyboardType="phone-pad"
+                      autoComplete="tel"
+                    />
+                    <Field
+                      label="Password"
+                      value={pwPassword}
+                      onChangeText={setPwPassword}
+                      placeholder="Your password"
+                      secureTextEntry
+                      autoCapitalize="none"
+                      autoComplete="password"
+                    />
+                  </>
+                ) : pwStage === "resetEmail" ? (
                   <Field
-                    label="Password"
-                    value={pwPassword}
-                    onChangeText={setPwPassword}
-                    placeholder="Your password"
-                    secureTextEntry
+                    label="Your account email"
+                    value={resetEmail}
+                    onChangeText={setResetEmail}
+                    placeholder="you@email.com"
                     autoCapitalize="none"
-                    autoComplete="password"
+                    keyboardType="email-address"
+                    autoComplete="email"
                   />
                 ) : (
                   <>
@@ -565,13 +571,40 @@ function SignInContent() {
                   size="lg"
                 />
                 <Pressable
-                  onPress={onStartPasswordReset}
+                  onPress={() => {
+                    setError(null);
+                    setPwInfo(null);
+                    setPwStage("resetEmail");
+                  }}
                   disabled={pwBusy}
                   hitSlop={8}
                   style={styles.modeSwitch}
                 >
                   <AppText weight="600" size={13} color={colors.mutedForeground}>
                     Forgot password? / Create a password
+                  </AppText>
+                </Pressable>
+              </>
+            ) : pwStage === "resetEmail" ? (
+              <>
+                <Button
+                  label="Email me a reset code"
+                  onPress={onStartPasswordReset}
+                  loading={pwBusy || fetchStatus === "fetching"}
+                  size="lg"
+                />
+                <Pressable
+                  onPress={() => {
+                    setError(null);
+                    setPwInfo(null);
+                    setPwStage("login");
+                  }}
+                  disabled={pwBusy}
+                  hitSlop={8}
+                  style={styles.modeSwitch}
+                >
+                  <AppText weight="600" size={13} color={colors.mutedForeground}>
+                    Back to password login
                   </AppText>
                 </Pressable>
               </>

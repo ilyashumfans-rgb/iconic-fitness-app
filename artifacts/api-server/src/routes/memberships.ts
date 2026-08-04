@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { Router, type IRouter, type Request } from "express";
+import { clerkClient } from "@clerk/express";
 import { eq, sql } from "drizzle-orm";
 import {
   db,
@@ -123,72 +124,102 @@ router.post("/membership-lookup", async (req, res): Promise<void> => {
   );
 });
 
-// ── Mobile + password login support ──────────────────────────────────────
-// Maps a gym-registered mobile number to the account email so the app can run
-// Clerk's password / reset-password flows (Clerk identifies by email, members
-// remember their mobile). Stricter rate limit than the membership lookup, and
-// a deliberately vague not-found message, since this reveals an email address
-// for a known mobile number.
-const EMAIL_LOOKUP_MAX_PER_WINDOW = 8;
-const emailLookupHits = new Map<string, { windowStart: number; count: number }>();
+// ── Mobile + password login ───────────────────────────────────────────────
+// Members remember their gym-registered mobile, but Clerk identifies accounts
+// by email — so the password check happens server-side (Clerk Backend API)
+// and the app receives only a short-lived sign-in ticket. No email address or
+// account detail is ever revealed to an unauthenticated caller, and all
+// failures return the same generic message so accounts can't be enumerated.
+const PW_LOGIN_MAX_PER_WINDOW = 10;
+const pwLoginHits = new Map<string, { windowStart: number; count: number }>();
 
-function emailLookupRateLimited(clientKey: string): boolean {
+function pwLoginRateLimited(clientKey: string): boolean {
   const now = Date.now();
-  if (emailLookupHits.size > 5000) {
-    for (const [k, v] of emailLookupHits) {
-      if (now - v.windowStart > LOOKUP_WINDOW_MS) emailLookupHits.delete(k);
+  if (pwLoginHits.size > 5000) {
+    for (const [k, v] of pwLoginHits) {
+      if (now - v.windowStart > LOOKUP_WINDOW_MS) pwLoginHits.delete(k);
     }
   }
-  const hit = emailLookupHits.get(clientKey);
+  const hit = pwLoginHits.get(clientKey);
   if (!hit || now - hit.windowStart > LOOKUP_WINDOW_MS) {
-    emailLookupHits.set(clientKey, { windowStart: now, count: 1 });
+    pwLoginHits.set(clientKey, { windowStart: now, count: 1 });
     return false;
   }
   hit.count += 1;
-  return hit.count > EMAIL_LOOKUP_MAX_PER_WINDOW;
+  return hit.count > PW_LOGIN_MAX_PER_WINDOW;
 }
 
-/** "someone@gmail.com" → "so•••@gmail.com" for on-screen display. */
-function maskEmail(email: string): string {
-  const at = email.indexOf("@");
-  if (at <= 0) return "•••";
-  const head = email.slice(0, Math.min(2, at));
-  return `${head}•••${email.slice(at)}`;
+function parsePasswordLoginBody(
+  body: unknown,
+): { mobile: string; password: string } | null {
+  const b = body as { mobile?: unknown; password?: unknown } | null;
+  if (
+    !b ||
+    typeof b.mobile !== "string" ||
+    typeof b.password !== "string" ||
+    b.mobile.length < 10 ||
+    b.mobile.length > 20 ||
+    b.password.length < 1 ||
+    b.password.length > 200
+  ) {
+    return null;
+  }
+  return { mobile: b.mobile, password: b.password };
 }
 
-router.post("/auth/password-lookup", async (req, res): Promise<void> => {
-  const parsed = LookupMembershipBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "A valid mobile number is required" });
+const GENERIC_LOGIN_ERROR =
+  "Incorrect mobile number or password. If you haven't set a password yet, use “Forgot password”.";
+
+router.post("/auth/password-login", async (req, res): Promise<void> => {
+  const parsed = parsePasswordLoginBody(req.body);
+  if (!parsed) {
+    res.status(400).json({ error: "Mobile number and password are required" });
     return;
   }
   const clientKey = req.ip ?? "unknown";
-  if (emailLookupRateLimited(clientKey)) {
+  if (pwLoginRateLimited(clientKey)) {
     res.status(429).json({ error: "Too many attempts — please try again in a few minutes" });
     return;
   }
-  const last10 = parsed.data.mobile.replace(/\D/g, "").slice(-10);
+  const last10 = parsed.mobile.replace(/\D/g, "").slice(-10);
   if (last10.length !== 10) {
-    res.json({ found: false, email: "", emailMasked: "" });
+    res.status(401).json({ error: GENERIC_LOGIN_ERROR });
     return;
   }
   const rows = await db
-    .select({ email: usersTable.email, clerkUserId: usersTable.clerkUserId })
+    .select({ clerkUserId: usersTable.clerkUserId })
     .from(usersTable)
     .where(
       sql`right(regexp_replace(${usersTable.mobile}, '\\D', '', 'g'), 10) = ${last10}`,
     )
-    .limit(2);
-  const match = rows.find((r) => r.clerkUserId && r.email.includes("@"));
-  if (!match) {
-    res.json({ found: false, email: "", emailMasked: "" });
+    .limit(3);
+  const matches = rows.filter((r) => r.clerkUserId);
+  // Fail closed on ambiguity — never guess between accounts sharing a number.
+  if (matches.length !== 1 || !matches[0]!.clerkUserId) {
+    res.status(401).json({ error: GENERIC_LOGIN_ERROR });
     return;
   }
-  res.json({
-    found: true,
-    email: match.email,
-    emailMasked: maskEmail(match.email),
-  });
+  const clerkUserId = matches[0]!.clerkUserId;
+  try {
+    await clerkClient.users.verifyPassword({
+      userId: clerkUserId,
+      password: parsed.password,
+    });
+  } catch {
+    // Wrong password, or the account has no password set yet.
+    res.status(401).json({ error: GENERIC_LOGIN_ERROR });
+    return;
+  }
+  try {
+    const token = await clerkClient.signInTokens.createSignInToken({
+      userId: clerkUserId,
+      expiresInSeconds: 300,
+    });
+    res.json({ ticket: token.token });
+  } catch (err) {
+    console.error("password-login: sign-in token creation failed", err);
+    res.status(500).json({ error: "Could not sign you in — please try again" });
+  }
 });
 
 router.get("/memberships/mine", requireUser, async (req, res): Promise<void> => {
