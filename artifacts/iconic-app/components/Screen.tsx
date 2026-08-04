@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import {
+  KeyboardAvoidingView,
   Platform,
   RefreshControl,
   ScrollView,
@@ -66,12 +67,7 @@ export function Screen({
         }
       : undefined;
 
-  return (
-    <SafeAreaView
-      edges={edges}
-      style={[styles.flex, { backgroundColor: colors.background }]}
-    >
-      {scroll ? (
+  const body = scroll ? (
         <ScrollView
           style={styles.flex}
           contentContainerStyle={[padStyle, contentContainerStyle, topFallback]}
@@ -94,6 +90,19 @@ export function Screen({
         <View style={[styles.flex, padStyle, contentContainerStyle, topFallback]}>
           {children}
         </View>
+      );
+
+  return (
+    <SafeAreaView
+      edges={edges}
+      style={[styles.flex, { backgroundColor: colors.background }]}
+    >
+      {Platform.OS === "web" ? (
+        body
+      ) : (
+        <KeyboardAvoidingView style={styles.flex} behavior="padding">
+          {body}
+        </KeyboardAvoidingView>
       )}
     </SafeAreaView>
   );

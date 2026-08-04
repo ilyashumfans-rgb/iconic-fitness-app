@@ -12,6 +12,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/AppText";
@@ -222,7 +223,7 @@ function Content() {
 
   return (
     <View style={[styles.flex, { backgroundColor: colors.background }]}>
-      <ScrollView
+      <KeyboardAwareScrollViewCompat
         contentContainerStyle={{
           paddingTop: Math.max(insets.top, 44) + 8,
           paddingBottom: Math.max(insets.bottom, 16) + 24,
@@ -278,7 +279,7 @@ function Content() {
             )}
           </>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollViewCompat>
     </View>
   );
 }
