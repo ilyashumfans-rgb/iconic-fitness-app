@@ -15,3 +15,6 @@ description: Third-party gym-management API (api.yoactiv.com) — auth quirks, s
 - Member "Book your PT sessions" screen (`book-pt-sessions.tsx`) shows /api/trainer-packages filtered to PT (YoActiv `PT===1` flag OR name matching /pt|personal train/i — branches often forget the flag).
 - Packages are hidden-by-default in admin curation; a branch shows prices only when YoActiv has PT-named packages AND admin unhides them. As of Jul 2026 no branch had any PT package in YoActiv — flow falls back to enquiry until the gym creates them.
 - PT sales can run through a DEDICATED YoActiv branch (e.g. "5th Block Koramangala (PT Sales)" = 6797) separate from the gym's main branch: `gyms.yoactiv_pt_branch_id` (nullable, added Jul 2026 via additive ALTER). /api/trainer-packages and POST /api/trainer-bookings use it when set (falls back to yoactiv_branch_id); membership packages keep using the main branch.
+
+## OTP / SMS endpoints NOT available (verified Aug 2026)
+All YoActiv OTP/SMS API methods return "Invalid API method" with our keys — proven by live probing. Member SMS OTP login is impossible until YoActiv support enables it (user was told to ask them). Only Users/* and Billing/* endpoints work.

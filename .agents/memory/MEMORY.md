@@ -40,3 +40,4 @@
 - [Admin Excel lead import](leads-excel-import.md) — client-side xlsx parse → /admin/leads/import (5mb body limit before global json); new /partner/* routes need STAFF_PERMISSION_PREFIXES entry.
 - [API micro-cache + perf setup](api-microcache.md) — 30s in-process cache on public GETs only; compression on; perf indexes applied to dev DB but NOT prod yet.
 - [Class sessions lazy generation](class-sessions-lazy-generation.md) — seeded sessions go stale; upcoming classes are materialised on read from the gym timetable (no background jobs).
+- [Mobile + password login](mobile-password-login.md) — server verifies password + returns Clerk sign-in ticket; never expose account email publicly; reset = user types own email.

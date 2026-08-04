@@ -2011,47 +2011,13 @@ function GymCard({
                 {Number.isFinite(gym.distanceKm) ? gym.distanceKm.toFixed(1) : "–"} km
               </AppText>
             </View>
-          ) : gym.isPremium ? (
-            <View style={[styles.gymPremium, { backgroundColor: colors.primary }]}>
-              <AppText weight="700" size={10} color={colors.primaryForeground}>
-                PREMIUM
-              </AppText>
-            </View>
           ) : null}
-          <View style={styles.gymRating}>
-            <Feather name="star" size={11} color={colors.primary} />
-            <AppText weight="700" size={12} color="#FFFFFF">
-              {gym.rating.toFixed(1)}
-            </AppText>
-          </View>
         </View>
+        {/* Branch cards stay simple by owner request: photo + name only. */}
         <View style={styles.gymBody}>
           <AppText weight="700" size={16} numberOfLines={1}>
             {gym.name}
           </AppText>
-          <View style={styles.gymMetaRow}>
-            <Feather name="map-pin" size={12} color={colors.mutedForeground} />
-            <AppText muted size={12} numberOfLines={1} style={{ flex: 1 }}>
-              {gym.area || gym.city}
-            </AppText>
-          </View>
-          <View style={styles.gymFooter}>
-            <AppText weight="700" size={15} color={colors.foreground}>
-              ₹{gym.priceFrom}
-              <AppText muted size={11}>
-                {" "}
-                /mo
-              </AppText>
-            </AppText>
-            {gym.openNow ? (
-              <View style={styles.openBadge}>
-                <View style={[styles.openDot, { backgroundColor: colors.success }]} />
-                <AppText weight="600" size={11} color={colors.success}>
-                  Open now
-                </AppText>
-              </View>
-            ) : null}
-          </View>
         </View>
       </Pressable>
     </View>
