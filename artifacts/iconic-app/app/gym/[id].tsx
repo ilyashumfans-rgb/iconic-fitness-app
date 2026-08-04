@@ -31,7 +31,7 @@ import { openExternal } from "@/lib/links";
 /** Extract a YouTube video id from a watch/share/embed/shorts URL. */
 function youtubeId(url: string): string | undefined {
   const m = url.match(
-    /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/,
+    /(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:[^#]*&)?v=|embed\/|shorts\/|live\/))([\w-]{11})/,
   );
   const id = m ? m[1] : /^[\w-]{11}$/.test(url.trim()) ? url.trim() : null;
   return id ?? undefined;
