@@ -475,6 +475,17 @@ export const adminApi = {
     remove: (id: number) =>
       request<{ ok: true }>(`/admin/blogs/${id}`, { method: "DELETE" }),
   },
+  settings: {
+    notificationSounds: () =>
+      request<{ members: string | null; trainers: string | null }>(
+        "/settings/notification-sounds",
+      ),
+    setNotificationSound: (audience: "members" | "trainers", url: string | null) =>
+      request<{ members: string | null; trainers: string | null }>(
+        "/admin/settings/notification-sounds",
+        { method: "PUT", body: JSON.stringify({ audience, url }) },
+      ),
+  },
   notifications: {
     send: (body: {
       recipientType: "user" | "partner" | "vendor" | "admin";

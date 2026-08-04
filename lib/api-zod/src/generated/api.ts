@@ -641,6 +641,29 @@ export const ListMyMembershipPaymentsResponse = zod.array(ListMyMembershipPaymen
 
 
 /**
+ * @summary Custom notification sound URLs (null = default ringtone)
+ */
+export const GetNotificationSoundsResponse = zod.object({
+  "members": zod.string().nullable(),
+  "trainers": zod.string().nullable()
+})
+
+
+/**
+ * @summary Admin — set or clear the custom notification sound for an audience
+ */
+export const SetNotificationSoundBody = zod.object({
+  "audience": zod.enum(['members', 'trainers']),
+  "url": zod.string().nullish()
+})
+
+export const SetNotificationSoundResponse = zod.object({
+  "members": zod.string().nullable(),
+  "trainers": zod.string().nullable()
+})
+
+
+/**
  * @summary List the member's notifications (newest first)
  */
 export const ListMyNotificationsResponseItem = zod.object({

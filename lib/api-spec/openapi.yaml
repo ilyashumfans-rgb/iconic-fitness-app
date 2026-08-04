@@ -453,6 +453,39 @@ paths:
                 type: array
                 items: { $ref: "#/components/schemas/MembershipPayment" }
 
+  /settings/notification-sounds:
+    get:
+      operationId: getNotificationSounds
+      tags: [settings]
+      summary: Custom notification sound URLs (null = default ringtone)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NotificationSounds" }
+  /admin/settings/notification-sounds:
+    put:
+      operationId: setNotificationSound
+      tags: [settings]
+      summary: Admin — set or clear the custom notification sound for an audience
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [audience]
+              properties:
+                audience: { type: string, enum: [members, trainers] }
+                url: { type: string, nullable: true }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NotificationSounds" }
+
   /notifications/mine:
     get:
       operationId: listMyNotifications
@@ -1236,6 +1269,12 @@ paths:
 
 components:
   schemas:
+    NotificationSounds:
+      type: object
+      required: [members, trainers]
+      properties:
+        members: { type: string, nullable: true }
+        trainers: { type: string, nullable: true }
     AiChatMessage:
       type: object
       required: [role, content]

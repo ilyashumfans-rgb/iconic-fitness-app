@@ -242,6 +242,147 @@ function Composer({ onSent }: { onSent: () => void }) {
   );
 }
 
+function SoundRow({
+  label,
+  audience,
+  url,
+  onChanged,
+}: {
+  label: string;
+  audience: "members" | "trainers";
+  url: string | null;
+  onChanged: (sounds: { members: string | null; trainers: string | null }) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const pick = async (file: File) => {
+    setErr(null);
+    if (file.size > 2 * 1024 * 1024) {
+      setErr("Audio file too large (max 2MB)");
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch("/api/storage/uploads/inline", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "x-filename": file.name,
+          "content-type": "application/octet-stream",
+        },
+        body: file,
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => null);
+        throw new Error(j?.error || `Upload failed (${res.status})`);
+      }
+      const { url: uploadedUrl } = (await res.json()) as { url: string };
+      onChanged(await adminApi.settings.setNotificationSound(audience, uploadedUrl));
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async () => {
+    setBusy(true);
+    setErr(null);
+    try {
+      onChanged(await adminApi.settings.setNotificationSound(audience, null));
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Failed to remove");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2 py-3 border-b border-lime-100 last:border-b-0">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="w-28 shrink-0 text-sm font-semibold text-slate-700">{label}</div>
+        {url ? (
+          <>
+            <audio controls preload="none" src={url} className="h-8 max-w-[220px]" />
+            <button
+              onClick={() => void remove()}
+              disabled={busy}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50"
+            >
+              Remove (use default)
+            </button>
+          </>
+        ) : (
+          <span className="text-xs text-slate-500">
+            Default phone ringtone (no custom sound uploaded)
+          </span>
+        )}
+        <label className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-lime-300 text-lime-700 hover:bg-lime-50 cursor-pointer">
+          {busy ? "Uploading…" : url ? "Replace sound" : "Upload sound"}
+          <input
+            type="file"
+            accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/mp4,audio/x-m4a,.mp3,.wav,.ogg,.m4a"
+            className="hidden"
+            disabled={busy}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              e.target.value = "";
+              if (f) void pick(f);
+            }}
+          />
+        </label>
+      </div>
+      {err ? <div className="text-xs text-red-600">{err}</div> : null}
+    </div>
+  );
+}
+
+function NotificationSoundCard() {
+  const [sounds, setSounds] = useState<{
+    members: string | null;
+    trainers: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    adminApi.settings
+      .notificationSounds()
+      .then(setSounds)
+      .catch(() => setSounds({ members: null, trainers: null }));
+  }, []);
+
+  return (
+    <AdminCard className="p-6">
+      <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700 mb-1">
+        Notification sound
+      </h2>
+      <p className="text-xs text-slate-500 mb-3">
+        Upload a short audio clip (MP3/WAV, max 2MB). The app plays it when a
+        notification arrives. If nothing is uploaded, the phone's default
+        notification ringtone is used.
+      </p>
+      {sounds ? (
+        <div>
+          <SoundRow
+            label="Members"
+            audience="members"
+            url={sounds.members}
+            onChanged={setSounds}
+          />
+          <SoundRow
+            label="Trainers"
+            audience="trainers"
+            url={sounds.trainers}
+            onChanged={setSounds}
+          />
+        </div>
+      ) : (
+        <div className="text-xs text-slate-500">Loading…</div>
+      )}
+    </AdminCard>
+  );
+}
+
 export default function AdminNotifications() {
   const [sent, setSent] = useState<Sent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -262,6 +403,8 @@ export default function AdminNotifications() {
     <AdminLayout title="Notifications">
       <div className="space-y-6">
         <Composer onSent={load} />
+
+        <NotificationSoundCard />
 
         <AdminCard className="p-0 overflow-hidden">
           <div className="px-5 py-4 border-b border-lime-100 flex items-center justify-between">

@@ -131,6 +131,16 @@ export const referralSettingsTable = pgTable("referral_settings", {
     .defaultNow(),
 });
 
+// Small app-wide key/value settings (e.g. custom notification sound URLs).
+// Keys are dot-namespaced strings like "notificationSound.members".
+export const appSettingsTable = pgTable("app_settings", {
+  key: text("key").primaryKey(),
+  value: text("value"),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const gymsTable = pgTable("gyms", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),

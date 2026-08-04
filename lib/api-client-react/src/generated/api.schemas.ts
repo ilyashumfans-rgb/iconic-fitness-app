@@ -5,6 +5,11 @@
  * GYMCO customer API — multi-gym memberships, classes, bookings, check-ins, and fitness tracking.
  * OpenAPI spec version: 0.1.0
  */
+export interface NotificationSounds {
+  members: string | null;
+  trainers: string | null;
+}
+
 export type AiChatMessageRole = typeof AiChatMessageRole[keyof typeof AiChatMessageRole];
 
 
@@ -1200,6 +1205,19 @@ export type LookupMembership429 = {
 
 export type CreateMembershipRenewal409 = {
   error: string;
+};
+
+export type SetNotificationSoundBodyAudience = typeof SetNotificationSoundBodyAudience[keyof typeof SetNotificationSoundBodyAudience];
+
+
+export const SetNotificationSoundBodyAudience = {
+  members: 'members',
+  trainers: 'trainers',
+} as const;
+
+export type SetNotificationSoundBody = {
+  audience: SetNotificationSoundBodyAudience;
+  url?: string | null;
 };
 
 export type ListMyBookingsParams = {

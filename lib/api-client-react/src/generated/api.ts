@@ -76,6 +76,7 @@ import type {
   MyEngagementPlan,
   MyMembership,
   Notification,
+  NotificationSounds,
   OkResponse,
   PackageBooking,
   PackageBookingCreated,
@@ -84,6 +85,7 @@ import type {
   PtProgram,
   PtTrialFeedback,
   ReferralInfo,
+  SetNotificationSoundBody,
   StoreCategory,
   StoreCheckoutRequest,
   StoreCheckoutResponse,
@@ -2023,6 +2025,154 @@ export function useListMyMembershipPayments<TData = Awaited<ReturnType<typeof li
 
 
 
+
+export const getGetNotificationSoundsUrl = () => {
+
+
+
+
+  return `/api/settings/notification-sounds`
+}
+
+/**
+ * @summary Custom notification sound URLs (null = default ringtone)
+ */
+export const getNotificationSounds = async ( options?: RequestInit): Promise<NotificationSounds> => {
+
+  return customFetch<NotificationSounds>(getGetNotificationSoundsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetNotificationSoundsQueryKey = () => {
+    return [
+    `/api/settings/notification-sounds`
+    ] as const;
+    }
+
+
+export const getGetNotificationSoundsQueryOptions = <TData = Awaited<ReturnType<typeof getNotificationSounds>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getNotificationSounds>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetNotificationSoundsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getNotificationSounds>>> = ({ signal }) => getNotificationSounds({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNotificationSounds>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetNotificationSoundsQueryResult = NonNullable<Awaited<ReturnType<typeof getNotificationSounds>>>
+export type GetNotificationSoundsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Custom notification sound URLs (null = default ringtone)
+ */
+
+export function useGetNotificationSounds<TData = Awaited<ReturnType<typeof getNotificationSounds>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getNotificationSounds>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetNotificationSoundsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSetNotificationSoundUrl = () => {
+
+
+
+
+  return `/api/admin/settings/notification-sounds`
+}
+
+/**
+ * @summary Admin — set or clear the custom notification sound for an audience
+ */
+export const setNotificationSound = async (setNotificationSoundBody: SetNotificationSoundBody, options?: RequestInit): Promise<NotificationSounds> => {
+
+  return customFetch<NotificationSounds>(getSetNotificationSoundUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      setNotificationSoundBody,)
+  }
+);}
+
+
+
+
+export const getSetNotificationSoundMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setNotificationSound>>, TError,{data: BodyType<SetNotificationSoundBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setNotificationSound>>, TError,{data: BodyType<SetNotificationSoundBody>}, TContext> => {
+
+const mutationKey = ['setNotificationSound'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setNotificationSound>>, {data: BodyType<SetNotificationSoundBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  setNotificationSound(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetNotificationSoundMutationResult = NonNullable<Awaited<ReturnType<typeof setNotificationSound>>>
+    export type SetNotificationSoundMutationBody = BodyType<SetNotificationSoundBody>
+    export type SetNotificationSoundMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Admin — set or clear the custom notification sound for an audience
+ */
+export const useSetNotificationSound = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setNotificationSound>>, TError,{data: BodyType<SetNotificationSoundBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setNotificationSound>>,
+        TError,
+        {data: BodyType<SetNotificationSoundBody>},
+        TContext
+      > => {
+      return useMutation(getSetNotificationSoundMutationOptions(options));
+    }
 
 export const getListMyNotificationsUrl = () => {
 

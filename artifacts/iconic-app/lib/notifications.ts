@@ -1,6 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createAudioPlayer } from "expo-audio";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
+import { customFetch } from "@workspace/api-client-react";
+
+import { resolveImageUrl } from "@/lib/images";
 
 const REMINDERS_KEY = "iconic.remindersOn";
 
@@ -92,6 +96,72 @@ export async function ensureAndroidChannel(): Promise<void> {
   });
 }
 
+const SILENT_CHANNEL_ID = "reminders-silent";
+
+/**
+ * A silent channel used when the admin uploaded a custom notification sound:
+ * the audio clip is played in-app while the banner itself stays silent, so the
+ * member doesn't hear two sounds at once.
+ */
+async function ensureSilentAndroidChannel(): Promise<void> {
+  if (Platform.OS !== "android") return;
+  await Notifications.setNotificationChannelAsync(SILENT_CHANNEL_ID, {
+    name: "Reminders (custom sound)",
+    importance: Notifications.AndroidImportance.HIGH,
+    // Explicitly silent — Android channel sound is sticky, so this channel is
+    // created silent from day one and never reused for audible notifications.
+    sound: null,
+    vibrationPattern: [0, 250, 250, 250],
+  });
+}
+
+export type NotificationAudience = "members" | "trainers";
+
+type NotificationSounds = { members: string | null; trainers: string | null };
+
+let soundsCache: { at: number; value: NotificationSounds } | null = null;
+const SOUNDS_CACHE_MS = 5 * 60 * 1000;
+
+/**
+ * Admin-uploaded custom notification sound for this audience, or null to use
+ * the phone's default ringtone. Cached for 5 minutes; any failure → default.
+ */
+async function getCustomSoundUrl(
+  audience: NotificationAudience,
+): Promise<string | null> {
+  try {
+    if (!soundsCache || Date.now() - soundsCache.at > SOUNDS_CACHE_MS) {
+      const value = await customFetch<NotificationSounds>(
+        "/api/settings/notification-sounds",
+        { method: "GET" },
+      );
+      soundsCache = { at: Date.now(), value };
+    }
+    const url = soundsCache.value[audience];
+    return url ? (resolveImageUrl(url) ?? null) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Play the uploaded clip in-app. Best-effort — failures fall back silently. */
+function playCustomSound(url: string): void {
+  try {
+    const player = createAudioPlayer({ uri: url });
+    player.play();
+    // Release the player once the clip has had time to finish.
+    setTimeout(() => {
+      try {
+        player.remove();
+      } catch {
+        // already removed
+      }
+    }, 15_000);
+  } catch {
+    // ignore — the notification banner still shows
+  }
+}
+
 export async function ensureNotificationPermission(): Promise<boolean> {
   if (Platform.OS === "web") return false;
   const current = await Notifications.getPermissionsAsync();
@@ -108,19 +178,31 @@ export async function ensureNotificationPermission(): Promise<boolean> {
 export async function presentLocalNotification(
   title: string,
   body: string,
+  audience: NotificationAudience = "members",
 ): Promise<void> {
   if (Platform.OS === "web") return;
   const granted = await ensureNotificationPermission();
   if (!granted) return;
-  await ensureAndroidChannel();
+
+  // Admin-uploaded custom sound? Play it in-app and keep the banner silent so
+  // the member hears the custom clip, not the default ringtone on top of it.
+  const customSoundUrl = await getCustomSoundUrl(audience);
+  const useCustom = customSoundUrl !== null;
+  if (useCustom) {
+    await ensureSilentAndroidChannel();
+    playCustomSound(customSoundUrl);
+  } else {
+    await ensureAndroidChannel();
+  }
+
   await Notifications.scheduleNotificationAsync({
-    content: { title, body, sound: "default" },
+    content: { title, body, sound: useCustom ? false : "default" },
     trigger:
       Platform.OS === "android"
         ? ({
             type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
             seconds: 1,
-            channelId: ANDROID_CHANNEL_ID,
+            channelId: useCustom ? SILENT_CHANNEL_ID : ANDROID_CHANNEL_ID,
           } as Notifications.TimeIntervalTriggerInput)
         : null,
   });

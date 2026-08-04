@@ -32,6 +32,7 @@ import trackingRouter from "./tracking";
 import challengesRouter from "./challenges";
 import homeSlidesRouter from "./homeSlides";
 import messagingRouter from "./messaging";
+import settingsRouter from "./settings";
 import webhooksRouter from "./webhooks";
 
 const router: IRouter = Router();
@@ -69,6 +70,7 @@ router.use(trackingRouter);
 router.use(challengesRouter);
 router.use(homeSlidesRouter);
 router.use(messagingRouter);
+router.use(settingsRouter);
 router.use(webhooksRouter);
 
 export default router;

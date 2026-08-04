@@ -402,7 +402,7 @@ async function pollOnce(): Promise<void> {
     await ensureAndroidChannel();
     // Cap the burst so a backlog can't spam the tray.
     for (const n of fresh.slice(0, 3)) {
-      await presentLocalNotification(n.title, n.body);
+      await presentLocalNotification(n.title, n.body, "trainers");
     }
   } catch {
     // Polling is best-effort; next tick retries.

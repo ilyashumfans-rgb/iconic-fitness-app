@@ -46,7 +46,27 @@ function sniffMimeType(buf: Buffer): string | null {
     return "image/webp";
   }
   if (buf.length >= 5 && buf.toString("ascii", 0, 5) === "%PDF-") return "application/pdf";
+  // Audio formats (for admin-uploaded notification sounds).
+  // MP3: ID3 tag or MPEG frame sync (0xFFEx/0xFFFx).
+  if (buf.length >= 3 && buf.toString("ascii", 0, 3) === "ID3") return "audio/mpeg";
+  if (buf.length >= 2 && buf[0] === 0xff && (buf[1] & 0xe0) === 0xe0) return "audio/mpeg";
+  // WAV: RIFF....WAVE
+  if (
+    buf.length >= 12 &&
+    buf.toString("ascii", 0, 4) === "RIFF" &&
+    buf.toString("ascii", 8, 12) === "WAVE"
+  ) {
+    return "audio/wav";
+  }
+  // OGG
+  if (buf.length >= 4 && buf.toString("ascii", 0, 4) === "OggS") return "audio/ogg";
+  // M4A/AAC in MP4 container: ....ftyp
+  if (buf.length >= 12 && buf.toString("ascii", 4, 8) === "ftyp") return "audio/mp4";
   return null;
+}
+
+function isAudioMime(mime: string): boolean {
+  return mime.startsWith("audio/");
 }
 
 const MAX_IMAGE_DIMENSION = 1280;
@@ -101,13 +121,21 @@ router.post(
     // Derive the MIME type from the actual bytes, not the client header.
     const sniffedType = sniffMimeType(body);
     if (!sniffedType) {
-      res.status(415).json({ error: "Only PNG, JPEG, GIF, WebP images and PDF files are allowed" });
+      res.status(415).json({
+        error:
+          "Only PNG, JPEG, GIF, WebP images, PDF files and MP3/WAV/OGG/M4A audio are allowed",
+      });
+      return;
+    }
+    // Audio (notification sounds) should stay small — cap at 2MB.
+    if (isAudioMime(sniffedType) && body.length > 2 * 1024 * 1024) {
+      res.status(413).json({ error: "Audio file too large (max 2MB)" });
       return;
     }
     // Compress images before storing so raw multi-MB blobs never hit the DB.
-    // PDFs are stored as-is.
+    // PDFs and audio are stored as-is.
     let stored = { data: body, mimeType: sniffedType };
-    if (sniffedType !== "application/pdf") {
+    if (sniffedType !== "application/pdf" && !isAudioMime(sniffedType)) {
       try {
         stored = await compressImage(body, sniffedType);
       } catch (error) {
