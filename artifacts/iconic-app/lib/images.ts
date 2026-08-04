@@ -1,5 +1,6 @@
-const domain = process.env.EXPO_PUBLIC_DOMAIN;
-const base = domain ? `https://${domain}` : "";
+// EAS cloud builds don't set EXPO_PUBLIC_DOMAIN — fall back to production.
+const domain = process.env.EXPO_PUBLIC_DOMAIN ?? "iconicfitnessindia.com";
+const base = `https://${domain}`;
 
 /**
  * Resolve an image path coming from the API into an absolute URL the native

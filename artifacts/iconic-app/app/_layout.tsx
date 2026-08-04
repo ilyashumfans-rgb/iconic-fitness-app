@@ -33,10 +33,10 @@ SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient();
 
 // Point generated API hooks at the remote GYMCO backend (same domain, /api).
-const domain = process.env.EXPO_PUBLIC_DOMAIN;
-if (domain) {
-  setBaseUrl(`https://${domain}`);
-}
+// EAS cloud builds don't set EXPO_PUBLIC_DOMAIN, so fall back to the published
+// production domain — never an old/stale deployment.
+const domain = process.env.EXPO_PUBLIC_DOMAIN ?? "iconicfitnessindia.com";
+setBaseUrl(`https://${domain}`);
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -47,7 +47,13 @@ Notifications.setNotificationHandler({
   }),
 });
 
-const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
+// EAS cloud builds don't set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY, which used to
+// leave APKs without a login key ("not able to login"). Fall back to the same
+// publishable key the published website uses (publishable keys are public by
+// design — they are visible in any web bundle).
+const publishableKey =
+  process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ||
+  "pk_test_ZXhjaXRlZC10ZXJyaWVyLTc0LmNsZXJrLmFjY291bnRzLmRldiQ";
 const proxyUrl = process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined;
 
 // Supply the Clerk session token as a bearer to every generated API call,

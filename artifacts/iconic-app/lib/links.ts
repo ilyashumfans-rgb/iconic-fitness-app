@@ -4,7 +4,9 @@ import * as WebBrowser from "expo-web-browser";
 const domain = process.env.EXPO_PUBLIC_DOMAIN;
 
 /** Public-facing GYMCO/Iconic website + linked surfaces, served via the proxy. */
-export const websiteUrl = domain ? `https://${domain}` : "https://gymco.replit.app";
+export const websiteUrl = domain
+  ? `https://${domain}`
+  : "https://iconicfitnessindia.com";
 export const exploreUrl = `${websiteUrl}/explore`;
 export const storeUrl = `${websiteUrl}/store`;
 export const membershipsUrl = `${websiteUrl}/memberships`;
