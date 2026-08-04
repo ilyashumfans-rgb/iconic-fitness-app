@@ -8,7 +8,8 @@
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "snapshot": "node ./scripts/generate-seed-snapshot.mjs"
+    "snapshot": "node ./scripts/generate-seed-snapshot.mjs",
+    "verify-category-images": "node ./scripts/verify-category-images.mjs"
   },
   "dependencies": {
     "@clerk/express": "^2.1.21",
