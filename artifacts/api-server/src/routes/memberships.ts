@@ -190,16 +190,15 @@ router.post("/auth/password-login", async (req, res): Promise<void> => {
     .select({ clerkUserId: usersTable.clerkUserId })
     .from(usersTable)
     .where(
-      sql`right(regexp_replace(${usersTable.mobile}, '\\D', '', 'g'), 10) = ${last10}`,
-    )
-    .limit(3);
-  const matches = rows.filter((r) => r.clerkUserId);
+      sql`right(regexp_replace(${usersTable.mobile}, '\\D', '', 'g'), 10) = ${last10} AND ${usersTable.clerkUserId} IS NOT NULL`,
+    );
+  const matches = [...new Set(rows.map((r) => r.clerkUserId))];
   // Fail closed on ambiguity — never guess between accounts sharing a number.
-  if (matches.length !== 1 || !matches[0]!.clerkUserId) {
+  if (matches.length !== 1 || !matches[0]) {
     res.status(401).json({ error: GENERIC_LOGIN_ERROR });
     return;
   }
-  const clerkUserId = matches[0]!.clerkUserId;
+  const clerkUserId = matches[0];
   try {
     await clerkClient.users.verifyPassword({
       userId: clerkUserId,
