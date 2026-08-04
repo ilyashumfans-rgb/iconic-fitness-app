@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { asc, desc, eq, gte, sql } from "drizzle-orm";
 import { db, classSessionsTable, gymsTable, trainersTable, bookingsTable } from "@workspace/db";
 import { isClassVisibleToMembers } from "../lib/classVisibility";
+import { ensureUpcomingClassSessions } from "../lib/ensureClassSessions";
 import { microCache } from "../lib/microCache";
 import {
   ListClassesQueryParams,
@@ -73,6 +74,7 @@ router.get("/classes", microCache(CLASSES_TTL_MS), async (req, res): Promise<voi
     return;
   }
   const { category, city, date } = parsed.data;
+  await ensureUpcomingClassSessions();
   let rows = await db
     .select()
     .from(classSessionsTable)
@@ -89,10 +91,12 @@ router.get("/classes", microCache(CLASSES_TTL_MS), async (req, res): Promise<voi
 });
 
 router.get("/classes/trending", microCache(CLASSES_TTL_MS), async (_req, res): Promise<void> => {
+  await ensureUpcomingClassSessions();
   const rows = await db
     .select()
     .from(classSessionsTable)
-    .orderBy(desc(classSessionsTable.trendingScore))
+    .where(gte(classSessionsTable.startsAt, new Date()))
+    .orderBy(desc(classSessionsTable.trendingScore), asc(classSessionsTable.startsAt))
     .limit(8);
   const dtos = await buildSessionDtos(rows);
   res.json(ListTrendingClassesResponse.parse(dtos));

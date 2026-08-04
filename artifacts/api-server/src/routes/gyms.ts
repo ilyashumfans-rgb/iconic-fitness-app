@@ -3,6 +3,7 @@ import { and, eq, sql, asc, desc } from "drizzle-orm";
 import { microCache } from "../lib/microCache";
 import { isClassVisibleToMembers } from "../lib/classVisibility";
 import { resolveGymSchedule } from "../lib/resolveGymSchedule";
+import { ensureUpcomingClassSessions } from "../lib/ensureClassSessions";
 import {
   db,
   gymsTable,
@@ -368,6 +369,7 @@ router.get(
 );
 
 router.get("/gyms/:gymId/classes", microCache(GYMS_TTL_MS), async (req, res): Promise<void> => {
+  await ensureUpcomingClassSessions();
   const params = ListGymClassesParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
