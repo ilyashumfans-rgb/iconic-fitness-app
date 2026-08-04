@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { Router, type IRouter, type Request } from "express";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import {
   db,
   gymsTable,
@@ -121,6 +121,74 @@ router.post("/membership-lookup", async (req, res): Promise<void> => {
       branchName: primary?.branchName ?? "",
     }),
   );
+});
+
+// ── Mobile + password login support ──────────────────────────────────────
+// Maps a gym-registered mobile number to the account email so the app can run
+// Clerk's password / reset-password flows (Clerk identifies by email, members
+// remember their mobile). Stricter rate limit than the membership lookup, and
+// a deliberately vague not-found message, since this reveals an email address
+// for a known mobile number.
+const EMAIL_LOOKUP_MAX_PER_WINDOW = 8;
+const emailLookupHits = new Map<string, { windowStart: number; count: number }>();
+
+function emailLookupRateLimited(clientKey: string): boolean {
+  const now = Date.now();
+  if (emailLookupHits.size > 5000) {
+    for (const [k, v] of emailLookupHits) {
+      if (now - v.windowStart > LOOKUP_WINDOW_MS) emailLookupHits.delete(k);
+    }
+  }
+  const hit = emailLookupHits.get(clientKey);
+  if (!hit || now - hit.windowStart > LOOKUP_WINDOW_MS) {
+    emailLookupHits.set(clientKey, { windowStart: now, count: 1 });
+    return false;
+  }
+  hit.count += 1;
+  return hit.count > EMAIL_LOOKUP_MAX_PER_WINDOW;
+}
+
+/** "someone@gmail.com" → "so•••@gmail.com" for on-screen display. */
+function maskEmail(email: string): string {
+  const at = email.indexOf("@");
+  if (at <= 0) return "•••";
+  const head = email.slice(0, Math.min(2, at));
+  return `${head}•••${email.slice(at)}`;
+}
+
+router.post("/auth/password-lookup", async (req, res): Promise<void> => {
+  const parsed = LookupMembershipBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "A valid mobile number is required" });
+    return;
+  }
+  const clientKey = req.ip ?? "unknown";
+  if (emailLookupRateLimited(clientKey)) {
+    res.status(429).json({ error: "Too many attempts — please try again in a few minutes" });
+    return;
+  }
+  const last10 = parsed.data.mobile.replace(/\D/g, "").slice(-10);
+  if (last10.length !== 10) {
+    res.json({ found: false, email: "", emailMasked: "" });
+    return;
+  }
+  const rows = await db
+    .select({ email: usersTable.email, clerkUserId: usersTable.clerkUserId })
+    .from(usersTable)
+    .where(
+      sql`right(regexp_replace(${usersTable.mobile}, '\\D', '', 'g'), 10) = ${last10}`,
+    )
+    .limit(2);
+  const match = rows.find((r) => r.clerkUserId && r.email.includes("@"));
+  if (!match) {
+    res.json({ found: false, email: "", emailMasked: "" });
+    return;
+  }
+  res.json({
+    found: true,
+    email: match.email,
+    emailMasked: maskEmail(match.email),
+  });
 });
 
 router.get("/memberships/mine", requireUser, async (req, res): Promise<void> => {

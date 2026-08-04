@@ -1,4 +1,5 @@
 import { useSignIn, useSSO } from "@clerk/expo";
+import { customFetch } from "@workspace/api-client-react";
 import { Feather } from "@expo/vector-icons";
 import * as AuthSession from "expo-auth-session";
 import { LinearGradient } from "expo-linear-gradient";
@@ -62,6 +63,18 @@ function SignInContent() {
   const [otpCode, setOtpCode] = useState("");
   const [otpInfo, setOtpInfo] = useState<string | null>(null);
 
+  // Mobile + password login. Clerk identifies accounts by email, but members
+  // remember their gym-registered mobile — the server maps mobile → account
+  // email, then Clerk's password / reset-password flows run on that email.
+  const [mode, setMode] = useState<"otp" | "password">("otp");
+  const [pwMobile, setPwMobile] = useState("");
+  const [pwPassword, setPwPassword] = useState("");
+  const [pwStage, setPwStage] = useState<"login" | "reset">("login");
+  const [resetCode, setResetCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [pwBusy, setPwBusy] = useState(false);
+  const [pwInfo, setPwInfo] = useState<string | null>(null);
+
   useEffect(() => {
     if (Platform.OS !== "android") return;
     void WebBrowser.warmUpAsync();
@@ -123,6 +136,170 @@ function SignInContent() {
       setError(clerkError(err));
     }
   }, [signIn, otpCode, finalizeSignIn]);
+
+  const lookupAccountEmail = useCallback(async (mobile: string) => {
+    return customFetch<{ found: boolean; email: string; emailMasked: string }>(
+      "/api/auth/password-lookup",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile }),
+      },
+    );
+  }, []);
+
+  const onPasswordLogin = useCallback(async () => {
+    setError(null);
+    setPwInfo(null);
+    const mobile = pwMobile.replace(/\D/g, "");
+    if (mobile.length < 10) {
+      setError("Enter your gym-registered mobile number.");
+      return;
+    }
+    if (pwPassword.length < 8) {
+      setError("Enter your password (at least 8 characters).");
+      return;
+    }
+    setPwBusy(true);
+    try {
+      const lookup = await lookupAccountEmail(mobile);
+      if (!lookup.found) {
+        setError(
+          "No account found for this mobile number. Create an account first, or log in with your email.",
+        );
+        return;
+      }
+      const { error: pwError } = await signIn.password({
+        identifier: lookup.email,
+        password: pwPassword,
+      });
+      if (pwError) {
+        setError(clerkError(pwError));
+        return;
+      }
+      if (signIn.status === "complete") {
+        await finalizeSignIn();
+      } else {
+        setError("Additional verification is required to sign in.");
+      }
+    } catch (err: unknown) {
+      setError(clerkError(err));
+    } finally {
+      setPwBusy(false);
+    }
+  }, [signIn, pwMobile, pwPassword, lookupAccountEmail, finalizeSignIn]);
+
+  const onStartPasswordReset = useCallback(async () => {
+    setError(null);
+    setPwInfo(null);
+    const mobile = pwMobile.replace(/\D/g, "");
+    if (mobile.length < 10) {
+      setError("Enter your gym-registered mobile number first.");
+      return;
+    }
+    setPwBusy(true);
+    try {
+      const lookup = await lookupAccountEmail(mobile);
+      if (!lookup.found) {
+        setError(
+          "No account found for this mobile number. Create an account first, or log in with your email.",
+        );
+        return;
+      }
+      if (signIn.status !== null) {
+        try {
+          await signIn.reset();
+        } catch {
+          // A stale attempt shouldn't block starting a fresh reset.
+        }
+      }
+      const { error: createError } = await signIn.create({
+        identifier: lookup.email,
+      });
+      if (createError) {
+        setError(clerkError(createError));
+        return;
+      }
+      const { error: sendError } =
+        await signIn.resetPasswordEmailCode.sendCode();
+      if (sendError) {
+        setError(clerkError(sendError));
+        return;
+      }
+      setPwStage("reset");
+      setResetCode("");
+      setNewPassword("");
+      setPwInfo(
+        `We emailed a 6-digit code to ${lookup.emailMasked} (the email registered on this account).`,
+      );
+    } catch (err: unknown) {
+      setError(clerkError(err));
+    } finally {
+      setPwBusy(false);
+    }
+  }, [signIn, pwMobile, lookupAccountEmail]);
+
+  const onSubmitPasswordReset = useCallback(async () => {
+    setError(null);
+    if (resetCode.trim().length < 4) {
+      setError("Enter the code from your email.");
+      return;
+    }
+    if (newPassword.length < 8) {
+      setError("New password must be at least 8 characters.");
+      return;
+    }
+    setPwBusy(true);
+    try {
+      const { error: verifyError } =
+        await signIn.resetPasswordEmailCode.verifyCode({
+          code: resetCode.trim(),
+        });
+      if (verifyError) {
+        setError(clerkError(verifyError));
+        return;
+      }
+      const { error: submitError } =
+        await signIn.resetPasswordEmailCode.submitPassword({
+          password: newPassword,
+        });
+      if (submitError) {
+        setError(clerkError(submitError));
+        return;
+      }
+      if (signIn.status === "complete") {
+        await finalizeSignIn();
+      } else {
+        setError("Additional verification is required to sign in.");
+      }
+    } catch (err: unknown) {
+      setError(clerkError(err));
+    } finally {
+      setPwBusy(false);
+    }
+  }, [signIn, resetCode, newPassword, finalizeSignIn]);
+
+  const switchMode = useCallback(
+    async (next: "otp" | "password") => {
+      setMode(next);
+      setError(null);
+      setPwInfo(null);
+      setOtpInfo(null);
+      setOtpSent(false);
+      setOtpCode("");
+      setPwStage("login");
+      setResetCode("");
+      setNewPassword("");
+      if (signIn.status !== null) {
+        try {
+          await signIn.reset();
+        } catch {
+          // Ignore — a stale attempt shouldn't block switching modes.
+        }
+      }
+    },
+    [signIn],
+  );
 
   const onChangeEmail = useCallback(async () => {
     setError(null);
@@ -259,32 +436,80 @@ function SignInContent() {
                 YoActiv plan connects the moment they finish logging in. */}
             <MemberMobileVerify />
 
-            <Field
-              label="Email"
-              value={email}
-              onChangeText={setEmail}
-              placeholder="you@email.com"
-              autoCapitalize="none"
-              keyboardType="email-address"
-              autoComplete="email"
-              editable={!otpSent}
-            />
+            {mode === "otp" ? (
+              <>
+                <Field
+                  label="Email"
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="you@email.com"
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  autoComplete="email"
+                  editable={!otpSent}
+                />
 
-            {otpSent ? (
-              <Field
-                label="One-time code"
-                value={otpCode}
-                onChangeText={setOtpCode}
-                placeholder="6-digit code"
-                keyboardType="number-pad"
-                autoComplete="one-time-code"
-                maxLength={8}
-              />
-            ) : null}
+                {otpSent ? (
+                  <Field
+                    label="One-time code"
+                    value={otpCode}
+                    onChangeText={setOtpCode}
+                    placeholder="6-digit code"
+                    keyboardType="number-pad"
+                    autoComplete="one-time-code"
+                    maxLength={8}
+                  />
+                ) : null}
+              </>
+            ) : (
+              <>
+                <Field
+                  label="Mobile number"
+                  value={pwMobile}
+                  onChangeText={setPwMobile}
+                  placeholder="Gym-registered mobile number"
+                  keyboardType="phone-pad"
+                  autoComplete="tel"
+                  editable={pwStage === "login"}
+                />
+                {pwStage === "login" ? (
+                  <Field
+                    label="Password"
+                    value={pwPassword}
+                    onChangeText={setPwPassword}
+                    placeholder="Your password"
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoComplete="password"
+                  />
+                ) : (
+                  <>
+                    <Field
+                      label="Email code"
+                      value={resetCode}
+                      onChangeText={setResetCode}
+                      placeholder="6-digit code from your email"
+                      keyboardType="number-pad"
+                      autoComplete="one-time-code"
+                      maxLength={8}
+                    />
+                    <Field
+                      label="New password"
+                      value={newPassword}
+                      onChangeText={setNewPassword}
+                      placeholder="At least 8 characters"
+                      secureTextEntry
+                      autoCapitalize="none"
+                      autoComplete="new-password"
+                    />
+                  </>
+                )}
+              </>
+            )}
 
-            {otpInfo && !error ? (
+            {(mode === "otp" ? otpInfo : pwInfo) && !error ? (
               <AppText size={13} color={colors.primary}>
-                {otpInfo}
+                {mode === "otp" ? otpInfo : pwInfo}
               </AppText>
             ) : null}
             {error ? (
@@ -293,24 +518,74 @@ function SignInContent() {
               </AppText>
             ) : null}
 
-            {!otpSent ? (
-              <Button
-                label="Email me a login code"
-                onPress={onSendOtp}
-                loading={fetchStatus === "fetching"}
-                size="lg"
-              />
-            ) : (
-              <>
+            {mode === "otp" ? (
+              !otpSent ? (
                 <Button
-                  label="Verify code & log in"
-                  onPress={onVerifyOtp}
+                  label="Email me a login code"
+                  onPress={onSendOtp}
                   loading={fetchStatus === "fetching"}
                   size="lg"
                 />
+              ) : (
+                <>
+                  <Button
+                    label="Verify code & log in"
+                    onPress={onVerifyOtp}
+                    loading={fetchStatus === "fetching"}
+                    size="lg"
+                  />
+                  <Pressable
+                    onPress={onSendOtp}
+                    disabled={fetchStatus === "fetching"}
+                    hitSlop={8}
+                    style={styles.modeSwitch}
+                  >
+                    <AppText weight="600" size={13} color={colors.mutedForeground}>
+                      Didn&apos;t get it? Resend code
+                    </AppText>
+                  </Pressable>
+                  <Pressable
+                    onPress={onChangeEmail}
+                    disabled={fetchStatus === "fetching"}
+                    hitSlop={8}
+                    style={styles.modeSwitch}
+                  >
+                    <AppText weight="600" size={13} color={colors.mutedForeground}>
+                      Use a different email
+                    </AppText>
+                  </Pressable>
+                </>
+              )
+            ) : pwStage === "login" ? (
+              <>
+                <Button
+                  label="Log in with password"
+                  onPress={onPasswordLogin}
+                  loading={pwBusy || fetchStatus === "fetching"}
+                  size="lg"
+                />
                 <Pressable
-                  onPress={onSendOtp}
-                  disabled={fetchStatus === "fetching"}
+                  onPress={onStartPasswordReset}
+                  disabled={pwBusy}
+                  hitSlop={8}
+                  style={styles.modeSwitch}
+                >
+                  <AppText weight="600" size={13} color={colors.mutedForeground}>
+                    Forgot password? / Create a password
+                  </AppText>
+                </Pressable>
+              </>
+            ) : (
+              <>
+                <Button
+                  label="Set new password & log in"
+                  onPress={onSubmitPasswordReset}
+                  loading={pwBusy || fetchStatus === "fetching"}
+                  size="lg"
+                />
+                <Pressable
+                  onPress={onStartPasswordReset}
+                  disabled={pwBusy}
                   hitSlop={8}
                   style={styles.modeSwitch}
                 >
@@ -318,18 +593,23 @@ function SignInContent() {
                     Didn&apos;t get it? Resend code
                   </AppText>
                 </Pressable>
-                <Pressable
-                  onPress={onChangeEmail}
-                  disabled={fetchStatus === "fetching"}
-                  hitSlop={8}
-                  style={styles.modeSwitch}
-                >
-                  <AppText weight="600" size={13} color={colors.mutedForeground}>
-                    Use a different email
-                  </AppText>
-                </Pressable>
               </>
             )}
+
+            <Pressable
+              onPress={() =>
+                void switchMode(mode === "otp" ? "password" : "otp")
+              }
+              disabled={pwBusy || fetchStatus === "fetching"}
+              hitSlop={8}
+              style={styles.modeSwitch}
+            >
+              <AppText weight="600" size={13} color={colors.primary}>
+                {mode === "otp"
+                  ? "Log in with mobile number & password"
+                  : "Log in with email code instead"}
+              </AppText>
+            </Pressable>
 
             <View style={styles.divider}>
               <View style={[styles.line, { backgroundColor: colors.border }]} />
