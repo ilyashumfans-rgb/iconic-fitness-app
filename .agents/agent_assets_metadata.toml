@@ -41,3 +41,17 @@ id = "ITjHYkyUu8ZAQT5dj1ZCk"
 uri = "file://exports/iconic-fitness-source-code.zip"
 type = "unspecified"
 title = "Iconic Fitness — Source code (zip)"
+
+[[outputs]]
+id = "vtFn9WUcMQYNPpIvazD9e"
+uri = "file://attached_assets/generated_images/category-iconic-fitness.webp"
+type = "image"
+title = "Category image 1 — iconic Fitness"
+description = "Upload this in the live admin for the 'iconic Fitness' package category."
+
+[[outputs]]
+id = "Tq4tUaSmPEu4H6LMo-X8n"
+uri = "file://attached_assets/generated_images/category-iconic-gymco.webp"
+type = "image"
+title = "Category image 2 — iconic + Gymco"
+description = "Upload this in the live admin for the 'iconic + Gymco' package category."
