@@ -843,6 +843,7 @@ export const adminApi = {
       categoriesAdded: string[];
       categoriesSkipped: string[];
       imagesAdded: number;
+      imagesMissing?: string[];
     }>("/admin/sync-package-catalog", { method: "POST" }),
   reseedFromSnapshot: () =>
     request<{ ok: true; inserted: Record<string, number> }>(

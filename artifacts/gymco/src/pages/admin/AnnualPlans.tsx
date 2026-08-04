@@ -436,15 +436,32 @@ function CategoriesPanel({
     try {
       const res = await adminApi.syncPackageCatalog();
       const added = res.categoriesAdded ?? [];
-      if (added.length === 0) {
-        setSyncMsg("Already up to date — no missing categories found.");
-      } else {
-        setSyncMsg(
-          `Added ${added.length} categor${added.length === 1 ? "y" : "ies"}: ${added.join(
-            ", ",
-          )}${res.imagesAdded ? ` (+${res.imagesAdded} image${res.imagesAdded === 1 ? "" : "s"})` : ""}. Existing categories were left untouched.`,
+      const imagesAdded = res.imagesAdded ?? 0;
+      const missing = res.imagesMissing ?? [];
+      const parts: string[] = [];
+      if (added.length > 0) {
+        parts.push(
+          `Added ${added.length} categor${added.length === 1 ? "y" : "ies"}: ${added.join(", ")}`,
         );
-        onChanged();
+      }
+      if (imagesAdded > 0) {
+        parts.push(
+          `copied ${imagesAdded} image${imagesAdded === 1 ? "" : "s"}`,
+        );
+      }
+      if (missing.length > 0) {
+        parts.push(
+          `${missing.length} image${missing.length === 1 ? " is" : "s are"} referenced but missing from the workspace snapshot — those will need a re-upload`,
+        );
+        setSyncErr(true);
+      }
+      if (parts.length === 0) {
+        setSyncMsg(
+          "Already up to date — all categories and their images are present.",
+        );
+      } else {
+        setSyncMsg(`${parts.join("; ")}. Existing categories were left untouched.`);
+        if (added.length > 0 || imagesAdded > 0) onChanged();
       }
     } catch (e) {
       setSyncErr(true);

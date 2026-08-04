@@ -18,7 +18,7 @@ import {
   yoactivPackagePrefsTable,
   packageCategoriesTable,
 } from "@workspace/db";
-import { sql } from "drizzle-orm";
+import { inArray, sql } from "drizzle-orm";
 import { logger } from "./logger";
 import snapshot from "./seed-snapshot.json" with { type: "json" };
 
@@ -220,10 +220,13 @@ export async function seedFromSnapshot(): Promise<Record<string, number>> {
  * updates or deletes existing rows, so live edits (visibility, renames,
  * ordering, YoActiv mappings) are untouched.
  */
+const DB_IMAGE_ID_RE = /db-images\/([^/?#]+)/;
+
 export async function syncMissingPackageCatalog(): Promise<{
   categoriesAdded: string[];
   categoriesSkipped: string[];
   imagesAdded: number;
+  imagesMissing: string[];
 }> {
   const snap = snapshot as Record<string, Row[]>;
   const snapCats = (snap.package_categories ?? []).map((r) => toCamel(r)) as {
@@ -238,6 +241,7 @@ export async function syncMissingPackageCatalog(): Promise<{
       .select({
         name: packageCategoriesTable.name,
         sortOrder: packageCategoriesTable.sortOrder,
+        imageUrl: packageCategoriesTable.imageUrl,
       })
       .from(packageCategoriesTable);
     const existingNames = new Set(
@@ -248,6 +252,16 @@ export async function syncMissingPackageCatalog(): Promise<{
     const categoriesAdded: string[] = [];
     const categoriesSkipped: string[] = [];
     let imagesAdded = 0;
+    const imagesMissing: string[] = [];
+
+    // Every db-images id referenced by a category on this database or in the
+    // snapshot. Re-scanning existing rows lets a second click backfill blobs
+    // that a previous partial copy (or manual insert) left missing.
+    const referencedIds = new Set<string>();
+    for (const c of existing) {
+      const id = String(c.imageUrl ?? "").match(DB_IMAGE_ID_RE)?.[1];
+      if (id) referencedIds.add(id);
+    }
 
     for (const cat of snapCats) {
       const key = String(cat.name ?? "").trim().toLowerCase();
@@ -256,26 +270,8 @@ export async function syncMissingPackageCatalog(): Promise<{
         categoriesSkipped.push(cat.name);
         continue;
       }
-      // Copy the referenced image blob first so the category never points at
-      // a 404. Image ids are text (uuid) — insert only if missing.
-      const imgId = String(cat.imageUrl ?? "").match(
-        /db-images\/([^/?#]+)/,
-      )?.[1];
-      if (imgId) {
-        const imgRow = (snap.uploaded_images ?? []).find(
-          (r) => r.id === imgId,
-        );
-        if (imgRow) {
-          const inserted = await tx
-            .insert(uploadedImagesTable)
-            .values(
-              coerceDates(toCamel(imgRow), ["createdAt"]) as never,
-            )
-            .onConflictDoNothing({ target: uploadedImagesTable.id })
-            .returning({ id: uploadedImagesTable.id });
-          imagesAdded += inserted.length;
-        }
-      }
+      const imgId = String(cat.imageUrl ?? "").match(DB_IMAGE_ID_RE)?.[1];
+      if (imgId) referencedIds.add(imgId);
       maxSort += 1;
       await tx.insert(packageCategoriesTable).values({
         name: String(cat.name).trim(),
@@ -287,11 +283,38 @@ export async function syncMissingPackageCatalog(): Promise<{
       categoriesAdded.push(String(cat.name).trim());
     }
 
+    // Backfill any referenced image blob that isn't in uploaded_images yet.
+    // Image ids are text (uuid) — insert only if missing. Ids referenced by
+    // categories but absent from the snapshot are reported, not silently
+    // skipped, so a partial copy is visible.
+    if (referencedIds.size > 0) {
+      const ids = Array.from(referencedIds);
+      const present = await tx
+        .select({ id: uploadedImagesTable.id })
+        .from(uploadedImagesTable)
+        .where(inArray(uploadedImagesTable.id, ids));
+      const presentIds = new Set(present.map((r) => r.id));
+      for (const id of ids) {
+        if (presentIds.has(id)) continue;
+        const imgRow = (snap.uploaded_images ?? []).find((r) => r.id === id);
+        if (!imgRow) {
+          imagesMissing.push(id);
+          continue;
+        }
+        const inserted = await tx
+          .insert(uploadedImagesTable)
+          .values(coerceDates(toCamel(imgRow), ["createdAt"]) as never)
+          .onConflictDoNothing({ target: uploadedImagesTable.id })
+          .returning({ id: uploadedImagesTable.id });
+        imagesAdded += inserted.length;
+      }
+    }
+
     logger.info(
-      { categoriesAdded, categoriesSkipped, imagesAdded },
+      { categoriesAdded, categoriesSkipped, imagesAdded, imagesMissing },
       "Synced missing package catalog from snapshot",
     );
-    return { categoriesAdded, categoriesSkipped, imagesAdded };
+    return { categoriesAdded, categoriesSkipped, imagesAdded, imagesMissing };
   });
 }
 
