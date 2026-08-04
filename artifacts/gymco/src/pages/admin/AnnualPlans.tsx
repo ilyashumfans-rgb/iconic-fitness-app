@@ -8,6 +8,7 @@ import {
   Tag,
   Trash2,
   Upload,
+  RefreshCw,
   X,
   CalendarClock,
 } from "lucide-react";
@@ -370,6 +371,9 @@ function CategoriesPanel({
   const [editName, setEditName] = useState("");
   const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [imgErr, setImgErr] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState<string | null>(null);
+  const [syncErr, setSyncErr] = useState(false);
   const imgFileRef = useRef<HTMLInputElement>(null);
   const imgTargetRef = useRef<number | null>(null);
 
@@ -424,6 +428,34 @@ function CategoriesPanel({
     onChanged();
   };
 
+  const syncFromWorkspace = async () => {
+    if (syncing) return;
+    setSyncing(true);
+    setSyncMsg(null);
+    setSyncErr(false);
+    try {
+      const res = await adminApi.syncPackageCatalog();
+      const added = res.categoriesAdded ?? [];
+      if (added.length === 0) {
+        setSyncMsg("Already up to date — no missing categories found.");
+      } else {
+        setSyncMsg(
+          `Added ${added.length} categor${added.length === 1 ? "y" : "ies"}: ${added.join(
+            ", ",
+          )}${res.imagesAdded ? ` (+${res.imagesAdded} image${res.imagesAdded === 1 ? "" : "s"})` : ""}. Existing categories were left untouched.`,
+        );
+        onChanged();
+      }
+    } catch (e) {
+      setSyncErr(true);
+      setSyncMsg(
+        `Sync failed: ${e instanceof Error ? e.message : "unknown error"}`,
+      );
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const move = async (idx: number, dir: -1 | 1) => {
     const a = categories[idx];
     const b = categories[idx + dir];
@@ -440,7 +472,30 @@ function CategoriesPanel({
       <div className="flex items-center gap-2 mb-3">
         <Tag className="h-4 w-4 text-lime-600" />
         <h3 className="font-semibold text-slate-900">Package Categories</h3>
+        <button
+          type="button"
+          onClick={() => void syncFromWorkspace()}
+          disabled={syncing}
+          title="Copies package categories (and their images) that exist in the workspace but are missing here. Never changes or removes existing categories."
+          className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-xs font-medium hover:bg-slate-200 disabled:opacity-60"
+        >
+          <RefreshCw
+            className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`}
+          />
+          {syncing ? "Copying…" : "Copy missing from workspace"}
+        </button>
       </div>
+      {syncMsg ? (
+        <div
+          className={`text-xs mb-3 rounded-lg border p-2.5 ${
+            syncErr
+              ? "text-red-600 bg-red-500/10 border-red-500/30"
+              : "text-emerald-700 bg-emerald-500/10 border-emerald-500/30"
+          }`}
+        >
+          {syncMsg}
+        </div>
+      ) : null}
       <p className="text-xs text-slate-500 mb-4">
         Categories appear as filter chips on the app’s Packages tab. Hidden
         categories (and their packages) stay under “All”. Add an image to show

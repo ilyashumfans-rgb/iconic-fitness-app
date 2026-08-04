@@ -837,6 +837,13 @@ export const adminApi = {
         { method: "POST", body: JSON.stringify(body) },
       ),
   },
+  syncPackageCatalog: () =>
+    request<{
+      ok: true;
+      categoriesAdded: string[];
+      categoriesSkipped: string[];
+      imagesAdded: number;
+    }>("/admin/sync-package-catalog", { method: "POST" }),
   reseedFromSnapshot: () =>
     request<{ ok: true; inserted: Record<string, number> }>(
       "/admin/reseed-from-snapshot",

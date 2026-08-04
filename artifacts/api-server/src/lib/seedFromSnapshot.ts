@@ -16,6 +16,7 @@ import {
   productsTable,
   uploadedImagesTable,
   yoactivPackagePrefsTable,
+  packageCategoriesTable,
 } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { logger } from "./logger";
@@ -166,6 +167,13 @@ async function seedAll(dbx: Executor): Promise<Record<string, number>> {
     productsTable,
     snap.products ?? [],
   );
+  results.package_categories = await seedTable(
+    dbx,
+    "package_categories",
+    packageCategoriesTable,
+    snap.package_categories ?? [],
+    [],
+  );
   results.uploaded_images = await seedTable(
     dbx,
     "uploaded_images",
@@ -205,6 +213,88 @@ export async function seedFromSnapshot(): Promise<Record<string, number>> {
   }
 }
 
+/**
+ * Additive dev → prod catalog sync. Inserts ONLY package_categories rows whose
+ * name is not already present on the live database (case-insensitive), plus any
+ * uploaded_images blobs their imageUrl references that are missing. Never
+ * updates or deletes existing rows, so live edits (visibility, renames,
+ * ordering, YoActiv mappings) are untouched.
+ */
+export async function syncMissingPackageCatalog(): Promise<{
+  categoriesAdded: string[];
+  categoriesSkipped: string[];
+  imagesAdded: number;
+}> {
+  const snap = snapshot as Record<string, Row[]>;
+  const snapCats = (snap.package_categories ?? []).map((r) => toCamel(r)) as {
+    name: string;
+    sortOrder: number;
+    isActive: boolean;
+    imageUrl: string;
+  }[];
+
+  return await db.transaction(async (tx) => {
+    const existing = await tx
+      .select({
+        name: packageCategoriesTable.name,
+        sortOrder: packageCategoriesTable.sortOrder,
+      })
+      .from(packageCategoriesTable);
+    const existingNames = new Set(
+      existing.map((c) => c.name.trim().toLowerCase()),
+    );
+    let maxSort = existing.reduce((m, c) => Math.max(m, c.sortOrder), 0);
+
+    const categoriesAdded: string[] = [];
+    const categoriesSkipped: string[] = [];
+    let imagesAdded = 0;
+
+    for (const cat of snapCats) {
+      const key = String(cat.name ?? "").trim().toLowerCase();
+      if (!key) continue;
+      if (existingNames.has(key)) {
+        categoriesSkipped.push(cat.name);
+        continue;
+      }
+      // Copy the referenced image blob first so the category never points at
+      // a 404. Image ids are text (uuid) — insert only if missing.
+      const imgId = String(cat.imageUrl ?? "").match(
+        /db-images\/([^/?#]+)/,
+      )?.[1];
+      if (imgId) {
+        const imgRow = (snap.uploaded_images ?? []).find(
+          (r) => r.id === imgId,
+        );
+        if (imgRow) {
+          const inserted = await tx
+            .insert(uploadedImagesTable)
+            .values(
+              coerceDates(toCamel(imgRow), ["createdAt"]) as never,
+            )
+            .onConflictDoNothing({ target: uploadedImagesTable.id })
+            .returning({ id: uploadedImagesTable.id });
+          imagesAdded += inserted.length;
+        }
+      }
+      maxSort += 1;
+      await tx.insert(packageCategoriesTable).values({
+        name: String(cat.name).trim(),
+        sortOrder: Number(cat.sortOrder) || maxSort,
+        isActive: cat.isActive !== false,
+        imageUrl: String(cat.imageUrl ?? ""),
+      });
+      existingNames.add(key);
+      categoriesAdded.push(String(cat.name).trim());
+    }
+
+    logger.info(
+      { categoriesAdded, categoriesSkipped, imagesAdded },
+      "Synced missing package catalog from snapshot",
+    );
+    return { categoriesAdded, categoriesSkipped, imagesAdded };
+  });
+}
+
 // Tables wiped (CASCADE) before a forced reseed. Order does not matter with
 // CASCADE — dependent rows (bookings, memberships, etc.) are removed too.
 const CATALOG_TABLES = [
@@ -222,6 +312,7 @@ const CATALOG_TABLES = [
   "memberships",
   "class_sessions",
   "products",
+  "package_categories",
   "uploaded_images",
   "yoactiv_package_prefs",
 ];

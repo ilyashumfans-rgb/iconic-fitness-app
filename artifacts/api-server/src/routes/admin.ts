@@ -34,7 +34,10 @@ import {
   verifyPassword,
 } from "../lib/adminAuth";
 import { STAFF_PERMISSIONS } from "../lib/staffAuth";
-import { forceReseedFromSnapshot } from "../lib/seedFromSnapshot";
+import {
+  forceReseedFromSnapshot,
+  syncMissingPackageCatalog,
+} from "../lib/seedFromSnapshot";
 import {
   fetchYoactivMemberByMobile,
   fetchYoactivMemberList,
@@ -2896,6 +2899,25 @@ router.post(
     } catch (err) {
       req.log.error({ err }, "Catalog reseed failed");
       res.status(500).json({ error: "Reseed failed" });
+    }
+  },
+);
+
+// Additive: copies ONLY missing package categories (and their image blobs)
+// from the bundled workspace snapshot onto this database. Never updates or
+// deletes existing rows, so live edits stay intact. Super-admin only.
+router.post(
+  "/admin/sync-package-catalog",
+  requireAdmin,
+  superAdminGuard,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const result = await syncMissingPackageCatalog();
+      req.log.info(result, "Admin triggered package catalog sync");
+      res.json({ ok: true, ...result });
+    } catch (err) {
+      req.log.error({ err }, "Package catalog sync failed");
+      res.status(500).json({ error: "Sync failed" });
     }
   },
 );
