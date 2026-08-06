@@ -34,7 +34,7 @@ import { useColors } from "@/hooks/useColors";
 import { istDateInNDays, istDateLabel, istToday } from "@/lib/dates";
 import { resolveImageUrl } from "@/lib/images";
 import { submitLead } from "@/lib/leads";
-import { openExternal } from "@/lib/links";
+import { openPayment } from "@/lib/links";
 
 export default function BookPackageScreen() {
   const router = useRouter();
@@ -211,7 +211,7 @@ export default function BookPackageScreen() {
       });
       setBookingId(created.id);
       setBookingToken(created.token ?? null);
-      await openExternal(created.paymentUrl);
+      await openPayment(created.paymentUrl);
     } catch (err) {
       Alert.alert(
         "Could not start payment",

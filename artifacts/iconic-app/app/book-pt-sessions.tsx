@@ -24,7 +24,7 @@ import { Screen } from "@/components/Screen";
 import { Chip, EmptyState, ErrorView, LoadingView } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
 import { istDateInNDays, istDateLabel, istToday } from "@/lib/dates";
-import { openExternal } from "@/lib/links";
+import { openPayment } from "@/lib/links";
 
 // Paid PT session packages for the member's branch: live prices from the
 // gym-management system, hosted Razorpay checkout, and a booking row that
@@ -144,7 +144,7 @@ export default function BookPtSessionsScreen() {
       });
       setBookingId(created.id);
       setPaymentUrl(created.paymentUrl);
-      await openExternal(created.paymentUrl);
+      await openPayment(created.paymentUrl);
     } catch (err) {
       Alert.alert(
         "Could not start payment",
@@ -224,7 +224,7 @@ export default function BookPtSessionsScreen() {
                 {paymentUrl ? (
                   <Button
                     label="Re-open payment page"
-                    onPress={() => void openExternal(paymentUrl)}
+                    onPress={() => void openPayment(paymentUrl)}
                     icon="external-link"
                   />
                 ) : null}
