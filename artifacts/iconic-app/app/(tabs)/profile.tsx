@@ -430,7 +430,7 @@ export default function ProfileScreen() {
                 <Button
                   label="View plans"
                   icon="credit-card"
-                  onPress={() => router.push("/plans")}
+                  onPress={() => router.push("/(tabs)/packages")}
                 />
               </>
             )}
