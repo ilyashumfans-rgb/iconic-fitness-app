@@ -1050,7 +1050,9 @@ export default function HomeScreen() {
       {/* Kick-starter PT trial journey — only for ACTIVE members (waits for
           the membership check to settle so it never flashes for others); the
           card hides itself once every step (both trials + feedbacks) is done. */}
-      {isSignedIn && membershipSettled && isMember ? (
+      {isSignedIn &&
+      myMembershipQuery.isSuccess &&
+      membership?.status === "active" ? (
         <FitnessJourneyCard />
       ) : null}
 

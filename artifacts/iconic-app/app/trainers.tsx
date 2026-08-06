@@ -42,6 +42,10 @@ export default function TrainersScreen() {
       ? (membershipQuery.data.homeGymId ?? null)
       : null;
   const locked = homeGymId !== null;
+  // Booking (trial, PT sessions, coach enquiry) is for ACTIVE members only —
+  // guests and inactive members can still browse the roster.
+  const isActiveMember =
+    !!isSignedIn && membershipQuery.data?.status === "active";
   const gymId = locked ? homeGymId : pickedGymId;
   // Members with an assigned PT program skip the roster entirely — their
   // trainer is already fixed, so show their PT Details instead.
@@ -163,9 +167,32 @@ export default function TrainersScreen() {
         )}
       </Pressable>
 
+      {/* Booking is members-only: tell guests/inactive users how to unlock it. */}
+      {!isActiveMember ? (
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 10,
+            borderWidth: 1,
+            borderColor: colors.border,
+            borderRadius: 14,
+            paddingHorizontal: 14,
+            paddingVertical: 12,
+            marginBottom: 18,
+          }}
+        >
+          <Feather name="lock" size={16} color={colors.primary} />
+          <AppText muted size={13} style={{ flex: 1 }}>
+            Personal training booking is for active members. Get a membership
+            to book your coach.
+          </AppText>
+        </View>
+      ) : null}
+
       {/* Prominent kick-starter trial CTA — shown FIRST, no need to pick a
           coach. Hidden once the member has already sent a trial request. */}
-      {trialRequested ? null : (
+      {!isActiveMember || trialRequested ? null : (
         <Pressable
           onPress={() =>
             router.push({
@@ -208,6 +235,7 @@ export default function TrainersScreen() {
       )}
 
       {/* Paid PT packages for this branch — live prices + online payment. */}
+      {!isActiveMember ? null : (
       <Pressable
         onPress={() =>
           router.push({
@@ -246,6 +274,7 @@ export default function TrainersScreen() {
           </View>
         )}
       </Pressable>
+      )}
 
       {liveQuery.isLoading ? (
         <LoadingView />
@@ -265,7 +294,9 @@ export default function TrainersScreen() {
               key={t.id}
               trainer={t}
               onPress={() =>
-                router.push({
+                !isActiveMember
+                  ? router.push("/(tabs)/packages")
+                  : router.push({
                   pathname: "/book-trainer",
                   params: {
                     trainerName: t.name,
