@@ -18,7 +18,8 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Image, Pressable, View } from "react-native";
+import { Image as ExpoImage } from "expo-image";
+import { Alert, Pressable, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
@@ -656,10 +657,10 @@ function PackageOption({
         }}
       >
         {imageUrl ? (
-          <Image
+          <ExpoImage
             source={{ uri: imageUrl }}
             style={{ width: 52, height: 52, borderRadius: 10 }}
-            resizeMode="cover"
+            contentFit="cover"
           />
         ) : null}
         <View style={{ flex: 1 }}>

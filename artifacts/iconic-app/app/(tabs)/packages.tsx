@@ -9,7 +9,8 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Image, Pressable, StyleSheet, View } from "react-native";
+import { Image as ExpoImage } from "expo-image";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { PackageCard } from "@/components/PackageCard";
@@ -53,7 +54,7 @@ function CategoryCard({
     >
       <View style={styles.media}>
         {uri ? (
-          <Image source={{ uri }} style={styles.image} resizeMode="cover" />
+          <ExpoImage source={{ uri }} style={styles.image} contentFit="cover" />
         ) : (
           <LinearGradient
             colors={[colors.primary + "33", colors.card]}

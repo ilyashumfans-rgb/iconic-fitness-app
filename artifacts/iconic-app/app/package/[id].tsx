@@ -6,7 +6,8 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { Alert, Image, StyleSheet, View } from "react-native";
+import { Image as ExpoImage } from "expo-image";
+import { Alert, StyleSheet, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
@@ -130,7 +131,7 @@ export default function PackageDetailScreen() {
 
       <View style={styles.hero}>
         {uri ? (
-          <Image source={{ uri }} style={styles.heroImage} resizeMode="cover" />
+          <ExpoImage source={{ uri }} style={styles.heroImage} contentFit="cover" />
         ) : (
           <LinearGradient
             colors={[colors.primary + "33", colors.card]}
