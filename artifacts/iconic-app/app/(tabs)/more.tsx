@@ -92,12 +92,7 @@ export default function MoreScreen() {
           } as MoreLink,
         ]
       : []),
-    {
-      title: "Membership Plans",
-      subtitle: "One pass. Every gym. Pick your plan",
-      icon: "credit-card",
-      action: () => router.push("/plans"),
-    },
+    // "Membership Plans" hidden on request — members buy via Packages instead.
     // Packages moved off the signed-in Home — members reach them here.
     ...(!isGuest
       ? [
