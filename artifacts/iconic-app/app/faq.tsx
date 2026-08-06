@@ -1,6 +1,9 @@
 import { Feather } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Pressable, View } from "react-native";
+import { ActivityIndicator, Pressable, View } from "react-native";
+
+import { customFetch } from "@workspace/api-client-react";
 
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
@@ -8,51 +11,39 @@ import { ModalHeader } from "@/components/ModalHeader";
 import { Screen } from "@/components/Screen";
 import { useColors } from "@/hooks/useColors";
 
-type Faq = { q: string; a: string };
+type Faq = {
+  id: number;
+  question: string;
+  answer: string;
+  category: string;
+};
 
-// Keep this in sync with the website's /faqs page (gymco InfoPage "faqs").
-const FAQS: Faq[] = [
-  {
-    q: "What are your operating hours?",
-    a: "Clubs are open 5:00 AM – 11:00 PM, 365 days a year (may vary by location).",
-  },
-  {
-    q: "Can I access all branches?",
-    a: "Yes, with an All Club Access membership you can use all participating branches.",
-  },
-  {
-    q: "Are group classes included?",
-    a: "Yes, if included in your plan. Class availability and timings may vary.",
-  },
-  {
-    q: "Can I pause my membership?",
-    a: "Yes, but only as per your plan terms and subject to management approval.",
-  },
-  {
-    q: "Do you offer Personal Training and diet plans?",
-    a: "Yes. Certified trainers and diet consultations are available and may be included in select plans or charged separately.",
-  },
-  {
-    q: "Are facilities like steam and showers available?",
-    a: "Available at selected branches only. Please check with your location.",
-  },
-  {
-    q: "Can I transfer my membership?",
-    a: "Yes, subject to these conditions: the membership can be transferred only to a non-member of Iconic Fitness (existing members are not eligible); only the gym membership can be transferred — Personal Training packages, diet plans, promotional benefits, add-on services, merchandise or other packages are not transferable; a minimum of 60 days of active membership validity must be remaining at the time of the transfer request; the applicable membership transfer fee must be paid; and all transfers are subject to management approval and verification.",
-  },
-  {
-    q: "What should I bring to the gym?",
-    a: "Bring your app/QR code, workout attire, clean shoes, and a water bottle.",
-  },
-  {
-    q: "How do I contact support?",
-    a: "Contact your branch directly or use the support option in the Iconic Fitness App.",
-  },
-];
+// Public endpoint — works for guests and members alike. These are the same
+// FAQs staff manage in the admin panel (Content → FAQs & AI Knowledge).
+function useFaqs() {
+  return useQuery({
+    queryKey: ["public-faqs"],
+    queryFn: () => customFetch<Faq[]>("/api/faqs"),
+    staleTime: 5 * 60 * 1000,
+  });
+}
 
 export default function FaqScreen() {
   const colors = useColors();
-  const [open, setOpen] = useState<number | null>(0);
+  const { data, isPending, isError, refetch } = useFaqs();
+  const [openId, setOpenId] = useState<number | null>(null);
+
+  const faqs = Array.isArray(data) ? data : [];
+
+  // Group by category, preserving the server's sort order.
+  const groups: { category: string; items: Faq[] }[] = [];
+  for (const f of faqs) {
+    const category = f.category?.trim() || "General";
+    const existing = groups.find((g) => g.category === category);
+    if (existing) existing.items.push(f);
+    else groups.push({ category, items: [f] });
+  }
+
   return (
     <Screen>
       <ModalHeader title="FAQs" />
@@ -62,45 +53,84 @@ export default function FaqScreen() {
       >
         Everything you need to know about Iconic Fitness.
       </AppText>
-      <View style={{ gap: 10, paddingBottom: 24 }}>
-        {FAQS.map((f, i) => {
-          const isOpen = open === i;
-          return (
-            <Card key={f.q} tone="elevated" style={{ gap: 0 }}>
-              <Pressable
-                onPress={() => setOpen(isOpen ? null : i)}
+
+      {isPending ? (
+        <View style={{ paddingVertical: 40, alignItems: "center" }}>
+          <ActivityIndicator color={colors.primary} />
+        </View>
+      ) : isError ? (
+        <Card tone="elevated" style={{ alignItems: "center", gap: 10 }}>
+          <AppText muted size={14} style={{ textAlign: "center" }}>
+            Couldn't load the FAQs. Check your connection and try again.
+          </AppText>
+          <Pressable onPress={() => void refetch()} hitSlop={8}>
+            <AppText weight="700" size={14} style={{ color: colors.primary }}>
+              Retry
+            </AppText>
+          </Pressable>
+        </Card>
+      ) : faqs.length === 0 ? (
+        <Card tone="elevated" style={{ alignItems: "center" }}>
+          <AppText muted size={14} style={{ textAlign: "center" }}>
+            No FAQs yet — check back soon.
+          </AppText>
+        </Card>
+      ) : (
+        <View style={{ gap: 20, paddingBottom: 24 }}>
+          {groups.map((group) => (
+            <View key={group.category} style={{ gap: 10 }}>
+              <AppText
+                weight="700"
+                size={13}
                 style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 10,
+                  color: colors.mutedForeground,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.8,
                 }}
-                hitSlop={6}
               >
-                <AppText weight="700" size={14} style={{ flex: 1 }}>
-                  {f.q}
-                </AppText>
-                <Feather
-                  name={isOpen ? "chevron-up" : "chevron-down"}
-                  size={18}
-                  color={colors.mutedForeground}
-                />
-              </Pressable>
-              {isOpen ? (
-                <AppText
-                  size={13}
-                  style={{
-                    color: colors.mutedForeground,
-                    lineHeight: 20,
-                    marginTop: 8,
-                  }}
-                >
-                  {f.a}
-                </AppText>
-              ) : null}
-            </Card>
-          );
-        })}
-      </View>
+                {group.category}
+              </AppText>
+              {group.items.map((f) => {
+                const isOpen = openId === f.id;
+                return (
+                  <Card key={f.id} tone="elevated" style={{ gap: 0 }}>
+                    <Pressable
+                      onPress={() => setOpenId(isOpen ? null : f.id)}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 10,
+                      }}
+                      hitSlop={6}
+                    >
+                      <AppText weight="700" size={14} style={{ flex: 1 }}>
+                        {f.question}
+                      </AppText>
+                      <Feather
+                        name={isOpen ? "chevron-up" : "chevron-down"}
+                        size={18}
+                        color={colors.mutedForeground}
+                      />
+                    </Pressable>
+                    {isOpen ? (
+                      <AppText
+                        size={13}
+                        style={{
+                          color: colors.mutedForeground,
+                          lineHeight: 20,
+                          marginTop: 8,
+                        }}
+                      >
+                        {f.answer}
+                      </AppText>
+                    ) : null}
+                  </Card>
+                );
+              })}
+            </View>
+          ))}
+        </View>
+      )}
     </Screen>
   );
 }
