@@ -309,7 +309,7 @@ export default function AdminYoactivPlans() {
               <SelectTrigger>
                 <SelectValue placeholder="Choose a branch" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-72 overflow-y-auto">
                 {branches.map((b) => (
                   <SelectItem key={b.branchId} value={String(b.branchId)}>
                     {b.gymLabel ?? b.branchName ?? `Branch ${b.branchId}`}
