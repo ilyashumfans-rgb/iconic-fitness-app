@@ -141,22 +141,39 @@ function WelcomeContent() {
             <Feather name="arrow-right" size={20} color={colors.primary} />
           </Pressable>
 
+          {/* Guest entry — same card design as Staff Login (owner request). */}
           <Pressable
             onPress={() => {
               enterGuest();
               router.replace("/(tabs)");
             }}
-            hitSlop={8}
-            style={styles.skip}
+            style={({ pressed }) => [
+              styles.option,
+              styles.optionOutline,
+              {
+                borderColor: colors.primary,
+                backgroundColor: "rgba(10,12,8,0.55)",
+                opacity: pressed ? 0.85 : 1,
+              },
+            ]}
           >
-            <AppText weight="600" size={14} color={colors.mutedForeground}>
-              Continue without login
-            </AppText>
-            <Feather
-              name="arrow-right"
-              size={16}
-              color={colors.mutedForeground}
-            />
+            <View
+              style={[
+                styles.optionIconLime,
+                { backgroundColor: "rgba(11,230,7,0.12)" },
+              ]}
+            >
+              <Feather name="users" size={22} color={colors.primary} />
+            </View>
+            <View style={styles.optionText}>
+              <AppText weight="700" size={17} color={colors.foreground}>
+                Guest
+              </AppText>
+              <AppText size={13} color={colors.mutedForeground}>
+                Without login
+              </AppText>
+            </View>
+            <Feather name="arrow-right" size={20} color={colors.primary} />
           </Pressable>
         </View>
       </View>
