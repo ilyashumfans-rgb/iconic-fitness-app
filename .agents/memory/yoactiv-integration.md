@@ -18,3 +18,6 @@ description: Third-party gym-management API (api.yoactiv.com) — auth quirks, s
 
 ## OTP / SMS endpoints NOT available (verified Aug 2026)
 All YoActiv OTP/SMS API methods return "Invalid API method" with our keys — proven by live probing. Member SMS OTP login is impossible until YoActiv support enables it (user was told to ask them). Only Users/* and Billing/* endpoints work.
+
+## AddMember mail collision
+YoActiv `/Billing/AddMember` rejects ANY duplicate mail — including blank `Mail:""` (collides with every member registered without one) → "Mobile number or mail id already exists" with no id, and branch-scoped `/Users/Fetch` re-check finds nothing → payment start 502s. Fix: register with a unique per-mobile placeholder mail (`member<mobile>@iconicfitnessindia.com`) when no email, and retry with the placeholder if a user-supplied mail collides. Also: payment links must open in the SYSTEM browser (not Expo in-app browser tab) or UPI app handoff stalls with an endless spinner. Keys can silently expire — "Invalid API_Key" on all branches means that brand's branch set loses paid flows; probe both keys when payments break.
