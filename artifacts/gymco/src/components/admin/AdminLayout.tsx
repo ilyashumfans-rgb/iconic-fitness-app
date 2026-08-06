@@ -31,6 +31,7 @@ import {
   Gift as GiftIcon,
   MessageSquare,
   Menu,
+  HelpCircle,
   X,
 } from "lucide-react";
 import { adminApi, type AdminUser } from "@/lib/adminApi";
@@ -236,6 +237,11 @@ const SECTIONS: Section[] = [
         label: "Blog Posts",
         href: "/admin/blogs",
         icon: <BookOpen className="h-4 w-4" />,
+      },
+      {
+        label: "FAQs & AI Knowledge",
+        href: "/admin/faqs",
+        icon: <HelpCircle className="h-4 w-4" />,
       },
       {
         label: "Notifications",

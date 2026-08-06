@@ -556,6 +556,23 @@ export const homeSlidesTable = pgTable("home_slides", {
     .defaultNow(),
 });
 
+// Admin-managed FAQs: shown to members and fed into the AI assistant as
+// gym knowledge, so staff can "teach" the AI without a code change.
+export const faqsTable = pgTable("faqs", {
+  id: serial("id").primaryKey(),
+  question: text("question").notNull(),
+  answer: text("answer").notNull(),
+  category: text("category").notNull().default("General"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const trainersTable = pgTable("trainers", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),

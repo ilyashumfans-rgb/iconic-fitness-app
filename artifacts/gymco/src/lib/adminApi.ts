@@ -475,6 +475,21 @@ export const adminApi = {
     remove: (id: number) =>
       request<{ ok: true }>(`/admin/blogs/${id}`, { method: "DELETE" }),
   },
+  faqs: {
+    list: () => request<any[]>("/admin/faqs"),
+    create: (body: Record<string, unknown>) =>
+      request<any>("/admin/faqs", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: number, body: Record<string, unknown>) =>
+      request<any>(`/admin/faqs/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: number) =>
+      request<{ ok: true }>(`/admin/faqs/${id}`, { method: "DELETE" }),
+  },
   settings: {
     notificationSounds: () =>
       request<{ members: string | null; trainers: string | null }>(

@@ -2,11 +2,13 @@ import { Router, type IRouter } from "express";
 import { and, eq, gte, sql } from "drizzle-orm";
 import {
   db,
+  faqsTable,
   usersTable,
   waterLogsTable,
   mealLogsTable,
   workoutLogsTable,
 } from "@workspace/db";
+import { asc } from "drizzle-orm";
 import {
   AiChatBody,
   AiChatResponse,
@@ -68,6 +70,31 @@ Iconic Fitness is open for franchise partnerships. For franchise queries, contac
 CONTACT
 For membership and general enquiries: call +91 70263 22322 (IVR), email support@iconicfitnessindia.com or iconicfitnessindia@gmail.com, or visit www.iconicfitnessindia.com. WhatsApp: +91 94800 00248.`;
 
+// Admin-managed FAQ knowledge: whatever staff add in the admin panel is
+// appended to the AI's system prompt so it can answer with that content.
+// Failures are swallowed — the AI still works with its built-in knowledge.
+async function loadFaqKnowledge(): Promise<string> {
+  try {
+    const rows = await db
+      .select({
+        question: faqsTable.question,
+        answer: faqsTable.answer,
+        category: faqsTable.category,
+      })
+      .from(faqsTable)
+      .where(eq(faqsTable.isActive, true))
+      .orderBy(asc(faqsTable.sortOrder), asc(faqsTable.id))
+      .limit(200);
+    if (rows.length === 0) return "";
+    const lines = rows.map(
+      (r) => `Q (${r.category}): ${r.question}\nA: ${r.answer}`,
+    );
+    return `\n\nSTAFF-ADDED KNOWLEDGE (latest answers from the Iconic Fitness team — trust these over anything above if they conflict)\n${lines.join("\n\n")}`;
+  } catch {
+    return "";
+  }
+}
+
 router.post("/ai/chat", async (req, res): Promise<void> => {
   const parsed = AiChatBody.safeParse(req.body);
   if (!parsed.success) {
@@ -94,7 +121,7 @@ router.post("/ai/chat", async (req, res): Promise<void> => {
       model: "gpt-5.4",
       max_completion_tokens: 8192,
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: `${SYSTEM_PROMPT}${await loadFaqKnowledge()}` },
         ...parsed.data.messages.map((m) => ({
           role: m.role,
           content: m.content,
@@ -815,7 +842,10 @@ router.post("/ai/coach", requireUser, async (req, res): Promise<void> => {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const messages: any[] = [
-      { role: "system", content: `${COACH_SYSTEM_PROMPT}\n\n${context}` },
+      {
+        role: "system",
+        content: `${COACH_SYSTEM_PROMPT}\n\n${context}${await loadFaqKnowledge()}`,
+      },
       ...parsed.data.messages.map((m) => ({ role: m.role, content: m.content })),
     ];
 
