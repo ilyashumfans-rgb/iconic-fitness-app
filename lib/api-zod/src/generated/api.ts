@@ -804,7 +804,8 @@ export const CreateTrainerBookingBody = zod.object({
   "trainerName": zod.string().optional(),
   "name": zod.string().min(createTrainerBookingBodyNameMin),
   "mobile": zod.string().min(createTrainerBookingBodyMobileMin),
-  "preferredDate": zod.string().describe('ISO date (YYYY-MM-DD)')
+  "preferredDate": zod.string().describe('ISO date (YYYY-MM-DD)'),
+  "couponCode": zod.string().optional().describe('Optional coupon code — validated and applied server-side')
 })
 
 export const CreateTrainerBookingResponse = zod.object({
@@ -1131,6 +1132,26 @@ export const ListMembershipPackagesResponse = zod.array(ListMembershipPackagesRe
 
 
 /**
+ * @summary Check a coupon code against a purchase amount and get the discount
+ */
+export const PreviewCouponBody = zod.object({
+  "code": zod.string(),
+  "amountInr": zod.number().describe('Purchase list price (₹)'),
+  "kind": zod.enum(['package', 'pt']),
+  "mobile": zod.string().optional().describe('Optional — helps enforce per-user limits for guests')
+})
+
+export const PreviewCouponResponse = zod.object({
+  "valid": zod.boolean(),
+  "error": zod.string().optional().describe('Friendly reason when valid=false'),
+  "code": zod.string().optional(),
+  "discountInr": zod.number().optional(),
+  "finalInr": zod.number().optional(),
+  "description": zod.string().optional()
+})
+
+
+/**
  * @summary Start a paid membership-package purchase; returns the hosted payment link
  */
 export const createPackageBookingBodyNameMin = 2;
@@ -1148,7 +1169,8 @@ export const CreatePackageBookingBody = zod.object({
   "mobile": zod.string().min(createPackageBookingBodyMobileMin),
   "email": zod.string().optional().describe('Optional email to enroll with — attached to the member record in the gym system'),
   "startDate": zod.string().describe('ISO date (YYYY-MM-DD)'),
-  "redeemPoints": zod.number().min(createPackageBookingBodyRedeemPointsMin).optional().describe('Wallet points (₹) to apply as a discount — signed-in members only; clamped server-side')
+  "redeemPoints": zod.number().min(createPackageBookingBodyRedeemPointsMin).optional().describe('Wallet points (₹) to apply as a discount — signed-in members only; clamped server-side'),
+  "couponCode": zod.string().optional().describe('Optional coupon code — validated and applied server-side')
 })
 
 export const CreatePackageBookingResponse = zod.object({

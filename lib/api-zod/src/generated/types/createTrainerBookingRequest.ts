@@ -17,4 +17,6 @@ export interface CreateTrainerBookingRequest {
   mobile: string;
   /** ISO date (YYYY-MM-DD) */
   preferredDate: string;
+  /** Optional coupon code — validated and applied server-side */
+  couponCode?: string;
 }

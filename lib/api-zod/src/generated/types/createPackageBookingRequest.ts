@@ -22,4 +22,6 @@ export interface CreatePackageBookingRequest {
      * @minimum 0
      */
   redeemPoints?: number;
+  /** Optional coupon code — validated and applied server-side */
+  couponCode?: string;
 }

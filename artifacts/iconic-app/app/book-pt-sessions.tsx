@@ -18,6 +18,7 @@ import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Field } from "@/components/Field";
+import { CouponInput, type AppliedCoupon } from "@/components/CouponInput";
 import { ModalHeader } from "@/components/ModalHeader";
 import { Screen } from "@/components/Screen";
 import { Chip, EmptyState, ErrorView, LoadingView } from "@/components/ui-bits";
@@ -75,6 +76,7 @@ export default function BookPtSessionsScreen() {
   const [phone, setPhone] = useState("");
   const [date, setDate] = useState(dateOptions[0]);
   const [busy, setBusy] = useState(false);
+  const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
   const [bookingId, setBookingId] = useState<number | null>(null);
   // Keep the hosted checkout link so the member can re-open it if they
   // closed the payment window before finishing.
@@ -98,6 +100,17 @@ export default function BookPtSessionsScreen() {
   });
   const status = bookingId !== null ? statusQuery.data?.status : undefined;
   const selectedPkg = packages.find((p) => p.id === pkgId) ?? null;
+
+  // Coupon leaves at least ₹1 payable; the server re-validates at checkout.
+  const payableInr = selectedPkg
+    ? Math.max(1, selectedPkg.amountInr - (coupon?.discountInr ?? 0))
+    : 0;
+
+  // A coupon is validated against one package's price — reset it if the
+  // member switches packages.
+  useEffect(() => {
+    setCoupon(null);
+  }, [pkgId]);
 
   function validateContact(): boolean {
     if (name.trim().length < 2) {
@@ -126,6 +139,7 @@ export default function BookPtSessionsScreen() {
           name: name.trim(),
           mobile: phone.trim(),
           preferredDate: date,
+          ...(coupon ? { couponCode: coupon.code } : {}),
         },
       });
       setBookingId(created.id);
@@ -366,11 +380,19 @@ export default function BookPtSessionsScreen() {
             ))}
           </View>
 
+          <CouponInput
+            amountInr={selectedPkg ? selectedPkg.amountInr : null}
+            kind="pt"
+            mobile={phone}
+            applied={coupon}
+            onApplied={setCoupon}
+          />
+
           <View style={{ marginTop: 20 }}>
             <Button
               label={
                 selectedPkg
-                  ? `Pay ₹${selectedPkg.amountInr.toLocaleString("en-IN")}`
+                  ? `Pay ₹${payableInr.toLocaleString("en-IN")}`
                   : "Pay online"
               }
               onPress={onPay}

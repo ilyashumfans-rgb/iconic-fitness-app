@@ -195,6 +195,12 @@ export const trainerBookingsTable = pgTable("trainer_bookings", {
   packageName: text("package_name").notNull().default(""),
   serviceName: text("service_name").notNull().default(""),
   amountInr: integer("amount_inr").notNull().default(0),
+  // Coupon applied to this purchase (₹ discount already subtracted from
+  // amountInr). couponId is an immutable snapshot — redemption at paid-flip
+  // settles against the id, so renaming/deleting the coupon can't detach it.
+  couponId: integer("coupon_id").notNull().default(0),
+  couponCode: text("coupon_code").notNull().default(""),
+  couponDiscountInr: integer("coupon_discount_inr").notNull().default(0),
   // Package snapshot for the staff PT dashboard auto-enrol on payment.
   sessions: integer("sessions").notNull().default(0),
   durationDays: integer("duration_days").notNull().default(0),
@@ -515,6 +521,12 @@ export const packageBookingsTable = pgTable("package_bookings", {
   // Wallet points applied to this purchase (₹). amountInr is the amount
   // actually charged after the discount; points are debited at paid-flip.
   redeemPointsInr: integer("redeem_points_inr").notNull().default(0),
+  // Coupon applied to this purchase (₹ discount already subtracted from
+  // amountInr). couponId is an immutable snapshot — redemption at paid-flip
+  // settles against the id, so renaming/deleting the coupon can't detach it.
+  couponId: integer("coupon_id").notNull().default(0),
+  couponCode: text("coupon_code").notNull().default(""),
+  couponDiscountInr: integer("coupon_discount_inr").notNull().default(0),
   startDate: text("start_date").notNull().default(""),
   status: text("status").notNull().default("pending"), // pending | paid | failed
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -572,6 +584,56 @@ export const faqsTable = pgTable("faqs", {
     .notNull()
     .defaultNow(),
 });
+
+// Admin-created discount coupons for membership packages and PT sessions.
+// Codes are stored uppercase. used_count is incremented only at the paid
+// flip (a pending purchase that never completes doesn't consume the coupon).
+export const couponsTable = pgTable("coupons", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(),
+  description: text("description").notNull().default(""),
+  discountType: text("discount_type").notNull().default("percent"), // percent | flat
+  discountValue: integer("discount_value").notNull().default(0),
+  maxDiscountInr: integer("max_discount_inr").notNull().default(0), // 0 = no cap
+  minAmountInr: integer("min_amount_inr").notNull().default(0),
+  appliesTo: text("applies_to").notNull().default("all"), // all | membership | pt
+  maxUses: integer("max_uses").notNull().default(0), // 0 = unlimited
+  usedCount: integer("used_count").notNull().default(0),
+  perUserLimit: integer("per_user_limit").notNull().default(1), // 0 = unlimited
+  expiresOn: text("expires_on"), // YYYY-MM-DD (IST) or null = never
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// One row per successful (paid) use of a coupon.
+export const couponRedemptionsTable = pgTable(
+  "coupon_redemptions",
+  {
+    id: serial("id").primaryKey(),
+    couponId: integer("coupon_id").notNull(),
+    couponCode: text("coupon_code").notNull(),
+    userId: integer("user_id"),
+    mobile: text("mobile").notNull().default(""),
+    kind: text("kind").notNull(), // package | pt
+    bookingId: integer("booking_id").notNull(),
+    discountInr: integer("discount_inr").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    // A booking can consume a coupon exactly once (paid-flip is idempotent).
+    uniqueIndex("coupon_redemptions_kind_booking_unique").on(
+      t.kind,
+      t.bookingId,
+    ),
+  ],
+);
 
 export const trainersTable = pgTable("trainers", {
   id: serial("id").primaryKey(),

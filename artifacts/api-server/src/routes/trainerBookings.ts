@@ -45,6 +45,7 @@ import {
   resolveBranchTarget,
   yoactivConfigured,
 } from "../lib/yoactiv";
+import { quoteCoupon, recordCouponRedemption } from "../lib/coupons";
 
 const router: IRouter = Router();
 
@@ -310,8 +311,14 @@ router.post(
       fetchYoactivPackages(target.branchId),
       packagePrefs(target.branchId),
     ]);
+    // Only genuine PT packages are purchasable here (same classification as
+    // the app's PT list) — blocks applying PT-only coupons to other packages.
     const rawPkg = packages.find(
-      (p) => p.id === body.packageId && isPackageVisible(p.id, prefs),
+      (p) =>
+        p.id === body.packageId &&
+        isPackageVisible(p.id, prefs) &&
+        (p.pt ||
+          /(\bpt\b|personal\s*train)/i.test(`${p.serviceName} ${p.name}`)),
     );
     if (!rawPkg) {
       res.status(400).json({ error: "That package is no longer available" });
@@ -337,6 +344,29 @@ router.post(
       return;
     }
 
+    // Optional coupon — validated against the live list price.
+    const listPrice = Math.round(pkg.amountInr);
+    let couponId = 0;
+    let couponCode = "";
+    let couponDiscountInr = 0;
+    if (typeof body.couponCode === "string" && body.couponCode.trim()) {
+      const quote = await quoteCoupon({
+        code: body.couponCode,
+        amountInr: listPrice,
+        kind: "pt",
+        userId: req.userId ?? null,
+        mobile,
+      });
+      if (!quote.ok) {
+        res.status(400).json({ error: quote.error ?? "Invalid coupon" });
+        return;
+      }
+      couponId = quote.couponId!;
+      couponCode = quote.code!;
+      couponDiscountInr = quote.discountInr!;
+    }
+    const chargeInr = listPrice - couponDiscountInr;
+
     const token = randomBytes(24).toString("hex");
     const [booking] = await db
       .insert(trainerBookingsTable)
@@ -352,7 +382,10 @@ router.post(
         mobile,
         packageName: pkg.name,
         serviceName: pkg.serviceName,
-        amountInr: Math.round(pkg.amountInr),
+        amountInr: chargeInr,
+        couponId,
+        couponCode,
+        couponDiscountInr,
         // Snapshot for the staff PT dashboard auto-enrol once payment lands.
         sessions: pkg.sessions ?? 0,
         durationDays: durationToDays(pkg.duration),
@@ -366,7 +399,7 @@ router.post(
       target,
       memberId,
       variationId: pkg.id,
-      amountInr: Math.round(pkg.amountInr),
+      amountInr: chargeInr,
       startDateIso: body.preferredDate,
       successUrl: `${base}/api/pay/trainer/${token}/success`,
       failedUrl: `${base}/api/pay/trainer/${token}/failed`,
@@ -385,7 +418,7 @@ router.post(
       CreateTrainerBookingResponse.parse({
         id: booking!.id,
         status: "pending",
-        amountInr: Math.round(pkg.amountInr),
+        amountInr: chargeInr,
         paymentUrl,
       }),
     );
@@ -835,6 +868,17 @@ router.get(
       // Refer & Earn: a paid PT purchase also counts as the referred member's
       // first purchase (credited once per referred user, idempotent).
       if (flipped && outcome === "paid") {
+        if (flipped.couponId > 0 && flipped.couponDiscountInr > 0) {
+          await recordCouponRedemption({
+            couponId: flipped.couponId,
+            code: flipped.couponCode,
+            kind: "pt",
+            bookingId: flipped.id,
+            discountInr: flipped.couponDiscountInr,
+            userId: flipped.userId,
+            mobile: flipped.mobile,
+          });
+        }
         await creditReferralRewardOnce(flipped.userId, flipped.amountInr);
         await autoEnrolPtMembership(flipped);
       }

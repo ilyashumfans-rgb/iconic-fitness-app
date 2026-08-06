@@ -32,6 +32,7 @@ import {
   resolveBranchTarget,
   yoactivConfigured,
 } from "../lib/yoactiv";
+import { quoteCoupon, recordCouponRedemption } from "../lib/coupons";
 
 const router: IRouter = Router();
 
@@ -187,17 +188,41 @@ router.post(
     // the hosted payment page always has a real charge. Points are debited at
     // the paid-flip (a pending purchase that never completes costs nothing).
     const listPrice = Math.round(pkg.amountInr);
+
+    // Coupon first (validated against the list price), then wallet points on
+    // the remainder. Both keep at least ₹1 payable.
+    let couponId = 0;
+    let couponCode = "";
+    let couponDiscountInr = 0;
+    if (typeof body.couponCode === "string" && body.couponCode.trim()) {
+      const quote = await quoteCoupon({
+        code: body.couponCode,
+        amountInr: listPrice,
+        kind: "package",
+        userId: req.userId ?? null,
+        mobile,
+      });
+      if (!quote.ok) {
+        res.status(400).json({ error: quote.error ?? "Invalid coupon" });
+        return;
+      }
+      couponId = quote.couponId!;
+      couponCode = quote.code!;
+      couponDiscountInr = quote.discountInr!;
+    }
+    const afterCoupon = listPrice - couponDiscountInr;
+
     let redeemInr = 0;
     if (req.userId && (body.redeemPoints ?? 0) > 0) {
       const balance = await walletBalance(req.userId);
       redeemInr = Math.min(
         Math.round(body.redeemPoints!),
         balance,
-        Math.max(listPrice - 1, 0),
+        Math.max(afterCoupon - 1, 0),
       );
       redeemInr = Math.max(redeemInr, 0);
     }
-    const chargeInr = listPrice - redeemInr;
+    const chargeInr = afterCoupon - redeemInr;
 
     const token = randomBytes(24).toString("hex");
     const [booking] = await db
@@ -214,6 +239,9 @@ router.post(
         serviceName: pkg.serviceName,
         amountInr: chargeInr,
         redeemPointsInr: redeemInr,
+        couponId,
+        couponCode,
+        couponDiscountInr,
         startDate: body.startDate,
         status: "pending",
       })
@@ -366,6 +394,17 @@ router.get(
             label: `Points redeemed — ${flipped.packageName}`,
             refType: "package_redeem",
             refId: String(flipped.id),
+          });
+        }
+        if (flipped.couponId > 0 && flipped.couponDiscountInr > 0) {
+          await recordCouponRedemption({
+            couponId: flipped.couponId,
+            code: flipped.couponCode,
+            kind: "package",
+            bookingId: flipped.id,
+            discountInr: flipped.couponDiscountInr,
+            userId: flipped.userId,
+            mobile: flipped.mobile,
           });
         }
         await creditReferralRewardOnce(

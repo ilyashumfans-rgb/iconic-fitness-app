@@ -490,6 +490,23 @@ export const adminApi = {
     remove: (id: number) =>
       request<{ ok: true }>(`/admin/faqs/${id}`, { method: "DELETE" }),
   },
+  coupons: {
+    list: () => request<any[]>("/admin/coupons"),
+    create: (body: Record<string, unknown>) =>
+      request<any>("/admin/coupons", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    update: (id: number, body: Record<string, unknown>) =>
+      request<any>(`/admin/coupons/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    remove: (id: number) =>
+      request<{ ok: true }>(`/admin/coupons/${id}`, { method: "DELETE" }),
+    redemptions: (id: number) =>
+      request<any[]>(`/admin/coupons/${id}/redemptions`),
+  },
   settings: {
     notificationSounds: () =>
       request<{ members: string | null; trainers: string | null }>(

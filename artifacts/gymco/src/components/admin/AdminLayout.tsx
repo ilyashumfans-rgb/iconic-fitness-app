@@ -32,6 +32,7 @@ import {
   MessageSquare,
   Menu,
   HelpCircle,
+  TicketPercent,
   X,
 } from "lucide-react";
 import { adminApi, type AdminUser } from "@/lib/adminApi";
@@ -242,6 +243,11 @@ const SECTIONS: Section[] = [
         label: "FAQs & AI Knowledge",
         href: "/admin/faqs",
         icon: <HelpCircle className="h-4 w-4" />,
+      },
+      {
+        label: "Coupons",
+        href: "/admin/coupons",
+        icon: <TicketPercent className="h-4 w-4" />,
       },
       {
         label: "Notifications",

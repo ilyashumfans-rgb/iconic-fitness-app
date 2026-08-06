@@ -38,6 +38,8 @@ import type {
   Complaint,
   ComplaintCreate,
   ComplaintFollowUpRequest,
+  CouponPreviewRequest,
+  CouponPreviewResponse,
   CreateMembershipRenewal409,
   CreatePackageBookingRequest,
   CreateTrainerBookingRequest,
@@ -3909,6 +3911,77 @@ export function useListMembershipPackages<TData = Awaited<ReturnType<typeof list
 
 
 
+
+export const getPreviewCouponUrl = () => {
+
+
+
+
+  return `/api/coupons/preview`
+}
+
+/**
+ * @summary Check a coupon code against a purchase amount and get the discount
+ */
+export const previewCoupon = async (couponPreviewRequest: CouponPreviewRequest, options?: RequestInit): Promise<CouponPreviewResponse> => {
+
+  return customFetch<CouponPreviewResponse>(getPreviewCouponUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      couponPreviewRequest,)
+  }
+);}
+
+
+
+
+export const getPreviewCouponMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof previewCoupon>>, TError,{data: BodyType<CouponPreviewRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof previewCoupon>>, TError,{data: BodyType<CouponPreviewRequest>}, TContext> => {
+
+const mutationKey = ['previewCoupon'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof previewCoupon>>, {data: BodyType<CouponPreviewRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  previewCoupon(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PreviewCouponMutationResult = NonNullable<Awaited<ReturnType<typeof previewCoupon>>>
+    export type PreviewCouponMutationBody = BodyType<CouponPreviewRequest>
+    export type PreviewCouponMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Check a coupon code against a purchase amount and get the discount
+ */
+export const usePreviewCoupon = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof previewCoupon>>, TError,{data: BodyType<CouponPreviewRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof previewCoupon>>,
+        TError,
+        {data: BodyType<CouponPreviewRequest>},
+        TContext
+      > => {
+      return useMutation(getPreviewCouponMutationOptions(options));
+    }
 
 export const getCreatePackageBookingUrl = () => {
 

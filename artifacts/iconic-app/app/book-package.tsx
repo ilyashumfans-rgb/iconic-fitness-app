@@ -25,6 +25,7 @@ import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Field } from "@/components/Field";
+import { CouponInput, type AppliedCoupon } from "@/components/CouponInput";
 import { ModalHeader } from "@/components/ModalHeader";
 import { ProfilePhotoPicker } from "@/components/ProfilePhotoPicker";
 import { Screen } from "@/components/Screen";
@@ -105,6 +106,7 @@ export default function BookPackageScreen() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [date, setDate] = useState(dateOptions[0]);
   const [busy, setBusy] = useState(false);
+  const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
   const [bookingId, setBookingId] = useState<number | null>(null);
   // Guest purchases poll status with the access token returned at creation.
   const [bookingToken, setBookingToken] = useState<string | null>(null);
@@ -130,13 +132,24 @@ export default function BookPackageScreen() {
   const status = bookingId !== null ? statusQuery.data?.status : undefined;
   const selectedPkg = packages.find((p) => p.id === pkgId) ?? null;
 
-  // Points cover at most price minus ₹1 — the gateway needs a real charge.
+  // Coupon first, then points on the remainder — both leave at least ₹1
+  // payable (the gateway needs a real charge). Server re-validates both.
+  const couponDiscount = selectedPkg && coupon ? coupon.discountInr : 0;
+  const afterCoupon = selectedPkg
+    ? Math.max(1, selectedPkg.amountInr - couponDiscount)
+    : 0;
   const pointsDiscount = selectedPkg
-    ? Math.min(pointsAvailable, Math.max(0, selectedPkg.amountInr - 1))
+    ? Math.min(pointsAvailable, Math.max(0, afterCoupon - 1))
     : 0;
   const payableInr = selectedPkg
-    ? selectedPkg.amountInr - (usePoints ? pointsDiscount : 0)
+    ? afterCoupon - (usePoints ? pointsDiscount : 0)
     : 0;
+
+  // A coupon is validated against one package's price — reset it if the
+  // member switches packages.
+  useEffect(() => {
+    setCoupon(null);
+  }, [pkgId]);
 
   // Points are debited server-side when the payment lands; refresh the wallet
   // and the membership (the new plan should replace "Join membership" cues).
@@ -190,6 +203,7 @@ export default function BookPackageScreen() {
           mobile: phone.trim(),
           ...(email.trim() ? { email: email.trim() } : {}),
           startDate: date,
+          ...(coupon ? { couponCode: coupon.code } : {}),
           ...(usePoints && pointsDiscount > 0
             ? { redeemPoints: pointsDiscount }
             : {}),
@@ -448,6 +462,16 @@ export default function BookPackageScreen() {
             />
           ))}
         </View>
+
+        {paidFlow ? (
+          <CouponInput
+            amountInr={selectedPkg ? selectedPkg.amountInr : null}
+            kind="package"
+            mobile={phone}
+            applied={coupon}
+            onApplied={setCoupon}
+          />
+        ) : null}
 
         {paidFlow && isSignedIn && pointsAvailable > 0 ? (
           <Pressable

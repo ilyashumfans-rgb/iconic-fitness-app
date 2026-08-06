@@ -392,6 +392,8 @@ export interface CreateTrainerBookingRequest {
   mobile: string;
   /** ISO date (YYYY-MM-DD) */
   preferredDate: string;
+  /** Optional coupon code — validated and applied server-side */
+  couponCode?: string;
 }
 
 export type TrainerBookingCreatedStatus = typeof TrainerBookingCreatedStatus[keyof typeof TrainerBookingCreatedStatus];
@@ -674,6 +676,33 @@ export interface SubmitPtTrialFeedbackRequest {
   comment?: string;
 }
 
+export type CouponPreviewRequestKind = typeof CouponPreviewRequestKind[keyof typeof CouponPreviewRequestKind];
+
+
+export const CouponPreviewRequestKind = {
+  package: 'package',
+  pt: 'pt',
+} as const;
+
+export interface CouponPreviewRequest {
+  code: string;
+  /** Purchase list price (₹) */
+  amountInr: number;
+  kind: CouponPreviewRequestKind;
+  /** Optional — helps enforce per-user limits for guests */
+  mobile?: string;
+}
+
+export interface CouponPreviewResponse {
+  valid: boolean;
+  /** Friendly reason when valid=false */
+  error?: string;
+  code?: string;
+  discountInr?: number;
+  finalInr?: number;
+  description?: string;
+}
+
 export interface CreatePackageBookingRequest {
   gymId: number;
   packageId: number;
@@ -690,6 +719,8 @@ export interface CreatePackageBookingRequest {
      * @minimum 0
      */
   redeemPoints?: number;
+  /** Optional coupon code — validated and applied server-side */
+  couponCode?: string;
 }
 
 export type PackageBookingCreatedStatus = typeof PackageBookingCreatedStatus[keyof typeof PackageBookingCreatedStatus];
