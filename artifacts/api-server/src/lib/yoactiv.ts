@@ -947,28 +947,43 @@ export async function ensureYoactivMemberId(
   } catch {
     // fall through to AddMember
   }
+  // YoActiv rejects AddMember when the mail collides with ANY existing
+  // member — including blank mail, which "already exists" for everyone who
+  // registered without one. A per-mobile placeholder mail is always unique
+  // (mobile is unique per member) and is never shown to anyone.
+  const placeholderMail = `member${mobile}@iconicfitnessindia.com`;
+  const attemptMails =
+    email && email.trim()
+      ? [email.trim(), placeholderMail]
+      : [placeholderMail];
   try {
-    const created = await yoactivPost<{
-      Data?: { Member_Id?: number };
-      Error?: string | null;
-    }>("/Billing/AddMember", target.apiKey, target.branchId, {
-      Name: name,
-      Mail: email ?? "",
-      Ccode: "+91",
-      Mobile: mobile,
-    });
-    const id = created.Data?.Member_Id;
-    if (typeof id === "number" && id > 0) return id;
-    // "already exists" without an id → re-fetch once.
-    const refetch = await yoactivPost<{ MemberId?: number }>(
-      "/Users/Fetch",
-      target.apiKey,
-      target.branchId,
-      { Mobile_No: mobile },
-    );
-    return typeof refetch.MemberId === "number" && refetch.MemberId > 0
-      ? refetch.MemberId
-      : null;
+    for (const mail of attemptMails) {
+      const created = await yoactivPost<{
+        Data?: { Member_Id?: number };
+        Error?: string | null;
+      }>("/Billing/AddMember", target.apiKey, target.branchId, {
+        Name: name,
+        Mail: mail,
+        Ccode: "+91",
+        Mobile: mobile,
+      });
+      const id = created.Data?.Member_Id;
+      if (typeof id === "number" && id > 0) return id;
+      // "already exists" without an id: either the mobile is genuinely
+      // registered (re-fetch will find it) or the MAIL collided with another
+      // member — retry with the guaranteed-unique placeholder mail.
+      const refetch = await yoactivPost<{ MemberId?: number }>(
+        "/Users/Fetch",
+        target.apiKey,
+        target.branchId,
+        { Mobile_No: mobile },
+      );
+      if (typeof refetch.MemberId === "number" && refetch.MemberId > 0) {
+        return refetch.MemberId;
+      }
+    }
+    logger.warn({ branchId: target.branchId }, "yoactiv AddMember exhausted");
+    return null;
   } catch (err) {
     logger.warn({ err }, "yoactiv member ensure failed");
     return null;
