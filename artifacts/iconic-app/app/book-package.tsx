@@ -304,8 +304,41 @@ export default function BookPackageScreen() {
                 />
               </View>
             ) : null}
+            {paid && !isSignedIn ? (
+              <View
+                style={{
+                  alignSelf: "stretch",
+                  marginTop: 4,
+                  padding: 14,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: colors.primary,
+                  gap: 6,
+                }}
+              >
+                <AppText weight="600" size={13} style={{ textAlign: "center" }}>
+                  One last step — log in
+                </AppText>
+                <AppText muted size={12} style={{ textAlign: "center" }}>
+                  Log in with the same phone number ({phone.trim()}) to see
+                  your membership, your branch
+                  {selectedGym ? ` (${selectedGym.name})` : ""}, and what to do
+                  next.
+                </AppText>
+              </View>
+            ) : null}
             {paid ? (
-              <Button label="Done" onPress={() => router.back()} />
+              isSignedIn ? (
+                <Button
+                  label="Go to Home"
+                  onPress={() => router.replace("/(tabs)")}
+                />
+              ) : (
+                <Button
+                  label="Log in to continue"
+                  onPress={() => router.replace("/(auth)/welcome")}
+                />
+              )
             ) : failed ? (
               <Button
                 label="Try again"
