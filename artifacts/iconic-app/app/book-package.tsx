@@ -29,9 +29,10 @@ import { CouponInput, type AppliedCoupon } from "@/components/CouponInput";
 import { ModalHeader } from "@/components/ModalHeader";
 import { ProfilePhotoPicker } from "@/components/ProfilePhotoPicker";
 import { Screen } from "@/components/Screen";
-import { Chip, EmptyState, ErrorView, LoadingView } from "@/components/ui-bits";
+import { EmptyState, ErrorView, LoadingView } from "@/components/ui-bits";
+import { CalendarPicker } from "@/components/DateTimePickers";
 import { useColors } from "@/hooks/useColors";
-import { istDateInNDays, istDateLabel, istToday } from "@/lib/dates";
+import { istDateLabel, istToday } from "@/lib/dates";
 import { resolveImageUrl } from "@/lib/images";
 import { submitLead } from "@/lib/leads";
 import { openPayment } from "@/lib/links";
@@ -86,7 +87,6 @@ export default function BookPackageScreen() {
     },
   });
 
-  const dateOptions = [istToday(), istDateInNDays(1), istDateInNDays(2)];
 
   // Wallet points redemption (signed-in members only).
   const queryClient = useQueryClient();
@@ -104,7 +104,7 @@ export default function BookPackageScreen() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [date, setDate] = useState(dateOptions[0]);
+  const [date, setDate] = useState(istToday());
   const [busy, setBusy] = useState(false);
   const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
   const [bookingId, setBookingId] = useState<number | null>(null);
@@ -485,16 +485,10 @@ export default function BookPackageScreen() {
         >
           Start date
         </AppText>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-          {dateOptions.map((d) => (
-            <Chip
-              key={d}
-              label={istDateLabel(d)}
-              active={d === date}
-              onPress={() => setDate(d)}
-            />
-          ))}
-        </View>
+        <CalendarPicker value={date} onChange={setDate} />
+        <AppText muted size={11} style={{ marginTop: 6 }}>
+          Selected: {istDateLabel(date)}
+        </AppText>
 
         {paidFlow ? (
           <CouponInput
