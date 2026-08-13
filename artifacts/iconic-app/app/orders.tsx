@@ -104,7 +104,9 @@ export default function OrdersScreen() {
 
 function OrderCard({ order }: { order: StoreOrder }) {
   const colors = useColors();
-  const cancelled = order.status === "cancelled";
+  const cancelled =
+    order.status === "cancelled" || order.status === "payment_failed";
+  const awaitingPayment = order.status === "payment_pending";
   const stepIdx = TRACK_STEPS.indexOf(
     order.status as (typeof TRACK_STEPS)[number],
   );
@@ -138,7 +140,11 @@ function OrderCard({ order }: { order: StoreOrder }) {
 
       <View style={styles.rowBetween}>
         <AppText muted size={13}>
-          {order.paymentMethod === "cod" ? "Cash on delivery" : order.paymentMethod}
+          {order.paymentMethod === "cod"
+            ? "Cash on delivery"
+            : order.paymentMethod === "online"
+              ? "Paid online"
+              : order.paymentMethod}
           {order.pointsRedeemedInr > 0
             ? ` · ₹${order.pointsRedeemedInr} points used`
             : ""}
@@ -158,7 +164,18 @@ function OrderCard({ order }: { order: StoreOrder }) {
         >
           <Feather name="x-circle" size={16} color={colors.destructive} />
           <AppText weight="600" size={13} style={{ color: colors.destructive }}>
-            This order was cancelled
+            {order.status === "payment_failed"
+              ? "Payment failed — this order wasn't placed"
+              : "This order was cancelled"}
+          </AppText>
+        </View>
+      ) : awaitingPayment ? (
+        <View
+          style={[styles.cancelBanner, { backgroundColor: colors.elevated }]}
+        >
+          <Feather name="clock" size={16} color={colors.mutedForeground} />
+          <AppText muted weight="600" size={13}>
+            Waiting for payment — the order is confirmed once paid
           </AppText>
         </View>
       ) : (
