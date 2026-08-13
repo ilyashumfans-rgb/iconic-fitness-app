@@ -305,11 +305,15 @@ export default function CartScreen() {
           ) : null}
           <Row label="Payment" value="Online (UPI / card)" />
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          <Row label="To pay" value={`₹${payable}`} bold />
+          <Row label="To pay" value={`₹${payable} + GST & shipping`} bold />
+          <AppText muted size={11}>
+            GST and shipping (if any) are added on the payment page. Your order
+            bill shows the full breakup.
+          </AppText>
         </Card>
 
         <Button
-          label={checkout.isPending ? "Starting payment…" : `Pay ₹${payable}`}
+          label={checkout.isPending ? "Starting payment…" : `Pay ₹${payable} + GST & shipping`}
           icon="check-circle"
           loading={checkout.isPending}
           onPress={() => void onPlaceOrder()}
