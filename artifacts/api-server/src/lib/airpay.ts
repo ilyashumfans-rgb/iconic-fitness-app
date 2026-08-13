@@ -252,11 +252,25 @@ export interface AirpayReturnResult {
   raw: Record<string, unknown>;
 }
 
+/** crc32 (IEEE, unsigned) — matches PHP's crc32() used by Airpay's securehash. */
+function crc32Unsigned(input: string): number {
+  let crc = 0xffffffff;
+  const buf = Buffer.from(input, "utf8");
+  for (const byte of buf) {
+    crc ^= byte;
+    for (let i = 0; i < 8; i++) {
+      crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+    }
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
 /**
  * Verify an Airpay return callback. Only encrypted `encdata` responses are
- * accepted — the blob must decrypt with OUR merchant key to well-formed JSON
- * (an attacker without the key cannot forge that). Plain-field legacy
- * responses carry no keyed signature and are rejected. The caller must
+ * accepted — the blob must decrypt with OUR merchant key to well-formed JSON.
+ * When the payload carries `ap_securehash` (per Airpay's official kit) it is
+ * additionally verified: crc32(orderid:aptxnid:amount:status:message:mercid:
+ * username[:vpa]) must match, or the result is rejected. The caller must
  * additionally bind amount/merchant to the pending order before settling.
  */
 export function parseAirpayReturn(
@@ -266,19 +280,45 @@ export function parseAirpayReturn(
     (body.encdata as string | undefined) ??
     (body.response as string | undefined);
   if (!enc || typeof enc !== "string") return null;
-  const dec = airpayDecrypt(enc);
-  if (!dec) return null;
-  const status = String(
+  const outer = airpayDecrypt(enc);
+  if (!outer) return null;
+  // The kit nests the fields under `data`; accept both shapes.
+  const dec = (
+    outer.data && typeof outer.data === "object" ? outer.data : outer
+  ) as Record<string, unknown>;
+  const statusRaw = String(
     dec.transaction_payment_status ??
       dec.transaction_status ??
       dec.status ??
       "",
-  ).toUpperCase();
+  );
+  const status = statusRaw.toUpperCase();
+  const orderId = String(dec.orderid ?? dec.order_id ?? "");
+  const airpayTxnId = String(dec.ap_transactionid ?? dec.apTransactionID ?? "");
   const amountRaw = dec.amount ?? dec.transaction_amount ?? dec.AMOUNT;
+  // Verify Airpay's securehash when present (official kit formula).
+  const secureHash = String(dec.ap_securehash ?? "");
+  if (secureHash) {
+    const message = String(dec.message ?? "");
+    const chmod = String(dec.chmod ?? "").toLowerCase();
+    const vpa =
+      chmod === "upi" && body.CUSTOMERVPA !== undefined
+        ? `:${String(body.CUSTOMERVPA).trim()}`
+        : "";
+    const expected = crc32Unsigned(
+      `${orderId}:${airpayTxnId}:${String(amountRaw ?? "")}:${statusRaw}:${message}:${env("AIRPAY_MERCHANT_ID")}:${env("AIRPAY_USERNAME")}${vpa}`,
+    ).toString();
+    if (expected !== secureHash) {
+      console.error(
+        `[airpay] securehash MISMATCH for order ${orderId} — rejecting return`,
+      );
+      return null;
+    }
+  }
   return {
     ok: status === "SUCCESS" || status === "200",
-    orderId: String(dec.orderid ?? dec.order_id ?? ""),
-    airpayTxnId: String(dec.ap_transactionid ?? dec.apTransactionID ?? ""),
+    orderId,
+    airpayTxnId,
     amountInr: amountRaw === undefined ? null : Number(amountRaw),
     merchantId: String(dec.merchant_id ?? dec.mercid ?? "") || null,
     raw: dec,
