@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { Router, type IRouter, type Request, type Response } from "express";
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, like, sql } from "drizzle-orm";
 import {
   db,
   productsTable,
@@ -409,7 +409,10 @@ router.get(
     }
     const base = publicBaseUrl(req);
     const form = await airpayCheckoutForm({
-      orderId: token, // unguessable; echoed back in the return callback
+      // Airpay rejects long order ids ("Invalid Order Id"), so we send the
+      // first 20 hex chars of our token — still unguessable (80 bits) and
+      // unique; the return handler matches it as a token prefix.
+      orderId: token.slice(0, 20),
       amountInr: order.totalInr,
       buyerName: order.customerName,
       buyerEmail: order.customerEmail,
@@ -452,7 +455,7 @@ async function handleStoreReturn(req: Request, res: Response): Promise<void> {
     ...((req.body ?? {}) as Record<string, unknown>),
   };
   const result = parseAirpayReturn(body);
-  if (!result || !/^[0-9a-f]{48}$/.test(result.orderId)) {
+  if (!result || !/^[0-9a-f]{20}$/.test(result.orderId)) {
     console.error(
       "[store] unverifiable Airpay return:",
       JSON.stringify(body).slice(0, 500),
@@ -470,7 +473,7 @@ async function handleStoreReturn(req: Request, res: Response): Promise<void> {
     const [pending] = await db
       .select()
       .from(productOrdersTable)
-      .where(eq(productOrdersTable.token, result.orderId));
+      .where(like(productOrdersTable.token, `${result.orderId}%`));
     const mercid = (process.env.AIRPAY_MERCHANT_ID ?? "").trim();
     // A SUCCESS result must carry an amount that exactly equals our order
     // total and (when we know our merchant id) a matching merchant id —
@@ -504,7 +507,7 @@ async function handleStoreReturn(req: Request, res: Response): Promise<void> {
     )
     .where(
       and(
-        eq(productOrdersTable.token, result.orderId),
+        like(productOrdersTable.token, `${result.orderId}%`),
         eq(productOrdersTable.status, "payment_pending"),
       ),
     )
@@ -546,7 +549,7 @@ async function handleStoreReturn(req: Request, res: Response): Promise<void> {
     : await db
         .select()
         .from(productOrdersTable)
-        .where(eq(productOrdersTable.token, result.orderId));
+        .where(like(productOrdersTable.token, `${result.orderId}%`));
   if (!order) {
     res.status(404).send("Not found");
     return;
