@@ -924,6 +924,9 @@ export const productsTable = pgTable("products", {
   colors: text("colors").array().notNull().default([]),
   stock: integer("stock").notNull().default(0),
   status: text("status").notNull().default("active"),
+  // GST percentages applied on the sale price at checkout (e.g. 9 = 9%).
+  cgstPercent: real("cgst_percent").notNull().default(0),
+  sgstPercent: real("sgst_percent").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -942,6 +945,12 @@ export const productOrdersTable = pgTable("product_orders", {
   // totalInr is the payable amount after the points discount.
   userId: integer("user_id").notNull().default(0),
   pointsRedeemedInr: integer("points_redeemed_inr").notNull().default(0),
+  // Invoice breakdown snapshot (₹, whole rupees), captured at checkout:
+  // totalInr = subtotal + cgst + sgst + shipping − points redeemed.
+  subtotalInr: integer("subtotal_inr").notNull().default(0),
+  cgstInr: integer("cgst_inr").notNull().default(0),
+  sgstInr: integer("sgst_inr").notNull().default(0),
+  shippingInr: integer("shipping_inr").notNull().default(0),
   paymentMethod: text("payment_method").notNull().default("cod"),
   // payment_pending → placed (after online payment) | payment_failed;
   // then the fulfillment lifecycle: placed/confirmed/shipped/delivered/cancelled.
