@@ -1425,6 +1425,8 @@ components:
         description: { type: string }
         sizes: { type: array, items: { type: string } }
         colors: { type: array, items: { type: string } }
+        cgstPercent: { type: number }
+        sgstPercent: { type: number }
     StoreCheckoutRequest:
       type: object
       required:
@@ -1458,6 +1460,10 @@ components:
         orderId: { type: integer }
         total: { type: integer }
         redeemedInr: { type: integer }
+        subtotalInr: { type: integer }
+        cgstInr: { type: integer }
+        sgstInr: { type: integer }
+        shippingInr: { type: integer }
         paymentUrl:
           type: string
           description: Open in the system browser to pay (Airpay hosted page)
@@ -1479,6 +1485,10 @@ components:
         id: { type: integer }
         totalInr: { type: integer }
         pointsRedeemedInr: { type: integer }
+        subtotalInr: { type: integer }
+        cgstInr: { type: integer }
+        sgstInr: { type: integer }
+        shippingInr: { type: integer }
         paymentMethod: { type: string }
         status:
           type: string
