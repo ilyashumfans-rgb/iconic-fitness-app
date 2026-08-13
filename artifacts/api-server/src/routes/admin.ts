@@ -1984,6 +1984,34 @@ router.patch(
     const b = (req.body ?? {}) as Record<string, any>;
     const patch: Record<string, unknown> = {};
     if (b.status !== undefined) patch.status = String(b.status);
+    // Payment states belong to the gateway flow, not manual fulfilment edits:
+    // staff may cancel an unpaid order, but never flip it to "placed" (that
+    // happens only via the verified Airpay callback), and never move any
+    // order INTO a payment_* state by hand.
+    if (typeof patch.status === "string") {
+      if (patch.status.startsWith("payment_")) {
+        res.status(400).json({ error: "Payment statuses are set by the gateway" });
+        return;
+      }
+      const [current] = await db
+        .select({ status: productOrdersTable.status })
+        .from(productOrdersTable)
+        .where(eq(productOrdersTable.id, id));
+      if (!current) {
+        res.status(404).json({ error: "Order not found" });
+        return;
+      }
+      if (
+        (current.status === "payment_pending" ||
+          current.status === "payment_failed") &&
+        patch.status !== "cancelled"
+      ) {
+        res.status(400).json({
+          error: "Unpaid orders can only be cancelled — payment confirms them",
+        });
+        return;
+      }
+    }
     const [row] = await db
       .update(productOrdersTable)
       .set(patch)
