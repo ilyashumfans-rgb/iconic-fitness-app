@@ -32,6 +32,7 @@ import { EmptyState } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
 import { cartKey, useCart } from "@/lib/cart";
 import { resolveImageUrl } from "@/lib/images";
+import { openPayment } from "@/lib/links";
 
 export default function CartScreen() {
   const colors = useColors();
@@ -68,7 +69,10 @@ export default function CartScreen() {
   const checkout = useStoreCheckout();
 
   const balance = referral.data?.balanceInr ?? 0;
-  const pointsDiscount = usePoints ? Math.min(balance, totalInr) : 0;
+  // Keep at least ₹1 payable — the online payment page needs a real charge.
+  const pointsDiscount = usePoints
+    ? Math.min(balance, Math.max(totalInr - 1, 0))
+    : 0;
   const payable = totalInr - pointsDiscount;
 
   const onPlaceOrder = async () => {
@@ -124,6 +128,9 @@ export default function CartScreen() {
       void queryClient.invalidateQueries({
         queryKey: getGetMyReferralInfoQueryKey(),
       });
+      // Hand off to the secure payment page (UPI / cards / netbanking) in the
+      // system browser; it deep-links back into the app when done.
+      await openPayment(res.paymentUrl);
     } catch (err) {
       Alert.alert(
         "Could not place order",
@@ -140,11 +147,12 @@ export default function CartScreen() {
             <Feather name="check" size={36} color={colors.primaryForeground} />
           </View>
           <AppText weight="700" size={22} style={{ textAlign: "center" }}>
-            Order placed!
+            Complete your payment
           </AppText>
           <AppText muted size={14} style={{ textAlign: "center" }}>
-            Order #{placedOrderId} — pay cash on delivery. We&apos;ll be in
-            touch soon.
+            Order #{placedOrderId} — finish the payment in the browser window
+            that just opened. Your order is confirmed as soon as the payment
+            goes through.
           </AppText>
           {isSignedIn ? (
             <Button
@@ -295,13 +303,13 @@ export default function CartScreen() {
           {pointsDiscount > 0 ? (
             <Row label="Points discount" value={`−₹${pointsDiscount}`} />
           ) : null}
-          <Row label="Payment" value="Cash on delivery" />
+          <Row label="Payment" value="Online (UPI / card)" />
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <Row label="To pay" value={`₹${payable}`} bold />
         </Card>
 
         <Button
-          label={checkout.isPending ? "Placing order…" : `Place order — ₹${payable}`}
+          label={checkout.isPending ? "Starting payment…" : `Pay ₹${payable}`}
           icon="check-circle"
           loading={checkout.isPending}
           onPress={() => void onPlaceOrder()}
