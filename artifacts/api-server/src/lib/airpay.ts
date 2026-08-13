@@ -21,7 +21,10 @@ import {
 //   privatekey= sha256(secret + "@" + username + ":|:" + password)
 
 const OAUTH_URL = "https://kraken.airpay.co.in/airpay/pay/v4/api/oauth2";
-const CHECKOUT_URL = "https://payments.airpay.co.in/v4/checkout/index.php";
+// NOTE: the docs page shows /v4/checkout/index.php but that path 404s in
+// production — Airpay's own official Node.js integration kit posts to
+// /pay/v4/index.php, which is the working hosted payment page.
+const CHECKOUT_URL = "https://payments.airpay.co.in/pay/v4/index.php";
 
 function env(name: string): string {
   return (process.env[name] ?? "").trim();
@@ -212,22 +215,29 @@ export async function airpayCheckoutForm(
     buyer_pincode: input.buyerPincode,
     amount: input.amountInr.toFixed(2),
     orderid: input.orderId,
+    // Per Airpay's official PHP kit, the payload carries BOTH `currency`
+    // and `currency_code` (same value) plus `iso_currency`.
     currency: "356",
-    isocurrency: "INR",
+    currency_code: "356",
+    iso_currency: "INR",
     merchant_id: env("AIRPAY_MERCHANT_ID"),
     // Where the buyer should land after payment (also configure the same URL
     // in the Airpay merchant dashboard — dashboard config wins if both exist).
     successurl: input.successUrl,
     failureurl: input.failureUrl,
   };
-  payload.checksum = airpayChecksum(payload);
+  const checksum = airpayChecksum(payload);
+  // Field names per Airpay's official integration kit: merchant_id (not
+  // mercid) + an empty chmod alongside privatekey/encdata/checksum.
   return {
     action: `${CHECKOUT_URL}?token=${encodeURIComponent(token)}`,
     fields: {
       privatekey: airpayPrivateKey(),
-      mercid: env("AIRPAY_MERCHANT_ID"),
+      merchant_id: env("AIRPAY_MERCHANT_ID"),
+      apyVer: "",
       encdata: airpayEncrypt(payload),
-      checksum: payload.checksum,
+      checksum,
+      chmod: "",
     },
   };
 }
