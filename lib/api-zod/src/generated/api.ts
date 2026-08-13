@@ -245,7 +245,9 @@ export const ListStoreProductsResponseItem = zod.object({
   "status": zod.string().optional(),
   "description": zod.string().optional(),
   "sizes": zod.array(zod.string()).optional(),
-  "colors": zod.array(zod.string()).optional()
+  "colors": zod.array(zod.string()).optional(),
+  "cgstPercent": zod.number().optional(),
+  "sgstPercent": zod.number().optional()
 })
 export const ListStoreProductsResponse = zod.array(ListStoreProductsResponseItem)
 
@@ -274,6 +276,10 @@ export const StoreCheckoutResponse = zod.object({
   "orderId": zod.number(),
   "total": zod.number(),
   "redeemedInr": zod.number(),
+  "subtotalInr": zod.number().optional(),
+  "cgstInr": zod.number().optional(),
+  "sgstInr": zod.number().optional(),
+  "shippingInr": zod.number().optional(),
   "paymentUrl": zod.string().describe('Open in the system browser to pay (Airpay hosted page)')
 })
 
@@ -285,6 +291,10 @@ export const ListMyStoreOrdersResponseItem = zod.object({
   "id": zod.number(),
   "totalInr": zod.number(),
   "pointsRedeemedInr": zod.number(),
+  "subtotalInr": zod.number().optional(),
+  "cgstInr": zod.number().optional(),
+  "sgstInr": zod.number().optional(),
+  "shippingInr": zod.number().optional(),
   "paymentMethod": zod.string(),
   "status": zod.string().describe('placed | confirmed | shipped | delivered | cancelled'),
   "createdAt": zod.string(),
