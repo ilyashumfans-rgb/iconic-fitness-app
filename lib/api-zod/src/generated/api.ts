@@ -251,7 +251,7 @@ export const ListStoreProductsResponse = zod.array(ListStoreProductsResponseItem
 
 
 /**
- * @summary Place a Cash-on-Delivery store order (guest or signed-in)
+ * @summary Start a store order with online payment (guest or signed-in)
  */
 export const StoreCheckoutBody = zod.object({
   "customerName": zod.string(),
@@ -273,7 +273,8 @@ export const StoreCheckoutResponse = zod.object({
   "ok": zod.boolean(),
   "orderId": zod.number(),
   "total": zod.number(),
-  "redeemedInr": zod.number()
+  "redeemedInr": zod.number(),
+  "paymentUrl": zod.string().describe('Open in the system browser to pay (Airpay hosted page)')
 })
 
 
