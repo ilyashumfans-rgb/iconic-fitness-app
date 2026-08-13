@@ -26,7 +26,15 @@ type Order = {
   items: OrderItem[];
 };
 
-const STATUSES = ["placed", "confirmed", "shipped", "delivered", "cancelled"];
+const STATUSES = [
+  "payment_pending",
+  "payment_failed",
+  "placed",
+  "confirmed",
+  "shipped",
+  "delivered",
+  "cancelled",
+];
 
 export default function AdminOrders() {
   const [rows, setRows] = useState<Order[]>([]);
