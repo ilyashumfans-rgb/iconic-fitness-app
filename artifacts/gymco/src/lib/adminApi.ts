@@ -255,6 +255,14 @@ export const adminApi = {
     remove: (id: number) =>
       request<{ ok: true }>(`/admin/categories/${id}`, { method: "DELETE" }),
   },
+  storeShipping: {
+    get: () => request<{ shippingInr: number }>("/admin/store/shipping"),
+    set: (shippingInr: number) =>
+      request<{ shippingInr: number }>("/admin/store/shipping", {
+        method: "PUT",
+        body: JSON.stringify({ shippingInr }),
+      }),
+  },
   orders: {
     list: () => request<any[]>("/admin/orders"),
     update: (id: number, body: Record<string, unknown>) =>
