@@ -943,7 +943,14 @@ export const productOrdersTable = pgTable("product_orders", {
   userId: integer("user_id").notNull().default(0),
   pointsRedeemedInr: integer("points_redeemed_inr").notNull().default(0),
   paymentMethod: text("payment_method").notNull().default("cod"),
+  // payment_pending → placed (after online payment) | payment_failed;
+  // then the fulfillment lifecycle: placed/confirmed/shipped/delivered/cancelled.
   status: text("status").notNull().default("placed"),
+  // Online payment (Airpay): unguessable reference used as the gateway order
+  // id and in the return/landing URLs; '' for legacy COD rows.
+  token: text("token").notNull().default(""),
+  airpayTxnId: text("airpay_txn_id").notNull().default(""),
+  paidAt: timestamp("paid_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
