@@ -26,7 +26,9 @@ import {
   trainerBookingsTable,
   packageBookingsTable,
   packageCategoriesTable,
+  appSettingsTable,
 } from "@workspace/db";
+import { SHIPPING_SETTING_KEY, storeShippingInr } from "./store";
 import {
   hashPassword,
   requireAdmin,
@@ -1874,6 +1876,43 @@ router.get(
   },
 );
 
+/** GST rates are 0–50%; anything else is a typo — clamp, don't reject. */
+function clampGstPercent(v: unknown): number {
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.min(50, Math.round(n * 100) / 100);
+}
+
+// ── Store shipping charge (flat ₹ per order, saved in app settings) ──
+
+router.get(
+  "/admin/store/shipping",
+  requireAdmin,
+  async (_req: Request, res: Response): Promise<void> => {
+    res.json({ shippingInr: await storeShippingInr() });
+  },
+);
+
+router.put(
+  "/admin/store/shipping",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const n = Math.round(Number((req.body ?? {}).shippingInr));
+    if (!Number.isFinite(n) || n < 0 || n > 100000) {
+      res.status(400).json({ error: "Shipping charge must be 0–100000 ₹" });
+      return;
+    }
+    await db
+      .insert(appSettingsTable)
+      .values({ key: SHIPPING_SETTING_KEY, value: String(n) })
+      .onConflictDoUpdate({
+        target: appSettingsTable.key,
+        set: { value: String(n), updatedAt: new Date() },
+      });
+    res.json({ shippingInr: n });
+  },
+);
+
 router.post(
   "/admin/products",
   requireAdmin,
@@ -1900,6 +1939,8 @@ router.post(
         colors: Array.isArray(b.colors) ? b.colors.map(String) : [],
         stock: Number(b.stock ?? 0),
         status: String(b.status ?? "active"),
+        cgstPercent: clampGstPercent(b.cgstPercent),
+        sgstPercent: clampGstPercent(b.sgstPercent),
       })
       .returning();
     res.json(row);
@@ -1928,6 +1969,10 @@ router.patch(
     if (b.status !== undefined) patch.status = String(b.status);
     if (b.vendorPartnerId !== undefined)
       patch.vendorPartnerId = Number(b.vendorPartnerId);
+    if (b.cgstPercent !== undefined)
+      patch.cgstPercent = clampGstPercent(b.cgstPercent);
+    if (b.sgstPercent !== undefined)
+      patch.sgstPercent = clampGstPercent(b.sgstPercent);
     const [row] = await db
       .update(productsTable)
       .set(patch)
