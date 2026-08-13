@@ -151,6 +151,8 @@ export interface StoreProduct {
   description?: string;
   sizes?: string[];
   colors?: string[];
+  cgstPercent?: number;
+  sgstPercent?: number;
 }
 
 export type StoreCheckoutRequestItemsItem = {
@@ -177,6 +179,10 @@ export interface StoreCheckoutResponse {
   orderId: number;
   total: number;
   redeemedInr: number;
+  subtotalInr?: number;
+  cgstInr?: number;
+  sgstInr?: number;
+  shippingInr?: number;
   /** Open in the system browser to pay (Airpay hosted page) */
   paymentUrl: string;
 }
@@ -194,6 +200,10 @@ export interface StoreOrder {
   id: number;
   totalInr: number;
   pointsRedeemedInr: number;
+  subtotalInr?: number;
+  cgstInr?: number;
+  sgstInr?: number;
+  shippingInr?: number;
   paymentMethod: string;
   /** placed | confirmed | shipped | delivered | cancelled */
   status: string;
