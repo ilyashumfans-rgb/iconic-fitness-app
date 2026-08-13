@@ -66,6 +66,9 @@ export default function Checkout() {
         });
       }
       setSuccess({ orderId: result.orderId, total: result.total });
+      // Hand off to the secure Airpay payment page (UPI / cards / netbanking).
+      window.location.assign(result.paymentUrl);
+      return; // keep the button disabled while the browser navigates away
     } catch (e: any) {
       setErr(e?.message ?? "Checkout failed");
     } finally {
@@ -81,11 +84,11 @@ export default function Checkout() {
         </div>
         <h1 className="text-3xl font-black tracking-tight">Order placed!</h1>
         <p className="text-muted-foreground mt-2">
-          Order #{success.orderId} — ₹{success.total.toLocaleString("en-IN")} (Cash on
-          Delivery)
+          Order #{success.orderId} — ₹{success.total.toLocaleString("en-IN")}
         </p>
         <p className="text-sm text-muted-foreground mt-3">
-          You'll get a call from the vendor to confirm. Pay on delivery.
+          Taking you to the secure payment page… Your order is confirmed once the
+          payment goes through.
         </p>
         <Link
           href="/store"
@@ -187,9 +190,10 @@ export default function Checkout() {
             Payment method
           </div>
           <div className="p-3 rounded-lg border-2 border-lime-500/60 bg-lime-500/5">
-            <div className="font-bold text-foreground">Cash on Delivery</div>
+            <div className="font-bold text-foreground">Pay Online</div>
             <div className="text-xs text-muted-foreground mt-0.5">
-              Pay in cash when your order arrives. Online payment coming soon.
+              UPI, cards or netbanking on the secure payment page after you place
+              the order. GST &amp; shipping (if any) are added at checkout.
             </div>
           </div>
 
@@ -269,7 +273,7 @@ export default function Checkout() {
             disabled={busy}
             className="mt-5 w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-brand text-white font-bold shadow-[0_8px_24px_-8px_hsl(91_56%_55%/0.7)] hover:opacity-95 disabled:opacity-50"
           >
-            {busy ? "Placing order…" : "Place order"}
+            {busy ? "Placing order…" : "Place order & pay"}
           </button>
         </aside>
       </form>
