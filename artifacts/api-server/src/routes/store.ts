@@ -467,21 +467,39 @@ async function handleStoreReturn(req: Request, res: Response): Promise<void> {
       );
     return;
   }
+  // Resolve the 20-hex gateway reference back to exactly ONE order token —
+  // ambiguity means we cannot safely settle anything. All later queries use
+  // strict equality on the full resolved token.
+  const matches = await db
+    .select()
+    .from(productOrdersTable)
+    .where(like(productOrdersTable.token, `${result.orderId}%`));
+  if (matches.length > 1) {
+    console.error(
+      `[store] Airpay return prefix ${result.orderId} matched ${matches.length} orders — rejecting`,
+    );
+    res.status(409).send("Payment verification failed");
+    return;
+  }
+  const fullToken = matches[0]?.token ?? null;
+  if (!fullToken) {
+    res.status(404).send("Not found");
+    return;
+  }
   // Bind the gateway's echoed amount/merchant to OUR pending order before any
   // flip — decrypt alone proves the key, not that this result matches this order.
   if (result.ok) {
-    const [pending] = await db
-      .select()
-      .from(productOrdersTable)
-      .where(like(productOrdersTable.token, `${result.orderId}%`));
+    const [pending] = matches;
     const mercid = (process.env.AIRPAY_MERCHANT_ID ?? "").trim();
     // A SUCCESS result must carry an amount that exactly equals our order
-    // total and (when we know our merchant id) a matching merchant id —
-    // an omitted/NaN amount is treated as a mismatch, never waved through.
+    // total (compared in paise — no rounding tolerance) and (when we know our
+    // merchant id) a matching merchant id — an omitted/NaN amount is treated
+    // as a mismatch, never waved through.
     const amountOk =
       result.amountInr !== null &&
       Number.isFinite(result.amountInr) &&
-      Math.round(result.amountInr) === pending?.totalInr;
+      pending !== undefined &&
+      Math.round(result.amountInr * 100) === pending.totalInr * 100;
     const merchantOk =
       mercid === "" || (result.merchantId !== null && result.merchantId === mercid);
     if (pending && pending.status === "payment_pending" && (!amountOk || !merchantOk)) {
@@ -507,7 +525,7 @@ async function handleStoreReturn(req: Request, res: Response): Promise<void> {
     )
     .where(
       and(
-        like(productOrdersTable.token, `${result.orderId}%`),
+        eq(productOrdersTable.token, fullToken),
         eq(productOrdersTable.status, "payment_pending"),
       ),
     )
@@ -549,7 +567,7 @@ async function handleStoreReturn(req: Request, res: Response): Promise<void> {
     : await db
         .select()
         .from(productOrdersTable)
-        .where(like(productOrdersTable.token, `${result.orderId}%`));
+        .where(eq(productOrdersTable.token, fullToken));
   if (!order) {
     res.status(404).send("Not found");
     return;
