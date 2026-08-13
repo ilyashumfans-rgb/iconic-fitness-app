@@ -8,6 +8,7 @@ import {
   productOrderItemsTable,
   productCategoriesTable,
   partnersTable,
+  appSettingsTable,
 } from "@workspace/db";
 import { DEFAULT_PRODUCT_CATEGORIES } from "../lib/productCategories.js";
 import { optionalUser, requireUser } from "../lib/currentUser";
@@ -37,15 +38,26 @@ function publicBaseUrl(req: Request): string {
 // columns on first use (production DDL can't be run by hand).
 let orderColumnsEnsured = false;
 /** Throws when the columns can't be guaranteed — callers must NOT proceed to
- *  insert orders against a schema that may be missing them. */
-async function ensureOrderPaymentColumns(): Promise<void> {
+ *  insert orders against a schema that may be missing them. Also invoked at
+ *  server startup (before listen) so catalog/admin SELECTs never hit a
+ *  production database that predates these columns. */
+export async function ensureStoreColumns(): Promise<void> {
   if (orderColumnsEnsured) return;
   try {
     await db.execute(sql`
       ALTER TABLE product_orders
         ADD COLUMN IF NOT EXISTS token text NOT NULL DEFAULT '',
         ADD COLUMN IF NOT EXISTS airpay_txn_id text NOT NULL DEFAULT '',
-        ADD COLUMN IF NOT EXISTS paid_at timestamptz
+        ADD COLUMN IF NOT EXISTS paid_at timestamptz,
+        ADD COLUMN IF NOT EXISTS subtotal_inr integer NOT NULL DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS cgst_inr integer NOT NULL DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS sgst_inr integer NOT NULL DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS shipping_inr integer NOT NULL DEFAULT 0
+    `);
+    await db.execute(sql`
+      ALTER TABLE products
+        ADD COLUMN IF NOT EXISTS cgst_percent real NOT NULL DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS sgst_percent real NOT NULL DEFAULT 0
     `);
     orderColumnsEnsured = true;
   } catch (err) {
@@ -53,7 +65,10 @@ async function ensureOrderPaymentColumns(): Promise<void> {
     // already exist — verify before giving up.
     try {
       await db.execute(
-        sql`SELECT token, airpay_txn_id, paid_at FROM product_orders LIMIT 1`,
+        sql`SELECT token, airpay_txn_id, paid_at, subtotal_inr, shipping_inr FROM product_orders LIMIT 1`,
+      );
+      await db.execute(
+        sql`SELECT cgst_percent, sgst_percent FROM products LIMIT 1`,
       );
       orderColumnsEnsured = true;
       return;
@@ -63,6 +78,18 @@ async function ensureOrderPaymentColumns(): Promise<void> {
     console.error("[store] could not ensure payment columns:", err);
     throw new Error("store payment columns unavailable");
   }
+}
+
+/** Flat shipping charge (₹) applied to every order; set by admin in app
+ *  settings under this key. Missing/invalid → 0 (free shipping). */
+export const SHIPPING_SETTING_KEY = "store_shipping_inr";
+export async function storeShippingInr(): Promise<number> {
+  const [row] = await db
+    .select()
+    .from(appSettingsTable)
+    .where(eq(appSettingsTable.key, SHIPPING_SETTING_KEY));
+  const n = Math.round(Number(row?.value ?? 0));
+  return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
 // ── Categories (public) ──
@@ -224,8 +251,12 @@ router.post(
       res.status(400).json({ error: "Some products no longer available" });
       return;
     }
-    // Compute server-side total — never trust client prices.
-    let total = 0;
+    // Compute server-side totals — never trust client prices. GST is applied
+    // per line from each product's configured CGST/SGST percentages, rounded
+    // to whole rupees per component.
+    let subtotal = 0;
+    let cgstPaise = 0;
+    let sgstPaise = 0;
     const lineItems: Array<{
       productId: number;
       vendorPartnerId: number;
@@ -241,7 +272,11 @@ router.post(
         return;
       }
       const qty = Math.max(1, Math.min(99, Number(i.qty) || 1));
-      total += p.priceInr * qty;
+      const lineInr = p.priceInr * qty;
+      subtotal += lineInr;
+      // Accumulate GST in paise to avoid per-line rounding drift.
+      cgstPaise += Math.round(lineInr * 100 * (p.cgstPercent / 100));
+      sgstPaise += Math.round(lineInr * 100 * (p.sgstPercent / 100));
       // Compose a human-readable variant label, validating against the product's
       // configured options so clients can't inject arbitrary text.
       const size =
@@ -264,11 +299,16 @@ router.post(
       return;
     }
     try {
-      await ensureOrderPaymentColumns();
+      await ensureStoreColumns();
     } catch {
       res.status(503).json({ error: "Payments are temporarily unavailable" });
       return;
     }
+
+    const cgstInr = Math.round(cgstPaise / 100);
+    const sgstInr = Math.round(sgstPaise / 100);
+    const shippingInr = await storeShippingInr();
+    const total = subtotal + cgstInr + sgstInr + shippingInr;
 
     // Refer & Earn: signed-in members may apply wallet points (1 point = ₹1).
     // Clamp to their balance and keep at least ₹1 payable so the payment page
@@ -297,6 +337,10 @@ router.post(
         totalInr: total - redeemInr,
         userId: req.userId ?? 0,
         pointsRedeemedInr: redeemInr,
+        subtotalInr: subtotal,
+        cgstInr,
+        sgstInr,
+        shippingInr,
         paymentMethod: "online",
         status: "payment_pending",
         token,
@@ -310,6 +354,10 @@ router.post(
       orderId: order!.id,
       total: total - redeemInr,
       redeemedInr: redeemInr,
+      subtotalInr: subtotal,
+      cgstInr,
+      sgstInr,
+      shippingInr,
       // The app opens this in the system browser; it forwards to Airpay's
       // hosted payment page (UPI / cards / netbanking).
       paymentUrl: `${publicBaseUrl(req)}/api/pay/store/${token}/start`,
@@ -424,14 +472,16 @@ async function handleStoreReturn(req: Request, res: Response): Promise<void> {
       .from(productOrdersTable)
       .where(eq(productOrdersTable.token, result.orderId));
     const mercid = (process.env.AIRPAY_MERCHANT_ID ?? "").trim();
-    const amountMismatch =
-      pending !== undefined &&
+    // A SUCCESS result must carry an amount that exactly equals our order
+    // total and (when we know our merchant id) a matching merchant id —
+    // an omitted/NaN amount is treated as a mismatch, never waved through.
+    const amountOk =
       result.amountInr !== null &&
       Number.isFinite(result.amountInr) &&
-      Math.round(result.amountInr) !== pending.totalInr;
-    const merchantMismatch =
-      result.merchantId !== null && mercid !== "" && result.merchantId !== mercid;
-    if (pending && pending.status === "payment_pending" && (amountMismatch || merchantMismatch)) {
+      Math.round(result.amountInr) === pending?.totalInr;
+    const merchantOk =
+      mercid === "" || (result.merchantId !== null && result.merchantId === mercid);
+    if (pending && pending.status === "payment_pending" && (!amountOk || !merchantOk)) {
       console.error(
         `[store] Airpay return REJECTED for order #${pending.id}: ` +
           `amount ${result.amountInr} vs ${pending.totalInr}, merchant ${result.merchantId}`,
@@ -542,6 +592,10 @@ router.get(
         id: o.id,
         totalInr: o.totalInr,
         pointsRedeemedInr: o.pointsRedeemedInr,
+        subtotalInr: o.subtotalInr,
+        cgstInr: o.cgstInr,
+        sgstInr: o.sgstInr,
+        shippingInr: o.shippingInr,
         paymentMethod: o.paymentMethod,
         status: o.status,
         createdAt: o.createdAt.toISOString(),
