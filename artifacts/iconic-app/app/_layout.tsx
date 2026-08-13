@@ -10,7 +10,10 @@ import {
   Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setAuthTokenGetter, setBaseUrl } from "@workspace/api-client-react";
 import { Stack } from "expo-router";
 import * as Notifications from "expo-notifications";
@@ -30,7 +33,52 @@ import { ThemeProvider, useTheme } from "@/hooks/useTheme";
 
 SplashScreen.preventAutoHideAsync();
 
-const queryClient = new QueryClient();
+// Cache-first data loading: screens render instantly from the last known data
+// (persisted to device storage across app launches) while a background refetch
+// keeps things fresh. staleTime avoids refetch storms when hopping between tabs.
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000,
+      gcTime: 24 * 60 * 60 * 1000,
+      retry: 1,
+    },
+  },
+});
+
+const queryPersister = createAsyncStoragePersister({
+  storage: AsyncStorage,
+  key: "iconic-query-cache",
+  throttleTime: 2000,
+});
+
+// Only PUBLIC catalog-style content is ever written to device storage —
+// anything personal (profile, orders, bookings, notifications, wallet…)
+// stays in memory only, so nothing private can leak to the next person
+// who opens the app on a shared phone.
+const PUBLIC_PERSIST_PREFIXES = [
+  "/api/gyms",
+  "/api/classes",
+  "/api/trainers",
+  "/api/memberships",
+  "/api/package-categories",
+  "/api/membership-packages",
+  "/api/store/products",
+  "/api/store/categories",
+  "/api/home-slides",
+  "/api/faq",
+  "/api/links",
+];
+
+function isPublicPersistableQuery(query: { queryKey: readonly unknown[] }): boolean {
+  const first = query.queryKey[0];
+  return (
+    typeof first === "string" &&
+    PUBLIC_PERSIST_PREFIXES.some(
+      (p) => first === p || first.startsWith(`${p}/`) || first.startsWith(`${p}?`),
+    )
+  );
+}
 
 // Point generated API hooks at the remote GYMCO backend (same domain, /api).
 // EAS cloud builds don't set EXPO_PUBLIC_DOMAIN, so fall back to the published
@@ -249,7 +297,19 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <ThemeProvider>
           <ErrorBoundary>
-            <QueryClientProvider client={queryClient}>
+            <PersistQueryClientProvider
+              client={queryClient}
+              persistOptions={{
+                persister: queryPersister,
+                maxAge: 24 * 60 * 60 * 1000,
+                buster: "v2",
+                dehydrateOptions: {
+                  shouldDehydrateQuery: (query) =>
+                    query.state.status === "success" &&
+                    isPublicPersistableQuery(query),
+                },
+              }}
+            >
               <ApiAuthBridge />
               <PendingMobileLink />
               <GuestProvider>
@@ -260,7 +320,7 @@ export default function RootLayout() {
                   ) : null}
                 </GestureHandlerRootView>
               </GuestProvider>
-            </QueryClientProvider>
+            </PersistQueryClientProvider>
           </ErrorBoundary>
         </ThemeProvider>
       </SafeAreaProvider>
