@@ -107,12 +107,14 @@ export function airpayChecksum(payload: Record<string, unknown>): string {
 }
 
 export function airpayPrivateKey(): string {
-  // VERIFIED live (Aug 2026): the "secret" in the privatekey formula is the
-  // dashboard API KEY (AIRPAY_API_KEY) — NOT the 32-char secret key. Using
-  // AIRPAY_SECRET_KEY here yields "Merchant Key Authentication Failed".
+  // privatekey = sha256(secret + "@" + username + ":|:" + password).
+  // Which credential is "the secret" is ambiguous in Airpay's docs; the env
+  // var AIRPAY_PK_SECRET (name of another AIRPAY_* env var, default
+  // AIRPAY_API_KEY) selects it so we can probe candidates without code edits.
+  const source = env("AIRPAY_PK_SECRET") || "AIRPAY_API_KEY";
   return createHash("sha256")
     .update(
-      `${env("AIRPAY_API_KEY")}@${env("AIRPAY_USERNAME")}:|:${env("AIRPAY_PASSWORD")}`,
+      `${env(source)}@${env("AIRPAY_USERNAME")}:|:${env("AIRPAY_PASSWORD")}`,
     )
     .digest("hex");
 }
