@@ -958,6 +958,9 @@ export const productOrdersTable = pgTable("product_orders", {
   // Online payment (Airpay): unguessable reference used as the gateway order
   // id and in the return/landing URLs; '' for legacy COD rows.
   token: text("token").notNull().default(""),
+  // Numeric gateway order id sent to Airpay (they reject non-numeric ids with
+  // "Merchant Transaction Id not valid"); regenerated on every payment attempt.
+  airpayOrderRef: text("airpay_order_ref").notNull().default(""),
   airpayTxnId: text("airpay_txn_id").notNull().default(""),
   paidAt: timestamp("paid_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
