@@ -47,6 +47,7 @@ export async function ensureStoreColumns(): Promise<void> {
     await db.execute(sql`
       ALTER TABLE product_orders
         ADD COLUMN IF NOT EXISTS token text NOT NULL DEFAULT '',
+        ADD COLUMN IF NOT EXISTS airpay_order_ref text NOT NULL DEFAULT '',
         ADD COLUMN IF NOT EXISTS airpay_txn_id text NOT NULL DEFAULT '',
         ADD COLUMN IF NOT EXISTS paid_at timestamptz,
         ADD COLUMN IF NOT EXISTS subtotal_inr integer NOT NULL DEFAULT 0,
@@ -65,7 +66,7 @@ export async function ensureStoreColumns(): Promise<void> {
     // already exist — verify before giving up.
     try {
       await db.execute(
-        sql`SELECT token, airpay_txn_id, paid_at, subtotal_inr, shipping_inr FROM product_orders LIMIT 1`,
+        sql`SELECT token, airpay_order_ref, airpay_txn_id, paid_at, subtotal_inr, shipping_inr FROM product_orders LIMIT 1`,
       );
       await db.execute(
         sql`SELECT cgst_percent, sgst_percent FROM products LIMIT 1`,
@@ -408,11 +409,39 @@ router.get(
       return;
     }
     const base = publicBaseUrl(req);
+    // Airpay only accepts NUMERIC order ids ("Merchant Transaction Id not
+    // valid" otherwise). Each order gets exactly ONE stable numeric ref,
+    // assigned on the first /start and never overwritten — a second tab
+    // reuses it, so a payment made in the first tab always resolves back to
+    // this order (an overwritten ref would orphan the paid return). The
+    // order-id prefix makes refs unique across orders; a failed payment flips
+    // the order to payment_failed (410 here), so a retry is a NEW order and
+    // therefore a new ref — Airpay never sees a reused id for a new attempt.
+    let orderRef = order.airpayOrderRef;
+    if (!orderRef) {
+      await db
+        .update(productOrdersTable)
+        .set({ airpayOrderRef: `${order.id}${Date.now()}` })
+        .where(
+          and(
+            eq(productOrdersTable.token, token),
+            eq(productOrdersTable.airpayOrderRef, ""),
+          ),
+        );
+      // Re-read: under concurrency the other request may have won the
+      // conditional update — either way this is the single stable ref.
+      const [fresh] = await db
+        .select()
+        .from(productOrdersTable)
+        .where(eq(productOrdersTable.token, token));
+      orderRef = fresh?.airpayOrderRef ?? "";
+    }
+    if (!orderRef) {
+      res.status(500).send("Could not prepare payment");
+      return;
+    }
     const form = await airpayCheckoutForm({
-      // Airpay rejects long order ids ("Invalid Order Id"), so we send the
-      // first 20 hex chars of our token — still unguessable (80 bits) and
-      // unique; the return handler matches it as a token prefix.
-      orderId: token.slice(0, 20),
+      orderId: orderRef,
       amountInr: order.totalInr,
       buyerName: order.customerName,
       buyerEmail: order.customerEmail,
@@ -455,7 +484,7 @@ async function handleStoreReturn(req: Request, res: Response): Promise<void> {
     ...((req.body ?? {}) as Record<string, unknown>),
   };
   const result = parseAirpayReturn(body);
-  if (!result || !/^[0-9a-f]{20}$/.test(result.orderId)) {
+  if (!result || !/^[0-9]{6,32}$/.test(result.orderId)) {
     console.error(
       "[store] unverifiable Airpay return:",
       JSON.stringify(body).slice(0, 500),
@@ -467,13 +496,13 @@ async function handleStoreReturn(req: Request, res: Response): Promise<void> {
       );
     return;
   }
-  // Resolve the 20-hex gateway reference back to exactly ONE order token —
+  // Resolve the numeric gateway reference back to exactly ONE order —
   // ambiguity means we cannot safely settle anything. All later queries use
   // strict equality on the full resolved token.
   const matches = await db
     .select()
     .from(productOrdersTable)
-    .where(like(productOrdersTable.token, `${result.orderId}%`));
+    .where(eq(productOrdersTable.airpayOrderRef, result.orderId));
   if (matches.length > 1) {
     console.error(
       `[store] Airpay return prefix ${result.orderId} matched ${matches.length} orders — rejecting`,
