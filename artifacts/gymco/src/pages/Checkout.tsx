@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
+import { useUser } from "@clerk/react";
 import {
   useGetMyReferralInfo,
   getGetMyReferralInfoQueryKey,
@@ -14,6 +15,7 @@ const INPUT =
 
 export default function Checkout() {
   const cart = useCart();
+  const { isLoaded, isSignedIn } = useUser();
   const [, navigate] = useLocation();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -95,6 +97,26 @@ export default function Checkout() {
           className="inline-flex items-center gap-2 mt-6 px-5 py-3 rounded-xl bg-gradient-brand text-white font-bold"
         >
           Continue shopping <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+    );
+  }
+
+  // Login is required to order — the order then shows in My Orders and the
+  // member gets status notifications.
+  if (isLoaded && !isSignedIn) {
+    return (
+      <div className="py-20 text-center max-w-md mx-auto">
+        <h1 className="text-3xl font-black tracking-tight">Please sign in</h1>
+        <p className="text-muted-foreground mt-3">
+          Log in to place your order — you'll get order updates and can track
+          it anytime in My Orders. Your cart is saved.
+        </p>
+        <Link
+          href="/sign-in"
+          className="inline-flex items-center gap-2 mt-6 px-5 py-3 rounded-xl bg-gradient-brand text-white font-bold"
+        >
+          Sign in to continue <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
     );
