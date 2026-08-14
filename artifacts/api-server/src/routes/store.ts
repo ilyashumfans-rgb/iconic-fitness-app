@@ -11,7 +11,8 @@ import {
   appSettingsTable,
 } from "@workspace/db";
 import { DEFAULT_PRODUCT_CATEGORIES } from "../lib/productCategories.js";
-import { optionalUser, requireUser } from "../lib/currentUser";
+import { requireUser } from "../lib/currentUser";
+import { notifyOrderStatus } from "../lib/orderNotify";
 import { microCache } from "../lib/microCache";
 import {
   creditReferralRewardOnce,
@@ -202,7 +203,9 @@ router.get(
 
 router.post(
   "/store/checkout",
-  optionalUser,
+  // Login is required to place an order — signed-in orders get status
+  // notifications and appear in My Orders (website + app).
+  requireUser,
   async (req: Request, res: Response): Promise<void> => {
     const b = (req.body ?? {}) as Record<string, unknown>;
     const customerName = String(b.customerName ?? "").trim();
@@ -559,6 +562,13 @@ async function handleStoreReturn(req: Request, res: Response): Promise<void> {
       ),
     )
     .returning();
+<<<<<<< HEAD
+  if (flipped) {
+    // Fire-and-forget member notification (placed / payment_failed).
+    void notifyOrderStatus(flipped.userId, flipped.id, flipped.status);
+  }
+=======
+>>>>>>> 2c19f3b5f3452738417c84cdac0ccc3abb5b9427
   if (flipped && result.ok) {
     // Settle wallet points and referral reward exactly once, on the paid flip.
     // debitWallet is idempotent per (refType, refId), so a failure here can be
