@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import {
   db,
   adminsTable,
@@ -29,6 +29,10 @@ import {
   appSettingsTable,
 } from "@workspace/db";
 import { SHIPPING_SETTING_KEY, storeShippingInr } from "./store";
+<<<<<<< HEAD
+import { notifyOrderStatus } from "../lib/orderNotify";
+=======
+>>>>>>> 2c19f3b5f3452738417c84cdac0ccc3abb5b9427
 import {
   hashPassword,
   requireAdmin,
@@ -2033,6 +2037,10 @@ router.patch(
     // staff may cancel an unpaid order, but never flip it to "placed" (that
     // happens only via the verified Airpay callback), and never move any
     // order INTO a payment_* state by hand.
+<<<<<<< HEAD
+    let previousStatus: string | null = null;
+=======
+>>>>>>> 2c19f3b5f3452738417c84cdac0ccc3abb5b9427
     if (typeof patch.status === "string") {
       if (patch.status.startsWith("payment_")) {
         res.status(400).json({ error: "Payment statuses are set by the gateway" });
@@ -2056,6 +2064,42 @@ router.patch(
         });
         return;
       }
+<<<<<<< HEAD
+      previousStatus = current.status;
+    }
+    // Race-safe transition: condition the UPDATE on the status actually
+    // changing, so of N concurrent identical saves only the one that flips
+    // the row notifies the member (re-saving the same status is a no-op).
+    if (typeof patch.status === "string") {
+      const [flipped] = await db
+        .update(productOrdersTable)
+        .set(patch)
+        .where(
+          and(
+            eq(productOrdersTable.id, id),
+            ne(productOrdersTable.status, patch.status),
+          ),
+        )
+        .returning();
+      if (flipped) {
+        void notifyOrderStatus(flipped.userId, flipped.id, flipped.status);
+        res.json(flipped);
+        return;
+      }
+      // No row flipped — either already in this status (idempotent success)
+      // or the order vanished.
+      const [row] = await db
+        .select()
+        .from(productOrdersTable)
+        .where(eq(productOrdersTable.id, id));
+      if (!row) {
+        res.status(404).json({ error: "Order not found" });
+        return;
+      }
+      res.json(row);
+      return;
+=======
+>>>>>>> 2c19f3b5f3452738417c84cdac0ccc3abb5b9427
     }
     const [row] = await db
       .update(productOrdersTable)
