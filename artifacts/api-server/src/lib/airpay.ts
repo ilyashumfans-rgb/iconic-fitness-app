@@ -37,7 +37,7 @@ export function airpayConfigured(): boolean {
       env("AIRPAY_PASSWORD") &&
       env("AIRPAY_CLIENT_ID") &&
       env("AIRPAY_CLIENT_SECRET") &&
-      env("AIRPAY_SECRET_KEY"),
+      env("AIRPAY_API_KEY"),
   );
 }
 
@@ -107,9 +107,12 @@ export function airpayChecksum(payload: Record<string, unknown>): string {
 }
 
 export function airpayPrivateKey(): string {
+  // VERIFIED live (Aug 2026): the "secret" in the privatekey formula is the
+  // dashboard API KEY (AIRPAY_API_KEY) — NOT the 32-char secret key. Using
+  // AIRPAY_SECRET_KEY here yields "Merchant Key Authentication Failed".
   return createHash("sha256")
     .update(
-      `${env("AIRPAY_SECRET_KEY")}@${env("AIRPAY_USERNAME")}:|:${env("AIRPAY_PASSWORD")}`,
+      `${env("AIRPAY_API_KEY")}@${env("AIRPAY_USERNAME")}:|:${env("AIRPAY_PASSWORD")}`,
     )
     .digest("hex");
 }
@@ -215,28 +218,24 @@ export async function airpayCheckoutForm(
     buyer_pincode: input.buyerPincode,
     amount: input.amountInr.toFixed(2),
     orderid: input.orderId,
-    // Per Airpay's official PHP kit, the payload carries BOTH `currency`
-    // and `currency_code` (same value) plus `iso_currency`.
-    currency: "356",
-    currency_code: "356",
+    // KIT-EXACT payload (verified live Aug 2026): only iso_currency +
+    // currency_code — adding `currency` or successurl/failureurl makes Airpay
+    // reject the request. Return URLs are configured in the Airpay merchant
+    // dashboard (Airpay support set https://iconicfitnessindia.com/api/pay/store/return).
     iso_currency: "INR",
+    currency_code: "356",
     merchant_id: env("AIRPAY_MERCHANT_ID"),
-    // Where the buyer should land after payment (also configure the same URL
-    // in the Airpay merchant dashboard — dashboard config wins if both exist).
-    successurl: input.successUrl,
-    failureurl: input.failureUrl,
   };
   const checksum = airpayChecksum(payload);
-  // Field names per Airpay's official integration kit: merchant_id (not
-  // mercid) + an empty chmod alongside privatekey/encdata/checksum.
+  // Field names per Airpay's official Node kit: exactly privatekey,
+  // merchant_id, checksum, encdata, chmod — no apyVer.
   return {
     action: `${CHECKOUT_URL}?token=${encodeURIComponent(token)}`,
     fields: {
       privatekey: airpayPrivateKey(),
       merchant_id: env("AIRPAY_MERCHANT_ID"),
-      apyVer: "",
-      encdata: airpayEncrypt(payload),
       checksum,
+      encdata: airpayEncrypt(payload),
       chmod: "",
     },
   };
