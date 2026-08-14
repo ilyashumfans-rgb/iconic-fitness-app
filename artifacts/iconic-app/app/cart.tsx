@@ -76,6 +76,22 @@ export default function CartScreen() {
   const payable = totalInr - pointsDiscount;
 
   const onPlaceOrder = async () => {
+    // Login is required to order — the order then shows in My Orders and the
+    // member gets status notifications.
+    if (!isSignedIn) {
+      Alert.alert(
+        "Login required",
+        "Please log in to place your order — you'll get order updates and can track it in My Orders.",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Log in",
+            onPress: () => router.push("/(auth)/welcome"),
+          },
+        ],
+      );
+      return;
+    }
     if (name.trim().length < 2) {
       Alert.alert("Name required", "Please enter your full name.");
       return;
