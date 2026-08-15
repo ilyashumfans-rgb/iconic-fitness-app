@@ -806,6 +806,8 @@ export const createTrainerBookingBodyNameMin = 2;
 
 export const createTrainerBookingBodyMobileMin = 10;
 
+export const createTrainerBookingBodyRedeemPointsMin = 0;
+
 
 
 export const CreateTrainerBookingBody = zod.object({
@@ -816,7 +818,8 @@ export const CreateTrainerBookingBody = zod.object({
   "name": zod.string().min(createTrainerBookingBodyNameMin),
   "mobile": zod.string().min(createTrainerBookingBodyMobileMin),
   "preferredDate": zod.string().describe('ISO date (YYYY-MM-DD)'),
-  "couponCode": zod.string().optional().describe('Optional coupon code — validated and applied server-side')
+  "couponCode": zod.string().optional().describe('Optional coupon code — validated and applied server-side'),
+  "redeemPoints": zod.number().min(createTrainerBookingBodyRedeemPointsMin).optional().describe('Wallet points (₹) to apply as a discount — clamped server-side, at least ₹1 stays payable')
 })
 
 export const CreateTrainerBookingResponse = zod.object({
