@@ -12,7 +12,6 @@ description: Airpay v4 hosted checkout for the product store — endpoints, cryp
 - **Why:** wrong-key decrypt = silent 502 at /start; don't re-debug the crypto — the code matches the official PHP kit exactly.
 - Security hardening done after review: legacy plain securehash fallback REMOVED (forgeable); return handler binds echoed amount+merchant to the pending order; admin PATCH cannot set payment_* statuses or flip unpaid orders except to cancelled; ensureOrderPaymentColumns throws (checkout 503) instead of proceeding on a maybe-missing schema.
 - Return URL to configure in Airpay dashboard: https://iconicfitnessindia.com/api/pay/store/return
-<<<<<<< HEAD
 - **Hosted checkout page (Aug 13 2026):** docs' `/v4/checkout/index.php` 404s — the real page is `https://payments.airpay.co.in/pay/v4/index.php?token=...` (per Airpay's official PHP/Node kits). Form fields: privatekey, merchant_id (NOT mercid), apyVer:"", encdata, checksum, chmod:"". Payload must carry BOTH `currency` and `currency_code` (356) + `iso_currency`. Airpay rejects long order ids — send 20-hex token prefix; return handler matches via `like(token, prefix%)`.
 - **UNRESOLVED blocker:** with kit-faithful requests, Airpay still errors — encdata with md5(u~:~p) key → "Merchant Key Authentication Failed"; with secretKey → "Invalid checksum" (~25 combos of keys/checksums/privatekeys probed; garbage privatekey → "Invalid Domain", so pk=sha256(secret@user:|:pass) IS recognized). Conclusion: merchant-side config/creds mismatch — Airpay support must verify username/password/secret for merchant + enable hosted checkout/domain. Don't re-brute-force formulas.
 
@@ -33,5 +32,3 @@ description: Airpay v4 hosted checkout for the product store — endpoints, cryp
 - User confirmed Airpay checkout works now (their side got fixed). Store routes use Airpay.
 - A complete Razorpay integration exists dormant: `artifacts/api-server/src/lib/razorpay.ts` (orders API + HMAC signature verify) plus `razorpay_order_id`/`razorpay_payment_id` columns in schema+DDL. To switch: swap imports/flow in store routes (see commit "Implement Razorpay integration", later reverted).
 - RAZORPAY_KEY_ID/SECRET secrets exist but were rejected 401 by Razorpay (user pasted a mismatched test key pair) — must be re-collected before any switch.
-=======
->>>>>>> 2c19f3b5f3452738417c84cdac0ccc3abb5b9427
