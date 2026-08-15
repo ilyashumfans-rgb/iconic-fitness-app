@@ -329,6 +329,14 @@ export const adminApi = {
         body: JSON.stringify(body),
       }),
   },
+  signupBonus: {
+    get: () => request<{ points: number }>("/admin/signup-bonus"),
+    set: (points: number) =>
+      request<{ points: number }>("/admin/signup-bonus", {
+        method: "PUT",
+        body: JSON.stringify({ points }),
+      }),
+  },
   staff: {
     list: () => request<any[]>("/admin/staff"),
     permissions: () =>
