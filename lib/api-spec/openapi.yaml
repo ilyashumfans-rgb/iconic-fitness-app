@@ -1706,6 +1706,10 @@ components:
         couponCode:
           type: string
           description: "Optional coupon code — validated and applied server-side"
+        redeemPoints:
+          type: integer
+          minimum: 0
+          description: "Wallet points (₹) to apply as a discount — clamped server-side, at least ₹1 stays payable"
     TrainerBookingCreated:
       type: object
       required: [id, status, amountInr, paymentUrl]
