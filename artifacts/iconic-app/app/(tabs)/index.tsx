@@ -25,6 +25,8 @@ import {
   useListMyTrainerBookings,
   useGetMyPtProgram,
   getGetMyPtProgramQueryKey,
+  useGetMyReferralInfo,
+  getGetMyReferralInfoQueryKey,
   useListHomeSlides,
   useListPackageCategories,
   getListPackageCategoriesQueryKey,
@@ -1058,6 +1060,9 @@ export default function HomeScreen() {
 
       {/* Engagement 45-day plan */}
       {isSignedIn ? <EngagementPlanCard /> : null}
+
+      {/* Redeem prizes wallet — points spendable on store, packages & PT */}
+      {isSignedIn ? <WalletRewardsCard /> : null}
 
       {/* Personal tracking — pinned to the top for signed-in members.
           One arrow collapses/expands the whole block (progress + quick log + today). */}
@@ -2680,6 +2685,57 @@ function StatCard({
         {label}
       </AppText>
     </Card>
+  );
+}
+
+/** Redeem prizes wallet — shows the member's points balance and where to
+ *  spend it (store, membership packages, PT plans). Hidden while loading and
+ *  when the wallet is empty, so the home feed stays clean. */
+function WalletRewardsCard() {
+  const colors = useColors();
+  const router = useRouter();
+  const referralQuery = useGetMyReferralInfo({
+    query: { queryKey: getGetMyReferralInfoQueryKey() },
+  });
+  const balance = referralQuery.data?.balanceInr ?? 0;
+  if (!referralQuery.isSuccess) return null;
+  return (
+    <Pressable onPress={() => router.push("/(tabs)/store")}>
+      <Card
+        style={{
+          marginBottom: 14,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 12,
+        }}
+      >
+        <View
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: `${colors.primary}22`,
+          }}
+        >
+          <Feather name="gift" size={22} color={colors.primary} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <AppText weight="700" size={15}>
+            Redeem prizes wallet
+          </AppText>
+          <AppText size={12} color={colors.mutedForeground} style={{ marginTop: 2 }}>
+            {balance > 0
+              ? "Use your points on store orders, memberships & PT plans (₹1 each)"
+              : "Earn points by referring friends — spend them on store, memberships & PT"}
+          </AppText>
+        </View>
+        <AppText weight="700" size={18} color={colors.primary}>
+          {balance.toLocaleString("en-IN")} pts
+        </AppText>
+      </Card>
+    </Pressable>
   );
 }
 
