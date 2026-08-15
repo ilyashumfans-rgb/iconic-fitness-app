@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import {
   Alert,
   Image,
+  Platform,
   Pressable,
   StyleSheet,
   Switch,
@@ -77,19 +78,22 @@ export default function CartScreen() {
 
   const onPlaceOrder = async () => {
     // Login is required to order — the order then shows in My Orders and the
-    // member gets status notifications.
+    // member gets status notifications. (Alert.alert with buttons is a no-op
+    // on react-native-web, so the web build uses window.confirm.)
     if (!isSignedIn) {
-      Alert.alert(
-        "Login required",
-        "Please log in to place your order — you'll get order updates and can track it in My Orders.",
-        [
+      const msg =
+        "Please log in to place your order — you'll get order updates and can track it in My Orders.";
+      if (Platform.OS === "web") {
+        // eslint-disable-next-line no-alert
+        if (window.confirm(`Login required\n${msg}`)) {
+          router.push("/(auth)/welcome");
+        }
+      } else {
+        Alert.alert("Login required", msg, [
           { text: "Cancel", style: "cancel" },
-          {
-            text: "Log in",
-            onPress: () => router.push("/(auth)/welcome"),
-          },
-        ],
-      );
+          { text: "Log in", onPress: () => router.push("/(auth)/welcome") },
+        ]);
+      }
       return;
     }
     if (name.trim().length < 2) {
@@ -293,19 +297,21 @@ export default function CartScreen() {
           maxLength={6}
         />
 
-        {isSignedIn && balance > 0 ? (
+        {isSignedIn ? (
           <Card style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
             <View style={{ flex: 1 }}>
               <AppText weight="600" size={14}>
                 Use wallet points
               </AppText>
               <AppText muted size={12}>
-                Balance ₹{balance} — save ₹{Math.min(balance, totalInr)} on
-                this order
+                {balance > 0
+                  ? `Balance ₹${balance} — save ₹${Math.min(balance, totalInr)} on this order`
+                  : "You have 0 points. Earn points by referring friends — 1 point = ₹1 off."}
               </AppText>
             </View>
             <Switch
-              value={usePoints}
+              value={usePoints && balance > 0}
+              disabled={balance <= 0}
               onValueChange={setUsePoints}
               trackColor={{ true: colors.primary, false: colors.elevated }}
               thumbColor="#fff"
