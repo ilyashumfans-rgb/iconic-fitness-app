@@ -103,8 +103,14 @@ export default function Checkout() {
   }
 
   // Login is required to order — the order then shows in My Orders and the
-  // member gets status notifications.
-  if (isLoaded && !isSignedIn) {
+  // member gets status notifications. While Clerk is still loading we show a
+  // spinner instead of the form, so guests never see a submittable checkout.
+  if (!isLoaded) {
+    return (
+      <div className="py-20 text-center text-muted-foreground">Loading…</div>
+    );
+  }
+  if (!isSignedIn) {
     return (
       <div className="py-20 text-center max-w-md mx-auto">
         <h1 className="text-3xl font-black tracking-tight">Please sign in</h1>
