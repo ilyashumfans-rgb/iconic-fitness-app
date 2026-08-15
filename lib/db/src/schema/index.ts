@@ -201,6 +201,8 @@ export const trainerBookingsTable = pgTable("trainer_bookings", {
   couponId: integer("coupon_id").notNull().default(0),
   couponCode: text("coupon_code").notNull().default(""),
   couponDiscountInr: integer("coupon_discount_inr").notNull().default(0),
+  // Wallet points (₹) applied at booking time; debited at paid-flip.
+  pointsRedeemedInr: integer("points_redeemed_inr").notNull().default(0),
   // Package snapshot for the staff PT dashboard auto-enrol on payment.
   sessions: integer("sessions").notNull().default(0),
   durationDays: integer("duration_days").notNull().default(0),
@@ -962,13 +964,10 @@ export const productOrdersTable = pgTable("product_orders", {
   // "Merchant Transaction Id not valid"); regenerated on every payment attempt.
   airpayOrderRef: text("airpay_order_ref").notNull().default(""),
   airpayTxnId: text("airpay_txn_id").notNull().default(""),
-<<<<<<< HEAD
   // Online payment (Razorpay): gateway order id ("order_...") created once
   // per order via the Orders API, and the settled payment id ("pay_...").
   razorpayOrderId: text("razorpay_order_id").notNull().default(""),
   razorpayPaymentId: text("razorpay_payment_id").notNull().default(""),
-=======
->>>>>>> 2c19f3b5f3452738417c84cdac0ccc3abb5b9427
   paidAt: timestamp("paid_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
