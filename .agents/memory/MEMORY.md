@@ -43,8 +43,5 @@
 - [Class sessions lazy generation](class-sessions-lazy-generation.md) — seeded sessions go stale; upcoming classes are materialised on read from the gym timetable (no background jobs).
 - [Coupon redemption settlement](coupon-redemption-settlement.md) — snapshot couponId at checkout, consume only at paid-flip via unique index + conditional used_count bump; coupon before points, ≥₹1 payable.
 - [Airpay store payments](airpay-store-payments.md) — oauth2 form-encoded body; key = md5(user~:~pass); creds working since Aug 2026; new secrets need workflow restart.
-<<<<<<< HEAD
 - [RN persisted query cache — public-only](rn-query-cache-persist.md) — persist ONLY whitelisted public catalog queries to AsyncStorage; personal data memory-only (shared-device leak).
-=======
->>>>>>> 2c19f3b5f3452738417c84cdac0ccc3abb5b9427
 - [Mobile + password login](mobile-password-login.md) — server verifies password + returns Clerk sign-in ticket; never expose account email publicly; reset = user types own email.
