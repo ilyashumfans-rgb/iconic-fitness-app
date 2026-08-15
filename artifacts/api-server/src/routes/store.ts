@@ -61,6 +61,10 @@ export async function ensureStoreColumns(): Promise<void> {
         ADD COLUMN IF NOT EXISTS cgst_percent real NOT NULL DEFAULT 0,
         ADD COLUMN IF NOT EXISTS sgst_percent real NOT NULL DEFAULT 0
     `);
+    await db.execute(sql`
+      ALTER TABLE trainer_bookings
+        ADD COLUMN IF NOT EXISTS points_redeemed_inr integer NOT NULL DEFAULT 0
+    `);
     orderColumnsEnsured = true;
   } catch (err) {
     // ALTER may be denied (e.g. restricted role) even though the columns
@@ -71,6 +75,9 @@ export async function ensureStoreColumns(): Promise<void> {
       );
       await db.execute(
         sql`SELECT cgst_percent, sgst_percent FROM products LIMIT 1`,
+      );
+      await db.execute(
+        sql`SELECT points_redeemed_inr FROM trainer_bookings LIMIT 1`,
       );
       orderColumnsEnsured = true;
       return;
@@ -562,13 +569,10 @@ async function handleStoreReturn(req: Request, res: Response): Promise<void> {
       ),
     )
     .returning();
-<<<<<<< HEAD
   if (flipped) {
     // Fire-and-forget member notification (placed / payment_failed).
     void notifyOrderStatus(flipped.userId, flipped.id, flipped.status);
   }
-=======
->>>>>>> 2c19f3b5f3452738417c84cdac0ccc3abb5b9427
   if (flipped && result.ok) {
     // Settle wallet points and referral reward exactly once, on the paid flip.
     // debitWallet is idempotent per (refType, refId), so a failure here can be
