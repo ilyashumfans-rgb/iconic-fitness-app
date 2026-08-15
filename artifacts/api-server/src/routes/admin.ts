@@ -29,10 +29,11 @@ import {
   appSettingsTable,
 } from "@workspace/db";
 import { SHIPPING_SETTING_KEY, storeShippingInr } from "./store";
-<<<<<<< HEAD
+import {
+  SIGNUP_BONUS_SETTING_KEY,
+  signupBonusPoints,
+} from "../lib/signupBonus";
 import { notifyOrderStatus } from "../lib/orderNotify";
-=======
->>>>>>> 2c19f3b5f3452738417c84cdac0ccc3abb5b9427
 import {
   hashPassword,
   requireAdmin,
@@ -1887,6 +1888,36 @@ function clampGstPercent(v: unknown): number {
   return Math.min(50, Math.round(n * 100) / 100);
 }
 
+// ── Welcome (signup) bonus points (saved in app settings) ──
+
+router.get(
+  "/admin/signup-bonus",
+  requireAdmin,
+  async (_req: Request, res: Response): Promise<void> => {
+    res.json({ points: await signupBonusPoints() });
+  },
+);
+
+router.put(
+  "/admin/signup-bonus",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    const n = Math.round(Number((req.body ?? {}).points));
+    if (!Number.isFinite(n) || n < 0 || n > 100000) {
+      res.status(400).json({ error: "Bonus must be 0–100000 points" });
+      return;
+    }
+    await db
+      .insert(appSettingsTable)
+      .values({ key: SIGNUP_BONUS_SETTING_KEY, value: String(n) })
+      .onConflictDoUpdate({
+        target: appSettingsTable.key,
+        set: { value: String(n), updatedAt: new Date() },
+      });
+    res.json({ points: n });
+  },
+);
+
 // ── Store shipping charge (flat ₹ per order, saved in app settings) ──
 
 router.get(
@@ -2037,10 +2068,7 @@ router.patch(
     // staff may cancel an unpaid order, but never flip it to "placed" (that
     // happens only via the verified Airpay callback), and never move any
     // order INTO a payment_* state by hand.
-<<<<<<< HEAD
     let previousStatus: string | null = null;
-=======
->>>>>>> 2c19f3b5f3452738417c84cdac0ccc3abb5b9427
     if (typeof patch.status === "string") {
       if (patch.status.startsWith("payment_")) {
         res.status(400).json({ error: "Payment statuses are set by the gateway" });
@@ -2064,7 +2092,6 @@ router.patch(
         });
         return;
       }
-<<<<<<< HEAD
       previousStatus = current.status;
     }
     // Race-safe transition: condition the UPDATE on the status actually
@@ -2098,8 +2125,6 @@ router.patch(
       }
       res.json(row);
       return;
-=======
->>>>>>> 2c19f3b5f3452738417c84cdac0ccc3abb5b9427
     }
     const [row] = await db
       .update(productOrdersTable)
