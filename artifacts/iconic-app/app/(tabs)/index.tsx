@@ -1,4 +1,5 @@
 import { useAuth } from "@clerk/expo";
+import { useGuest } from "@/hooks/useGuest";
 import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
@@ -810,7 +811,12 @@ const SOFT_SHADOW = Platform.select({
 export default function HomeScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { isSignedIn } = useAuth();
+  const { isSignedIn: clerkSignedIn } = useAuth();
+  const { isGuest } = useGuest();
+  // "Continue without login" must behave like a real guest even when a
+  // previous login session is still remembered on the device — otherwise the
+  // guest home shows the member's personal card. Guest mode wins.
+  const isSignedIn = !!clerkSignedIn && !isGuest;
   const queryClient = useQueryClient();
 
   // Public, no-auth content — works for guests and members alike.
