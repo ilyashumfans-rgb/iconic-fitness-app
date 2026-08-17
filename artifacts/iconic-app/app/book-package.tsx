@@ -650,11 +650,12 @@ function BranchRow({ gym, onPress }: { gym: Gym; onPress: () => void }) {
             <Feather name="map-pin" size={17} color={colors.primary} />
           </View>
           <View style={{ flex: 1 }}>
-            <AppText weight="700" size={15} numberOfLines={1}>
+            {/* Full branch name must always be readable — wrap, never truncate. */}
+            <AppText weight="700" size={15}>
               {gym.name}
             </AppText>
             {gym.area ? (
-              <AppText muted size={12} numberOfLines={1} style={{ marginTop: 2 }}>
+              <AppText muted size={12} style={{ marginTop: 2 }}>
                 {gym.area}
               </AppText>
             ) : null}
