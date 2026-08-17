@@ -232,6 +232,47 @@ function SignInContent() {
     }
   }, [signIn, resetEmail]);
 
+  // The reset attempt can silently go stale (app reload, long pause, or a
+  // mixed-up earlier attempt). Instead of showing Clerk's confusing "send a
+  // verification code before attempting to verify" error, restart the flow
+  // and email a fresh code automatically.
+  const restartResetWithFreshCode = useCallback(async () => {
+    const address = resetEmail.trim();
+    if (!address.includes("@")) {
+      setPwStage("resetEmail");
+      setError("Enter your email again — the session expired.");
+      return;
+    }
+    try {
+      if (signIn.status !== null) {
+        try {
+          await signIn.reset();
+        } catch {
+          // A stale attempt shouldn't block a fresh reset.
+        }
+      }
+      const { error: createError } = await signIn.create({
+        identifier: address,
+      });
+      if (createError) {
+        setError(clerkError(createError));
+        return;
+      }
+      const { error: sendError } =
+        await signIn.resetPasswordEmailCode.sendCode();
+      if (sendError) {
+        setError(clerkError(sendError));
+        return;
+      }
+      setResetCode("");
+      setPwInfo(
+        `That code expired, so we emailed a fresh one to ${address}. Enter the new code.`,
+      );
+    } catch (err: unknown) {
+      setError(clerkError(err));
+    }
+  }, [signIn, resetEmail]);
+
   const onSubmitPasswordReset = useCallback(async () => {
     setError(null);
     if (resetCode.trim().length < 4) {
@@ -244,12 +285,23 @@ function SignInContent() {
     }
     setPwBusy(true);
     try {
+      // If the attempt went stale, don't even try to verify — the typed code
+      // belongs to a dead session. Send a fresh code instead.
+      if (signIn.status === null) {
+        await restartResetWithFreshCode();
+        return;
+      }
       const { error: verifyError } =
         await signIn.resetPasswordEmailCode.verifyCode({
           code: resetCode.trim(),
         });
       if (verifyError) {
-        setError(clerkError(verifyError));
+        const message = clerkError(verifyError);
+        if (/send a verification code/i.test(message)) {
+          await restartResetWithFreshCode();
+          return;
+        }
+        setError(message);
         return;
       }
       const { error: submitError } =
@@ -266,11 +318,16 @@ function SignInContent() {
         setError("Additional verification is required to sign in.");
       }
     } catch (err: unknown) {
-      setError(clerkError(err));
+      const message = clerkError(err);
+      if (/send a verification code/i.test(message)) {
+        await restartResetWithFreshCode();
+        return;
+      }
+      setError(message);
     } finally {
       setPwBusy(false);
     }
-  }, [signIn, resetCode, newPassword, finalizeSignIn]);
+  }, [signIn, resetCode, newPassword, finalizeSignIn, restartResetWithFreshCode]);
 
   const switchMode = useCallback(
     async (next: "otp" | "password") => {
