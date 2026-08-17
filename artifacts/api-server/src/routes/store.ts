@@ -1,5 +1,12 @@
 import { randomBytes } from "node:crypto";
-import { Router, type IRouter, type Request, type Response } from "express";
+import {
+  Router,
+  type IRouter,
+  type Request,
+  type RequestHandler,
+  type Response,
+} from "express";
+import { getAuth } from "@clerk/express";
 import { and, asc, desc, eq, inArray, like, sql } from "drizzle-orm";
 import {
   db,
@@ -211,8 +218,19 @@ router.get(
 router.post(
   "/store/checkout",
   // Login is required to place an order — signed-in orders get status
-  // notifications and appear in My Orders (website + app).
-  requireUser,
+  // notifications and appear in My Orders (website + app). Older app builds
+  // let guests reach this point, so the 401 must explain itself instead of
+  // the bare "HTTP 401: Unauthorized".
+  ((req, res, next) => {
+    if (!getAuth(req)?.userId) {
+      res.status(401).json({
+        error:
+          "Please log in first to place your order — then you can track it in My Orders.",
+      });
+      return;
+    }
+    requireUser(req, res, next);
+  }) as RequestHandler,
   async (req: Request, res: Response): Promise<void> => {
     const b = (req.body ?? {}) as Record<string, unknown>;
     const customerName = String(b.customerName ?? "").trim();
