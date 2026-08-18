@@ -1251,7 +1251,7 @@ export const GetMyReferralInfoResponse = zod.object({
   "id": zod.number(),
   "label": zod.string(),
   "amountInr": zod.number().describe('Positive = credit, negative = debit'),
-  "kind": zod.enum(['cashback', 'referral', 'refund', 'debit', 'topup']),
+  "kind": zod.enum(['cashback', 'referral', 'refund', 'debit', 'topup', 'credit', 'signup_bonus']),
   "createdAt": zod.coerce.date()
 }))
 })
@@ -1280,7 +1280,7 @@ export const ApplyReferralCodeResponse = zod.object({
   "id": zod.number(),
   "label": zod.string(),
   "amountInr": zod.number().describe('Positive = credit, negative = debit'),
-  "kind": zod.enum(['cashback', 'referral', 'refund', 'debit', 'topup']),
+  "kind": zod.enum(['cashback', 'referral', 'refund', 'debit', 'topup', 'credit', 'signup_bonus']),
   "createdAt": zod.coerce.date()
 }))
 })
@@ -1453,7 +1453,7 @@ export const GetWalletResponse = zod.object({
   "id": zod.number(),
   "label": zod.string(),
   "amountInr": zod.number().describe('Positive = credit, negative = debit'),
-  "kind": zod.enum(['cashback', 'referral', 'refund', 'debit', 'topup']),
+  "kind": zod.enum(['cashback', 'referral', 'refund', 'debit', 'topup', 'credit', 'signup_bonus']),
   "createdAt": zod.coerce.date()
 }))
 })
