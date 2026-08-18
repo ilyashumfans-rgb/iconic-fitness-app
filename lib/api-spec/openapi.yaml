@@ -2097,7 +2097,7 @@ components:
         id: { type: integer }
         label: { type: string }
         amountInr: { type: integer, description: "Positive = credit, negative = debit" }
-        kind: { type: string, enum: [cashback, referral, refund, debit, topup] }
+        kind: { type: string, enum: [cashback, referral, refund, debit, topup, credit, signup_bonus] }
         createdAt: { type: string, format: date-time }
 
     DashboardSummary:
