@@ -95,10 +95,10 @@ function ListRow({
       style={({ pressed }) => [
         styles.listRow,
         !isLast && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
-        pressed && { backgroundColor: "rgba(255,255,255,0.03)" },
+        pressed && { backgroundColor: colors.secondary },
       ]}
     >
-      <View style={[styles.listRowIcon, { backgroundColor: "rgba(255,255,255,0.05)" }]}>
+      <View style={[styles.listRowIcon, { backgroundColor: colors.muted }]}>
         <Feather name={item.icon} size={18} color={colors.primary} />
       </View>
       <View style={styles.listRowBody}>
@@ -238,7 +238,7 @@ export default function MoreScreen() {
         {avatarUrl ? (
           <ExpoImage source={{ uri: avatarUrl }} style={styles.avatar} contentFit="cover" />
         ) : (
-          <View style={[styles.avatar, { backgroundColor: "rgba(255,255,255,0.08)", alignItems: "center", justifyContent: "center" }]}>
+          <View style={[styles.avatar, { backgroundColor: colors.muted, alignItems: "center", justifyContent: "center" }]}>
             <AppText weight="700" size={26} color={colors.primary}>{initials}</AppText>
           </View>
         )}
@@ -289,7 +289,7 @@ export default function MoreScreen() {
         <ListGroup>
           {/* Daily Reminders Toggle */}
           <View style={[styles.listRow, { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border }]}>
-            <View style={[styles.listRowIcon, { backgroundColor: "rgba(255,255,255,0.05)" }]}>
+            <View style={[styles.listRowIcon, { backgroundColor: colors.muted }]}>
               <Feather name="clock" size={18} color={colors.primary} />
             </View>
             <View style={styles.listRowBody}>
@@ -321,7 +321,7 @@ export default function MoreScreen() {
 
           {/* Theme */}
           <View style={styles.listRow}>
-            <View style={[styles.listRowIcon, { backgroundColor: "rgba(255,255,255,0.05)" }]}>
+            <View style={[styles.listRowIcon, { backgroundColor: colors.muted }]}>
               <Feather name="moon" size={18} color={colors.primary} />
             </View>
             <View style={styles.listRowBody}>
@@ -379,6 +379,18 @@ export default function MoreScreen() {
   );
 }
 
+
+const SOFT_SHADOW = Platform.select({
+  web: { boxShadow: "0 4px 20px rgba(0,0,0,0.06)" } as any,
+  default: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 2,
+  },
+});
+
 const styles = StyleSheet.create({
   headerBar: {
     paddingVertical: 16,
@@ -390,7 +402,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
     borderRadius: 28,
-  },
+  ...SOFT_SHADOW
+},
   avatar: {
     width: 76,
     height: 76,
@@ -415,13 +428,15 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-  },
+    borderWidth: StyleSheet.hairlineWidth,
+  ...SOFT_SHADOW
+},
   listGroup: {
     borderRadius: 24,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     overflow: "hidden",
-  },
+  ...SOFT_SHADOW
+},
   listRow: {
     flexDirection: "row",
     alignItems: "center",
