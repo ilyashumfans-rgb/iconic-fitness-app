@@ -42,11 +42,11 @@ const colors = {
     accentForeground: "#1C1C1E",
 
     // Destructive
-    destructive: "#D70015",
+    destructive: "#FF3B30",
     destructiveForeground: "#FFFFFF",
 
     // Borders / inputs
-    border: "#C7C7CC",
+    border: "#E5E5EA",
     input: "#E5E5EA",
 
     // Domain accents (rings, charts, badges)
