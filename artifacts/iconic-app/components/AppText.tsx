@@ -27,10 +27,10 @@ export function AppText({
   ...rest
 }: Props) {
   const colors = useColors();
-  
+
   // Apply a subtle premium negative tracking to larger headers
   const tracking = size >= 20 ? -0.5 : size >= 16 ? -0.2 : 0;
-  
+
   return (
     <Text
       {...rest}
