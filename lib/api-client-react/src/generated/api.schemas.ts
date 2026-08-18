@@ -920,6 +920,8 @@ export const WalletTransactionKind = {
   refund: 'refund',
   debit: 'debit',
   topup: 'topup',
+  credit: 'credit',
+  signup_bonus: 'signup_bonus',
 } as const;
 
 export interface WalletTransaction {
