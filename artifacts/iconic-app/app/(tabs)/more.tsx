@@ -277,7 +277,9 @@ export default function MoreScreen() {
               <Feather name="award" size={12} color={colors.primary} />
             </View>
             <AppText weight="700" size={14} color={colors.foreground}>
-              {pointsAvailable > 0 ? pointsAvailable.toLocaleString("en-IN") : "Wallet"}
+              {infoQuery.isSuccess
+                ? pointsAvailable.toLocaleString("en-IN")
+                : "Wallet"}
             </AppText>
           </Pressable>
 
