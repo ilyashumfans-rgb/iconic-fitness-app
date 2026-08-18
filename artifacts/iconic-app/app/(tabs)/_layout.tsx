@@ -56,12 +56,13 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: colors.mutedForeground,
         tabBarStyle: {
           backgroundColor: colors.background, // Match premium dark theme seamlessly
-          borderTopColor: colors.border,
-          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: "transparent",
+          borderTopWidth: 0,
           height: (Platform.OS === "ios" ? 60 : 64) + bottomInset,
           paddingTop: 8,
           paddingBottom: bottomInset,
           elevation: 0, // Remove android shadow for flatter premium look
+          shadowOpacity: 0,
         },
         tabBarLabelStyle: {
           fontFamily: "Inter_600SemiBold",
