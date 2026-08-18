@@ -14,7 +14,8 @@
       "backgroundColor": "#0A0C08"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.iconicfitness.app"
     },
     "android": {
       "package": "com.iconicfitness.app",
