@@ -55,9 +55,9 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
         tabBarStyle: {
-          backgroundColor: colors.background, // Match premium dark theme seamlessly
-          borderTopColor: "transparent",
-          borderTopWidth: 0,
+          backgroundColor: colors.card,
+          borderTopColor: colors.background === "#000000" || colors.background === "#121212" ? "transparent" : colors.border,
+          borderTopWidth: colors.background === "#000000" || colors.background === "#121212" ? 0 : StyleSheet.hairlineWidth,
           height: (Platform.OS === "ios" ? 60 : 64) + bottomInset,
           paddingTop: 8,
           paddingBottom: bottomInset,
