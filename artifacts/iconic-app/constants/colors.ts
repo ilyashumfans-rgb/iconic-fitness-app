@@ -35,14 +35,14 @@ const colors = {
 
     // Muted / subdued
     muted: "#E5E5EA",
-    mutedForeground: "#8E8E93",
+    mutedForeground: "#5F5F66",
 
     // Accent
     accent: "#E5E5EA",
     accentForeground: "#1C1C1E",
 
     // Destructive
-    destructive: "#FF3B30",
+    destructive: "#D70015",
     destructiveForeground: "#FFFFFF",
 
     // Borders / inputs
