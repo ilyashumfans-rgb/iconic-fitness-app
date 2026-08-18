@@ -13,7 +13,11 @@ import {
   Switch,
   View,
 } from "react-native";
-import { getGetMeQueryKey, useGetMe } from "@workspace/api-client-react";
+import { getGetMeQueryKey, useGetMe, useGetMyReferralInfo, getGetMyReferralInfoQueryKey } from "@workspace/api-client-react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRef } from "react";
+import { ScrollView } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
@@ -120,10 +124,20 @@ export default function MoreScreen() {
   const colors = useColors();
   const router = useRouter();
   const { signOut } = useClerk();
-  const { isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn } = useAuth();
   const { isGuest, exitGuest } = useGuest();
   const { mode: themeMode, setMode: setThemeMode } = useTheme();
   const queryClient = useQueryClient();
+  const insets = useSafeAreaInsets();
+  const scrollRef = useRef<ScrollView>(null);
+
+  const infoQuery = useGetMyReferralInfo({
+    query: {
+      enabled: isLoaded && !!isSignedIn,
+      queryKey: getGetMyReferralInfoQueryKey(),
+    },
+  });
+  const pointsAvailable = infoQuery.data?.balanceInr ?? 0;
 
   const isMember = !!isSignedIn && !isGuest;
   const meQuery = useGetMe({
@@ -220,36 +234,119 @@ export default function MoreScreen() {
   const initials = profileName.split(/\s+/).map((w) => w[0] ?? "").join("").slice(0, 2).toUpperCase();
 
   return (
-    <Screen contentContainerStyle={{ paddingBottom: 40 }}>
-      {/* Header */}
-      <View style={styles.headerBar}>
-        <AppText weight="700" size={34} style={{ letterSpacing: -1 }}>Me</AppText>
-      </View>
-
-      {/* Profile Card */}
-      <Pressable 
-        onPress={() => router.push("/profile")}
-        style={({ pressed }) => [
-          styles.profileCard,
-          { backgroundColor: colors.card },
-          pressed && { opacity: 0.85 }
+    <Screen ref={scrollRef} contentContainerStyle={{ paddingBottom: 40 }} padded={false}>
+      {/* FULL BLEED HEADER WITH GRADIENT */}
+      <LinearGradient
+        colors={[
+          colors.background === "#000000" || colors.background === "#121212"
+            ? colors.primary + "15"
+            : colors.primary + "10",
+          colors.background,
         ]}
+        style={{
+          paddingTop: Math.max(insets.top, Platform.OS === "web" ? 52 : 16) + 12,
+          paddingHorizontal: 20,
+          paddingBottom: 32,
+          borderBottomLeftRadius: 32,
+          borderBottomRightRadius: 32,
+          marginBottom: 16,
+        }}
       >
-        {avatarUrl ? (
-          <ExpoImage source={{ uri: avatarUrl }} style={styles.avatar} contentFit="cover" />
-        ) : (
-          <View style={[styles.avatar, { backgroundColor: colors.muted, alignItems: "center", justifyContent: "center" }]}>
-            <AppText weight="700" size={26} color={colors.primary}>{initials}</AppText>
-          </View>
-        )}
-        <View style={styles.profileMeta}>
-          <AppText weight="700" size={22} numberOfLines={1}>{profileName}</AppText>
-          <AppText muted size={15} style={{ marginTop: 2 }}>
-            {isMember ? "View / Edit Profile" : "Tap to log in"}
-          </AppText>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+          {/* Wallet / Points Chip */}
+          <Pressable
+            onPress={() => router.push("/refer")}
+            style={({ pressed }) => [
+              {
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: colors.card,
+                paddingVertical: 8,
+                paddingHorizontal: 14,
+                borderRadius: 999,
+                gap: 8,
+              },
+              pressed && { opacity: 0.85 },
+              SOFT_SHADOW
+            ]}
+          >
+            <View style={{
+              width: 22, height: 22, borderRadius: 11, backgroundColor: colors.primary + "22",
+              alignItems: "center", justifyContent: "center"
+            }}>
+              <Feather name="award" size={12} color={colors.primary} />
+            </View>
+            <AppText weight="700" size={14} color={colors.foreground}>
+              {pointsAvailable > 0 ? pointsAvailable.toLocaleString("en-IN") : "Wallet"}
+            </AppText>
+          </Pressable>
+
+          {/* Settings Button */}
+          <Pressable
+            onPress={() => scrollRef.current?.scrollToEnd({ animated: true })}
+            style={({ pressed }) => [
+              {
+                width: 40, height: 40, borderRadius: 20, backgroundColor: colors.card,
+                alignItems: "center", justifyContent: "center",
+              },
+              pressed && { opacity: 0.85 },
+              SOFT_SHADOW
+            ]}
+          >
+            <Feather name="settings" size={18} color={colors.foreground} />
+          </Pressable>
         </View>
-        <Feather name="chevron-right" size={24} color={colors.mutedForeground} />
-      </Pressable>
+
+        {/* Center Profile */}
+        <View style={{ alignItems: "center", marginTop: 24 }}>
+          <View
+            style={[
+              {
+                width: 100, height: 100, borderRadius: 50,
+                backgroundColor: colors.muted,
+                alignItems: "center", justifyContent: "center",
+                marginBottom: 16,
+                borderWidth: StyleSheet.hairlineWidth,
+                borderColor: colors.border,
+              },
+              !isGuest && { borderColor: colors.primary, borderWidth: 2 },
+            ]}
+          >
+            {avatarUrl ? (
+              <ExpoImage source={{ uri: avatarUrl }} style={{ width: 100, height: 100, borderRadius: 50 }} contentFit="cover" />
+            ) : isGuest ? (
+              <Feather name="user" size={44} color={colors.mutedForeground} />
+            ) : (
+              <AppText weight="700" size={34} color={colors.primary}>
+                {initials}
+              </AppText>
+            )}
+          </View>
+
+          <AppText weight="700" size={26} color={colors.foreground} style={{ marginBottom: 6, letterSpacing: -0.5 }}>
+            {profileName}
+          </AppText>
+
+          <Pressable 
+            onPress={() => router.push("/profile")}
+            style={({ pressed }) => [
+              { paddingVertical: 4, paddingHorizontal: 12 },
+              pressed && { opacity: 0.7 }
+            ]}
+          >
+            <AppText
+              size={15}
+              weight="600"
+              color={colors.mutedForeground}
+              style={{ textDecorationLine: "underline" }}
+            >
+              See profile
+            </AppText>
+          </Pressable>
+        </View>
+      </LinearGradient>
+      
+      <View style={{ paddingHorizontal: 20 }}>
 
       {/* Tools Grid */}
       <View style={{ marginTop: 24 }}>
@@ -375,6 +472,7 @@ export default function MoreScreen() {
           Version 1.0.0
         </AppText>
       </View>
+          </View>
     </Screen>
   );
 }
