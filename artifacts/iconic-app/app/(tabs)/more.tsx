@@ -223,7 +223,7 @@ export default function MoreScreen() {
     <Screen contentContainerStyle={{ paddingBottom: 40 }}>
       {/* Header */}
       <View style={styles.headerBar}>
-        <AppText weight="700" size={24} style={{ letterSpacing: -0.5 }}>Me</AppText>
+        <AppText weight="700" size={34} style={{ letterSpacing: -1 }}>Me</AppText>
       </View>
 
       {/* Profile Card */}
@@ -231,7 +231,7 @@ export default function MoreScreen() {
         onPress={() => router.push("/profile")}
         style={({ pressed }) => [
           styles.profileCard,
-          { backgroundColor: colors.card, borderColor: colors.border },
+          { backgroundColor: colors.card },
           pressed && { opacity: 0.85 }
         ]}
       >
@@ -239,12 +239,14 @@ export default function MoreScreen() {
           <ExpoImage source={{ uri: avatarUrl }} style={styles.avatar} contentFit="cover" />
         ) : (
           <View style={[styles.avatar, { backgroundColor: "rgba(255,255,255,0.08)", alignItems: "center", justifyContent: "center" }]}>
-            <AppText weight="700" size={20} color={colors.primary}>{initials}</AppText>
+            <AppText weight="700" size={26} color={colors.primary}>{initials}</AppText>
           </View>
         )}
         <View style={styles.profileMeta}>
-          <AppText weight="700" size={20}>{profileName}</AppText>
-          <AppText muted size={14} style={{ marginTop: 2 }}>View / Edit Profile</AppText>
+          <AppText weight="700" size={22} numberOfLines={1}>{profileName}</AppText>
+          <AppText muted size={15} style={{ marginTop: 2 }}>
+            {isMember ? "View / Edit Profile" : "Tap to log in"}
+          </AppText>
         </View>
         <Feather name="chevron-right" size={24} color={colors.mutedForeground} />
       </Pressable>
@@ -379,24 +381,24 @@ export default function MoreScreen() {
 
 const styles = StyleSheet.create({
   headerBar: {
-    paddingVertical: 12,
-    marginBottom: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 4,
+    marginBottom: 4,
   },
   profileCard: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    borderRadius: 24,
-    borderWidth: 1,
+    padding: 20,
+    borderRadius: 28,
   },
   avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
   },
   profileMeta: {
     flex: 1,
-    paddingLeft: 16,
+    paddingLeft: 18,
   },
   toolsGrid: {
     flexDirection: "row",
