@@ -313,13 +313,13 @@ function JoinMembershipBar({
 }
 
 const PREMIUM = {
-  bgTop: "#1A1F14",
-  bgBottom: "#080A06",
+  bgTop: "#1A1A1C",
+  bgBottom: "#050505",
   gold: "#0BE607",
-  goldDeep: "#9EBE00",
-  hairline: "rgba(199,240,0,0.25)",
+  goldDeep: "#05A303",
+  hairline: "rgba(255,255,255,0.08)",
   text: "#FFFFFF",
-  faint: "rgba(255,255,255,0.65)",
+  faint: "rgba(255,255,255,0.5)",
 };
 
 function MembershipStatusCard({
@@ -476,7 +476,7 @@ function MembershipStatusCard({
                 borderColor: needsRenewal ? alertColor : PREMIUM.hairline,
                 backgroundColor: needsRenewal
                   ? alertColor + "22"
-                  : "rgba(232,197,106,0.12)",
+                  : "rgba(255,255,255,0.06)",
               },
             ]}
           >
@@ -521,7 +521,7 @@ function MembershipStatusCard({
                 style={[
                   styles.premiumAvatar,
                   {
-                    backgroundColor: "rgba(232,197,106,0.14)",
+                    backgroundColor: "rgba(255,255,255,0.08)",
                     alignItems: "center",
                     justifyContent: "center",
                   },
@@ -2868,7 +2868,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     padding: 20,
     borderWidth: 1,
-    borderColor: "rgba(232,197,106,0.35)",
+    borderColor: "rgba(255,255,255,0.08)",
   },
   premiumBadge: {
     paddingHorizontal: 10,
@@ -2892,7 +2892,7 @@ const styles = StyleSheet.create({
     height: 66,
     borderRadius: 33,
     borderWidth: 2,
-    borderColor: "#E8C56A",
+    borderColor: PREMIUM.gold,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -2903,7 +2903,7 @@ const styles = StyleSheet.create({
   },
   premiumDivider: {
     height: 1,
-    backgroundColor: "rgba(232,197,106,0.18)",
+    backgroundColor: "rgba(255,255,255,0.06)",
     marginVertical: 16,
   },
   premiumRenewStrip: {
@@ -2933,7 +2933,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: "rgba(232,197,106,0.35)",
+    borderColor: "rgba(255,255,255,0.08)",
   },
   // Shadow lives on the wrapper, clipping on the inner slide (iOS clips a
   // view's own shadow when it also has overflow:hidden).
