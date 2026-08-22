@@ -18,7 +18,7 @@
       "bundleIdentifier": "com.iconicfitness.app"
     },
     "android": {
-      "package": "com.iconicfitness.app",
+      "package": "com.iconicfitness",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon-safe.png",
         "backgroundColor": "#000000"
