@@ -24,6 +24,7 @@ import { Button } from "@/components/Button";
 import { Screen } from "@/components/Screen";
 import { Chip, ChipRow, SectionHeader } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
+import { useAuthClientReset } from "@/hooks/useAuthClientReset";
 import { useGuest } from "@/hooks/useGuest";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import { resolveImageUrl } from "@/lib/images";
@@ -124,6 +125,7 @@ export default function MoreScreen() {
   const colors = useColors();
   const router = useRouter();
   const { signOut } = useClerk();
+  const resetAuthClient = useAuthClientReset();
   const { isLoaded, isSignedIn } = useAuth();
   const { isGuest, exitGuest } = useGuest();
   const { mode: themeMode, setMode: setThemeMode } = useTheme();
@@ -177,7 +179,8 @@ export default function MoreScreen() {
     } finally {
       exitGuest();
       queryClient.clear();
-      router.replace("/(auth)/sign-in");
+      resetAuthClient();
+      router.replace("/(auth)/welcome");
     }
   };
 

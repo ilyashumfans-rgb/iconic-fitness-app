@@ -20,7 +20,7 @@ import * as Notifications from "expo-notifications";
 import { ensureDefaultReminders } from "@/lib/notifications";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -30,6 +30,7 @@ import { PendingMobileLink } from "@/components/PendingMobileLink";
 import { PendingUsernameLink } from "@/components/PendingUsernameLink";
 import { useColors } from "@/hooks/useColors";
 import { GuestProvider } from "@/hooks/useGuest";
+import { AuthClientResetContext } from "@/hooks/useAuthClientReset";
 import { ThemeProvider, useTheme } from "@/hooks/useTheme";
 
 SplashScreen.preventAutoHideAsync();
@@ -214,6 +215,10 @@ export default function RootLayout() {
   const [authConfig, setAuthConfig] = useState<AuthConfig | null>(null);
   const [authConfigFailed, setAuthConfigFailed] = useState(false);
   const [authConfigRetry, setAuthConfigRetry] = useState(0);
+  const [authClientKey, setAuthClientKey] = useState(0);
+  const resetAuthClient = useCallback(() => {
+    setAuthClientKey((current) => current + 1);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -363,42 +368,45 @@ export default function RootLayout() {
     // request on a real device traps the user on a blank screen after the splash
     // (and even blocks guests from reaching "Continue without login"). Instead we
     // always render the app and let each route handle the auth-loading state.
-    <ClerkProvider
-      publishableKey={authConfig.publishableKey}
-      tokenCache={tokenCache}
-      {...(authConfig.proxyUrl ? { proxyUrl: authConfig.proxyUrl } : {})}
-    >
-      <SafeAreaProvider>
-        <ThemeProvider>
-          <ErrorBoundary>
-            <PersistQueryClientProvider
-              client={queryClient}
-              persistOptions={{
-                persister: queryPersister,
-                maxAge: 24 * 60 * 60 * 1000,
-                buster: "v2",
-                dehydrateOptions: {
-                  shouldDehydrateQuery: (query) =>
-                    query.state.status === "success" &&
-                    isPublicPersistableQuery(query),
-                },
-              }}
-            >
-              <ApiAuthBridge />
-              <PendingMobileLink />
-              <PendingUsernameLink />
-              <GuestProvider>
-                <GestureHandlerRootView style={{ flex: 1 }}>
-                  <RootLayoutNav />
-                  {!splashDone ? (
-                    <AnimatedSplash onFinish={() => setSplashDone(true)} />
-                  ) : null}
-                </GestureHandlerRootView>
-              </GuestProvider>
-            </PersistQueryClientProvider>
-          </ErrorBoundary>
-        </ThemeProvider>
-      </SafeAreaProvider>
-    </ClerkProvider>
+    <AuthClientResetContext.Provider value={resetAuthClient}>
+      <ClerkProvider
+        key={authClientKey}
+        publishableKey={authConfig.publishableKey}
+        tokenCache={tokenCache}
+        {...(authConfig.proxyUrl ? { proxyUrl: authConfig.proxyUrl } : {})}
+      >
+        <SafeAreaProvider>
+          <ThemeProvider>
+            <ErrorBoundary>
+              <PersistQueryClientProvider
+                client={queryClient}
+                persistOptions={{
+                  persister: queryPersister,
+                  maxAge: 24 * 60 * 60 * 1000,
+                  buster: "v2",
+                  dehydrateOptions: {
+                    shouldDehydrateQuery: (query) =>
+                      query.state.status === "success" &&
+                      isPublicPersistableQuery(query),
+                  },
+                }}
+              >
+                <ApiAuthBridge />
+                <PendingMobileLink />
+                <PendingUsernameLink />
+                <GuestProvider>
+                  <GestureHandlerRootView style={{ flex: 1 }}>
+                    <RootLayoutNav />
+                    {!splashDone ? (
+                      <AnimatedSplash onFinish={() => setSplashDone(true)} />
+                    ) : null}
+                  </GestureHandlerRootView>
+                </GuestProvider>
+              </PersistQueryClientProvider>
+            </ErrorBoundary>
+          </ThemeProvider>
+        </SafeAreaProvider>
+      </ClerkProvider>
+    </AuthClientResetContext.Provider>
   );
 }

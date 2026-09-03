@@ -27,6 +27,7 @@ import { ProfilePhotoPicker } from "@/components/ProfilePhotoPicker";
 import { Screen } from "@/components/Screen";
 import { Chip, ChipRow, SectionHeader } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
+import { useAuthClientReset } from "@/hooks/useAuthClientReset";
 import { useGuest } from "@/hooks/useGuest";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import { istDateLabel, istDateStr } from "@/lib/dates";
@@ -65,6 +66,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { user } = useUser();
   const { signOut } = useClerk();
+  const resetAuthClient = useAuthClientReset();
   const { isGuest, exitGuest } = useGuest();
   const { mode: themeMode, setMode: setThemeMode } = useTheme();
   const queryClient = useQueryClient();
@@ -240,7 +242,8 @@ export default function ProfileScreen() {
     } finally {
       exitGuest();
       queryClient.clear();
-      router.replace("/(auth)/sign-in");
+      resetAuthClient();
+      router.replace("/(auth)/welcome");
     }
   };
 
