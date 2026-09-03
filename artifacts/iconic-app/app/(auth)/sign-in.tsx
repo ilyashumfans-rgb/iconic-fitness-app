@@ -4,7 +4,7 @@ import { customFetch } from "@workspace/api-client-react";
 import { Feather } from "@expo/vector-icons";
 import * as AuthSession from "expo-auth-session";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link, useRouter } from "expo-router";
+import { Link, useFocusEffect, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -78,6 +78,14 @@ function SignInContent() {
   const [newPassword, setNewPassword] = useState("");
   const [pwBusy, setPwBusy] = useState(false);
   const [pwInfo, setPwInfo] = useState<string | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      // Expo Router keeps screens mounted in its stack. Clear any error left
+      // by the previous sign-in attempt when logout reveals this screen again.
+      setError(null);
+    }, []),
+  );
 
   useEffect(() => {
     if (Platform.OS !== "android") return;
