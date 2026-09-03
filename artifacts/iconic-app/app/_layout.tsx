@@ -1,7 +1,7 @@
 import "@/lib/silenceExpoGoPushWarning";
 
 import { ClerkProvider, useAuth } from "@clerk/expo";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { tokenCache } from "@clerk/expo/token-cache";
 import {
   Inter_400Regular,
@@ -27,6 +27,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AnimatedSplash } from "@/components/AnimatedSplash";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PendingMobileLink } from "@/components/PendingMobileLink";
+import { PendingUsernameLink } from "@/components/PendingUsernameLink";
 import { useColors } from "@/hooks/useColors";
 import { GuestProvider } from "@/hooks/useGuest";
 import { ThemeProvider, useTheme } from "@/hooks/useTheme";
@@ -84,7 +85,8 @@ function isPublicPersistableQuery(query: { queryKey: readonly unknown[] }): bool
 // EAS cloud builds don't set EXPO_PUBLIC_DOMAIN, so fall back to the published
 // production domain — never an old/stale deployment.
 const domain = process.env.EXPO_PUBLIC_DOMAIN ?? "iconicfitnessindia.com";
-setBaseUrl(`https://${domain}`);
+const apiBaseUrl = `https://${domain}`;
+setBaseUrl(apiBaseUrl);
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -95,14 +97,10 @@ Notifications.setNotificationHandler({
   }),
 });
 
-// EAS cloud builds don't set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY, which used to
-// leave APKs without a login key ("not able to login"). Fall back to the same
-// publishable key the published website uses (publishable keys are public by
-// design — they are visible in any web bundle).
-const publishableKey =
-  process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ||
-  "pk_test_ZXhjaXRlZC10ZXJyaWVyLTc0LmNsZXJrLmFjY291bnRzLmRldiQ";
-const proxyUrl = process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined;
+type AuthConfig = {
+  publishableKey: string;
+  proxyUrl?: string;
+};
 
 // Supply the Clerk session token as a bearer to every generated API call,
 // at the root so all routes (tabs + root-level modals) are covered.
@@ -213,6 +211,56 @@ export default function RootLayout() {
     Inter_700Bold,
   });
   const [splashDone, setSplashDone] = useState(false);
+  const [authConfig, setAuthConfig] = useState<AuthConfig | null>(null);
+  const [authConfigFailed, setAuthConfigFailed] = useState(false);
+  const [authConfigRetry, setAuthConfigRetry] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    setAuthConfigFailed(false);
+
+    void fetch(`${apiBaseUrl}/api/auth/config`, {
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Auth config request failed: ${response.status}`);
+        }
+        const config = (await response.json()) as {
+          publishableKey?: unknown;
+          proxyPath?: unknown;
+        };
+        if (
+          typeof config.publishableKey !== "string" ||
+          !config.publishableKey
+        ) {
+          throw new Error("Auth config did not include a publishable key");
+        }
+        const proxyPath =
+          typeof config.proxyPath === "string" ? config.proxyPath : "";
+        if (active) {
+          setAuthConfig({
+            publishableKey: config.publishableKey,
+            proxyUrl: proxyPath ? `${apiBaseUrl}${proxyPath}` : undefined,
+          });
+          setAuthConfigFailed(false);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setAuthConfigFailed(true);
+        }
+      });
+
+    return () => {
+      active = false;
+      clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [authConfigRetry]);
 
   // Hide the native splash as soon as fonts resolve — but NEVER wait on them
   // forever. If the font download stalls (slow device / blocked tunnel), a 2s
@@ -239,10 +287,10 @@ export default function RootLayout() {
     void ensureDefaultReminders();
   }, []);
 
-  // A build without the Clerk key must not hard-crash at launch ("app opens
-  // then instantly closes"). Show a readable message instead so the problem
-  // is obvious on a real device.
-  if (!publishableKey) {
+  // A build without a usable Clerk configuration must not hard-crash. EAS
+  // builds obtain it from the API above because they do not inherit Replit
+  // deployment environment variables.
+  if (!authConfig) {
     return (
       <View
         style={{
@@ -261,7 +309,9 @@ export default function RootLayout() {
             textAlign: "center",
           }}
         >
-          App build is missing its login key
+          {authConfigFailed
+            ? "Could not connect to login"
+            : "Connecting to secure login…"}
         </Text>
         <Text
           style={{
@@ -271,9 +321,33 @@ export default function RootLayout() {
             marginTop: 8,
           }}
         >
-          Add EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY as an environment variable in
-          the Expo build settings and rebuild the app.
+          {authConfigFailed
+            ? "Check your internet connection, close the app, and open it again."
+            : "Please wait a moment."}
         </Text>
+        {authConfigFailed ? (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setAuthConfigRetry((attempt) => attempt + 1)}
+            style={{
+              marginTop: 20,
+              borderRadius: 12,
+              backgroundColor: "#0BE607",
+              paddingHorizontal: 24,
+              paddingVertical: 12,
+            }}
+          >
+            <Text
+              style={{
+                color: "#071006",
+                fontSize: 15,
+                fontWeight: "700",
+              }}
+            >
+              Try again
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
     );
   }
@@ -290,9 +364,9 @@ export default function RootLayout() {
     // (and even blocks guests from reaching "Continue without login"). Instead we
     // always render the app and let each route handle the auth-loading state.
     <ClerkProvider
-      publishableKey={publishableKey}
+      publishableKey={authConfig.publishableKey}
       tokenCache={tokenCache}
-      {...(proxyUrl ? { proxyUrl } : {})}
+      {...(authConfig.proxyUrl ? { proxyUrl: authConfig.proxyUrl } : {})}
     >
       <SafeAreaProvider>
         <ThemeProvider>
@@ -312,6 +386,7 @@ export default function RootLayout() {
             >
               <ApiAuthBridge />
               <PendingMobileLink />
+              <PendingUsernameLink />
               <GuestProvider>
                 <GestureHandlerRootView style={{ flex: 1 }}>
                   <RootLayoutNav />

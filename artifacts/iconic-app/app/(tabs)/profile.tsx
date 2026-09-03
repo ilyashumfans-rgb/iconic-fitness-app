@@ -97,6 +97,7 @@ export default function ProfileScreen() {
   const [saving, setSaving] = useState(false);
 
   const [pName, setPName] = useState("");
+  const [pUsername, setPUsername] = useState("");
   const [pMobile, setPMobile] = useState("");
   const [pCity, setPCity] = useState("");
   const [pGender, setPGender] = useState("");
@@ -123,6 +124,7 @@ export default function ProfileScreen() {
     const m = meQuery.data;
     if (m) {
       setPName(m.name ?? "");
+      setPUsername(m.username ?? "");
       setPMobile(m.mobile ?? "");
       setPCity(m.city ?? "");
       setPGender(m.gender ?? "");
@@ -142,6 +144,14 @@ export default function ProfileScreen() {
       Alert.alert("Name required", "Please enter your name.");
       return;
     }
+    const username = pUsername.trim().toLowerCase();
+    if (username && !/^[a-z][a-z0-9._]{2,29}$/.test(username)) {
+      Alert.alert(
+        "Invalid username",
+        "Use 3–30 characters, start with a letter, and use only letters, numbers, dots, or underscores.",
+      );
+      return;
+    }
     const age = Number(pAge);
     const heightCm = Number(pHeight);
     const weightKg = Number(pWeight);
@@ -155,6 +165,7 @@ export default function ProfileScreen() {
       await updateMe.mutateAsync({
         data: {
           name: pName.trim(),
+          username: username || null,
           mobile: pMobile.trim(),
           city: pCity.trim(),
           gender: pGender,
@@ -167,8 +178,12 @@ export default function ProfileScreen() {
       await queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
       await meQuery.refetch();
       Alert.alert("Saved", "Your profile has been updated.");
-    } catch {
-      Alert.alert("Error", "Could not save your profile.");
+    } catch (err: unknown) {
+      const message =
+        (err as { data?: { error?: string } })?.data?.error ??
+        (err as { body?: { error?: string } })?.body?.error ??
+        "Could not save your profile.";
+      Alert.alert("Error", message);
     } finally {
       setSavingProfile(false);
     }
@@ -550,6 +565,14 @@ export default function ProfileScreen() {
           <SectionHeader title="Personal details" />
           <Card style={{ gap: 14 }}>
             <Field label="Name" value={pName} onChangeText={setPName} />
+            <Field
+              label="Username"
+              value={pUsername}
+              onChangeText={setPUsername}
+              placeholder="e.g. iconic.member"
+              autoCapitalize="none"
+              autoComplete="username"
+            />
             <Field
               label="Mobile"
               value={pMobile}
