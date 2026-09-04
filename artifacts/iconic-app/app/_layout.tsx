@@ -103,6 +103,8 @@ type AuthConfig = {
   proxyUrl?: string;
 };
 
+const AUTH_CONFIG_CACHE_KEY = "iconic.auth-config.v1";
+
 // Supply the Clerk session token as a bearer to every generated API call,
 // at the root so all routes (tabs + root-level modals) are covered.
 function ApiAuthBridge() {
@@ -226,11 +228,36 @@ export default function RootLayout() {
     const timeout = setTimeout(() => controller.abort(), 10000);
     setAuthConfigFailed(false);
 
-    void fetch(`${apiBaseUrl}/api/auth/config`, {
-      headers: { Accept: "application/json" },
-      signal: controller.signal,
-    })
-      .then(async (response) => {
+    void (async () => {
+      let hasCachedConfig = false;
+      try {
+        const cached = await AsyncStorage.getItem(AUTH_CONFIG_CACHE_KEY);
+        if (cached) {
+          const parsed = JSON.parse(cached) as Partial<AuthConfig>;
+          if (
+            typeof parsed.publishableKey === "string" &&
+            parsed.publishableKey.length > 0
+          ) {
+            hasCachedConfig = true;
+            if (active) {
+              setAuthConfig({
+                publishableKey: parsed.publishableKey,
+                ...(typeof parsed.proxyUrl === "string" && parsed.proxyUrl
+                  ? { proxyUrl: parsed.proxyUrl }
+                  : {}),
+              });
+            }
+          }
+        }
+      } catch {
+        // A corrupt/missing cache simply falls through to the live request.
+      }
+
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/auth/config`, {
+          headers: { Accept: "application/json" },
+          signal: controller.signal,
+        });
         if (!response.ok) {
           throw new Error(`Auth config request failed: ${response.status}`);
         }
@@ -246,19 +273,24 @@ export default function RootLayout() {
         }
         const proxyPath =
           typeof config.proxyPath === "string" ? config.proxyPath : "";
+        const freshConfig: AuthConfig = {
+          publishableKey: config.publishableKey,
+          proxyUrl: proxyPath ? `${apiBaseUrl}${proxyPath}` : undefined,
+        };
         if (active) {
-          setAuthConfig({
-            publishableKey: config.publishableKey,
-            proxyUrl: proxyPath ? `${apiBaseUrl}${proxyPath}` : undefined,
-          });
+          setAuthConfig(freshConfig);
           setAuthConfigFailed(false);
         }
-      })
-      .catch(() => {
-        if (active) {
+        void AsyncStorage.setItem(
+          AUTH_CONFIG_CACHE_KEY,
+          JSON.stringify(freshConfig),
+        ).catch(() => {});
+      } catch {
+        if (active && !hasCachedConfig) {
           setAuthConfigFailed(true);
         }
-      });
+      }
+    })();
 
     return () => {
       active = false;

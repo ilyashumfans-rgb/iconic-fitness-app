@@ -12,6 +12,62 @@ const svc = new ObjectStorageService();
 
 const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
 const ALLOWED_PREFIXES = ["image/", "application/pdf"];
+const DB_IMAGE_CACHE_MAX_BYTES = 32 * 1024 * 1024;
+const DB_IMAGE_CACHE_ITEM_MAX_BYTES = 2 * 1024 * 1024;
+type CachedDbImage = { data: Buffer; mimeType: string };
+const dbImageCache = new Map<string, CachedDbImage>();
+const dbImageLoads = new Map<string, Promise<CachedDbImage | null>>();
+let dbImageCacheBytes = 0;
+
+function cacheDbImage(id: string, image: CachedDbImage): void {
+  if (image.data.length > DB_IMAGE_CACHE_ITEM_MAX_BYTES) return;
+  while (
+    dbImageCache.size > 0 &&
+    dbImageCacheBytes + image.data.length > DB_IMAGE_CACHE_MAX_BYTES
+  ) {
+    const oldest = dbImageCache.entries().next().value as
+      | [string, CachedDbImage]
+      | undefined;
+    if (!oldest) break;
+    dbImageCache.delete(oldest[0]);
+    dbImageCacheBytes -= oldest[1].data.length;
+  }
+  dbImageCache.set(id, image);
+  dbImageCacheBytes += image.data.length;
+}
+
+async function loadDbImage(id: string): Promise<CachedDbImage | null> {
+  const cached = dbImageCache.get(id);
+  if (cached) {
+    dbImageCache.delete(id);
+    dbImageCache.set(id, cached);
+    return cached;
+  }
+  const existing = dbImageLoads.get(id);
+  if (existing) return existing;
+
+  const pending = (async () => {
+    const [row] = await db
+      .select({
+        mimeType: uploadedImagesTable.mimeType,
+        dataBase64: uploadedImagesTable.dataBase64,
+      })
+      .from(uploadedImagesTable)
+      .where(eq(uploadedImagesTable.id, id))
+      .limit(1);
+    if (!row) return null;
+    const image = {
+      data: Buffer.from(row.dataBase64, "base64"),
+      mimeType: row.mimeType,
+    };
+    cacheDbImage(id, image);
+    return image;
+  })().finally(() => {
+    dbImageLoads.delete(id);
+  });
+  dbImageLoads.set(id, pending);
+  return pending;
+}
 
 // Uploads are for signed-in users: staff sessions (admin/partner/staff) or
 // authenticated Clerk members (profile photo uploads from the mobile app).
@@ -167,24 +223,25 @@ router.get("/storage/db-images/:id", async (req: Request, res: Response) => {
   try {
     const rawId = req.params.id;
     const id = Array.isArray(rawId) ? rawId.join("") : rawId;
-    const [row] = await db
-      .select()
-      .from(uploadedImagesTable)
-      .where(eq(uploadedImagesTable.id, id))
-      .limit(1);
-    if (!row) {
+    const etag = `"${id}"`;
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    res.setHeader("ETag", etag);
+    if (req.get("if-none-match") === etag) {
+      res.status(304).end();
+      return;
+    }
+    const image = await loadDbImage(id);
+    if (!image) {
       res.status(404).json({ error: "Image not found" });
       return;
     }
-    const buf = Buffer.from(row.dataBase64, "base64");
-    res.setHeader("Content-Type", row.mimeType);
-    res.setHeader("Content-Length", buf.length);
+    res.setHeader("Content-Type", image.mimeType);
+    res.setHeader("Content-Length", image.data.length);
     res.setHeader("X-Content-Type-Options", "nosniff");
-    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-    if (row.mimeType === "application/pdf") {
+    if (image.mimeType === "application/pdf") {
       res.setHeader("Content-Disposition", "attachment");
     }
-    res.send(buf);
+    res.send(image.data);
   } catch (error) {
     req.log.error({ err: error }, "Error serving db image");
     res.status(500).json({ error: "Failed to serve image" });

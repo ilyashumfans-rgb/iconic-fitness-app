@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { asc, desc, eq, gte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, ne, sql } from "drizzle-orm";
 import { db, classSessionsTable, gymsTable, trainersTable, bookingsTable } from "@workspace/db";
 import { isClassVisibleToMembers } from "../lib/classVisibility";
 import { ensureUpcomingClassSessions } from "../lib/ensureClassSessions";
@@ -29,7 +29,15 @@ async function buildSessionDtos(rows: typeof classSessionsTable.$inferSelect[]) 
             booked: sql<number>`count(*)::int`,
           })
           .from(bookingsTable)
-          .where(sql`${bookingsTable.status} <> 'cancelled'`)
+          .where(
+            and(
+              inArray(
+                bookingsTable.classId,
+                rows.map((row) => row.id),
+              ),
+              ne(bookingsTable.status, "cancelled"),
+            ),
+          )
           .groupBy(bookingsTable.classId),
   ]);
   const bookedByClass = new Map(bookedCounts.map((b) => [b.classId, b.booked]));
@@ -78,6 +86,7 @@ router.get("/classes", microCache(CLASSES_TTL_MS), async (req, res): Promise<voi
   let rows = await db
     .select()
     .from(classSessionsTable)
+    .where(gte(classSessionsTable.startsAt, new Date()))
     .orderBy(asc(classSessionsTable.startsAt));
   if (category)
     rows = rows.filter((c) => c.category.toLowerCase() === category.toLowerCase());

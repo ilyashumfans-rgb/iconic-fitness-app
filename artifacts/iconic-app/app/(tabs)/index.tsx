@@ -6,6 +6,7 @@ import {
   getGetMeQueryKey,
   getGetMyMembershipQueryKey,
   getGetTrackingSummaryQueryKey,
+  getListClassesQueryKey,
   getListGymsQueryKey,
   getListMembershipsQueryKey,
   getListMyBookingsQueryKey,
@@ -59,6 +60,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  InteractionManager,
   Modal,
   Platform,
   Pressable,
@@ -826,13 +828,41 @@ export default function HomeScreen() {
   // previous login session is still remembered on the device — otherwise the
   // guest home shows the member's personal card. Guest mode wins.
   const isSignedIn = !!clerkSignedIn && !isGuest;
+  const showDiscovery = !isSignedIn;
   const queryClient = useQueryClient();
+  const [secondaryReady, setSecondaryReady] = useState(false);
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      setSecondaryReady(false);
+      return;
+    }
+    const task = InteractionManager.runAfterInteractions(() =>
+      setSecondaryReady(true),
+    );
+    const fallback = setTimeout(() => setSecondaryReady(true), 800);
+    return () => {
+      task.cancel();
+      clearTimeout(fallback);
+    };
+  }, [isSignedIn]);
 
   // Public, no-auth content — works for guests and members alike.
   const gymsQuery = useListGyms({ sort: "rating" });
-  const classesQuery = useListClasses({});
+  const classesQuery = useListClasses(
+    {},
+    {
+      query: {
+        enabled: !!isSignedIn && secondaryReady,
+        queryKey: getListClassesQueryKey({}),
+      },
+    },
+  );
   const membershipsQuery = useListMemberships({
-    query: { queryKey: getListMembershipsQueryKey() },
+    query: {
+      enabled: showDiscovery,
+      queryKey: getListMembershipsQueryKey(),
+    },
   });
 
   // Personal content — only fetched when signed in (guests get 401 otherwise).
@@ -840,7 +870,7 @@ export default function HomeScreen() {
     { date: istToday() },
     {
       query: {
-        enabled: !!isSignedIn,
+        enabled: !!isSignedIn && secondaryReady,
         queryKey: getGetTrackingSummaryQueryKey({ date: istToday() }),
       },
     },
@@ -897,12 +927,11 @@ export default function HomeScreen() {
   }, [welcomeKey]);
   // Signed-in users get a tracking-focused Home: the discovery sections
   // (Explore packages / Gyms near me / Top rated gyms) are guest-only.
-  const showDiscovery = !isSignedIn;
   const bookingsQuery = useListMyBookings(
     { status: "upcoming" },
     {
       query: {
-        enabled: !!isSignedIn,
+        enabled: !!isSignedIn && secondaryReady,
         queryKey: getListMyBookingsQueryKey({ status: "upcoming" }),
       },
     },
@@ -941,7 +970,10 @@ export default function HomeScreen() {
 
   // Package categories — shown as a compact 3D tile row on Home.
   const packageCategoriesQuery = useListPackageCategories({
-    query: { queryKey: getListPackageCategoriesQueryKey() },
+    query: {
+      enabled: showDiscovery,
+      queryKey: getListPackageCategoriesQueryKey(),
+    },
   });
   const packageCategories = packageCategoriesQuery.data ?? [];
   // Wait for the categories query to settle before choosing tiles vs the
@@ -955,8 +987,12 @@ export default function HomeScreen() {
 
   const refetchAll = useCallback(() => {
     void gymsQuery.refetch();
-    void classesQuery.refetch();
-    void membershipsQuery.refetch();
+    if (isSignedIn) {
+      void classesQuery.refetch();
+    } else {
+      void membershipsQuery.refetch();
+      void packageCategoriesQuery.refetch();
+    }
     if (isSignedIn) {
       void summaryQuery.refetch();
       void meQuery.refetch();
