@@ -564,7 +564,7 @@ export const adminApi = {
   },
   notifications: {
     send: (body: {
-      recipientType: "user" | "partner" | "vendor" | "admin";
+      recipientType: "user" | "prospect" | "partner" | "vendor" | "admin";
       recipientId: number | null;
       title: string;
       body: string;
@@ -594,7 +594,7 @@ export const adminApi = {
           read: number;
         }[]
       >("/admin/notifications"),
-    recipients: (type: "user" | "partner" | "vendor" | "admin") =>
+    recipients: (type: "user" | "prospect" | "partner" | "vendor" | "admin") =>
       request<{ id: number; name: string; email: string }[]>(
         `/admin/notifications/recipients?type=${type}`,
       ),

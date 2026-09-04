@@ -3,7 +3,7 @@ import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
 import { adminApi } from "@/lib/adminApi";
 import { Send, Users, Megaphone, Check } from "lucide-react";
 
-type RType = "user" | "partner" | "vendor" | "admin";
+type RType = "user" | "prospect" | "partner" | "vendor" | "admin";
 
 type Recipient = { id: number; name: string; email: string };
 
@@ -24,6 +24,7 @@ const inputCls =
 
 const TYPE_LABELS: Record<RType, string> = {
   user: "Members",
+  prospect: "Logged in, not yet a member",
   partner: "Partners (gyms)",
   vendor: "Vendors (store sellers)",
   admin: "Admins",

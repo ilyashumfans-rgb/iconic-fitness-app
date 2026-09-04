@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { Router, type IRouter, type Request } from "express";
 import { clerkClient } from "@clerk/express";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import {
   db,
   gymsTable,
@@ -21,6 +21,7 @@ import {
   LookupMembershipResponse,
 } from "@workspace/api-zod";
 import { requireUser } from "../lib/currentUser";
+import { normalizeMemberUsername } from "../lib/memberUsername";
 import { microCache } from "../lib/microCache";
 import {
   createYoactivPaymentUrl,
@@ -36,6 +37,21 @@ const router: IRouter = Router();
 
 // 30s micro-cache for the public plan/category catalogs (admin edits rare).
 const CATALOG_TTL_MS = 30_000;
+
+function recordMembershipLookup(userId: number, hasMembership: boolean): void {
+  void db
+    .update(usersTable)
+    .set({ hasMembership })
+    .where(
+      and(
+        eq(usersTable.id, userId),
+        sql`${usersTable.hasMembership} IS DISTINCT FROM ${hasMembership}`,
+      ),
+    )
+    .catch((error) => {
+      console.error("membership classification update failed", error);
+    });
+}
 
 router.get("/memberships", microCache(CATALOG_TTL_MS), async (_req, res): Promise<void> => {
   const rows = await db.select().from(membershipsTable);
@@ -124,12 +140,10 @@ router.post("/membership-lookup", async (req, res): Promise<void> => {
   );
 });
 
-// ── Mobile + password login ───────────────────────────────────────────────
-// Members remember their gym-registered mobile, but Clerk identifies accounts
-// by email — so the password check happens server-side (Clerk Backend API)
-// and the app receives only a short-lived sign-in ticket. No email address or
-// account detail is ever revealed to an unauthenticated caller, and all
-// failures return the same generic message so accounts can't be enumerated.
+// ── Member identifier + password login ────────────────────────────────────
+// Username/email/mobile resolves only to linked Clerk ids. Password checking
+// stays server-side and the app receives only a short-lived sign-in ticket.
+// No account detail is revealed, and all credential failures are generic.
 const PW_LOGIN_MAX_PER_WINDOW = 10;
 const pwLoginHits = new Map<string, { windowStart: number; count: number }>();
 
@@ -151,29 +165,49 @@ function pwLoginRateLimited(clientKey: string): boolean {
 
 function parsePasswordLoginBody(
   body: unknown,
-): { mobile: string; password: string } | null {
-  const b = body as { mobile?: unknown; password?: unknown } | null;
+): { identifier: string; password: string } | null {
+  const b = body as { identifier?: unknown; password?: unknown } | null;
   if (
     !b ||
-    typeof b.mobile !== "string" ||
+    typeof b.identifier !== "string" ||
     typeof b.password !== "string" ||
-    b.mobile.length < 10 ||
-    b.mobile.length > 20 ||
+    b.identifier.trim().length < 3 ||
+    b.identifier.trim().length > 254 ||
     b.password.length < 1 ||
     b.password.length > 200
   ) {
     return null;
   }
-  return { mobile: b.mobile, password: b.password };
+  return { identifier: b.identifier.trim(), password: b.password };
 }
 
 const GENERIC_LOGIN_ERROR =
-  "Incorrect mobile number or password. If you haven't set a password yet, use “Forgot password”.";
+  "Incorrect username, email, mobile number, or password. If you haven't set a password yet, use “Forgot password”.";
+
+router.post("/auth/username-availability", async (req, res): Promise<void> => {
+  const username = normalizeMemberUsername(
+    (req.body as { username?: unknown } | null)?.username,
+  );
+  if (!username) {
+    res.status(400).json({ available: false });
+    return;
+  }
+  if (pwLoginRateLimited(`username:${req.ip ?? "unknown"}`)) {
+    res.status(429).json({ error: "Too many attempts — please try again in a few minutes" });
+    return;
+  }
+  const [existing] = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(sql`lower(${usersTable.username}) = ${username}`)
+    .limit(1);
+  res.json({ available: !existing });
+});
 
 router.post("/auth/password-login", async (req, res): Promise<void> => {
   const parsed = parsePasswordLoginBody(req.body);
   if (!parsed) {
-    res.status(400).json({ error: "Mobile number and password are required" });
+    res.status(400).json({ error: "Username, email, or mobile and password are required" });
     return;
   }
   const clientKey = req.ip ?? "unknown";
@@ -181,17 +215,28 @@ router.post("/auth/password-login", async (req, res): Promise<void> => {
     res.status(429).json({ error: "Too many attempts — please try again in a few minutes" });
     return;
   }
-  const last10 = parsed.mobile.replace(/\D/g, "").slice(-10);
-  if (last10.length !== 10) {
+  const identifierLower = parsed.identifier.toLowerCase();
+  const digits = parsed.identifier.replace(/\D/g, "");
+  const last10 =
+    digits.length >= 10 && /^[+\d\s()-]+$/.test(parsed.identifier)
+      ? digits.slice(-10)
+      : null;
+  const username = normalizeMemberUsername(parsed.identifier);
+  const identifierCondition = identifierLower.includes("@")
+    ? sql`lower(${usersTable.email}) = ${identifierLower}`
+    : last10
+      ? sql`right(regexp_replace(${usersTable.mobile}, '\\D', '', 'g'), 10) = ${last10}`
+      : username
+        ? sql`lower(${usersTable.username}) = ${username}`
+        : null;
+  if (!identifierCondition) {
     res.status(401).json({ error: GENERIC_LOGIN_ERROR });
     return;
   }
   const rows = await db
     .select({ clerkUserId: usersTable.clerkUserId })
     .from(usersTable)
-    .where(
-      sql`right(regexp_replace(${usersTable.mobile}, '\\D', '', 'g'), 10) = ${last10} AND ${usersTable.clerkUserId} IS NOT NULL`,
-    );
+    .where(sql`${identifierCondition} AND ${usersTable.clerkUserId} IS NOT NULL`);
   const matches = [...new Set(rows.map((r) => r.clerkUserId))].filter(
     (id): id is string => !!id,
   );
@@ -204,15 +249,20 @@ router.post("/auth/password-login", async (req, res): Promise<void> => {
   // the account whose password actually matches gets signed in. If the
   // password happens to match more than one account, fail closed.
   const verified: string[] = [];
-  for (const candidate of matches.slice(0, 5)) {
+  for (const candidate of matches) {
     try {
       await clerkClient.users.verifyPassword({
         userId: candidate,
         password: parsed.password,
       });
+      const clerkUser = await clerkClient.users.getUser(candidate);
+      const hasVerifiedEmail = clerkUser.emailAddresses.some(
+        (address) => address.verification?.status === "verified",
+      );
+      if (!hasVerifiedEmail) continue;
       verified.push(candidate);
     } catch {
-      // Wrong password for this account, or it has no password set.
+      // Wrong password, no password, missing account, or no verified identity.
     }
   }
   if (verified.length !== 1) {
@@ -244,6 +294,7 @@ router.get("/memberships/mine", requireUser, async (req, res): Promise<void> => 
     const profile = await fetchYoactivMemberByMobile(user?.mobile);
     const primary = profile ? pickPrimaryMembership(profile) : null;
     if (primary) {
+      recordMembershipLookup(req.userId!, true);
       // Map the plan's YoActiv branch to our local gym so clients can scope
       // branch-specific content (trainers, classes) to the member's home gym.
       const [homeGym] = await db
@@ -278,9 +329,11 @@ router.get("/memberships/mine", requireUser, async (req, res): Promise<void> => 
     .from(userMembershipsTable)
     .where(eq(userMembershipsTable.userId, req.userId!));
   if (!um) {
+    recordMembershipLookup(req.userId!, false);
     res.json(null);
     return;
   }
+  recordMembershipLookup(req.userId!, true);
   const [plan] = await db
     .select()
     .from(membershipsTable)

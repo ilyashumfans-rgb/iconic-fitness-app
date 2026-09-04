@@ -54,6 +54,9 @@ export const usersTable = pgTable(
   joinedAt: timestamp("joined_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
+  // Null until membership lookup has run at least once; false means the user
+  // has been confirmed as registered in the app without a membership.
+  hasMembership: boolean("has_membership"),
   // Set to true once the WhatsApp/SMS member welcome message has been sent, so
   // we never send a duplicate even if they save their phone number again.
   welcomeSmsSent: boolean("welcome_sms_sent").notNull().default(false),

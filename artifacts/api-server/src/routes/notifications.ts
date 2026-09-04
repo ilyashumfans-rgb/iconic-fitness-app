@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import {
   db,
@@ -17,7 +17,7 @@ import { ensureAssessmentReminder } from "./assessment";
 
 const router: IRouter = Router();
 
-const VALID_TYPES = ["user", "partner", "vendor", "admin"] as const;
+const VALID_TYPES = ["user", "prospect", "partner", "vendor", "admin"] as const;
 type RecipientType = (typeof VALID_TYPES)[number];
 
 async function recipientExists(
@@ -29,7 +29,27 @@ async function recipientExists(
       const r = await db
         .select({ id: usersTable.id })
         .from(usersTable)
-        .where(eq(usersTable.id, id))
+        .where(
+          and(
+            eq(usersTable.id, id),
+            eq(usersTable.hasMembership, true),
+            isNotNull(usersTable.clerkUserId),
+          ),
+        )
+        .limit(1);
+      return r.length > 0;
+    }
+    case "prospect": {
+      const r = await db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(
+          and(
+            eq(usersTable.id, id),
+            eq(usersTable.hasMembership, false),
+            isNotNull(usersTable.clerkUserId),
+          ),
+        )
         .limit(1);
       return r.length > 0;
     }
@@ -91,7 +111,27 @@ async function partnerHasKind(
 async function resolveRecipientIds(type: RecipientType): Promise<number[]> {
   switch (type) {
     case "user": {
-      const rows = await db.select({ id: usersTable.id }).from(usersTable);
+      const rows = await db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(
+          and(
+            eq(usersTable.hasMembership, true),
+            isNotNull(usersTable.clerkUserId),
+          ),
+        );
+      return rows.map((r) => r.id);
+    }
+    case "prospect": {
+      const rows = await db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(
+          and(
+            eq(usersTable.hasMembership, false),
+            isNotNull(usersTable.clerkUserId),
+          ),
+        );
       return rows.map((r) => r.id);
     }
     case "partner": {
@@ -258,7 +298,7 @@ router.get(
       .from(notificationsTable)
       .where(
         and(
-          eq(notificationsTable.recipientType, "user"),
+          inArray(notificationsTable.recipientType, ["user", "prospect"]),
           eq(notificationsTable.recipientId, req.userId!),
         ),
       )
@@ -279,7 +319,7 @@ router.post(
       .where(
         and(
           eq(notificationsTable.id, id),
-          eq(notificationsTable.recipientType, "user"),
+          inArray(notificationsTable.recipientType, ["user", "prospect"]),
           eq(notificationsTable.recipientId, req.userId!),
           isNull(notificationsTable.readAt),
         ),
@@ -297,7 +337,7 @@ router.post(
       .set({ readAt: new Date() })
       .where(
         and(
-          eq(notificationsTable.recipientType, "user"),
+          inArray(notificationsTable.recipientType, ["user", "prospect"]),
           eq(notificationsTable.recipientId, req.userId!),
           isNull(notificationsTable.readAt),
         ),
@@ -536,6 +576,31 @@ router.get(
             email: usersTable.email,
           })
           .from(usersTable)
+          .where(
+            and(
+              eq(usersTable.hasMembership, true),
+              isNotNull(usersTable.clerkUserId),
+            ),
+          )
+          .orderBy(usersTable.name)
+          .limit(1000);
+        res.json(rows);
+        return;
+      }
+      case "prospect": {
+        const rows = await db
+          .select({
+            id: usersTable.id,
+            name: usersTable.name,
+            email: usersTable.email,
+          })
+          .from(usersTable)
+          .where(
+            and(
+              eq(usersTable.hasMembership, false),
+              isNotNull(usersTable.clerkUserId),
+            ),
+          )
           .orderBy(usersTable.name)
           .limit(1000);
         res.json(rows);
