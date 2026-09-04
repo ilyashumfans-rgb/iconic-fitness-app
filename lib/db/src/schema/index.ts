@@ -17,6 +17,7 @@ export const usersTable = pgTable(
   {
   id: serial("id").primaryKey(),
   clerkUserId: text("clerk_user_id").unique(),
+  username: text("username"),
   name: text("name").notNull(),
   email: text("email").notNull(),
   mobile: text("mobile").notNull(),
@@ -58,6 +59,9 @@ export const usersTable = pgTable(
   welcomeSmsSent: boolean("welcome_sms_sent").notNull().default(false),
   },
   (t) => [
+    uniqueIndex("users_username_lower_unique")
+      .on(sql`lower(${t.username})`)
+      .where(sql`${t.username} IS NOT NULL AND ${t.username} <> ''`),
     uniqueIndex("users_referral_code_unique")
       .on(t.referralCode)
       .where(sql`referral_code IS NOT NULL AND referral_code <> ''`),
@@ -1035,6 +1039,10 @@ export const staffTable = pgTable("staff", {
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   username: text("username").unique(),
+  gymId: integer("gym_id").references(() => gymsTable.id, {
+    onDelete: "restrict",
+  }),
+  yoactivStaffId: text("yoactiv_staff_id").unique(),
   passwordHash: text("password_hash").notNull(),
   isActive: boolean("is_active").notNull().default(true),
   permissions: text("permissions")
