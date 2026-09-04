@@ -202,7 +202,7 @@ export function AICoachCard({
               <View style={styles.eyebrowRow}>
                 <View style={[styles.liveDot, { backgroundColor: colors.primary, shadowColor: colors.primary, shadowOpacity: 0.8, shadowRadius: 6, shadowOffset: { width: 0, height: 0 } }]} />
                 <AppText size={11} weight="700" style={{ letterSpacing: 2, color: colors.primary }}>
-                  AI FITNESS COACH
+                  AI FITNESS AGENT
                 </AppText>
               </View>
 
