@@ -704,6 +704,7 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
             </div>
           ) : (
             <button
+              type="button"
               onClick={() => setEditing(true)}
               className="text-xs px-3 py-1.5 rounded bg-slate-700/60 text-slate-200 border border-slate-600/60 hover:border-lime-500/40 w-fit"
             >
@@ -746,6 +747,7 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
             </div>
           ) : (
             <button
+              type="button"
               onClick={() => {
                 setNewUsername(row.username ?? "");
                 setChangingUser(true);
@@ -783,6 +785,7 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
             </div>
           ) : (
             <button
+              type="button"
               onClick={() => setResetting(true)}
               className="text-xs px-3 py-1.5 rounded bg-slate-700/60 text-slate-200 border border-slate-600/60 hover:border-lime-500/40 inline-flex items-center gap-1 w-fit"
             >
@@ -839,12 +842,18 @@ function EditStaffRow({ row, onChanged }: { row: Staff; onChanged: () => void })
 export default function AdminStaffManagement() {
   const [rows, setRows] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [prefill, setPrefill] = useState<StaffPrefill | null>(null);
 
   const load = async () => {
+    setLoadError(null);
     try {
       const data = (await adminApi.staff.list()) as Staff[];
       setRows(data);
+    } catch (e) {
+      setLoadError(
+        e instanceof Error ? e.message : "Couldn't load staff members",
+      );
     } finally {
       setLoading(false);
     }
@@ -884,7 +893,13 @@ export default function AdminStaffManagement() {
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
+                {loadError ? (
+                  <tr>
+                    <td colSpan={4} className="px-5 py-8 text-center text-red-500">
+                      {loadError}. Refresh the page or sign in again.
+                    </td>
+                  </tr>
+                ) : loading ? (
                   <tr>
                     <td colSpan={4} className="px-5 py-8 text-center text-slate-500">
                       Loading…
