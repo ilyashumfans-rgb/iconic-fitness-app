@@ -3113,9 +3113,9 @@ router.get(
             name: gymsTable.name,
             area: gymsTable.area,
             yoactivBranchId: gymsTable.yoactivBranchId,
+            yoactivPtBranchId: gymsTable.yoactivPtBranchId,
           })
           .from(gymsTable)
-          .where(inArray(gymsTable.yoactivBranchId, branchIds))
       : [];
     const labelByBranch = new Map<number, string>();
     const gymIdByBranch = new Map<number, number>();
@@ -3123,6 +3123,10 @@ router.get(
       if (g.yoactivBranchId && !labelByBranch.has(g.yoactivBranchId)) {
         labelByBranch.set(g.yoactivBranchId, `${g.name} (${g.area})`);
         gymIdByBranch.set(g.yoactivBranchId, g.gymId);
+      }
+      if (g.yoactivPtBranchId && !labelByBranch.has(g.yoactivPtBranchId)) {
+        labelByBranch.set(g.yoactivPtBranchId, `${g.name} (${g.area})`);
+        gymIdByBranch.set(g.yoactivPtBranchId, g.gymId);
       }
     }
     res.json(

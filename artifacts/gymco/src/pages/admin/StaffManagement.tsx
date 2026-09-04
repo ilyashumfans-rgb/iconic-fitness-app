@@ -990,6 +990,7 @@ function EditStaffRow({
 export default function AdminStaffManagement() {
   const [rows, setRows] = useState<Staff[]>([]);
   const [branches, setBranches] = useState<StaffBranch[]>([]);
+  const [yoactivBranches, setYoactivBranches] = useState<YoactivBranch[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [prefill, setPrefill] = useState<StaffPrefill | null>(null);
@@ -1018,6 +1019,10 @@ export default function AdminStaffManagement() {
       .branches()
       .then((data) => setBranches(data as StaffBranch[]))
       .catch(() => setBranches([]));
+    adminApi.yoactiv
+      .branches()
+      .then((data) => setYoactivBranches(data as YoactivBranch[]))
+      .catch(() => setYoactivBranches([]));
   }, []);
 
   const filteredRows = rows.filter((row) => {
@@ -1026,7 +1031,10 @@ export default function AdminStaffManagement() {
         ? true
         : branchFilter === "unassigned"
           ? row.gymId === null
-          : row.gymId === Number(branchFilter);
+          : row.gymId ===
+            (yoactivBranches.find(
+              (branch) => branch.branchId === Number(branchFilter),
+            )?.gymId ?? -1);
     const statusMatches =
       statusFilter === "all"
         ? true
@@ -1088,9 +1096,11 @@ export default function AdminStaffManagement() {
                 onChange={(e) => setBranchFilter(e.target.value)}
               >
                 <option value="all">All branches</option>
-                {branches.map((b) => (
-                  <option key={b.gymId} value={b.gymId}>
-                    {b.label}
+                {yoactivBranches.map((b) => (
+                  <option key={b.branchId} value={b.branchId}>
+                    {b.branchName ??
+                      b.gymLabel ??
+                      `Branch ${b.branchId}`}
                   </option>
                 ))}
                 <option value="unassigned">No branch assigned</option>
