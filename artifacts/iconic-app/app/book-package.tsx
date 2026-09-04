@@ -100,6 +100,7 @@ export default function BookPackageScreen() {
   const [usePoints, setUsePoints] = useState(false);
 
   const [pkgId, setPkgId] = useState<number | null>(null);
+  const [checkoutStep, setCheckoutStep] = useState<1 | 2 | 3>(1);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -174,6 +175,23 @@ export default function BookPackageScreen() {
       return false;
     }
     return true;
+  }
+
+  function continueToDetails() {
+    if (!selectedPkg) {
+      Alert.alert("Pick a package", "Please choose a package to continue.");
+      return;
+    }
+    setCheckoutStep(2);
+  }
+
+  function continueToPayment() {
+    if (!validateContact()) return;
+    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      Alert.alert("Check your email", "Please enter a valid email address.");
+      return;
+    }
+    setCheckoutStep(3);
   }
 
   async function onPay() {
@@ -392,7 +410,14 @@ export default function BookPackageScreen() {
     <Screen contentContainerStyle={{ paddingBottom: 40 }}>
       <ModalHeader title="Buy a package" />
 
-      <Pressable onPress={() => setGymId(null)} style={{ marginBottom: 12 }}>
+       <Pressable
+         onPress={() => {
+           setGymId(null);
+           setPkgId(null);
+           setCheckoutStep(1);
+         }}
+         style={{ marginBottom: 12 }}
+       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
           <Feather name="map-pin" size={14} color={colors.primary} />
           <AppText weight="600" size={13} color={colors.primary}>
@@ -427,70 +452,167 @@ export default function BookPackageScreen() {
         </Card>
       ) : (
       <Card>
-        <AppText weight="700" size={16} style={{ marginBottom: 4 }}>
-          {paidFlow ? "Choose your plan" : "Request a callback"}
-        </AppText>
-        <AppText muted size={13} style={{ marginBottom: 16 }}>
-          {paidFlow
-            ? "Pick a plan and pay securely online — your membership starts instantly."
-            : "Online purchase isn't available for this branch yet. Share your details and the team will help you join."}
-        </AppText>
-
-        {paidFlow ? (
-          <View style={{ gap: 10, marginBottom: 16 }}>
-            {packages.map((p) => (
-              <PackageOption
-                key={p.id}
-                pkg={p}
-                selected={p.id === pkgId}
-                onPress={() => setPkgId(p.id)}
-              />
-            ))}
-          </View>
+        {paidFlow && checkoutStep > 1 ? (
+          <Pressable
+            onPress={() =>
+              setCheckoutStep((step) => (step === 3 ? 2 : 1))
+            }
+            style={{
+              alignSelf: "flex-start",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 5,
+              marginBottom: 12,
+            }}
+          >
+            <Feather name="arrow-left" size={15} color={colors.primary} />
+            <AppText weight="600" size={13} color={colors.primary}>
+              Back
+            </AppText>
+          </Pressable>
         ) : null}
 
-        <Field
-          label="Full name"
-          value={name}
-          onChangeText={setName}
-          placeholder="Your name"
-          autoCapitalize="words"
-        />
-        <View style={{ height: 12 }} />
-        <Field
-          label="Phone"
-          value={phone}
-          onChangeText={setPhone}
-          placeholder="Your phone number"
-          keyboardType="phone-pad"
-        />
-        {paidFlow ? (
+        <AppText weight="700" size={16} style={{ marginBottom: 4 }}>
+          {!paidFlow
+            ? "Request a callback"
+            : checkoutStep === 1
+              ? "Choose your plan"
+              : checkoutStep === 2
+                ? "Your details"
+                : "Complete your purchase"}
+        </AppText>
+        <AppText muted size={13} style={{ marginBottom: 16 }}>
+          {!paidFlow
+            ? "Online purchase isn't available for this branch yet. Share your details and the team will help you join."
+            : checkoutStep === 1
+              ? "Select the membership package that works for you."
+              : checkoutStep === 2
+                ? "Enter the contact details for your membership."
+                : "Choose your start date, apply a coupon if you have one, and confirm the terms."}
+        </AppText>
+
+        {paidFlow && checkoutStep === 1 ? (
           <>
-            <View style={{ height: 12 }} />
-            <Field
-              label="Email (for your membership record)"
-              value={email}
-              onChangeText={setEmail}
-              placeholder="you@email.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
+            <View style={{ gap: 10, marginBottom: 20 }}>
+              {packages.map((p) => (
+                <PackageOption
+                  key={p.id}
+                  pkg={p}
+                  selected={p.id === pkgId}
+                  onPress={() => setPkgId(p.id)}
+                />
+              ))}
+            </View>
+            <Button
+              label="Next"
+              onPress={continueToDetails}
+              icon="arrow-right"
             />
           </>
         ) : null}
 
-        <AppText
-          weight="600"
-          size={13}
-          style={{ marginTop: 18, marginBottom: 8 }}
-        >
-          Start date
-        </AppText>
-        <CalendarPicker value={date} onChange={setDate} />
-        <AppText muted size={11} style={{ marginTop: 6 }}>
-          Selected: {istDateLabel(date)}
-        </AppText>
+        {(!paidFlow || checkoutStep === 2) ? (
+          <>
+            <Field
+              label="Full name"
+              value={name}
+              onChangeText={setName}
+              placeholder="Your full name"
+              autoCapitalize="words"
+            />
+            <View style={{ height: 12 }} />
+            <Field
+              label="Phone"
+              value={phone}
+              onChangeText={setPhone}
+              placeholder="Your phone number"
+              keyboardType="phone-pad"
+            />
+            {paidFlow ? (
+              <>
+                <View style={{ height: 12 }} />
+                <Field
+                  label="Email ID"
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="you@email.com"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </>
+            ) : null}
+          </>
+        ) : null}
 
-        {paidFlow ? (
+        {paidFlow && checkoutStep === 2 && isSignedIn ? (
+          <View
+            style={{
+              marginTop: 18,
+              padding: 14,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: colors.border,
+              gap: 10,
+            }}
+          >
+            <AppText weight="600" size={13}>
+              Your profile photo{meQuery.data?.avatarUrl ? " ✅" : " (optional)"}
+            </AppText>
+            <AppText muted size={11}>
+              This photo goes on your member card and your account. You can also
+              add it after payment.
+            </AppText>
+            <ProfilePhotoPicker
+              avatarUrl={meQuery.data?.avatarUrl}
+              name={name || meQuery.data?.name}
+              size={84}
+            />
+          </View>
+        ) : null}
+
+        {paidFlow && checkoutStep === 2 ? (
+          <View style={{ marginTop: 20 }}>
+            <Button
+              label="Next"
+              onPress={continueToPayment}
+              icon="arrow-right"
+            />
+          </View>
+        ) : null}
+
+        {(!paidFlow || checkoutStep === 3) ? (
+          <>
+            {paidFlow && selectedPkg ? (
+              <View
+                style={{
+                  padding: 12,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: colors.primary,
+                  backgroundColor: `${colors.primary}0D`,
+                  marginBottom: 18,
+                }}
+              >
+                <AppText weight="700" size={14}>
+                  {selectedPkg.serviceName}
+                </AppText>
+                <AppText weight="700" size={16} color={colors.primary} style={{ marginTop: 4 }}>
+                  ₹{selectedPkg.amountInr.toLocaleString("en-IN")}
+                </AppText>
+              </View>
+            ) : null}
+
+            <AppText weight="600" size={13} style={{ marginBottom: 8 }}>
+              Start date
+            </AppText>
+            <CalendarPicker value={date} onChange={setDate} />
+            <AppText muted size={11} style={{ marginTop: 6 }}>
+              Selected: {istDateLabel(date)}
+            </AppText>
+          </>
+        ) : null}
+
+        {paidFlow && checkoutStep === 3 ? (
           <CouponInput
             amountInr={selectedPkg ? selectedPkg.amountInr : null}
             kind="package"
@@ -500,7 +622,7 @@ export default function BookPackageScreen() {
           />
         ) : null}
 
-        {paidFlow && isSignedIn && pointsAvailable > 0 ? (
+        {paidFlow && checkoutStep === 3 && isSignedIn && pointsAvailable > 0 ? (
           <Pressable
             onPress={() => setUsePoints((v) => !v)}
             style={{
@@ -533,33 +655,7 @@ export default function BookPackageScreen() {
           </Pressable>
         ) : null}
 
-        {paidFlow && isSignedIn ? (
-          <View
-            style={{
-              marginTop: 18,
-              padding: 14,
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: colors.border,
-              gap: 10,
-            }}
-          >
-            <AppText weight="600" size={13}>
-              Your profile photo{meQuery.data?.avatarUrl ? " ✅" : " (optional)"}
-            </AppText>
-            <AppText muted size={11}>
-              This photo goes on your member card and your account. You can also
-              add it after payment.
-            </AppText>
-            <ProfilePhotoPicker
-              avatarUrl={meQuery.data?.avatarUrl}
-              name={name || meQuery.data?.name}
-              size={84}
-            />
-          </View>
-        ) : null}
-
-        {paidFlow ? (
+        {paidFlow && checkoutStep === 3 ? (
           <Pressable
             onPress={() => setTermsAccepted((v) => !v)}
             style={{
@@ -598,7 +694,8 @@ export default function BookPackageScreen() {
           </Pressable>
         ) : null}
 
-        <View style={{ marginTop: 20 }}>
+        {(!paidFlow || checkoutStep === 3) ? (
+          <View style={{ marginTop: 20 }}>
           {paidFlow ? (
             <Button
               label={
@@ -618,14 +715,15 @@ export default function BookPackageScreen() {
               icon="send"
             />
           )}
-        </View>
-        {paidFlow ? (
+          </View>
+        ) : null}
+        {paidFlow && checkoutStep === 3 ? (
           <AppText muted size={11} style={{ marginTop: 10, textAlign: "center" }}>
             Payments are processed securely by Razorpay via the gym's billing
             system.
           </AppText>
         ) : null}
-      </Card>
+       </Card>
       )}
     </Screen>
   );
