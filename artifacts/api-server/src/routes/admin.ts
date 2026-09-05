@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { and, asc, desc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import {
   db,
   adminsTable,
@@ -64,7 +64,11 @@ import {
   setPackageContent,
   setPackageHidden,
 } from "../lib/yoactivPackagePrefs";
-import { yoactivBranchName } from "../lib/yoactivBranchNames";
+import {
+  yoactivBranchName,
+  yoactivMembershipBranchId,
+  yoactivPeopleDirectoryBranchId,
+} from "../lib/yoactivBranchNames";
 import {
   fetchTrainerEnquiryRows,
   TRAINER_ENQUIRY_SOURCE,
@@ -3094,6 +3098,36 @@ router.get(
 
 // ─── YoActiv member directory (read-only) ───────────────────────────────────
 
+async function resolveYoactivMemberBranchId(
+  requestedBranchId: number,
+): Promise<number | null> {
+  const configs = await yoactivKeyConfigs();
+  if (!configs.some((config) => config.branchIds.includes(requestedBranchId))) {
+    return null;
+  }
+  const [gym] = await db
+    .select({
+      membershipBranchId: gymsTable.yoactivBranchId,
+      ptBranchId: gymsTable.yoactivPtBranchId,
+    })
+    .from(gymsTable)
+    .where(
+      or(
+        eq(gymsTable.yoactivBranchId, requestedBranchId),
+        eq(gymsTable.yoactivPtBranchId, requestedBranchId),
+      ),
+    )
+    .limit(1);
+
+  if (
+    gym?.ptBranchId === requestedBranchId &&
+    gym.membershipBranchId
+  ) {
+    return gym.membershipBranchId;
+  }
+  return yoactivMembershipBranchId(requestedBranchId);
+}
+
 // Branches available for the member directory: every configured YoActiv
 // branch id, labelled with the mapped gym name when one exists.
 router.get(
@@ -3267,7 +3301,12 @@ router.get(
       res.json([]);
       return;
     }
-    const members = await fetchYoactivMemberList(branchId);
+    const memberBranchId = await resolveYoactivMemberBranchId(branchId);
+    if (!memberBranchId) {
+      res.status(400).json({ error: "Unknown YoActiv branch" });
+      return;
+    }
+    const members = await fetchYoactivMemberList(memberBranchId);
     // Member photos come straight from YoActiv (display-only, no uploads).
     res.json(members);
   },
@@ -3287,7 +3326,8 @@ router.get(
       res.json([]);
       return;
     }
-    const trainers = await fetchYoactivBranchTrainers(branchId);
+    const directoryBranchId = yoactivPeopleDirectoryBranchId(branchId);
+    const trainers = await fetchYoactivBranchTrainers(directoryBranchId);
     const photos = await trainerPhotoMap(trainers.map((t) => t.id));
     res.json(
       trainers.map((t) => ({ ...t, photoUrl: photos.get(t.id) ?? null })),
@@ -3310,13 +3350,19 @@ router.get(
       res.json([]);
       return;
     }
-    const staff = await fetchYoactivBranchStaff(branchId);
+    const memberBranchId = await resolveYoactivMemberBranchId(branchId);
+    if (!memberBranchId) {
+      res.status(400).json({ error: "Unknown YoActiv branch" });
+      return;
+    }
+    const directoryBranchId = yoactivPeopleDirectoryBranchId(branchId);
+    const staff = await fetchYoactivBranchStaff(directoryBranchId);
     const [photos, members] = await Promise.all([
       trainerPhotoMap(staff.map((s) => s.id)),
       // YoActiv attaches emails to MEMBER registrations only, never to staff
       // records. Many trainers/MCs are also registered as members, so match
       // by mobile number to surface the email they registered with.
-      fetchYoactivMemberList(branchId).catch(() => []),
+      fetchYoactivMemberList(memberBranchId).catch(() => []),
     ]);
     const emailByMobile = new Map<string, string>();
     for (const m of members) {

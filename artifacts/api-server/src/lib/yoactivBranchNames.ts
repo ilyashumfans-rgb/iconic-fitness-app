@@ -40,6 +40,35 @@ export const YOACTIV_BRANCH_NAMES: Record<number, string> = {
   7820: "Sandbox (test branch)",
 };
 
+const PT_TO_MEMBERSHIP_BRANCH: Record<number, number> = {
+  6793: 5431,
+  6794: 5472,
+  6795: 5489,
+  6796: 5695,
+  6797: 5838,
+  6798: 5915,
+  6799: 6175,
+  6800: 6319,
+  6801: 6351,
+  6802: 6487,
+  6803: 6556,
+  6804: 6664,
+  6805: 6729,
+  7416: 7415,
+  7443: 5812,
+  7728: 7727,
+};
+
+export function yoactivMembershipBranchId(branchId: number): number {
+  return PT_TO_MEMBERSHIP_BRANCH[branchId] ?? branchId;
+}
+
+// Brookefield's PT Sales API key does not expose member/staff directories.
+// Its people directory is maintained on the paired physical-studio branch.
+export function yoactivPeopleDirectoryBranchId(branchId: number): number {
+  return branchId === 7728 ? 7727 : branchId;
+}
+
 export function yoactivBranchName(branchId: number): string | null {
   return YOACTIV_BRANCH_NAMES[branchId] ?? null;
 }
