@@ -3,12 +3,16 @@ import { useMemo, useState } from "react";
 import {
   Alert,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import {
   useListStoreProducts,
@@ -18,6 +22,7 @@ import {
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
 import { ModalHeader } from "@/components/ModalHeader";
+import { WEB_NOTCH_TOP } from "@/components/Screen";
 import { ErrorView, LoadingView } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
 import { useCart } from "@/lib/cart";
@@ -263,10 +268,17 @@ export default function ProductDetailScreen() {
 
 function Shell({ children }: { children: React.ReactNode }) {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
+  const webNotchPadding =
+    Platform.OS === "web" && insets.top === 0 ? WEB_NOTCH_TOP : 0;
   return (
     <SafeAreaView
       edges={["top"]}
-      style={{ flex: 1, backgroundColor: colors.background }}
+      style={{
+        flex: 1,
+        paddingTop: webNotchPadding,
+        backgroundColor: colors.background,
+      }}
     >
       <ModalHeader title="Product" />
       {children}
