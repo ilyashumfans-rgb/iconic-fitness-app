@@ -495,8 +495,8 @@ function MembershipStatusCard({
           style={{
             flexDirection: "row",
             alignItems: "center",
-            gap: 14,
-            marginTop: 16,
+            gap: 10,
+            marginTop: 10,
           }}
         >
           {/* Tappable avatar: Camera / Gallery chooser to change the photo */}
@@ -527,7 +527,7 @@ function MembershipStatusCard({
                   },
                 ]}
               >
-                <AppText weight="700" size={20} color={PREMIUM.gold}>
+                <AppText weight="700" size={16} color={PREMIUM.gold}>
                   {initials}
                 </AppText>
               </View>
@@ -553,10 +553,20 @@ function MembershipStatusCard({
             )}
           </Pressable>
           <View style={{ flex: 1 }}>
-            <AppText weight="700" size={18} color={PREMIUM.text}>
+            <AppText
+              weight="700"
+              size={16}
+              color={PREMIUM.text}
+              numberOfLines={1}
+            >
               {memberName || "Iconic Member"}
             </AppText>
-            <AppText size={13} color={PREMIUM.faint} style={{ marginTop: 2 }}>
+            <AppText
+              size={12}
+              color={PREMIUM.faint}
+              style={{ marginTop: 1 }}
+              numberOfLines={1}
+            >
               {membership.planName}
             </AppText>
             {membership.branchName ? (
@@ -569,7 +579,7 @@ function MembershipStatusCard({
                 }}
               >
                 <Feather name="map-pin" size={11} color={PREMIUM.faint} />
-                <AppText size={12} color={PREMIUM.faint}>
+                <AppText size={11} color={PREMIUM.faint} numberOfLines={1}>
                   {membership.branchName}
                 </AppText>
               </View>
@@ -581,12 +591,12 @@ function MembershipStatusCard({
 
         <View style={{ flexDirection: "row" }}>
           <View style={{ flex: 1 }}>
-            <AppText size={11} color={PREMIUM.faint} style={{ letterSpacing: 1 }}>
+            <AppText size={10} color={PREMIUM.faint} style={{ letterSpacing: 0.8 }}>
               VALID FROM
             </AppText>
             <AppText
               weight="700"
-              size={15}
+              size={13}
               color={PREMIUM.text}
               style={{ marginTop: 3 }}
             >
@@ -594,12 +604,12 @@ function MembershipStatusCard({
             </AppText>
           </View>
           <View style={{ flex: 1 }}>
-            <AppText size={11} color={PREMIUM.faint} style={{ letterSpacing: 1 }}>
+            <AppText size={10} color={PREMIUM.faint} style={{ letterSpacing: 0.8 }}>
               {isExpired ? "EXPIRED ON" : "VALID TILL"}
             </AppText>
             <AppText
               weight="700"
-              size={15}
+              size={13}
               color={needsRenewal ? alertColor : PREMIUM.text}
               style={{ marginTop: 3 }}
             >
@@ -608,12 +618,12 @@ function MembershipStatusCard({
           </View>
           {!isExpired && expiryKnown ? (
             <View style={{ alignItems: "flex-end" }}>
-              <AppText size={11} color={PREMIUM.faint} style={{ letterSpacing: 1 }}>
+              <AppText size={10} color={PREMIUM.faint} style={{ letterSpacing: 0.8 }}>
                 DAYS LEFT
               </AppText>
               <AppText
                 weight="700"
-                size={15}
+                size={13}
                 color={expiringSoon ? alertColor : PREMIUM.gold}
                 style={{ marginTop: 3 }}
               >
@@ -631,8 +641,8 @@ function MembershipStatusCard({
                 { borderColor: alertColor, backgroundColor: alertColor + "1C" },
               ]}
             >
-              <Feather name="alert-triangle" size={16} color={alertColor} />
-              <AppText size={13} weight="700" color={alertColor} style={{ flex: 1 }}>
+              <Feather name="alert-triangle" size={14} color={alertColor} />
+              <AppText size={12} weight="700" color={alertColor} style={{ flex: 1 }}>
                 {isExpired
                   ? `Expired on ${expiryLabel} — renew to keep access`
                   : days <= 0
@@ -655,19 +665,19 @@ function MembershipStatusCard({
                     },
                   ]}
                 >
-                  <Feather name="credit-card" size={16} color="#100E07" />
-                  <AppText weight="700" size={15} color="#100E07">
+                  <Feather name="credit-card" size={14} color="#100E07" />
+                  <AppText weight="700" size={14} color="#100E07">
                     {renewLabel}
                   </AppText>
                 </LinearGradient>
               )}
             </Pressable>
             <AppText
-              size={11}
+              size={10}
               color={PREMIUM.faint}
               style={{ textAlign: "center", marginTop: 8 }}
             >
-              Choose a plan, then continue to secure payment
+               Select a plan to renew securely
             </AppText>
           </>
         ) : (
@@ -3110,8 +3120,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   premiumWrap: {
-    marginBottom: 16,
-    borderRadius: 24,
+    marginBottom: 12,
+    borderRadius: 20,
   },
   joinBarWrap: {
     position: "absolute",
@@ -3145,15 +3155,15 @@ const styles = StyleSheet.create({
   },
   topPagerDot: { height: 7, borderRadius: 4 },
   premiumCard: {
-    borderRadius: 24,
+    borderRadius: 20,
     overflow: "hidden",
-    padding: 20,
+    padding: 14,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",
   },
   premiumBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
     borderRadius: 999,
     borderWidth: 1,
   },
@@ -3168,41 +3178,41 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   premiumAvatarRing: {
-    width: 66,
-    height: 66,
-    borderRadius: 33,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
   },
   premiumAvatar: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
   },
   premiumDivider: {
     height: 1,
     backgroundColor: "rgba(255,255,255,0.06)",
-    marginVertical: 16,
+    marginVertical: 12,
   },
   premiumRenewStrip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 8,
     borderWidth: 1,
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginTop: 16,
-    marginBottom: 12,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginTop: 12,
+    marginBottom: 8,
   },
   premiumRenewBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    borderRadius: 16,
-    paddingVertical: 14,
+    borderRadius: 13,
+    paddingVertical: 11,
   },
   premiumManageBtn: {
     flexDirection: "row",
