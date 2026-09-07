@@ -3663,11 +3663,11 @@ const styles = StyleSheet.create({
 
   // Personal tracking
   homeShortcutScroll: {
-    height: 102,
-    maxHeight: 102,
+    height: 96,
+    maxHeight: 96,
     flexGrow: 0,
     marginHorizontal: -20,
-    marginBottom: 8,
+    marginBottom: 0,
   },
   homeShortcutRow: {
     paddingHorizontal: 20,

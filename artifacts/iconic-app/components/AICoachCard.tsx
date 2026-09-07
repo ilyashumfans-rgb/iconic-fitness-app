@@ -120,7 +120,9 @@ export function AICoachCard({
     transform: [{ scale: interpolate(ring.value, [0, 1], [1, 2.4]) }],
   }));
 
-  const title = needsAssessment ? "Meet your AI Coach" : "Talk to your AI Coach";
+  const title = needsAssessment
+    ? "Meet your AI Agent"
+    : "Your AI Fitness Agent";
   const subtitle = needsAssessment
     ? "A few quick questions and I'll craft your personal plan."
     : "Live guidance from your workouts, meals & goals.";
@@ -131,7 +133,7 @@ export function AICoachCard({
         embedded ? null : CARD_SHADOW,
         embedded
             ? { borderRadius: 30, backgroundColor: colors.card }
-            : { marginTop: 20, marginBottom: 4, borderRadius: 30, backgroundColor: colors.card },
+            : { marginTop: 2, marginBottom: 4, borderRadius: 30, backgroundColor: colors.card },
       ]}
     >
       <Pressable onPress={onPress}>
@@ -139,7 +141,9 @@ export function AICoachCard({
           <View
             style={[
               styles.card,
-              embedded ? { height: 226 } : null,
+              embedded
+                ? { height: 226 }
+                : { height: 172, minHeight: 172, borderRadius: 24 },
               {
                 borderColor: "rgba(127,194,64,0.22)",
                 transform: [{ scale: pressed ? 0.985 : 1 }],
@@ -179,12 +183,35 @@ export function AICoachCard({
             <View pointerEvents="none" style={[styles.particle, { top: 60, right: 118, backgroundColor: colors.foreground, opacity: 0.35 }]} />
 
             {/* Floating holographic fitness icons */}
-            <FloatIcon name="activity" delay={0} tint={colors.primary} border="rgba(127,194,64,0.35)" style={{ top: 18, right: 132 }} />
-            <FloatIcon name="heart" delay={500} tint="#FF6B6B" border="rgba(255,107,107,0.35)" style={{ top: 118, right: 150 }} />
-            <FloatIcon name="zap" delay={1000} tint={colors.primary} border="rgba(127,194,64,0.35)" style={{ bottom: 20, right: 128 }} />
+            <FloatIcon
+              name="activity"
+              delay={0}
+              tint={colors.primary}
+              border="rgba(127,194,64,0.35)"
+              style={
+                embedded
+                  ? { top: 18, right: 132 }
+                  : { top: 14, right: 106 }
+              }
+            />
+            {embedded ? (
+              <>
+                <FloatIcon name="heart" delay={500} tint="#FF6B6B" border="rgba(255,107,107,0.35)" style={{ top: 118, right: 150 }} />
+                <FloatIcon name="zap" delay={1000} tint={colors.primary} border="rgba(127,194,64,0.35)" style={{ bottom: 20, right: 128 }} />
+              </>
+            ) : null}
 
             {/* The living coach */}
-            <Animated.View style={[styles.coachWrap, breatheStyle]} pointerEvents="none">
+            <Animated.View
+              style={[
+                styles.coachWrap,
+                !embedded
+                  ? { right: -8, width: 166, height: 174 }
+                  : null,
+                breatheStyle,
+              ]}
+              pointerEvents="none"
+            >
               <Image source={COACH_IMG} style={styles.coach} contentFit="contain" />
             </Animated.View>
 
@@ -198,36 +225,83 @@ export function AICoachCard({
             />
 
             {/* Content */}
-            <View style={styles.content}>
+            <View
+              style={[
+                styles.content,
+                !embedded ? { padding: 15, paddingRight: 118 } : null,
+              ]}
+            >
               <View style={styles.eyebrowRow}>
                 <View style={[styles.liveDot, { backgroundColor: colors.primary, shadowColor: colors.primary, shadowOpacity: 0.8, shadowRadius: 6, shadowOffset: { width: 0, height: 0 } }]} />
-                <AppText size={11} weight="700" style={{ letterSpacing: 2, color: colors.primary }}>
+                <AppText
+                  size={embedded ? 11 : 9}
+                  weight="700"
+                  style={{
+                    letterSpacing: embedded ? 2 : 1.4,
+                    color: colors.primary,
+                  }}
+                >
                   AI FITNESS AGENT
                 </AppText>
               </View>
 
-              <AppText weight="700" size={24} style={{ marginTop: 10, color: colors.foreground }}>
+              <AppText
+                weight="700"
+                size={embedded ? 24 : 19}
+                style={{
+                  marginTop: embedded ? 10 : 6,
+                  color: colors.foreground,
+                  lineHeight: embedded ? 30 : 23,
+                }}
+              >
                 {title}
               </AppText>
-              <AppText size={14} style={{ marginTop: 6, maxWidth: 210, color: colors.mutedForeground, lineHeight: 20 }}>
+              <AppText
+                size={embedded ? 14 : 11.5}
+                numberOfLines={embedded ? undefined : 2}
+                style={{
+                  marginTop: embedded ? 6 : 3,
+                  maxWidth: embedded ? 210 : 165,
+                  color: colors.mutedForeground,
+                  lineHeight: embedded ? 20 : 15,
+                }}
+              >
                 {subtitle}
               </AppText>
 
-              <View style={styles.ctaRow}>
+              <View
+                style={[
+                  styles.ctaRow,
+                  !embedded ? { marginTop: 10 } : null,
+                ]}
+              >
                 <LinearGradient
                   colors={colors.primaryGradient as [string, string]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
-                  style={styles.ctaPill}
+                  style={[
+                    styles.ctaPill,
+                    !embedded
+                      ? { paddingHorizontal: 12, paddingVertical: 9 }
+                      : null,
+                  ]}
                 >
-                  <Feather name="message-circle" size={15} color={colors.primaryForeground} />
-                  <AppText weight="700" size={13.5} style={{ color: colors.primaryForeground }}>
-                    {needsAssessment ? "Start assessment" : "Talk to AI Coach"}
+                  <Feather
+                    name="message-circle"
+                    size={embedded ? 15 : 13}
+                    color={colors.primaryForeground}
+                  />
+                  <AppText
+                    weight="700"
+                    size={embedded ? 13.5 : 11.5}
+                    style={{ color: colors.primaryForeground }}
+                  >
+                    {needsAssessment ? "Start assessment" : "Open AI Agent"}
                   </AppText>
                 </LinearGradient>
 
                 {/* Circular mic with soft pulse */}
-                <View style={styles.micWrap}>
+                {embedded ? <View style={styles.micWrap}>
                   <Animated.View
                     style={[styles.micRing, { borderColor: colors.primary }, ringStyle]}
                     pointerEvents="none"
@@ -235,7 +309,7 @@ export function AICoachCard({
                   <View style={[styles.micBtn, { backgroundColor: colors.primary }]}>
                     <Feather name="mic" size={18} color={colors.primaryForeground} />
                   </View>
-                </View>
+                </View> : null}
               </View>
             </View>
           </View>
