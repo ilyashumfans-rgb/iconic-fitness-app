@@ -1683,6 +1683,41 @@ export default function HomeScreen() {
           ) : null}
       </>
 
+      <Pressable
+        onPress={() => router.push("/train")}
+        style={({ pressed }) => [
+          styles.workoutStartRow,
+          {
+            borderColor: isLightTheme ? "#DCE8D8" : colors.border,
+            opacity: pressed ? 0.68 : 1,
+          },
+        ]}
+      >
+        <AppText
+          size={10}
+          weight="700"
+          color={colors.mutedForeground}
+          style={styles.workoutStartEyebrow}
+        >
+          EXERCISE
+        </AppText>
+        <AppText size={13} weight="700" style={{ flex: 1 }}>
+          Start logging your workout
+        </AppText>
+        <View
+          style={[
+            styles.workoutStartArrow,
+            {
+              backgroundColor: isLightTheme
+                ? "#EEF3EC"
+                : colors.elevated,
+            },
+          ]}
+        >
+          <Feather name="arrow-right" size={20} color={colors.foreground} />
+        </View>
+      </Pressable>
+
       {/* Explore packages — swipeable category cards (falls back to plan
           cards when no categories are configured). Guests only. */}
       {showDiscovery &&
@@ -3692,6 +3727,29 @@ const styles = StyleSheet.create({
     minHeight: 29,
     textAlign: "center",
     lineHeight: 14,
+  },
+  workoutStartRow: {
+    minHeight: 56,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    marginTop: 2,
+    marginBottom: 18,
+    paddingHorizontal: 2,
+    paddingVertical: 10,
+  },
+  workoutStartEyebrow: {
+    width: 62,
+    letterSpacing: 1,
+  },
+  workoutStartArrow: {
+    width: 48,
+    height: 26,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
   },
   todayTrackerCard: {
     borderWidth: StyleSheet.hairlineWidth,
