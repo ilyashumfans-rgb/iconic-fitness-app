@@ -85,6 +85,7 @@ export function AICoachCard({
   embedded?: boolean;
 }) {
   const colors = useColors();
+  const isLightTheme = colors.background !== "#000000";
 
   const breathe = useSharedValue(0);
   const glow = useSharedValue(0);
@@ -262,7 +263,7 @@ export function AICoachCard({
                 style={{
                   marginTop: embedded ? 6 : 3,
                   maxWidth: embedded ? 210 : 165,
-                  color: colors.mutedForeground,
+                  color: isLightTheme ? "#30382F" : colors.mutedForeground,
                   lineHeight: embedded ? 20 : 15,
                 }}
               >
