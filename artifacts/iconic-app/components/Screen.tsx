@@ -14,6 +14,7 @@ import {
   type Edge,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 
 import { useColors } from "@/hooks/useColors";
 
@@ -29,6 +30,7 @@ type Props = {
   edges?: readonly Edge[];
   contentContainerStyle?: StyleProp<ViewStyle>;
   padded?: boolean;
+  backgroundGradient?: readonly [string, string, ...string[]];
 };
 
 export const Screen = forwardRef<ScrollView, Props>(function Screen({
@@ -39,6 +41,7 @@ export const Screen = forwardRef<ScrollView, Props>(function Screen({
   edges = ["top"],
   contentContainerStyle,
   padded = true,
+  backgroundGradient,
 }, ref) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -96,8 +99,21 @@ export const Screen = forwardRef<ScrollView, Props>(function Screen({
   return (
     <SafeAreaView
       edges={edges}
-      style={[styles.flex, { backgroundColor: colors.background }]}
+      style={[
+        styles.flex,
+        {
+          backgroundColor: backgroundGradient?.[0] ?? colors.background,
+        },
+      ]}
     >
+      {backgroundGradient ? (
+        <LinearGradient
+          colors={backgroundGradient}
+          start={{ x: 0.15, y: 0 }}
+          end={{ x: 0.85, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      ) : null}
       {Platform.OS === "web" ? (
         body
       ) : (

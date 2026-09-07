@@ -153,6 +153,16 @@ const CARD_SHADOW = Platform.select({
     elevation: 7,
   },
 }) as ViewStyle;
+const LIGHT_CARD_SHADOW = Platform.select({
+  web: { boxShadow: "0 8px 24px rgba(42,92,35,0.10)" },
+  default: {
+    shadowColor: "#315C2B",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    elevation: 3,
+  },
+}) as ViewStyle;
 
 // Number of days before renewal that we start warning the member.
 const EXPIRY_SOON_DAYS = 7;
@@ -205,6 +215,7 @@ function HomeShortcutRow({
   onPress: (shortcut: HomeSlide) => void;
 }) {
   const colors = useColors();
+  const isLightTheme = colors.background !== "#000000";
   if (shortcuts.length === 0) return null;
   return (
     <ScrollView
@@ -227,6 +238,7 @@ function HomeShortcutRow({
             <View
               style={[
                 styles.homeShortcutCircle,
+                isLightTheme ? LIGHT_CARD_SHADOW : null,
                 {
                   borderColor: colors.primary + "88",
                   backgroundColor: colors.card,
@@ -882,6 +894,7 @@ const SOFT_SHADOW = Platform.select({
 
 export default function HomeScreen() {
   const colors = useColors();
+  const isLightTheme = colors.background !== "#000000";
   const router = useRouter();
   const { isSignedIn: clerkSignedIn } = useAuth();
   const { isGuest } = useGuest();
@@ -1268,6 +1281,11 @@ export default function HomeScreen() {
       refreshing={summaryQuery.isRefetching || gymsQuery.isRefetching}
       onRefresh={refetchAll}
       contentContainerStyle={{ paddingTop: 8 }}
+      backgroundGradient={
+        isLightTheme
+          ? ["#FFFFFF", "#F8FCF6", "#EEF8EA", "#F7F8F5"]
+          : undefined
+      }
     >
       {/* Top card — signed-in members with a plan see only the membership card
           (the AI coach lives on the floating chat button); everyone else gets
@@ -1317,7 +1335,11 @@ export default function HomeScreen() {
           <View
             style={[
               styles.todayTrackerCard,
-              { backgroundColor: colors.card, borderColor: colors.border },
+              isLightTheme ? LIGHT_CARD_SHADOW : null,
+              {
+                backgroundColor: colors.card,
+                borderColor: isLightTheme ? "#DCE8D8" : colors.border,
+              },
             ]}
           >
             <View style={styles.todayTrackerHeader}>
@@ -1336,14 +1358,26 @@ export default function HomeScreen() {
                 style={({ pressed }) => [
                   styles.modifyTrackersButton,
                   {
-                    borderColor: colors.border,
-                    backgroundColor: colors.elevated,
+                    borderColor: isLightTheme
+                      ? colors.primary
+                      : colors.border,
+                    backgroundColor: isLightTheme
+                      ? colors.primary
+                      : colors.elevated,
                     opacity: pressed ? 0.72 : 1,
                   },
                 ]}
               >
-                <Feather name="sliders" size={14} color={colors.primary} />
-                <AppText size={12} weight="700" color={colors.primary}>
+                <Feather
+                  name="sliders"
+                  size={14}
+                  color={isLightTheme ? "#0B0B0F" : colors.primary}
+                />
+                <AppText
+                  size={12}
+                  weight="700"
+                  color={isLightTheme ? "#0B0B0F" : colors.primary}
+                >
                   Modify
                 </AppText>
               </Pressable>
