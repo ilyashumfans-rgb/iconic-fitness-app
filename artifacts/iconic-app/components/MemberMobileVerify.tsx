@@ -1,8 +1,14 @@
 import { Feather } from "@expo/vector-icons";
+import { useAuth } from "@clerk/expo";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { useLookupMembership } from "@workspace/api-client-react";
+import {
+  getMe,
+  updateMe,
+  useLookupMembership,
+} from "@workspace/api-client-react";
 
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
@@ -20,7 +26,10 @@ import { clearPendingMobile, setPendingMobile } from "@/lib/pendingMobile";
  */
 export function MemberMobileVerify() {
   const colors = useColors();
+  const { isSignedIn } = useAuth();
+  const queryClient = useQueryClient();
   const lookup = useLookupMembership();
+  const [linking, setLinking] = useState(false);
 
   const [mobile, setMobile] = useState("");
   const [result, setResult] = useState<
@@ -41,14 +50,47 @@ export function MemberMobileVerify() {
     lookup.mutate(
       { data: { mobile: normalized } },
       {
-        onSuccess: (res) => {
+        onSuccess: async (res) => {
           if (res.found) {
+            if (isSignedIn) {
+              setLinking(true);
+              try {
+                const me = await getMe();
+                const currentDigits = (me.mobile ?? "")
+                  .replace(/\D/g, "")
+                  .slice(-10);
+                if (currentDigits !== normalized) {
+                  await updateMe({ mobile: normalized });
+                }
+                await clearPendingMobile();
+                await queryClient.invalidateQueries({
+                  predicate: (query) => {
+                    const key = query.queryKey[0];
+                    return (
+                      typeof key === "string" &&
+                      (key.startsWith("/api/me") ||
+                        key.startsWith("/api/memberships/mine"))
+                    );
+                  },
+                });
+              } catch {
+                setResult({
+                  state: "error",
+                  message:
+                    "Membership found, but we couldn't connect it. Please try again.",
+                });
+                return;
+              } finally {
+                setLinking(false);
+              }
+            } else {
+              await setPendingMobile(normalized);
+            }
             setResult({
               state: "found",
               memberName: res.memberName,
               branchName: res.branchName,
             });
-            void setPendingMobile(normalized);
           } else {
             setResult({ state: "notFound" });
             void clearPendingMobile();
@@ -63,7 +105,7 @@ export function MemberMobileVerify() {
         },
       },
     );
-  }, [mobile, lookup]);
+  }, [isSignedIn, mobile, lookup, queryClient]);
 
   return (
     <View
@@ -100,7 +142,7 @@ export function MemberMobileVerify() {
         <Button
           label="Verify"
           onPress={onVerify}
-          loading={lookup.isPending}
+          loading={lookup.isPending || linking}
           variant="secondary"
           size="md"
           full={false}
@@ -136,8 +178,10 @@ export function MemberMobileVerify() {
           <Feather name="check-circle" size={15} color={colors.primary} />
           <AppText size={12} weight="700" color={colors.primary} style={{ flex: 1 }}>
             Membership found ✓ {result.memberName}
-            {result.branchName ? ` · ${result.branchName}` : ""} — finish
-            logging in to connect it
+            {result.branchName ? ` · ${result.branchName}` : ""}
+            {isSignedIn
+              ? " — connected to your account"
+              : " — finish logging in to connect it"}
           </AppText>
         </View>
       ) : null}

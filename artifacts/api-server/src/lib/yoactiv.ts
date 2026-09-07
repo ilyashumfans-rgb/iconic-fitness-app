@@ -1,4 +1,5 @@
 import { logger } from "./logger";
+import { yoactivMembershipBranchId } from "./yoactivBranchNames";
 
 /**
  * YoActiv gym-management API client (https://api.yoactiv.com).
@@ -735,6 +736,88 @@ const memberListCache = new Map<
   number,
   { at: number; ttlMs: number; value: YoactivMemberRow[] }
 >();
+const memberEmailCache = new Map<
+  string,
+  { at: number; ttlMs: number; value: YoactivMemberProfile | null }
+>();
+
+function normalizeEmail(raw: string | null | undefined): string | null {
+  const email = (raw ?? "").trim().toLowerCase();
+  if (
+    email.length < 3 ||
+    email.length > 254 ||
+    !email.includes("@") ||
+    email.endsWith("@gymco.local")
+  ) {
+    return null;
+  }
+  return email;
+}
+
+/**
+ * Link a verified sign-in email to YoActiv when the local app profile has no
+ * usable mobile yet. Exact, unique matches only: duplicated emails fail closed.
+ */
+export async function fetchYoactivMemberByVerifiedEmail(
+  rawEmail: string | null | undefined,
+): Promise<YoactivMemberProfile | null> {
+  const email = normalizeEmail(rawEmail);
+  if (!email) return null;
+  const cached = memberEmailCache.get(email);
+  if (cached && Date.now() - cached.at < cached.ttlMs) return cached.value;
+
+  const configs = await yoactivKeyConfigs();
+  const branchIds = [
+    ...new Set(
+      configs
+        .map((config) =>
+          config.branchIds.find(
+            (branchId) => yoactivMembershipBranchId(branchId) === branchId,
+          ),
+        )
+        .filter((branchId): branchId is number => !!branchId),
+    ),
+  ];
+  if (branchIds.length === 0) return null;
+
+  try {
+    const directories = await Promise.all(
+      branchIds.map((branchId) => fetchYoactivMemberList(branchId)),
+    );
+    const matches = directories
+      .flat()
+      .filter((member) => normalizeEmail(member.email) === email);
+    const byMobile = new Map<string, YoactivMemberRow>();
+    for (const match of matches) {
+      const mobile = normalizeMobile(match.mobile);
+      if (mobile) byMobile.set(mobile, match);
+    }
+    if (byMobile.size !== 1) {
+      memberEmailCache.set(email, {
+        at: Date.now(),
+        ttlMs: FAILURE_TTL_MS,
+        value: null,
+      });
+      return null;
+    }
+    const [match] = byMobile.values();
+    const profile = await fetchYoactivMemberByMobile(match!.mobile);
+    memberEmailCache.set(email, {
+      at: Date.now(),
+      ttlMs: profile ? SUCCESS_TTL_MS : FAILURE_TTL_MS,
+      value: profile,
+    });
+    return profile;
+  } catch (err) {
+    logger.warn({ err }, "yoactiv verified-email lookup failed");
+    memberEmailCache.set(email, {
+      at: Date.now(),
+      ttlMs: FAILURE_TTL_MS,
+      value: null,
+    });
+    return null;
+  }
+}
 
 /**
  * Full member directory for a branch via paginated `Users/GetUserList`.
@@ -1010,31 +1093,50 @@ export async function createYoactivPaymentUrl(args: {
   successUrl: string;
   failedUrl: string;
 }): Promise<string | null> {
+  const serviceDetail = {
+    Fee: args.amountInr,
+    ServiceVariationID: args.variationId,
+    TotAmt: args.amountInr,
+    discount: 0,
+    disctype: 0,
+    Qty: 1,
+    StartDate: toYoactivDate(args.startDateIso),
+  };
+  const basePayload = {
+    memberId: String(args.memberId),
+    Busid: "1",
+    Booktype: 0,
+    Amount: args.amountInr,
+    SuccessURL: args.successUrl,
+    FailedURL: args.failedUrl,
+  };
+
   try {
-    const res = await yoactivPost<{ PaymentURL?: string; Error?: string }>(
-      "/Billing/APIPayment",
-      args.target.apiKey,
-      args.target.branchId,
-      {
-        memberId: String(args.memberId),
-        Busid: "1",
-        Booktype: 0,
-        ServiceDetails: [
-          {
-            Fee: args.amountInr,
-            ServiceVariationID: args.variationId,
-            TotAmt: args.amountInr,
-            discount: 0,
-            disctype: 0,
-            Qty: 1,
-            StartDate: toYoactivDate(args.startDateIso),
-          },
-        ],
-        Amount: args.amountInr,
-        SuccessURL: args.successUrl,
-        FailedURL: args.failedUrl,
-      },
-    );
+    let res: { PaymentURL?: string; Error?: string };
+    try {
+      res = await yoactivPost<{ PaymentURL?: string; Error?: string }>(
+        "/Billing/APIPayment",
+        args.target.apiKey,
+        args.target.branchId,
+        { ...basePayload, ServiceDetails: [serviceDetail] },
+      );
+    } catch (err) {
+      // Some YoActiv branches run a legacy APIPayment model that rejects even
+      // a one-element array with "Only one service item can be booked". Retry
+      // that exact compatibility failure with the singular object shape.
+      if (
+        !(err instanceof Error) ||
+        !err.message.includes("Only one service item can be booked at a time")
+      ) {
+        throw err;
+      }
+      res = await yoactivPost<{ PaymentURL?: string; Error?: string }>(
+        "/Billing/APIPayment",
+        args.target.apiKey,
+        args.target.branchId,
+        { ...basePayload, ServiceDetails: serviceDetail },
+      );
+    }
     return typeof res.PaymentURL === "string" && res.PaymentURL.length > 0
       ? res.PaymentURL
       : null;

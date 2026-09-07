@@ -27,7 +27,9 @@ import {
   createYoactivPaymentUrl,
   ensureYoactivMemberId,
   fetchYoactivMemberByMobile,
+  fetchYoactivMemberByVerifiedEmail,
   fetchYoactivPackages,
+  normalizeMobile,
   pickPrimaryMembership,
   resolveBranchTarget,
   yoactivConfigured,
@@ -51,6 +53,27 @@ function recordMembershipLookup(userId: number, hasMembership: boolean): void {
     .catch((error) => {
       console.error("membership classification update failed", error);
     });
+}
+
+async function verifiedClerkEmail(
+  clerkUserId: string | undefined,
+): Promise<string | null> {
+  if (!clerkUserId) return null;
+  try {
+    const user = await clerkClient.users.getUser(clerkUserId);
+    const primary =
+      user.emailAddresses.find(
+        (address) =>
+          address.id === user.primaryEmailAddressId &&
+          address.verification?.status === "verified",
+      ) ??
+      user.emailAddresses.find(
+        (address) => address.verification?.status === "verified",
+      );
+    return primary?.emailAddress?.trim().toLowerCase() ?? null;
+  } catch {
+    return null;
+  }
 }
 
 router.get("/memberships", microCache(CATALOG_TTL_MS), async (_req, res): Promise<void> => {
@@ -291,8 +314,37 @@ router.get("/memberships/mine", requireUser, async (req, res): Promise<void> => 
       .select({ mobile: usersTable.mobile })
       .from(usersTable)
       .where(eq(usersTable.id, req.userId!));
-    const profile = await fetchYoactivMemberByMobile(user?.mobile);
-    const primary = profile ? pickPrimaryMembership(profile) : null;
+    let profile = await fetchYoactivMemberByMobile(user?.mobile);
+    let primary = profile ? pickPrimaryMembership(profile) : null;
+    if (!primary) {
+      const email = await verifiedClerkEmail(req.clerkUserId);
+      const emailProfile = email
+        ? await fetchYoactivMemberByVerifiedEmail(email)
+        : null;
+      const emailPrimary = emailProfile
+        ? pickPrimaryMembership(emailProfile)
+        : null;
+      if (emailProfile && emailPrimary) {
+        profile = emailProfile;
+        primary = emailPrimary;
+        // Save a missing phone only after a unique match to a Clerk-verified
+        // email. Never overwrite a different phone entered by the user.
+        if (!normalizeMobile(user?.mobile)) {
+          const linkedMobile = normalizeMobile(emailProfile.mobile);
+          if (linkedMobile) {
+            await db
+              .update(usersTable)
+              .set({ mobile: linkedMobile })
+              .where(
+                and(
+                  eq(usersTable.id, req.userId!),
+                  sql`right(regexp_replace(${usersTable.mobile}, '\\D', '', 'g'), 10) = ''`,
+                ),
+              );
+          }
+        }
+      }
+    }
     if (primary) {
       recordMembershipLookup(req.userId!, true);
       // Map the plan's YoActiv branch to our local gym so clients can scope

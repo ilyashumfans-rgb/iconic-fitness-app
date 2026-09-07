@@ -83,6 +83,7 @@ import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { CoachFab } from "@/components/CoachFab";
 import { NotificationBell } from "@/components/NotificationBell";
+import { MemberMobileVerify } from "@/components/MemberMobileVerify";
 import { PackageCard } from "@/components/PackageCard";
 import { Screen } from "@/components/Screen";
 import { YouTubeInline } from "@/components/YouTubeInline";
@@ -178,6 +179,7 @@ function NoMembershipCard({
 }) {
   const colors = useColors();
   const PREMIUM = getPremiumColors(colors);
+  const [showConnector, setShowConnector] = useState(false);
   const initials = (memberName || "M")
     .split(/\s+/)
     .map((w) => w[0] ?? "")
@@ -276,6 +278,28 @@ function NoMembershipCard({
           </AppText>
           <Feather name="arrow-right" size={15} color={PREMIUM.text} />
         </Pressable>
+        <Pressable
+          onPress={() => setShowConnector((visible) => !visible)}
+          style={({ pressed }) => ({
+            minHeight: 42,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 7,
+            opacity: pressed ? 0.75 : 1,
+          })}
+        >
+          <Feather name="link-2" size={14} color={PREMIUM.gold} />
+          <AppText weight="700" size={13} color={PREMIUM.gold}>
+            Membership not showing? Connect it
+          </AppText>
+          <Feather
+            name={showConnector ? "chevron-up" : "chevron-down"}
+            size={14}
+            color={PREMIUM.gold}
+          />
+        </Pressable>
+        {showConnector ? <MemberMobileVerify /> : null}
       </LinearGradient>
     </View>
   );
