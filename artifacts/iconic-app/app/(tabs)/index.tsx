@@ -63,6 +63,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Switch,
   useWindowDimensions,
   View,
   type NativeScrollEvent,
@@ -155,6 +156,27 @@ const CARD_SHADOW = Platform.select({
 
 // Number of days before renewal that we start warning the member.
 const EXPIRY_SOON_DAYS = 7;
+type HomeTrackerKey =
+  | "steps"
+  | "weight"
+  | "water"
+  | "sleep"
+  | "hrv"
+  | "restingHr"
+  | "skinTemperature"
+  | "bloodOxygen";
+
+const HOME_TRACKER_STORAGE_KEY = "iconic.homeTrackerVisibility.v1";
+const DEFAULT_HOME_TRACKERS: Record<HomeTrackerKey, boolean> = {
+  steps: true,
+  weight: false,
+  water: true,
+  sleep: true,
+  hrv: true,
+  restingHr: false,
+  skinTemperature: false,
+  bloodOxygen: false,
+};
 
 /** Whole IST calendar days from today until `dateIso` (negative = past). */
 function daysUntilIst(dateIso: string): number {
@@ -893,7 +915,46 @@ export default function HomeScreen() {
   const [quickLogging, setQuickLogging] = useState(false);
   // Collapsible "Your progress today" block — arrow toggles it open/closed.
   const [trackingOpen, setTrackingOpen] = useState(false);
+  const [trackerSettingsOpen, setTrackerSettingsOpen] = useState(false);
+  const [visibleHomeTrackers, setVisibleHomeTrackers] = useState(
+    DEFAULT_HOME_TRACKERS,
+  );
   const [bookingId, setBookingId] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void AsyncStorage.getItem(HOME_TRACKER_STORAGE_KEY)
+      .then((raw) => {
+        if (!raw || cancelled) return;
+        const parsed: unknown = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object") return;
+        const next = { ...DEFAULT_HOME_TRACKERS };
+        for (const key of Object.keys(next) as HomeTrackerKey[]) {
+          if (typeof (parsed as Record<string, unknown>)[key] === "boolean") {
+            next[key] = (parsed as Record<string, boolean>)[key];
+          }
+        }
+        if (!cancelled) setVisibleHomeTrackers(next);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const setHomeTrackerVisible = useCallback(
+    (key: HomeTrackerKey, value: boolean) => {
+      setVisibleHomeTrackers((current) => {
+        const next = { ...current, [key]: value };
+        void AsyncStorage.setItem(
+          HOME_TRACKER_STORAGE_KEY,
+          JSON.stringify(next),
+        ).catch(() => {});
+        return next;
+      });
+    },
+    [],
+  );
 
   const bookedClassIds = useMemo(
     () => new Set((bookingsQuery.data ?? []).map((b) => b.classId)),
@@ -1021,6 +1082,64 @@ export default function HomeScreen() {
           : overallPct > 0
             ? "Time to get moving"
             : "Log your first activity";
+  const homeTrackerItems: Array<{
+    key: HomeTrackerKey;
+    label: string;
+    icon: keyof typeof Feather.glyphMap;
+    value: string;
+    actionLabel?: string;
+    onPress?: () => void;
+  }> = [
+    {
+      key: "steps",
+      label: "Steps",
+      icon: "activity",
+      value: summary ? summary.steps.toLocaleString() : "--",
+    },
+    {
+      key: "weight",
+      label: "Weight",
+      icon: "bar-chart-2",
+      value: meQuery.data?.weightKg ? `${meQuery.data.weightKg} kg` : "--",
+    },
+    {
+      key: "water",
+      label: "Water",
+      icon: "droplet",
+      value: summary ? `${(summary.waterMl / 1000).toFixed(1)} L` : "--",
+      actionLabel: "+250 ml",
+      onPress: onQuickWater,
+    },
+    {
+      key: "sleep",
+      label: "Sleep",
+      icon: "moon",
+      value: meQuery.data?.dailySleepHours
+        ? `${meQuery.data.dailySleepHours} h`
+        : "--",
+    },
+    { key: "hrv", label: "HRV", icon: "heart", value: "--" },
+    {
+      key: "restingHr",
+      label: "Resting HR",
+      icon: "heart",
+      value: meQuery.data?.restingHr
+        ? `${meQuery.data.restingHr} bpm`
+        : "--",
+    },
+    {
+      key: "skinTemperature",
+      label: "Skin temp",
+      icon: "thermometer",
+      value: "--",
+    },
+    {
+      key: "bloodOxygen",
+      label: "Blood O₂",
+      icon: "wind",
+      value: "--",
+    },
+  ];
 
   return (
     <View style={{ flex: 1 }}>
@@ -1066,31 +1185,205 @@ export default function HomeScreen() {
       {/* Redeem prizes wallet — points spendable on store, packages & PT */}
       {isSignedIn ? <WalletRewardsCard /> : null}
 
-      {/* Personal tracking — pinned to the top for signed-in members.
-          One arrow collapses/expands the whole block (progress + quick log + today). */}
+      {/* Compact Today trackers stay visible on Home; members choose which
+          metrics appear and can still expand the existing detailed view. */}
       {isSignedIn ? (
         <>
-          <Pressable
-            onPress={() => setTrackingOpen((v) => !v)}
-            style={styles.sectionToggleRow}
-            hitSlop={8}
+          <View
+            style={[
+              styles.todayTrackerCard,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
           >
-            <AppText weight="700" size={18} style={{ flex: 1 }}>
-              Your progress today
-            </AppText>
-            <View
-              style={[
-                styles.sectionToggleBtn,
-                { borderColor: colors.border, backgroundColor: colors.card },
-              ]}
+            <View style={styles.todayTrackerHeader}>
+              <View style={styles.todayPill}>
+                <AppText weight="700" size={14}>
+                  Today
+                </AppText>
+                <Feather
+                  name="chevron-down"
+                  size={14}
+                  color={colors.mutedForeground}
+                />
+              </View>
+              <Pressable
+                onPress={() => setTrackerSettingsOpen(true)}
+                style={({ pressed }) => [
+                  styles.modifyTrackersButton,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.elevated,
+                    opacity: pressed ? 0.72 : 1,
+                  },
+                ]}
+              >
+                <Feather name="sliders" size={14} color={colors.primary} />
+                <AppText size={12} weight="700" color={colors.primary}>
+                  Modify
+                </AppText>
+              </Pressable>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.todayTrackerRow}
             >
+              {homeTrackerItems
+                .filter((item) => visibleHomeTrackers[item.key])
+                .map((item) => (
+                  <Pressable
+                    key={item.key}
+                    onPress={item.onPress}
+                    disabled={!item.onPress || quickLogging}
+                    style={styles.todayTrackerItem}
+                  >
+                    <View style={styles.todayTrackerLabel}>
+                      <Feather
+                        name={item.icon}
+                        size={13}
+                        color={colors.mutedForeground}
+                      />
+                      <AppText
+                        size={10}
+                        weight="700"
+                        color={colors.mutedForeground}
+                        style={{ textTransform: "uppercase", letterSpacing: 0.7 }}
+                      >
+                        {item.label}
+                      </AppText>
+                    </View>
+                    <AppText size={15} weight="700">
+                      {item.value}
+                    </AppText>
+                    {item.actionLabel ? (
+                      <View
+                        style={[
+                          styles.trackerQuickAction,
+                          { backgroundColor: colors.elevated },
+                        ]}
+                      >
+                        <Feather
+                          name="plus-circle"
+                          size={12}
+                          color={colors.primary}
+                        />
+                        <AppText size={10} weight="700" color={colors.primary}>
+                          {item.actionLabel}
+                        </AppText>
+                      </View>
+                    ) : null}
+                  </Pressable>
+                ))}
+            </ScrollView>
+            <Pressable
+              onPress={() => setTrackingOpen((v) => !v)}
+              style={styles.trackerDetailsButton}
+              hitSlop={8}
+            >
+              <AppText size={12} weight="700" color={colors.mutedForeground}>
+                {trackingOpen ? "Hide detailed progress" : "View detailed progress"}
+              </AppText>
               <Feather
                 name={trackingOpen ? "chevron-up" : "chevron-down"}
-                size={18}
+                size={15}
                 color={colors.primary}
               />
+            </Pressable>
+          </View>
+          <Modal
+            visible={trackerSettingsOpen}
+            transparent
+            animationType="slide"
+            onRequestClose={() => setTrackerSettingsOpen(false)}
+          >
+            <View style={styles.trackerModalRoot}>
+              <Pressable
+                style={StyleSheet.absoluteFill}
+                onPress={() => setTrackerSettingsOpen(false)}
+              />
+              <View
+                style={[
+                  styles.trackerSheet,
+                  { backgroundColor: colors.background },
+                ]}
+              >
+                <View style={styles.trackerSheetHandle} />
+                <View style={styles.trackerSheetTitleRow}>
+                  <View style={{ flex: 1 }}>
+                    <AppText size={19} weight="700">
+                      Health trackers
+                    </AppText>
+                    <AppText size={12} muted style={{ marginTop: 3 }}>
+                      Select the widgets shown on your Home screen.
+                    </AppText>
+                  </View>
+                  <Pressable
+                    onPress={() => setTrackerSettingsOpen(false)}
+                    style={[
+                      styles.trackerCloseButton,
+                      { backgroundColor: colors.elevated },
+                    ]}
+                  >
+                    <Feather
+                      name="x"
+                      size={18}
+                      color={colors.mutedForeground}
+                    />
+                  </Pressable>
+                </View>
+                <View
+                  style={[
+                    styles.trackerRecommendation,
+                    {
+                      backgroundColor: colors.primary + "12",
+                      borderColor: colors.primary + "35",
+                    },
+                  ]}
+                >
+                  <Feather name="info" size={16} color={colors.primary} />
+                  <AppText size={12} style={{ flex: 1 }}>
+                    Keep your essential health metrics visible for faster daily
+                    tracking.
+                  </AppText>
+                </View>
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  {homeTrackerItems.map((item) => (
+                    <View
+                      key={item.key}
+                      style={[
+                        styles.trackerSettingRow,
+                        { borderBottomColor: colors.border },
+                      ]}
+                    >
+                      <Feather
+                        name={item.icon}
+                        size={18}
+                        color={colors.foreground}
+                      />
+                      <AppText size={15} style={{ flex: 1 }}>
+                        {item.label}
+                      </AppText>
+                      <Switch
+                        value={visibleHomeTrackers[item.key]}
+                        onValueChange={(value) =>
+                          setHomeTrackerVisible(item.key, value)
+                        }
+                        trackColor={{
+                          false: colors.elevated,
+                          true: colors.primary + "88",
+                        }}
+                        thumbColor={
+                          visibleHomeTrackers[item.key]
+                            ? colors.primary
+                            : colors.mutedForeground
+                        }
+                      />
+                    </View>
+                  ))}
+                </ScrollView>
+              </View>
             </View>
-          </Pressable>
+          </Modal>
           {trackingOpen ? (
           <>
           <View style={styles.heroWrap}>
@@ -3205,6 +3498,108 @@ const styles = StyleSheet.create({
   },
 
   // Personal tracking
+  todayTrackerCard: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 18,
+    marginBottom: 20,
+    overflow: "hidden",
+  },
+  todayTrackerHeader: {
+    minHeight: 48,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "rgba(128,128,128,0.18)",
+  },
+  todayPill: { flexDirection: "row", alignItems: "center", gap: 5 },
+  modifyTrackersButton: {
+    minHeight: 32,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 16,
+    paddingHorizontal: 11,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  todayTrackerRow: { paddingHorizontal: 6, paddingVertical: 12 },
+  todayTrackerItem: {
+    width: 102,
+    minHeight: 76,
+    paddingHorizontal: 10,
+    gap: 6,
+    borderRightWidth: StyleSheet.hairlineWidth,
+    borderRightColor: "rgba(128,128,128,0.22)",
+  },
+  todayTrackerLabel: { flexDirection: "row", alignItems: "center", gap: 5 },
+  trackerQuickAction: {
+    alignSelf: "flex-start",
+    borderRadius: 12,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  trackerDetailsButton: {
+    minHeight: 38,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+  },
+  trackerModalRoot: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.62)",
+  },
+  trackerSheet: {
+    borderTopLeftRadius: 26,
+    borderTopRightRadius: 26,
+    paddingHorizontal: 18,
+    paddingTop: 10,
+    paddingBottom: 28,
+    maxHeight: "90%",
+  },
+  trackerSheetHandle: {
+    width: 42,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "rgba(128,128,128,0.45)",
+    alignSelf: "center",
+    marginBottom: 16,
+  },
+  trackerSheetTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 14,
+  },
+  trackerCloseButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  trackerRecommendation: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 14,
+    padding: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 8,
+  },
+  trackerSettingRow: {
+    minHeight: 60,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
   heroWrap: { marginBottom: 28 },
   sectionToggleRow: {
     flexDirection: "row",
