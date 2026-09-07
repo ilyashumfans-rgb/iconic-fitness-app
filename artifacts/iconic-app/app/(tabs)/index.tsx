@@ -1117,8 +1117,8 @@ export default function HomeScreen() {
       label: "Water",
       icon: "droplet",
       value: summary ? `${(summary.waterMl / 1000).toFixed(1)} L` : "--",
-      actionLabel: "+250 ml",
-      onPress: onQuickWater,
+      actionLabel: isSignedIn ? "+250 ml" : undefined,
+      onPress: isSignedIn ? onQuickWater : undefined,
     },
     {
       key: "sleep",
@@ -1197,8 +1197,7 @@ export default function HomeScreen() {
 
       {/* Compact Today trackers stay visible on Home; members choose which
           metrics appear and can still expand the existing detailed view. */}
-      {isSignedIn ? (
-        <>
+      <>
           <View
             style={[
               styles.todayTrackerCard,
@@ -1285,20 +1284,24 @@ export default function HomeScreen() {
                   </Pressable>
                 ))}
             </ScrollView>
-            <Pressable
-              onPress={() => setTrackingOpen((v) => !v)}
-              style={styles.trackerDetailsButton}
-              hitSlop={8}
-            >
-              <AppText size={12} weight="700" color={colors.mutedForeground}>
-                {trackingOpen ? "Hide detailed progress" : "View detailed progress"}
-              </AppText>
-              <Feather
-                name={trackingOpen ? "chevron-up" : "chevron-down"}
-                size={15}
-                color={colors.primary}
-              />
-            </Pressable>
+            {isSignedIn ? (
+              <Pressable
+                onPress={() => setTrackingOpen((v) => !v)}
+                style={styles.trackerDetailsButton}
+                hitSlop={8}
+              >
+                <AppText size={12} weight="700" color={colors.mutedForeground}>
+                  {trackingOpen
+                    ? "Hide detailed progress"
+                    : "View detailed progress"}
+                </AppText>
+                <Feather
+                  name={trackingOpen ? "chevron-up" : "chevron-down"}
+                  size={15}
+                  color={colors.primary}
+                />
+              </Pressable>
+            ) : null}
           </View>
           <Modal
             visible={trackerSettingsOpen}
@@ -1394,7 +1397,7 @@ export default function HomeScreen() {
               </View>
             </View>
           </Modal>
-          {trackingOpen ? (
+          {isSignedIn && trackingOpen ? (
           <>
           <View style={styles.heroWrap}>
             <LinearGradient
@@ -1528,8 +1531,7 @@ export default function HomeScreen() {
           </Pressable>
           </>
           ) : null}
-        </>
-      ) : null}
+      </>
 
       {/* Explore packages — swipeable category cards (falls back to plan
           cards when no categories are configured). Guests only. */}
