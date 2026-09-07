@@ -869,7 +869,9 @@ export default function HomeScreen() {
   // synchronously, so targeting is always settled.
   const membershipSettled = true;
   const isMember = !!isSignedIn;
-  const membership = myMembershipQuery.data ?? null;
+  // React Query can retain the previous account's result after logout even
+  // while this query is disabled. Never let cached personal data reach guest UI.
+  const membership = isSignedIn ? (myMembershipQuery.data ?? null) : null;
 
   // ── Fixed join bar ────────────────────────────────────────────────────────
   // Signed-in members without an active plan (none at all, or expired) get a
@@ -1069,7 +1071,8 @@ export default function HomeScreen() {
     [isSignedIn, router, createBooking, queryClient],
   );
 
-  const summary = summaryQuery.data;
+  // The Today strip is visible to guests, so also gate cached tracking data.
+  const summary = isSignedIn ? summaryQuery.data : undefined;
 
   const calRatio = summary ? summary.caloriesIn / (summary.calorieGoal || 1) : 0;
   const waterRatio = summary ? summary.waterMl / (summary.waterGoalMl || 1) : 0;
@@ -1110,7 +1113,10 @@ export default function HomeScreen() {
       key: "weight",
       label: "Weight",
       icon: "bar-chart-2",
-      value: meQuery.data?.weightKg ? `${meQuery.data.weightKg} kg` : "--",
+      value:
+        isSignedIn && meQuery.data?.weightKg
+          ? `${meQuery.data.weightKg} kg`
+          : "--",
     },
     {
       key: "water",
@@ -1124,7 +1130,7 @@ export default function HomeScreen() {
       key: "sleep",
       label: "Sleep",
       icon: "moon",
-      value: meQuery.data?.dailySleepHours
+      value: isSignedIn && meQuery.data?.dailySleepHours
         ? `${meQuery.data.dailySleepHours} h`
         : "--",
     },
@@ -1133,7 +1139,7 @@ export default function HomeScreen() {
       key: "restingHr",
       label: "Resting HR",
       icon: "heart",
-      value: meQuery.data?.restingHr
+      value: isSignedIn && meQuery.data?.restingHr
         ? `${meQuery.data.restingHr} bpm`
         : "--",
     },
