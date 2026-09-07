@@ -1287,6 +1287,11 @@ export default function HomeScreen() {
           : undefined
       }
     >
+      <HomeShortcutRow
+        shortcuts={homeShortcuts}
+        onPress={openHomeShortcut}
+      />
+
       {/* Top card — signed-in members with a plan see only the membership card
           (the AI coach lives on the floating chat button); everyone else gets
           the AI coach card. */}
@@ -1308,11 +1313,6 @@ export default function HomeScreen() {
           onPress={() => router.push("/coach")}
         />
       )}
-
-      <HomeShortcutRow
-        shortcuts={homeShortcuts}
-        onPress={openHomeShortcut}
-      />
 
       {/* Kick-starter PT trial journey — only for ACTIVE members (waits for
           the membership check to settle so it never flashes for others); the
