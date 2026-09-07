@@ -85,7 +85,7 @@ export default function TabsLayout() {
           title: "Branches",
           // Members reach Branches from the More tab — free the slot for
           // Progress; guests keep the Branches tab.
-          href: isSignedIn ? null : undefined,
+          href: isGuest ? undefined : null,
           tabBarIcon: ({ color, size, focused }) => (
             <TabIcon name="award" size={size} color={color} focused={focused} />
           ),
@@ -96,7 +96,7 @@ export default function TabsLayout() {
         options={{
           title: "Progress",
           // Progress is member data — main tab bar after login only.
-          href: isSignedIn ? undefined : null,
+          href: isGuest ? null : undefined,
           tabBarIcon: ({ color, size, focused }) => (
             <TabIcon
               name="bar-chart-2"
@@ -111,6 +111,7 @@ export default function TabsLayout() {
         name="store"
         options={{
           title: "Store",
+          href: isGuest ? null : undefined,
           tabBarIcon: ({ color, size, focused }) => (
             <TabIcon
               name="shopping-bag"
@@ -126,8 +127,8 @@ export default function TabsLayout() {
         options={{
           title: "Packages",
           // Members already have a plan — hide the tab for signed-in users
-          // (still reachable from the More tab); guests keep it.
-          href: isSignedIn ? null : undefined,
+          // (still reachable from the More tab).
+          href: null,
           tabBarIcon: ({ color, size, focused }) => (
             <TabIcon
               name="package"
@@ -141,7 +142,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="pt"
         options={{
-          title: "PT Dashboard",
+          title: isGuest ? "Get a Coach" : "PT Dashboard",
           tabBarIcon: ({ color, size, focused }) => (
             <TabIcon name="users" size={size} color={color} focused={focused} />
           ),
