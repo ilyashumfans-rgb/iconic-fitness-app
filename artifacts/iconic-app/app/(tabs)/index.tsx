@@ -11,13 +11,10 @@ import {
   getListMembershipsQueryKey,
   getListMyBookingsQueryKey,
   getListMyTrainerBookingsQueryKey,
-  getGetPackageBookingQueryKey,
   useAddWater,
   useCreateBooking,
-  useCreateMembershipRenewal,
   useGetMe,
   useGetMyMembership,
-  useGetPackageBooking,
   useGetTrackingSummary,
   type MyMembership,
   useListClasses,
@@ -372,8 +369,6 @@ function MembershipStatusCard({
 }) {
   const colors = useColors();
   const PREMIUM = getPremiumColors(colors);
-  const queryClient = useQueryClient();
-  const router = useRouter();
   // Hide "Book PT Trainer" once the member already has any PT booking or
   // pending session request.
   const ptQuery = useListMyTrainerBookings({
@@ -408,49 +403,6 @@ function MembershipStatusCard({
     ? istDateLabel(membership.startedOn)
     : null;
 
-  // ── One-tap renewal through the YoActiv payment gateway ──────────────────
-  const renew = useCreateMembershipRenewal();
-  const [bookingId, setBookingId] = useState<number | null>(null);
-  const [bookingToken, setBookingToken] = useState<string | null>(null);
-  const pollParams = bookingToken ? { token: bookingToken } : undefined;
-  const statusQuery = useGetPackageBooking(bookingId ?? 0, pollParams, {
-    query: {
-      enabled: bookingId !== null,
-      queryKey: getGetPackageBookingQueryKey(bookingId ?? 0, pollParams),
-      refetchInterval: (q) =>
-        q.state.data?.status === "pending" ? 4000 : false,
-    },
-  });
-  const payStatus = bookingId !== null ? statusQuery.data?.status : undefined;
-
-  useEffect(() => {
-    if (payStatus === "paid") {
-      // Plan changed upstream — refresh membership + payment history.
-      queryClient.invalidateQueries({ queryKey: getGetMyMembershipQueryKey() });
-    }
-  }, [payStatus, queryClient]);
-
-  const startRenewal = useCallback(async () => {
-    try {
-      const created = await renew.mutateAsync();
-      setBookingId(created.id);
-      setBookingToken(created.token ?? null);
-      await openExternal(created.paymentUrl);
-    } catch (err) {
-      // Online renewal unavailable (unlinked plan/branch) — offer the website.
-      Alert.alert(
-        "Online renewal unavailable",
-        err instanceof Error && err.message
-          ? err.message
-          : "Please pick your plan manually instead.",
-        [
-          { text: "Choose a plan", onPress: onManage },
-          { text: "Close", style: "cancel" },
-        ],
-      );
-    }
-  }, [renew, onManage]);
-
   const photo = useProfilePhotoUpload();
 
   const initials = (memberName || "M")
@@ -460,16 +412,7 @@ function MembershipStatusCard({
     .slice(0, 2)
     .toUpperCase();
 
-  const renewLabel =
-    payStatus === "pending"
-      ? "Waiting for payment…"
-      : payStatus === "failed"
-        ? "Payment failed — try again"
-        : renew.isPending
-          ? "Starting payment…"
-          : isExpired
-            ? "Renew now"
-            : "Renew early";
+  const renewLabel = isExpired ? "Renew now" : "Renew early";
 
   return (
     <View
@@ -658,19 +601,7 @@ function MembershipStatusCard({
           ) : null}
         </View>
 
-        {payStatus === "paid" ? (
-          <View
-            style={[
-              styles.premiumRenewStrip,
-              { borderColor: "#3DDC84", backgroundColor: "#3DDC8422" },
-            ]}
-          >
-            <Feather name="check-circle" size={16} color="#3DDC84" />
-            <AppText size={13} weight="700" color="#3DDC84" style={{ flex: 1 }}>
-              Payment received — your plan is being renewed
-            </AppText>
-          </View>
-        ) : needsRenewal ? (
+        {needsRenewal ? (
           <>
             <View
               style={[
@@ -688,8 +619,7 @@ function MembershipStatusCard({
               </AppText>
             </View>
             <Pressable
-              onPress={startRenewal}
-              disabled={renew.isPending || payStatus === "pending"}
+              onPress={onManage}
             >
               {({ pressed }) => (
                 <LinearGradient
@@ -699,10 +629,7 @@ function MembershipStatusCard({
                   style={[
                     styles.premiumRenewBtn,
                     {
-                      opacity:
-                        pressed || renew.isPending || payStatus === "pending"
-                          ? 0.75
-                          : 1,
+                      opacity: pressed ? 0.75 : 1,
                     },
                   ]}
                 >
@@ -718,7 +645,7 @@ function MembershipStatusCard({
               color={PREMIUM.faint}
               style={{ textAlign: "center", marginTop: 8 }}
             >
-              Secure payment via our gym payment gateway
+              Choose a plan, then continue to secure payment
             </AppText>
           </>
         ) : (
