@@ -11,7 +11,7 @@ export type AdminUser = {
 
 export type HomeSlide = {
   id: number;
-  kind: "image" | "gif" | "youtube";
+  kind: "image" | "gif" | "youtube" | "shortcut";
   mediaUrl: string;
   title: string;
   subtitle: string;

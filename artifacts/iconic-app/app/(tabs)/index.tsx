@@ -185,6 +185,84 @@ function daysUntilIst(dateIso: string): number {
   return Math.round((target - today) / 86_400_000);
 }
 
+function shortcutIcon(url: string): keyof typeof Feather.glyphMap {
+  if (url === "/trainers") return "users";
+  if (url === "/store") return "shopping-bag";
+  if (url === "/challenges") return "award";
+  if (url === "app://my-plan") return "clipboard";
+  if (url === "/gyms") return "map-pin";
+  if (url === "/classes") return "calendar";
+  if (url === "/diet") return "coffee";
+  if (url === "/workouts") return "activity";
+  return "arrow-up-right";
+}
+
+function HomeShortcutRow({
+  shortcuts,
+  onPress,
+}: {
+  shortcuts: HomeSlide[];
+  onPress: (shortcut: HomeSlide) => void;
+}) {
+  const colors = useColors();
+  if (shortcuts.length === 0) return null;
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.homeShortcutRow}
+      style={styles.homeShortcutScroll}
+    >
+      {shortcuts.map((shortcut) => {
+        const imageUrl = resolveImageUrl(shortcut.mediaUrl);
+        return (
+          <Pressable
+            key={shortcut.id}
+            onPress={() => onPress(shortcut)}
+            style={({ pressed }) => [
+              styles.homeShortcutItem,
+              { opacity: pressed ? 0.72 : 1 },
+            ]}
+          >
+            <View
+              style={[
+                styles.homeShortcutCircle,
+                {
+                  borderColor: colors.primary + "88",
+                  backgroundColor: colors.card,
+                },
+              ]}
+            >
+              {imageUrl ? (
+                <ExpoImage
+                  source={{ uri: imageUrl }}
+                  style={styles.homeShortcutImage}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                />
+              ) : (
+                <Feather
+                  name={shortcutIcon(shortcut.ctaUrl)}
+                  size={24}
+                  color={colors.primary}
+                />
+              )}
+            </View>
+            <AppText
+              size={11}
+              weight="700"
+              numberOfLines={2}
+              style={styles.homeShortcutLabel}
+            >
+              {shortcut.title}
+            </AppText>
+          </Pressable>
+        );
+      })}
+    </ScrollView>
+  );
+}
+
 /** Plan card pinned to the top of Home for members with a plan. */
 // Fixed premium palette — the card always renders as a dark "black card"
 // with lime accents, matching the high-end fitness brand.
@@ -832,6 +910,7 @@ export default function HomeScreen() {
 
   // Public, no-auth content — works for guests and members alike.
   const gymsQuery = useListGyms({ sort: "rating" });
+  const homeContentQuery = useListHomeSlides();
   const classesQuery = useListClasses(
     {},
     {
@@ -872,6 +951,32 @@ export default function HomeScreen() {
   // React Query can retain the previous account's result after logout even
   // while this query is disabled. Never let cached personal data reach guest UI.
   const membership = isSignedIn ? (myMembershipQuery.data ?? null) : null;
+  const homeShortcuts = useMemo(
+    () =>
+      (homeContentQuery.data ?? []).filter((item) => {
+        if ((item.kind as string) !== "shortcut") return false;
+        if (item.audience === "all") return true;
+        if (item.audience === "members") return !!isSignedIn;
+        return !isSignedIn;
+      }),
+    [homeContentQuery.data, isSignedIn],
+  );
+  const openHomeShortcut = useCallback(
+    (shortcut: HomeSlide) => {
+      if (shortcut.ctaUrl === "app://my-plan") {
+        router.push(
+          membership
+            ? (`/package/${membership.planId}` as never)
+            : ("/book-package" as never),
+        );
+        return;
+      }
+      if (shortcut.ctaUrl.startsWith("/")) {
+        router.push(shortcut.ctaUrl as never);
+      }
+    },
+    [membership, router],
+  );
 
   // ── Fixed join bar ────────────────────────────────────────────────────────
   // Signed-in members without an active plan (none at all, or expired) get a
@@ -1185,6 +1290,11 @@ export default function HomeScreen() {
           onPress={() => router.push("/coach")}
         />
       )}
+
+      <HomeShortcutRow
+        shortcuts={homeShortcuts}
+        onPress={openHomeShortcut}
+      />
 
       {/* Kick-starter PT trial journey — only for ACTIVE members (waits for
           the membership check to settle so it never flashes for others); the
@@ -1814,7 +1924,9 @@ function HeroSlider({
   const activeRef = useRef(0);
 
   const slidesQuery = useListHomeSlides();
-  const adminSlides = slidesQuery.data ?? [];
+  const adminSlides = (slidesQuery.data ?? []).filter(
+    (slide) => (slide.kind as string) !== "shortcut",
+  );
 
   // Show only slides targeted at this viewer: "all" for everyone, "members"
   // for viewers with an active plan, "customers" for viewers without one.
@@ -3516,6 +3628,31 @@ const styles = StyleSheet.create({
   },
 
   // Personal tracking
+  homeShortcutScroll: { marginHorizontal: -20, marginBottom: 18 },
+  homeShortcutRow: {
+    paddingHorizontal: 20,
+    gap: 13,
+  },
+  homeShortcutItem: {
+    width: 68,
+    alignItems: "center",
+    gap: 7,
+  },
+  homeShortcutCircle: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  homeShortcutImage: { width: "100%", height: "100%" },
+  homeShortcutLabel: {
+    minHeight: 29,
+    textAlign: "center",
+    lineHeight: 14,
+  },
   todayTrackerCard: {
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 18,

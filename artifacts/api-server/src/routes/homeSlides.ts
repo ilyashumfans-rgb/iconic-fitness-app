@@ -5,7 +5,7 @@ import { requireAdmin } from "../lib/adminAuth";
 
 const router: IRouter = Router();
 
-const KINDS = ["image", "gif", "youtube"] as const;
+const KINDS = ["image", "gif", "youtube", "shortcut"] as const;
 type SlideKind = (typeof KINDS)[number];
 
 const AUDIENCES = ["all", "members", "customers"] as const;
@@ -48,7 +48,9 @@ function isValidYoutube(url: string): boolean {
 // A media URL must be consistent with its kind. Returns an error string when
 // invalid, or null when acceptable.
 function validateMedia(kind: SlideKind, mediaUrl: string): string | null {
-  if (!mediaUrl) return "A media URL or uploaded file is required";
+  if (!mediaUrl && kind !== "shortcut")
+    return "A media URL or uploaded file is required";
+  if (!mediaUrl && kind === "shortcut") return null;
   if (kind === "youtube") {
     if (!isValidYoutube(mediaUrl))
       return "Provide a valid YouTube link for a YouTube slide";
@@ -62,8 +64,47 @@ function validateMedia(kind: SlideKind, mediaUrl: string): string | null {
   return null;
 }
 
+const DEFAULT_SHORTCUTS = [
+  { title: "Get a Coach", ctaUrl: "/trainers" },
+  { title: "Shop", ctaUrl: "/store" },
+  { title: "Challenges", ctaUrl: "/challenges" },
+  { title: "My Plan", ctaUrl: "app://my-plan" },
+  { title: "Branches", ctaUrl: "/gyms" },
+] as const;
+
+async function ensureDefaultShortcuts(): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(4200718)`);
+    const [existing] = await tx
+      .select({ id: homeSlidesTable.id })
+      .from(homeSlidesTable)
+      .where(eq(homeSlidesTable.kind, "shortcut"))
+      .limit(1);
+    if (existing) return;
+    const [{ nextOrder }] = await tx
+      .select({
+        nextOrder: sql<number>`coalesce(max(${homeSlidesTable.sortOrder}), 0) + 1`,
+      })
+      .from(homeSlidesTable);
+    await tx.insert(homeSlidesTable).values(
+      DEFAULT_SHORTCUTS.map((shortcut, index) => ({
+        kind: "shortcut",
+        mediaUrl: "",
+        title: shortcut.title,
+        subtitle: "",
+        ctaLabel: "",
+        ctaUrl: shortcut.ctaUrl,
+        audience: "all",
+        sortOrder: nextOrder + index,
+        isActive: true,
+      })),
+    );
+  });
+}
+
 // Public — active slides for the mobile Home screen.
 router.get("/home-slides", async (_req: Request, res: Response) => {
+  await ensureDefaultShortcuts();
   const rows = await db
     .select()
     .from(homeSlidesTable)
@@ -77,6 +118,7 @@ router.get(
   "/admin/home-slides",
   requireAdmin,
   async (_req: Request, res: Response) => {
+    await ensureDefaultShortcuts();
     const rows = await db
       .select()
       .from(homeSlidesTable)

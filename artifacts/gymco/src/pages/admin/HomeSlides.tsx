@@ -9,6 +9,7 @@ import {
   Youtube,
   Eye,
   EyeOff,
+  Link2,
 } from "lucide-react";
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
 import { adminApi, type HomeSlide } from "@/lib/adminApi";
@@ -60,6 +61,33 @@ const EMPTY_DRAFT: Draft = {
 };
 
 const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
+
+type ShortcutDraft = {
+  title: string;
+  mediaUrl: string;
+  ctaUrl: string;
+  audience: Audience;
+  isActive: boolean;
+};
+
+const EMPTY_SHORTCUT: ShortcutDraft = {
+  title: "",
+  mediaUrl: "",
+  ctaUrl: "/trainers",
+  audience: "all",
+  isActive: true,
+};
+
+const SHORTCUT_DESTINATIONS = [
+  { value: "/trainers", label: "PT Trainers" },
+  { value: "/store", label: "Store" },
+  { value: "/challenges", label: "Challenges" },
+  { value: "app://my-plan", label: "My Plan / Packages" },
+  { value: "/gyms", label: "Branches" },
+  { value: "/classes", label: "Classes" },
+  { value: "/diet", label: "Diet" },
+  { value: "/workouts", label: "Workouts" },
+] as const;
 
 function youtubeId(url: string): string | null {
   const m = url.match(
@@ -363,10 +391,189 @@ function SlideEditor({
   );
 }
 
+function ShortcutEditor({
+  initial,
+  submitLabel,
+  onSubmit,
+  onCancel,
+}: {
+  initial: ShortcutDraft;
+  submitLabel: string;
+  onSubmit: (draft: ShortcutDraft) => Promise<void>;
+  onCancel?: () => void;
+}) {
+  const [draft, setDraft] = useState(initial);
+  const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const input =
+    "w-full rounded-lg border border-lime-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400";
+
+  const handleFile = async (file: File) => {
+    setErr(null);
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setErr("File is too large. Please pick one under 15MB.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const uploaded = await compressImage(file);
+      const mediaUrl = await uploadInline(uploaded);
+      setDraft((current) => ({ ...current, mediaUrl }));
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  const submit = async () => {
+    if (!draft.title.trim()) {
+      setErr("Enter a shortcut name.");
+      return;
+    }
+    setBusy(true);
+    setErr(null);
+    try {
+      await onSubmit(draft);
+      if (!onCancel) setDraft(EMPTY_SHORTCUT);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Could not save shortcut");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-[120px_1fr]">
+        <div>
+          <div className="mx-auto h-20 w-20 overflow-hidden rounded-full border-2 border-lime-300 bg-lime-50 flex items-center justify-center">
+            {draft.mediaUrl ? (
+              <img
+                src={draft.mediaUrl}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <Link2 className="h-7 w-7 text-lime-500" />
+            )}
+          </div>
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={() => fileRef.current?.click()}
+            className="mt-2 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-lime-500 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
+          >
+            {uploading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Upload className="h-3.5 w-3.5" />
+            )}
+            Upload logo
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) void handleFile(file);
+            }}
+          />
+        </div>
+        <div className="space-y-3">
+          <input
+            className={input}
+            placeholder="Shortcut name"
+            value={draft.title}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                title: event.target.value,
+              }))
+            }
+          />
+          <select
+            className={input}
+            value={draft.ctaUrl}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                ctaUrl: event.target.value,
+              }))
+            }
+          >
+            {SHORTCUT_DESTINATIONS.map((destination) => (
+              <option key={destination.value} value={destination.value}>
+                {destination.label}
+              </option>
+            ))}
+          </select>
+          <select
+            className={input}
+            value={draft.audience}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                audience: event.target.value as Audience,
+              }))
+            }
+          >
+            {AUDIENCE_OPTIONS.map((audience) => (
+              <option key={audience.value} value={audience.value}>
+                {audience.label}
+              </option>
+            ))}
+          </select>
+          <label className="flex items-center gap-2 text-sm text-slate-600">
+            <input
+              type="checkbox"
+              checked={draft.isActive}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  isActive: event.target.checked,
+                }))
+              }
+              className="h-4 w-4 accent-lime-500"
+            />
+            Active (shown in the app)
+          </label>
+        </div>
+      </div>
+      {err ? <div className="text-xs text-rose-500">{err}</div> : null}
+      <div className="flex gap-2">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void submit()}
+          className="inline-flex items-center gap-2 rounded-lg bg-lime-500 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+        >
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+          {submitLabel}
+        </button>
+        {onCancel ? (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-lg border border-lime-200 px-4 py-2 text-sm font-semibold text-slate-600"
+          >
+            Cancel
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 function slideToDraft(s: HomeSlide): Draft {
   return {
     mediaType: s.kind === "youtube" ? "youtube" : "upload",
-    kind: s.kind,
+    kind: s.kind === "shortcut" ? "image" : s.kind,
     mediaUrl: s.mediaUrl,
     title: s.title,
     subtitle: s.subtitle,
@@ -382,6 +589,8 @@ export default function AdminHomeSlides() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const slideItems = slides.filter((slide) => slide.kind !== "shortcut");
+  const shortcutItems = slides.filter((slide) => slide.kind === "shortcut");
 
   const load = async () => {
     setErr(null);
@@ -412,6 +621,20 @@ export default function AdminHomeSlides() {
     await load();
   };
 
+  const createShortcut = async (draft: ShortcutDraft) => {
+    await adminApi.homeSlides.create({
+      kind: "shortcut",
+      mediaUrl: draft.mediaUrl,
+      title: draft.title,
+      subtitle: "",
+      ctaLabel: "",
+      ctaUrl: draft.ctaUrl,
+      audience: draft.audience,
+      isActive: draft.isActive,
+    });
+    await load();
+  };
+
   const update = async (id: number, draft: Draft) => {
     await adminApi.homeSlides.update(id, {
       kind: draft.kind,
@@ -427,16 +650,35 @@ export default function AdminHomeSlides() {
     await load();
   };
 
+  const updateShortcut = async (id: number, draft: ShortcutDraft) => {
+    await adminApi.homeSlides.update(id, {
+      kind: "shortcut",
+      mediaUrl: draft.mediaUrl,
+      title: draft.title,
+      subtitle: "",
+      ctaLabel: "",
+      ctaUrl: draft.ctaUrl,
+      audience: draft.audience,
+      isActive: draft.isActive,
+    });
+    setEditingId(null);
+    await load();
+  };
+
   const toggleActive = async (s: HomeSlide) => {
     await adminApi.homeSlides.update(s.id, { isActive: !s.isActive });
     await load();
   };
 
-  const move = async (index: number, dir: -1 | 1) => {
+  const move = async (
+    items: HomeSlide[],
+    index: number,
+    dir: -1 | 1,
+  ) => {
     const target = index + dir;
-    if (target < 0 || target >= slides.length) return;
-    const a = slides[index];
-    const b = slides[target];
+    if (target < 0 || target >= items.length) return;
+    const a = items[index];
+    const b = items[target];
     await Promise.all([
       adminApi.homeSlides.update(a.id, { sortOrder: b.sortOrder }),
       adminApi.homeSlides.update(b.id, { sortOrder: a.sortOrder }),
@@ -444,8 +686,8 @@ export default function AdminHomeSlides() {
     await load();
   };
 
-  const remove = async (id: number) => {
-    if (!window.confirm("Delete this slide? This cannot be undone.")) return;
+  const remove = async (id: number, label = "item") => {
+    if (!window.confirm(`Delete this ${label}? This cannot be undone.`)) return;
     await adminApi.homeSlides.remove(id);
     await load();
   };
@@ -456,6 +698,131 @@ export default function AdminHomeSlides() {
   return (
     <AdminLayout title="Home Slider">
       <div className="max-w-5xl space-y-6">
+        <AdminCard className="p-5">
+          <h2 className="text-sm font-bold text-slate-900 mb-1">
+            Home shortcut circles
+          </h2>
+          <p className="text-[12px] text-slate-500 mb-4">
+            Add a name and logo for the small circular links shown near the top
+            of the app Home screen.
+          </p>
+          <ShortcutEditor
+            initial={EMPTY_SHORTCUT}
+            submitLabel="Add shortcut"
+            onSubmit={createShortcut}
+          />
+        </AdminCard>
+
+        <AdminCard className="p-5">
+          <h2 className="text-sm font-bold text-slate-900 mb-4">
+            Current shortcuts
+          </h2>
+          {loading ? (
+            <div className="text-sm text-slate-400 py-6 text-center">
+              Loading…
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {shortcutItems.map((shortcut, index) => (
+                <div
+                  key={shortcut.id}
+                  className="rounded-xl border border-lime-100 p-3"
+                >
+                  {editingId === shortcut.id ? (
+                    <ShortcutEditor
+                      initial={{
+                        title: shortcut.title,
+                        mediaUrl: shortcut.mediaUrl,
+                        ctaUrl: shortcut.ctaUrl,
+                        audience: shortcut.audience,
+                        isActive: shortcut.isActive,
+                      }}
+                      submitLabel="Save shortcut"
+                      onSubmit={(draft) =>
+                        updateShortcut(shortcut.id, draft)
+                      }
+                      onCancel={() => setEditingId(null)}
+                    />
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full border-2 border-lime-200 bg-lime-50 flex items-center justify-center">
+                        {shortcut.mediaUrl ? (
+                          <img
+                            src={shortcut.mediaUrl}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <Link2 className="h-5 w-5 text-lime-500" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold text-slate-900">
+                          {shortcut.title}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {SHORTCUT_DESTINATIONS.find(
+                            (item) => item.value === shortcut.ctaUrl,
+                          )?.label ?? shortcut.ctaUrl}
+                          {" · "}
+                          {AUDIENCE_LABEL[shortcut.audience]}
+                        </div>
+                      </div>
+                      {!shortcut.isActive ? (
+                        <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-slate-200 text-slate-500 font-bold">
+                          hidden
+                        </span>
+                      ) : null}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => move(shortcutItems, index, -1)}
+                          disabled={index === 0}
+                          title="Move left"
+                          className="h-8 w-8 flex items-center justify-center rounded-lg border border-lime-200 text-slate-500 disabled:opacity-30"
+                        >
+                          <ArrowUp className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => move(shortcutItems, index, 1)}
+                          disabled={index === shortcutItems.length - 1}
+                          title="Move right"
+                          className="h-8 w-8 flex items-center justify-center rounded-lg border border-lime-200 text-slate-500 disabled:opacity-30"
+                        >
+                          <ArrowDown className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => toggleActive(shortcut)}
+                          title={shortcut.isActive ? "Hide" : "Show"}
+                          className="h-8 w-8 flex items-center justify-center rounded-lg border border-lime-200 text-slate-500"
+                        >
+                          {shortcut.isActive ? (
+                            <Eye className="h-4 w-4" />
+                          ) : (
+                            <EyeOff className="h-4 w-4" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => setEditingId(shortcut.id)}
+                          className="px-3 h-8 rounded-lg border border-lime-200 text-xs font-semibold text-slate-600"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => remove(shortcut.id, "shortcut")}
+                          title="Delete"
+                          className="h-8 w-8 flex items-center justify-center rounded-lg border border-rose-200 text-rose-500"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </AdminCard>
+
         <AdminCard className="p-5">
           <h2 className="text-sm font-bold text-slate-900 mb-1">
             Add a slide
@@ -482,13 +849,13 @@ export default function AdminHomeSlides() {
             <div className="text-sm text-slate-400 py-6 text-center">
               Loading…
             </div>
-          ) : slides.length === 0 ? (
+          ) : slideItems.length === 0 ? (
             <div className="text-sm text-slate-400 py-6 text-center">
               No slides yet. Add your first one above.
             </div>
           ) : (
             <div className="space-y-3">
-              {slides.map((s, i) => {
+              {slideItems.map((s, i) => {
                 const preview = previewFor(s);
                 return (
                   <div
@@ -542,7 +909,7 @@ export default function AdminHomeSlides() {
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
                           <button
-                            onClick={() => move(i, -1)}
+                            onClick={() => move(slideItems, i, -1)}
                             disabled={i === 0}
                             title="Move up"
                             className="h-8 w-8 flex items-center justify-center rounded-lg border border-lime-200 text-slate-500 hover:bg-lime-50 disabled:opacity-30"
@@ -550,8 +917,8 @@ export default function AdminHomeSlides() {
                             <ArrowUp className="h-4 w-4" />
                           </button>
                           <button
-                            onClick={() => move(i, 1)}
-                            disabled={i === slides.length - 1}
+                            onClick={() => move(slideItems, i, 1)}
+                            disabled={i === slideItems.length - 1}
                             title="Move down"
                             className="h-8 w-8 flex items-center justify-center rounded-lg border border-lime-200 text-slate-500 hover:bg-lime-50 disabled:opacity-30"
                           >
@@ -575,7 +942,7 @@ export default function AdminHomeSlides() {
                             Edit
                           </button>
                           <button
-                            onClick={() => remove(s.id)}
+                            onClick={() => remove(s.id, "slide")}
                             title="Delete"
                             className="h-8 w-8 flex items-center justify-center rounded-lg border border-rose-200 text-rose-500 hover:bg-rose-50"
                           >
