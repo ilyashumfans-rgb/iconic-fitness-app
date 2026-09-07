@@ -288,6 +288,7 @@ function NoMembershipCard({
 }) {
   const colors = useColors();
   const PREMIUM = getPremiumColors(colors);
+  const isLightTheme = colors.background !== "#000000";
   const [showConnector, setShowConnector] = useState(false);
   const initials = (memberName || "M")
     .split(/\s+/)
@@ -481,6 +482,7 @@ function MembershipStatusCard({
 }) {
   const colors = useColors();
   const PREMIUM = getPremiumColors(colors);
+  const isLightTheme = colors.background !== "#000000";
   // Hide "Book PT Trainer" once the member already has any PT booking or
   // pending session request.
   const ptQuery = useListMyTrainerBookings({
@@ -507,7 +509,13 @@ function MembershipStatusCard({
     membership.status === "active" &&
     days <= EXPIRY_SOON_DAYS;
   const needsRenewal = isExpired || expiringSoon;
-  const alertColor = isExpired ? "#FF6B6B" : "#FFB020";
+  const alertColor = isExpired
+    ? isLightTheme
+      ? "#C93D3D"
+      : "#FF6B6B"
+    : isLightTheme
+      ? "#B85F00"
+      : "#FFB020";
   const expiryLabel = expiryKnown
     ? istDateLabel(istDateStr(new Date(membership.renewsOn)))
     : "—";
