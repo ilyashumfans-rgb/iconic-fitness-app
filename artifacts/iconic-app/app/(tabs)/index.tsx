@@ -1287,6 +1287,8 @@ export default function HomeScreen() {
           : undefined
       }
     >
+      {isSignedIn ? <WalletBalancePill /> : null}
+
       <HomeShortcutRow
         shortcuts={homeShortcuts}
         onPress={openHomeShortcut}
@@ -1325,9 +1327,6 @@ export default function HomeScreen() {
 
       {/* Engagement 45-day plan */}
       {isSignedIn ? <EngagementPlanCard /> : null}
-
-      {/* Redeem prizes wallet — points spendable on store, packages & PT */}
-      {isSignedIn ? <WalletRewardsCard /> : null}
 
       {/* Compact Today trackers stay visible on Home; members choose which
           metrics appear and can still expand the existing detailed view. */}
@@ -3182,10 +3181,8 @@ function StatCard({
   );
 }
 
-/** Redeem prizes wallet — shows the member's points balance and where to
- *  spend it (store, membership packages, PT plans). Hidden while loading and
- *  when the wallet is empty, so the home feed stays clean. */
-function WalletRewardsCard() {
+/** Compact wallet balance shown at the top-left of Home for signed-in users. */
+function WalletBalancePill() {
   const colors = useColors();
   const router = useRouter();
   const referralQuery = useGetMyReferralInfo({
@@ -3194,46 +3191,52 @@ function WalletRewardsCard() {
   const balance = referralQuery.data?.balanceInr ?? 0;
   if (!referralQuery.isSuccess) return null;
   return (
-    <Pressable onPress={() => router.push("/(tabs)/store")}>
-      <Card
-        style={{
-          marginBottom: 14,
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 12,
-        }}
-      >
+    <Pressable
+      onPress={() => router.push("/(tabs)/store")}
+      style={({ pressed }) => [
+        styles.walletBalancePill,
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.primary + "55",
+          opacity: pressed ? 0.7 : 1,
+        },
+      ]}
+    >
         <View
           style={{
-            width: 44,
-            height: 44,
-            borderRadius: 22,
+            width: 30,
+            height: 30,
+            borderRadius: 15,
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: `${colors.primary}22`,
           }}
         >
-          <Feather name="gift" size={22} color={colors.primary} />
+          <Feather name="gift" size={16} color={colors.primary} />
         </View>
-        <View style={{ flex: 1 }}>
-          <AppText weight="700" size={15}>
-            Redeem prizes wallet
-          </AppText>
-          <AppText size={12} color={colors.mutedForeground} style={{ marginTop: 2 }}>
-            {balance > 0
-              ? "Use your points on store orders, memberships & PT plans (₹1 each)"
-              : "Earn points by referring friends — spend them on store, memberships & PT"}
-          </AppText>
-        </View>
-        <AppText weight="700" size={18} color={colors.primary}>
+        <AppText weight="700" size={11} color={colors.mutedForeground}>
+          WALLET
+        </AppText>
+        <AppText weight="700" size={14} color={colors.primary}>
           {balance.toLocaleString("en-IN")} pts
         </AppText>
-      </Card>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
+  walletBalancePill: {
+    alignSelf: "flex-start",
+    minHeight: 40,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingLeft: 5,
+    paddingRight: 12,
+    marginBottom: 10,
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
