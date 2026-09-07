@@ -87,6 +87,18 @@ const SHORTCUT_DESTINATIONS = [
   { value: "/classes", label: "Classes" },
   { value: "/diet", label: "Diet" },
   { value: "/workouts", label: "Workouts" },
+  { value: "/refer", label: "Refer & Earn" },
+  { value: "/coach", label: "AI Fitness Agent" },
+  { value: "/assessment", label: "Fitness Assessment" },
+  { value: "/meal-plans", label: "Meal Plans" },
+  { value: "/habits", label: "Habits" },
+  { value: "/water", label: "Water Tracker" },
+  { value: "/plans", label: "Plans" },
+  { value: "/orders", label: "My Orders" },
+  { value: "/invoices", label: "Invoices" },
+  { value: "/notifications", label: "Notifications" },
+  { value: "/complaint", label: "Complaints" },
+  { value: "/faq", label: "Help & FAQs" },
 ] as const;
 
 function youtubeId(url: string): string | null {
@@ -409,6 +421,9 @@ function ShortcutEditor({
   const fileRef = useRef<HTMLInputElement>(null);
   const input =
     "w-full rounded-lg border border-lime-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400";
+  const isKnownDestination = SHORTCUT_DESTINATIONS.some(
+    (destination) => destination.value === draft.ctaUrl,
+  );
 
   const handleFile = async (file: File) => {
     setErr(null);
@@ -499,11 +514,14 @@ function ShortcutEditor({
           />
           <select
             className={input}
-            value={draft.ctaUrl}
+            value={isKnownDestination ? draft.ctaUrl : "__custom__"}
             onChange={(event) =>
               setDraft((current) => ({
                 ...current,
-                ctaUrl: event.target.value,
+                ctaUrl:
+                  event.target.value === "__custom__"
+                    ? "/"
+                    : event.target.value,
               }))
             }
           >
@@ -512,7 +530,27 @@ function ShortcutEditor({
                 {destination.label}
               </option>
             ))}
+            <option value="__custom__">Custom app page…</option>
           </select>
+          {!isKnownDestination ? (
+            <div>
+              <input
+                className={input}
+                placeholder="/refer or /any-app-page"
+                value={draft.ctaUrl}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    ctaUrl: event.target.value,
+                  }))
+                }
+              />
+              <p className="mt-1 text-[11px] text-slate-500">
+                Enter the app page path beginning with /. Dynamic pages can
+                include their ID, for example /gym/12.
+              </p>
+            </div>
+          ) : null}
           <select
             className={input}
             value={draft.audience}
