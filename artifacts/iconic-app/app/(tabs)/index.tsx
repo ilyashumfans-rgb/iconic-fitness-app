@@ -1,5 +1,7 @@
 import { useAuth } from "@clerk/expo";
 import { useGuest } from "@/hooks/useGuest";
+import { memberAuthHref } from "@/lib/memberAuth";
+import { TodayTrackerEntry } from "@/components/TodayTrackerEntry";
 import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
@@ -10,22 +12,16 @@ import {
   getListGymsQueryKey,
   getListMembershipsQueryKey,
   getListMyBookingsQueryKey,
-  getListMyTrainerBookingsQueryKey,
   useAddWater,
   useCreateBooking,
   useGetMe,
   useGetMyMembership,
+  useGetFitnessJourney,
   useGetTrackingSummary,
-  type MyMembership,
   useListClasses,
   useListGyms,
   useListMemberships,
   useListMyBookings,
-  useListMyTrainerBookings,
-  useGetMyPtProgram,
-  getGetMyPtProgramQueryKey,
-  useGetMyReferralInfo,
-  getGetMyReferralInfoQueryKey,
   useListHomeSlides,
   useListPackageCategories,
   getListPackageCategoriesQueryKey,
@@ -39,6 +35,11 @@ import {
   type StoreProduct,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  useAutomaticMobileSyncState,
+  useMobileSyncPending,
+} from "@/lib/syncMemberMobile";
+import { showFitnessJourney } from "@/lib/fitnessJourneyVisibility";
 import { Image as ExpoImage } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -54,7 +55,6 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import {
-  ActivityIndicator,
   Alert,
   Image,
   InteractionManager,
@@ -72,14 +72,14 @@ import {
 } from "react-native";
 
 import { AICoachCard } from "@/components/AICoachCard";
-import { EngagementPlanCard } from "@/components/EngagementPlanCard";
+import { AutomaticMembershipSyncNotice } from "@/components/AutomaticMembershipSync";
 import { FitnessJourneyCard } from "@/components/FitnessJourneyCard";
 import { WelcomeCelebration } from "@/components/WelcomeCelebration";
 import { AppText } from "@/components/AppText";
-import { useProfilePhotoUpload } from "@/components/ProfilePhotoPicker";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { CoachFab } from "@/components/CoachFab";
+import { CommunityFeed } from "@/components/Community";
 import { NotificationBell } from "@/components/NotificationBell";
 import { MemberMobileVerify } from "@/components/MemberMobileVerify";
 import { PackageCard } from "@/components/PackageCard";
@@ -96,8 +96,6 @@ import {
   istToday,
   formatClock,
   formatDateLabel,
-  istDateStr,
-  istDateLabel,
 } from "@/lib/dates";
 import { resolveImageUrl } from "@/lib/images";
 import {
@@ -108,13 +106,19 @@ import {
 type StoryVideo = {
   name: string;
   role: string;
-  quote: string;
+  quote?: string;
   src: string;
   /** Bundled asset so faces always render, even if the website is unreachable. */
   poster: number;
 };
 
 const STORY_VIDEOS: StoryVideo[] = [
+  {
+    name: "Kahaskhan / Afridi",
+    role: "Influencers and Content Writer",
+    src: `${websiteUrl}/media/testimonial-member-experience.mp4`,
+    poster: require("@/assets/images/testimonial-member-experience-poster.jpg"),
+  },
   {
     name: "Rikitha",
     role: "Fashion Designer · Entrepreneur",
@@ -141,6 +145,20 @@ const STORY_VIDEOS: StoryVideo[] = [
   },
 ];
 
+// Programmatic crop of attached_assets/2_1789456494007.jpg. Only the source's
+// 720 × 510 hero panel is bundled; the greeting, shortcut tiles, and footer
+// from the reference screenshot are intentionally not included in the app.
+const DEFAULT_HOME_HERO = require("@/assets/images/home-hero-default.jpg");
+
+// Home's floating controls share the same bottom edge. The join banner
+// reports its actual rendered height so the Coach button can stay above it
+// even when text wraps on a narrow phone.
+const JOIN_BAR_BOTTOM = 14;
+const JOIN_BAR_TO_COACH_GAP = 16;
+const JOIN_BAR_ESTIMATED_HEIGHT = 72;
+const COACH_FAB_SIZE = 58;
+const FLOATING_CONTENT_GAP = 12;
+
 // Premium floating-card shadow (soft, brand-neutral). Web uses boxShadow to
 // avoid the deprecated shadow* warning; native uses shadow*/elevation.
 const CARD_SHADOW = Platform.select({
@@ -164,8 +182,6 @@ const LIGHT_CARD_SHADOW = Platform.select({
   },
 }) as ViewStyle;
 
-// Number of days before renewal that we start warning the member.
-const EXPIRY_SOON_DAYS = 7;
 type HomeTrackerKey =
   | "steps"
   | "weight"
@@ -187,13 +203,9 @@ const DEFAULT_HOME_TRACKERS: Record<HomeTrackerKey, boolean> = {
   skinTemperature: false,
   bloodOxygen: false,
 };
-
-/** Whole IST calendar days from today until `dateIso` (negative = past). */
-function daysUntilIst(dateIso: string): number {
-  const today = Date.parse(`${istDateStr()}T00:00:00Z`);
-  const target = Date.parse(`${istDateStr(new Date(dateIso))}T00:00:00Z`);
-  return Math.round((target - today) / 86_400_000);
-}
+const HOME_TRACKER_KEYS = Object.keys(
+  DEFAULT_HOME_TRACKERS,
+) as HomeTrackerKey[];
 
 function shortcutIcon(url: string): keyof typeof Feather.glyphMap {
   if (url === "/trainers") return "users";
@@ -251,6 +263,7 @@ function HomeShortcutRow({
                   style={styles.homeShortcutImage}
                   contentFit="cover"
                   cachePolicy="memory-disk"
+                  autoplay
                 />
               ) : (
                 <Feather
@@ -275,7 +288,6 @@ function HomeShortcutRow({
   );
 }
 
-/** Plan card pinned to the top of Home for members with a plan. */
 // Fixed premium palette — the card always renders as a dark "black card"
 // with lime accents, matching the high-end fitness brand.
 /** Premium-style card for signed-in members with no active membership. */
@@ -420,14 +432,21 @@ function NoMembershipCard({
 function JoinMembershipBar({
   expired,
   onJoin,
+  onHeightChange,
 }: {
   expired: boolean;
   onJoin: () => void;
+  onHeightChange?: (height: number) => void;
 }) {
   const colors = useColors();
   const PREMIUM = getPremiumColors(colors);
   return (
-    <View style={[styles.joinBarWrap, CARD_SHADOW]}>
+    <View
+      onLayout={(event) => {
+        onHeightChange?.(Math.ceil(event.nativeEvent.layout.height));
+      }}
+      style={[styles.joinBarWrap, CARD_SHADOW]}
+    >
       <Pressable
         onPress={onJoin}
         style={({ pressed }) => [
@@ -439,14 +458,22 @@ function JoinMembershipBar({
           <Feather name="zap" size={16} color={PREMIUM.gold} />
         </View>
         <View style={{ flex: 1 }}>
-          <AppText weight="700" size={14} color={colors.foreground}>
+          <AppText weight="700" size={14} color={colors.primaryForeground}>
             {expired ? "Rejoin your membership" : "Join Iconic membership"}
           </AppText>
-          <AppText size={11} color={colors.mutedForeground}>
+          <AppText
+            size={11}
+            color={colors.primaryForeground}
+            style={{ opacity: 0.72 }}
+          >
             Choose branch · pick plan · pay online
           </AppText>
         </View>
-        <Feather name="arrow-right" size={18} color={colors.foreground} />
+        <Feather
+          name="arrow-right"
+          size={18}
+          color={colors.primaryForeground}
+        />
       </Pressable>
     </View>
   );
@@ -465,430 +492,6 @@ function getPremiumColors(colors: any) {
   };
 }
 
-function MembershipStatusCard({
-  membership,
-  memberName,
-  memberPhotoUrl,
-  onManage,
-  embedded = false,
-}: {
-  membership: MyMembership;
-  memberName: string;
-  /** The member's own uploaded profile photo (preferred over the gym record photo). */
-  memberPhotoUrl?: string | null;
-  onManage: () => void;
-  /** Render as a slide inside the top card pager: outer margin handled by the pager. */
-  embedded?: boolean;
-}) {
-  const colors = useColors();
-  const PREMIUM = getPremiumColors(colors);
-  const isLightTheme = colors.background !== "#000000";
-  // Hide "Book PT Trainer" once the member already has any PT booking or
-  // pending session request.
-  const ptQuery = useListMyTrainerBookings({
-    query: { queryKey: getListMyTrainerBookingsQueryKey() },
-  });
-  const hasPtBooking = (ptQuery.data ?? []).some(
-    (b) => b.status === "paid" || b.status === "pending" || b.status === "enquiry",
-  );
-  // Once staff assign a trainer, the card swaps "Book PT Trainer" for a
-  // "PT Details" entry (trainer + scheduled session timings).
-  const ptProgram = useGetMyPtProgram({
-    query: { queryKey: getGetMyPtProgramQueryKey() },
-  });
-  const ptActive = ptProgram.data?.active === true;
-  // When the gym system reported no expiry date, renewsOn is a placeholder —
-  // never show urgency or a renewal push off the back of it.
-  const expiryKnown = membership.expiryKnown !== false;
-  const days = daysUntilIst(membership.renewsOn);
-  const isExpired =
-    membership.status === "expired" || (expiryKnown && days < 0);
-  const expiringSoon =
-    expiryKnown &&
-    !isExpired &&
-    membership.status === "active" &&
-    days <= EXPIRY_SOON_DAYS;
-  const needsRenewal = isExpired || expiringSoon;
-  const alertColor = isExpired
-    ? isLightTheme
-      ? "#C93D3D"
-      : "#FF6B6B"
-    : isLightTheme
-      ? "#B85F00"
-      : "#FFB020";
-  const expiryLabel = expiryKnown
-    ? istDateLabel(istDateStr(new Date(membership.renewsOn)))
-    : "—";
-  const sinceLabel = membership.startedOn
-    ? istDateLabel(membership.startedOn)
-    : null;
-
-  const photo = useProfilePhotoUpload();
-
-  const initials = (memberName || "M")
-    .split(/\s+/)
-    .map((w) => w[0] ?? "")
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-
-  const renewLabel = isExpired ? "Renew now" : "Renew early";
-
-  return (
-    <View
-      style={[
-        styles.premiumWrap,
-        CARD_SHADOW,
-        embedded ? { marginBottom: 0 } : null,
-      ]}
-    >
-      <LinearGradient
-        colors={[PREMIUM.bgTop, PREMIUM.bgBottom]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0.6, y: 1 }}
-        style={[styles.premiumCard, { borderColor: PREMIUM.hairline }]}
-      >
-        {/* Gold sheen sweeping the top edge */}
-        <LinearGradient
-          colors={["transparent", PREMIUM.gold + (colors.background === "#000000" || colors.background === "#121212" ? "2E" : "15"), "transparent"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0.4 }}
-          style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}
-        />
-
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Feather name="award" size={14} color={PREMIUM.gold} />
-          <AppText
-            size={11}
-            weight="700"
-            color={PREMIUM.gold}
-            style={{ letterSpacing: 2.4 }}
-          >
-            PREMIUM MEMBER
-          </AppText>
-          <View style={{ flex: 1 }} />
-          <View
-            style={[
-              styles.premiumBadge,
-              {
-                borderColor: needsRenewal ? alertColor : PREMIUM.hairline,
-                backgroundColor: needsRenewal
-                  ? alertColor + "22"
-                  : "rgba(255,255,255,0.06)",
-              },
-            ]}
-          >
-            <AppText
-              size={11}
-              weight="700"
-              color={needsRenewal ? alertColor : PREMIUM.gold}
-              style={{ textTransform: "capitalize" }}
-            >
-              {membership.status}
-            </AppText>
-          </View>
-        </View>
-
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 10,
-            marginTop: 10,
-          }}
-        >
-          {/* Tappable avatar: Camera / Gallery chooser to change the photo */}
-          <Pressable
-            onPress={photo.busy ? undefined : photo.choosePhoto}
-            style={[styles.premiumAvatarRing, { borderColor: PREMIUM.gold }]}
-            hitSlop={6}
-          >
-            {photo.localUrl || memberPhotoUrl || membership.photoUrl ? (
-              <Image
-                source={{
-                  uri:
-                    photo.localUrl ||
-                    memberPhotoUrl ||
-                    membership.photoUrl ||
-                    undefined,
-                }}
-                style={styles.premiumAvatar}
-              />
-            ) : (
-              <View
-                style={[
-                  styles.premiumAvatar,
-                  {
-                    backgroundColor: PREMIUM.hairline,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  },
-                ]}
-              >
-                <AppText weight="700" size={16} color={PREMIUM.gold}>
-                  {initials}
-                </AppText>
-              </View>
-            )}
-            {photo.busy ? (
-              <View
-                style={[
-                  StyleSheet.absoluteFill,
-                  {
-                    borderRadius: 27,
-                    backgroundColor: "rgba(0,0,0,0.45)",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  },
-                ]}
-              >
-                <ActivityIndicator color="#fff" size="small" />
-              </View>
-            ) : (
-              <View style={[styles.premiumAvatarCamBadge, { backgroundColor: PREMIUM.gold }]}>
-                <Feather name="camera" size={10} color="#0B0B0F" />
-              </View>
-            )}
-          </Pressable>
-          <View style={{ flex: 1 }}>
-            <AppText
-              weight="700"
-              size={16}
-              color={PREMIUM.text}
-              numberOfLines={1}
-            >
-              {memberName || "Iconic Member"}
-            </AppText>
-            <AppText
-              size={12}
-              color={PREMIUM.faint}
-              style={{ marginTop: 1 }}
-              numberOfLines={1}
-            >
-              {membership.planName}
-            </AppText>
-            {membership.branchName ? (
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 5,
-                  marginTop: 3,
-                }}
-              >
-                <Feather name="map-pin" size={11} color={PREMIUM.faint} />
-                <AppText size={11} color={PREMIUM.faint} numberOfLines={1}>
-                  {membership.branchName}
-                </AppText>
-              </View>
-            ) : null}
-          </View>
-        </View>
-
-        <View style={[styles.premiumDivider, { backgroundColor: PREMIUM.hairline }]} />
-
-        <View style={{ flexDirection: "row" }}>
-          <View style={{ flex: 1 }}>
-            <AppText size={10} color={PREMIUM.faint} style={{ letterSpacing: 0.8 }}>
-              VALID FROM
-            </AppText>
-            <AppText
-              weight="700"
-              size={13}
-              color={PREMIUM.text}
-              style={{ marginTop: 3 }}
-            >
-              {sinceLabel ?? "—"}
-            </AppText>
-          </View>
-          <View style={{ flex: 1 }}>
-            <AppText size={10} color={PREMIUM.faint} style={{ letterSpacing: 0.8 }}>
-              {isExpired ? "EXPIRED ON" : "VALID TILL"}
-            </AppText>
-            <AppText
-              weight="700"
-              size={13}
-              color={needsRenewal ? alertColor : PREMIUM.text}
-              style={{ marginTop: 3 }}
-            >
-              {expiryLabel}
-            </AppText>
-          </View>
-          {!isExpired && expiryKnown ? (
-            <View style={{ alignItems: "flex-end" }}>
-              <AppText size={10} color={PREMIUM.faint} style={{ letterSpacing: 0.8 }}>
-                DAYS LEFT
-              </AppText>
-              <AppText
-                weight="700"
-                size={13}
-                color={expiringSoon ? alertColor : PREMIUM.gold}
-                style={{ marginTop: 3 }}
-              >
-                {Math.max(days, 0)}
-              </AppText>
-            </View>
-          ) : null}
-        </View>
-
-        {needsRenewal ? (
-          <>
-            <View
-              style={[
-                styles.premiumRenewStrip,
-                { borderColor: alertColor, backgroundColor: alertColor + "1C" },
-              ]}
-            >
-              <Feather name="alert-triangle" size={14} color={alertColor} />
-              <AppText size={12} weight="700" color={alertColor} style={{ flex: 1 }}>
-                {isExpired
-                  ? `Expired on ${expiryLabel} — renew to keep access`
-                  : days <= 0
-                    ? `Expires today — renew to stay active`
-                    : `Expiring in ${days} day${days === 1 ? "" : "s"}`}
-              </AppText>
-            </View>
-            <Pressable
-              onPress={onManage}
-            >
-              {({ pressed }) => (
-                <LinearGradient
-                  colors={[PREMIUM.gold, PREMIUM.goldDeep]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={[
-                    styles.premiumRenewBtn,
-                    {
-                      opacity: pressed ? 0.75 : 1,
-                    },
-                  ]}
-                >
-                  <Feather name="credit-card" size={14} color="#100E07" />
-                  <AppText weight="700" size={14} color="#100E07">
-                    {renewLabel}
-                  </AppText>
-                </LinearGradient>
-              )}
-            </Pressable>
-            <AppText
-              size={10}
-              color={PREMIUM.faint}
-              style={{ textAlign: "center", marginTop: 8 }}
-            >
-               Select a plan to renew securely
-            </AppText>
-          </>
-        ) : (
-          /* All extra CTAs (PT Details, Book Classes, Book PT Trainer) are
-             hidden from the Home card per user request — PT booking lives on
-             the Personal Trainers screen. */
-          null
-        )}
-      </LinearGradient>
-    </View>
-  );
-}
-
-/**
- * Swipeable pager merging the AI coach card and the premium member card into
- * one top-of-Home row. The slide order flips so a plan needing renewal is the
- * first thing a member sees.
- */
-function TopCardPager({
-  aiCard,
-  memberCard,
-  membershipFirst,
-}: {
-  aiCard: React.ReactNode;
-  memberCard: React.ReactNode;
-  membershipFirst: boolean;
-}) {
-  const colors = useColors();
-  const { width } = useWindowDimensions();
-  // Screen applies 20px horizontal padding, so the pager (and each slide)
-  // spans width - 40.
-  const SLIDE_W = width - 40;
-  const scrollRef = useRef<ScrollView>(null);
-  const [active, setActive] = useState(0);
-  const activeRef = useRef(0);
-  useEffect(() => {
-    activeRef.current = active;
-  }, [active]);
-
-  // Keep the pager aligned when the slide width changes (rotation, resize):
-  // re-snap the current page to the new pixel offset.
-  useEffect(() => {
-    scrollRef.current?.scrollTo({
-      x: activeRef.current * SLIDE_W,
-      animated: false,
-    });
-  }, [SLIDE_W]);
-
-  // If renewal priority flips at runtime, reset to the first slide so the
-  // leading card matches the new priority (and dots stay in sync).
-  useEffect(() => {
-    setActive(0);
-    scrollRef.current?.scrollTo({ x: 0, animated: false });
-  }, [membershipFirst]);
-
-  const slides = membershipFirst
-    ? [
-        { key: "member", node: memberCard },
-        { key: "ai", node: aiCard },
-      ]
-    : [
-        { key: "ai", node: aiCard },
-        { key: "member", node: memberCard },
-      ];
-
-  return (
-    <View style={styles.topPagerWrap}>
-      <ScrollView
-        ref={scrollRef}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        decelerationRate="fast"
-        onMomentumScrollEnd={(e) =>
-          setActive(
-            Math.max(
-              0,
-              Math.min(
-                slides.length - 1,
-                Math.round(e.nativeEvent.contentOffset.x / SLIDE_W),
-              ),
-            ),
-          )
-        }
-      >
-        {slides.map((s) => (
-          <View
-            key={s.key}
-            style={{ width: SLIDE_W, justifyContent: "center" }}
-          >
-            {s.node}
-          </View>
-        ))}
-      </ScrollView>
-      <View style={styles.topPagerDots}>
-        {slides.map((s, i) => (
-          <View
-            key={s.key}
-            style={[
-              styles.topPagerDot,
-              {
-                backgroundColor:
-                  i === active ? colors.primary : colors.elevated,
-                width: i === active ? 18 : 7,
-              },
-            ]}
-          />
-        ))}
-      </View>
-    </View>
-  );
-}
-
 const SOFT_SHADOW = Platform.select({
   web: { boxShadow: "0 8px 22px rgba(0,0,0,0.20)" },
   default: {
@@ -904,7 +507,7 @@ export default function HomeScreen() {
   const colors = useColors();
   const isLightTheme = colors.background !== "#000000";
   const router = useRouter();
-  const { isSignedIn: clerkSignedIn } = useAuth();
+  const { isSignedIn: clerkSignedIn, userId } = useAuth();
   const { isGuest } = useGuest();
   // "Continue without login" must behave like a real guest even when a
   // previous login session is still remembered on the device — otherwise the
@@ -915,10 +518,10 @@ export default function HomeScreen() {
   const [secondaryReady, setSecondaryReady] = useState(false);
 
   useEffect(() => {
-    if (!isSignedIn) {
-      setSecondaryReady(false);
-      return;
-    }
+    // Keep the first frame focused on the hero and the member status. Public
+    // sections below the fold can wait until navigation/animations settle;
+    // private queries remain explicitly gated by isSignedIn below.
+    setSecondaryReady(false);
     const task = InteractionManager.runAfterInteractions(() =>
       setSecondaryReady(true),
     );
@@ -930,7 +533,15 @@ export default function HomeScreen() {
   }, [isSignedIn]);
 
   // Public, no-auth content — works for guests and members alike.
-  const gymsQuery = useListGyms({ sort: "rating" });
+  const gymsQuery = useListGyms(
+    { sort: "rating" },
+    {
+      query: {
+        enabled: showDiscovery && secondaryReady,
+        queryKey: getListGymsQueryKey({ sort: "rating" }),
+      },
+    },
+  );
   const homeContentQuery = useListHomeSlides();
   const classesQuery = useListClasses(
     {},
@@ -943,7 +554,7 @@ export default function HomeScreen() {
   );
   const membershipsQuery = useListMemberships({
     query: {
-      enabled: showDiscovery,
+      enabled: showDiscovery && secondaryReady,
       queryKey: getListMembershipsQueryKey(),
     },
   });
@@ -959,11 +570,25 @@ export default function HomeScreen() {
     },
   );
   const meQuery = useGetMe({
-    query: { enabled: !!isSignedIn, queryKey: getGetMeQueryKey() },
+    query: {
+      enabled: !!isSignedIn && secondaryReady,
+      queryKey: getGetMeQueryKey(),
+    },
   });
   const myMembershipQuery = useGetMyMembership({
     query: { enabled: !!isSignedIn, queryKey: getGetMyMembershipQueryKey() },
   });
+  const journeyQuery = useGetFitnessJourney({
+    query: {
+      enabled: !!isSignedIn && secondaryReady && !!userId,
+      queryKey: ["/api/memberships/journey", userId],
+      staleTime: 0,
+      refetchOnMount: "always",
+      refetchInterval: 60_000,
+    },
+  });
+  const syncPending = useMobileSyncPending();
+  const automaticSyncState = useAutomaticMobileSyncState(userId);
   // Banner slide targeting: "Members" = anyone logged in to the app,
   // "Customers" = guests browsing without an account. Auth state is known
   // synchronously, so targeting is always settled.
@@ -1007,6 +632,21 @@ export default function HomeScreen() {
     !!isSignedIn &&
     myMembershipQuery.isSuccess &&
     (!membership || membership.status === "expired");
+  // Start with a conservative height so the first frame is safe; onLayout
+  // tightens this to the actual banner height (including wrapped text).
+  const [membershipBarHeight, setMembershipBarHeight] = useState(
+    JOIN_BAR_ESTIMATED_HEIGHT,
+  );
+  const homeContentBottomPadding = membershipInactive
+    ? Math.max(
+        120,
+        JOIN_BAR_BOTTOM +
+          membershipBarHeight +
+          JOIN_BAR_TO_COACH_GAP +
+          COACH_FAB_SIZE +
+          FLOATING_CONTENT_GAP,
+      )
+    : undefined;
 
   // ── One-time "Diwali crackers" welcome for new members ───────────────────
   // First time we see an active plan on this device, celebrate with a
@@ -1051,8 +691,10 @@ export default function HomeScreen() {
   const addWater = useAddWater();
   const createBooking = useCreateBooking();
   const [quickLogging, setQuickLogging] = useState(false);
+  const quickLoggingRef = useRef(false);
   // Collapsible "Your progress today" block — arrow toggles it open/closed.
   const [trackingOpen, setTrackingOpen] = useState(false);
+  const [todayMenuOpen, setTodayMenuOpen] = useState(false);
   const [trackerSettingsOpen, setTrackerSettingsOpen] = useState(false);
   const [visibleHomeTrackers, setVisibleHomeTrackers] = useState(
     DEFAULT_HOME_TRACKERS,
@@ -1065,16 +707,30 @@ export default function HomeScreen() {
       .then((raw) => {
         if (!raw || cancelled) return;
         const parsed: unknown = JSON.parse(raw);
-        if (!parsed || typeof parsed !== "object") return;
+        if (
+          !parsed ||
+          typeof parsed !== "object" ||
+          Array.isArray(parsed)
+        ) {
+          return;
+        }
+        const stored = parsed as Record<string, unknown>;
         const next = { ...DEFAULT_HOME_TRACKERS };
-        for (const key of Object.keys(next) as HomeTrackerKey[]) {
-          if (typeof (parsed as Record<string, unknown>)[key] === "boolean") {
-            next[key] = (parsed as Record<string, boolean>)[key];
+        for (const key of HOME_TRACKER_KEYS) {
+          if (typeof stored[key] === "boolean") {
+            next[key] = stored[key];
           }
         }
         if (!cancelled) setVisibleHomeTrackers(next);
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!cancelled) {
+          Alert.alert(
+            "Could not load tracker preferences",
+            "Your default health trackers will be shown instead.",
+          );
+        }
+      });
     return () => {
       cancelled = true;
     };
@@ -1087,7 +743,12 @@ export default function HomeScreen() {
         void AsyncStorage.setItem(
           HOME_TRACKER_STORAGE_KEY,
           JSON.stringify(next),
-        ).catch(() => {});
+        ).catch(() => {
+          Alert.alert(
+            "Could not save tracker preferences",
+            "Your tracker selection could not be saved. Please try again.",
+          );
+        });
         return next;
       });
     },
@@ -1121,7 +782,7 @@ export default function HomeScreen() {
   // Package categories — shown as a compact 3D tile row on Home.
   const packageCategoriesQuery = useListPackageCategories({
     query: {
-      enabled: showDiscovery,
+      enabled: showDiscovery && secondaryReady,
       queryKey: getListPackageCategoriesQueryKey(),
     },
   });
@@ -1136,14 +797,13 @@ export default function HomeScreen() {
   const catCardW = screenW - 40;
 
   const refetchAll = useCallback(() => {
-    void gymsQuery.refetch();
-    if (isSignedIn) {
-      void classesQuery.refetch();
-    } else {
+    if (showDiscovery && secondaryReady) {
+      void gymsQuery.refetch();
       void membershipsQuery.refetch();
       void packageCategoriesQuery.refetch();
     }
-    if (isSignedIn) {
+    if (isSignedIn && secondaryReady) {
+      void classesQuery.refetch();
       void summaryQuery.refetch();
       void meQuery.refetch();
       void myMembershipQuery.refetch();
@@ -1154,14 +814,21 @@ export default function HomeScreen() {
     classesQuery,
     membershipsQuery,
     isSignedIn,
+    secondaryReady,
+    showDiscovery,
     summaryQuery,
     meQuery,
     myMembershipQuery,
+    packageCategoriesQuery,
     bookingsQuery,
   ]);
 
   const onQuickWater = useCallback(async () => {
-    if (quickLogging) return;
+    // State alone is not a sufficient double-tap guard: two native press
+    // events can arrive before React commits the state update. Keep an
+    // imperative guard for the mutation's entire pending window.
+    if (quickLoggingRef.current || addWater.isPending) return;
+    quickLoggingRef.current = true;
     setQuickLogging(true);
     try {
       await addWater.mutateAsync({ data: { amountMl: 250 } });
@@ -1169,16 +836,17 @@ export default function HomeScreen() {
         queryKey: getGetTrackingSummaryQueryKey(),
       });
     } catch {
-      // Guests (and any unauthenticated state) can't log data — fail quietly.
+      Alert.alert("Could not log water", "Please try again.");
     } finally {
+      quickLoggingRef.current = false;
       setQuickLogging(false);
     }
-  }, [quickLogging, addWater, queryClient]);
+  }, [addWater, queryClient]);
 
   const onBook = useCallback(
     async (session: ClassSession) => {
       if (!isSignedIn) {
-        router.push("/(auth)/sign-in");
+        router.push(memberAuthHref("/(tabs)/classes?tab=discover"));
         return;
       }
       setBookingId(session.id);
@@ -1226,8 +894,12 @@ export default function HomeScreen() {
     label: string;
     icon: keyof typeof Feather.glyphMap;
     value: string;
-    actionLabel?: string;
-    onPress?: () => void;
+    onMetricPress?: () => void;
+    quickAction?: {
+      label: string;
+      onPress: () => void;
+      disabled?: boolean;
+    };
   }> = [
     {
       key: "steps",
@@ -1248,26 +920,39 @@ export default function HomeScreen() {
       key: "water",
       label: "Water",
       icon: "droplet",
-      value: summary ? `${(summary.waterMl / 1000).toFixed(1)} L` : "--",
-      actionLabel: isSignedIn ? "+250 ml" : undefined,
-      onPress: isSignedIn ? onQuickWater : undefined,
+      value: "--",
+      onMetricPress: isSignedIn ? () => router.push("/water") : undefined,
+      quickAction: isSignedIn
+        ? {
+            label: quickLogging ? "Adding…" : "+250 ml",
+            onPress: onQuickWater,
+            disabled: quickLogging,
+          }
+        : undefined,
     },
     {
       key: "sleep",
       label: "Sleep",
       icon: "moon",
-      value: isSignedIn && meQuery.data?.dailySleepHours
-        ? `${meQuery.data.dailySleepHours} h`
-        : "--",
+      value:
+        isSignedIn && meQuery.data?.dailySleepHours
+          ? `${meQuery.data.dailySleepHours} h`
+          : "--",
     },
-    { key: "hrv", label: "HRV", icon: "heart", value: "--" },
+    {
+      key: "hrv",
+      label: "HRV",
+      icon: "heart",
+      value: "--",
+    },
     {
       key: "restingHr",
       label: "Resting HR",
       icon: "heart",
-      value: isSignedIn && meQuery.data?.restingHr
-        ? `${meQuery.data.restingHr} bpm`
-        : "--",
+      value:
+        isSignedIn && meQuery.data?.restingHr
+          ? `${meQuery.data.restingHr} bpm`
+          : "--",
     },
     {
       key: "skinTemperature",
@@ -1282,278 +967,281 @@ export default function HomeScreen() {
       value: "--",
     },
   ];
+  const visibleHomeTrackerItems = homeTrackerItems.filter(
+    (item) => visibleHomeTrackers[item.key],
+  );
 
   return (
     <View style={{ flex: 1 }}>
     <Screen
       refreshing={summaryQuery.isRefetching || gymsQuery.isRefetching}
       onRefresh={refetchAll}
-      contentContainerStyle={{ paddingTop: 8 }}
+      contentContainerStyle={{
+        paddingTop: 8,
+        ...(homeContentBottomPadding === undefined
+          ? {}
+          : { paddingBottom: homeContentBottomPadding }),
+      }}
       backgroundGradient={
         isLightTheme
           ? ["#FFFFFF", "#F8FCF6", "#EEF8EA", "#F7F8F5"]
           : undefined
       }
     >
-      {isSignedIn ? <WalletBalancePill /> : null}
+      <HomeHeroSlider
+        slides={homeContentQuery.data ?? []}
+        isMember={isMember}
+        membershipSettled={membershipSettled}
+        onExplore={() => router.push("/gyms")}
+        onOpenUrl={(url, title) => {
+          if (url.startsWith("/")) {
+            router.push(url as never);
+            return;
+          }
+          router.push({
+            pathname: "/web",
+            params: { url, title: title ?? "Iconic Fitness" },
+          });
+        }}
+      />
 
       <HomeShortcutRow
         shortcuts={homeShortcuts}
         onPress={openHomeShortcut}
       />
 
-      {/* Top card — signed-in members with a plan see only the membership card
-          (the AI coach lives on the floating chat button); everyone else gets
-          the AI coach card. */}
-      {membership ? (
-        <MembershipStatusCard
-          membership={membership}
-          memberName={meQuery.data?.name ?? ""}
-          memberPhotoUrl={resolveImageUrl(meQuery.data?.avatarUrl)}
-          onManage={() => router.push("/book-package")}
-        />
-      ) : isSignedIn && myMembershipQuery.isFetched ? (
+      {/* Membership details live on My Membership; keep no-plan discovery here. */}
+      {isSignedIn && myMembershipQuery.isFetched && !membership ? (
         <NoMembershipCard
           memberName={meQuery.data?.name ?? ""}
           onViewPlans={() => router.push("/book-package")}
         />
-      ) : isSignedIn ? null : (
-        <AICoachCard
-          needsAssessment={false}
-          onPress={() => router.push("/coach")}
-        />
-      )}
-
-      {/* Kick-starter PT trial journey — only for ACTIVE members (waits for
-          the membership check to settle so it never flashes for others); the
-          card hides itself once every step (both trials + feedbacks) is done. */}
-      {isSignedIn &&
-      myMembershipQuery.isSuccess &&
-      membership?.status === "active" ? (
-        <FitnessJourneyCard />
       ) : null}
 
-      {/* Engagement 45-day plan */}
-      {isSignedIn ? <EngagementPlanCard /> : null}
+      {/* Server-owned eligibility, scoped to this account. Never render stale
+          eligibility during loading, refetch, errors, logout or account switch. */}
+      {isSignedIn && userId ? (
+        <AutomaticMembershipSyncNotice accountId={userId} />
+      ) : null}
+      {journeyQuery.data && showFitnessJourney({
+        signedIn: isSignedIn, ready: secondaryReady, pendingSync: syncPending,
+        success: journeyQuery.isSuccess, fetching: journeyQuery.isFetching,
+        ownerId: journeyQuery.data.ownerId, accountId: userId,
+        eligible: journeyQuery.data.eligible, automaticSyncState,
+      }) ? (
+        <FitnessJourneyCard key={userId} journey={journeyQuery.data} />
+      ) : null}
 
-      {/* Compact Today trackers stay visible on Home; members choose which
-          metrics appear and can still expand the existing detailed view. */}
+
+      {/* Compact Today trackers stay visible on Home; members can choose which
+          readings appear while keeping the pill, separators, and quick actions. */}
       <>
-          <View
-            style={[
-              styles.todayTrackerCard,
-              isLightTheme ? LIGHT_CARD_SHADOW : null,
-              {
-                backgroundColor: colors.card,
-                borderColor: isLightTheme ? "#DCE8D8" : colors.border,
-              },
-            ]}
+        <View style={styles.todayTrackerCard}>
+          <View style={styles.todayTrackerHeader}>
+            <View style={[styles.todayHeaderLine, { backgroundColor: colors.border }]} />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Choose health date"
+              onPress={() => setTodayMenuOpen(true)}
+              style={({ pressed }) => [
+                styles.todayPill,
+                { backgroundColor: colors.secondary, opacity: pressed ? 0.72 : 1 },
+              ]}
+            >
+              <AppText weight="700" size={14}>Today</AppText>
+              <Feather name="chevron-down" size={14} color={colors.mutedForeground} />
+            </Pressable>
+            <View style={[styles.todayHeaderLine, { backgroundColor: colors.border }]} />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Modify health trackers"
+              onPress={() => setTrackerSettingsOpen(true)}
+              style={({ pressed }) => [
+                styles.modifyTrackersButton,
+                {
+                  borderColor: colors.border,
+                  backgroundColor: colors.elevated,
+                  opacity: pressed ? 0.72 : 1,
+                },
+              ]}
+            >
+              <Feather name="sliders" size={13} color={colors.foreground} />
+              <AppText size={11} weight="700">Modify</AppText>
+            </Pressable>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.todayTrackerRow}
           >
-            <View style={styles.todayTrackerHeader}>
-              <View style={styles.todayPill}>
-                <AppText weight="700" size={14}>
-                  Today
-                </AppText>
-                <Feather
-                  name="chevron-down"
-                  size={14}
-                  color={colors.mutedForeground}
+            {visibleHomeTrackerItems.length > 0 ? (
+              visibleHomeTrackerItems.map((item) => (
+                <TodayTrackerEntry
+                  key={item.key}
+                  metric={item.key}
+                  label={item.label}
+                  icon={item.icon}
+                  value={item.value}
+                  owner={isSignedIn && userId ? userId : "guest"}
+                  onMetricPress={item.onMetricPress}
+                  quickAction={item.quickAction}
                 />
+              ))
+            ) : (
+              <View style={styles.trackerEmptyState}>
+                <Feather name="eye-off" size={16} color={colors.mutedForeground} />
+                <AppText size={12} muted>
+                  No trackers selected. Tap Modify to choose one.
+                </AppText>
               </View>
+            )}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="View Health Report"
+              onPress={() => router.push("/health-report")}
+              style={({ pressed }) => [
+                styles.trackerReportAction,
+                {
+                  backgroundColor: colors.elevated,
+                  borderColor: colors.border,
+                  opacity: pressed ? 0.62 : 1,
+                },
+              ]}
+            >
+              <Feather name="bar-chart-2" size={19} color={colors.foreground} />
+            </Pressable>
+          </ScrollView>
+          {isSignedIn ? (
+            <Pressable
+              onPress={() => setTrackingOpen((v) => !v)}
+              style={styles.trackerDetailsButton}
+              hitSlop={8}
+            >
+              <AppText size={12} weight="700" color={colors.mutedForeground}>
+                {trackingOpen ? "Hide detailed progress" : "View detailed progress"}
+              </AppText>
+              <Feather
+                name={trackingOpen ? "chevron-up" : "chevron-down"}
+                size={15}
+                color={colors.primary}
+              />
+            </Pressable>
+          ) : null}
+        </View>
+        <Modal
+          visible={todayMenuOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setTodayMenuOpen(false)}
+        >
+          <View style={styles.todayMenuRoot}>
+            <Pressable
+              style={StyleSheet.absoluteFill}
+              onPress={() => setTodayMenuOpen(false)}
+            />
+            <View style={[styles.todayMenu, { backgroundColor: colors.card }]}>
+              <AppText size={18} weight="700">Today</AppText>
+              <AppText muted size={13}>
+                Health readings use today&apos;s India time date.
+              </AppText>
+              <AppText size={15} weight="700">{istToday()}</AppText>
               <Pressable
-                onPress={() => setTrackerSettingsOpen(true)}
-                style={({ pressed }) => [
-                  styles.modifyTrackersButton,
+                accessibilityRole="button"
+                onPress={() => setTodayMenuOpen(false)}
+                style={[styles.todayMenuDone, { backgroundColor: colors.primary }]}
+              >
+                <AppText weight="700" color={colors.primaryForeground}>Done</AppText>
+              </Pressable>
+            </View>
+          </View>
+        </Modal>
+        <Modal
+          visible={trackerSettingsOpen}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setTrackerSettingsOpen(false)}
+        >
+          <View style={styles.trackerModalRoot}>
+            <Pressable
+              style={StyleSheet.absoluteFill}
+              onPress={() => setTrackerSettingsOpen(false)}
+            />
+            <View style={[styles.trackerSheet, { backgroundColor: colors.card }]}>
+              <View style={styles.trackerSheetHandle} />
+              <View style={styles.trackerSheetTitleRow}>
+                <View style={{ flex: 1 }}>
+                  <AppText size={19} weight="700">Health trackers</AppText>
+                  <AppText size={12} muted style={{ marginTop: 3 }}>
+                    Select the widgets shown on your Home screen.
+                  </AppText>
+                </View>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Close health tracker settings"
+                  onPress={() => setTrackerSettingsOpen(false)}
+                  style={[
+                    styles.trackerCloseButton,
+                    { backgroundColor: colors.elevated },
+                  ]}
+                >
+                  <Feather name="x" size={18} color={colors.mutedForeground} />
+                </Pressable>
+              </View>
+              <View
+                style={[
+                  styles.trackerRecommendation,
                   {
-                    borderColor: isLightTheme
-                      ? colors.primary
-                      : colors.border,
-                    backgroundColor: isLightTheme
-                      ? colors.primary
-                      : colors.elevated,
-                    opacity: pressed ? 0.72 : 1,
+                    backgroundColor: colors.primary + "12",
+                    borderColor: colors.primary + "35",
                   },
                 ]}
               >
-                <Feather
-                  name="sliders"
-                  size={14}
-                  color={isLightTheme ? "#0B0B0F" : colors.primary}
-                />
-                <AppText
-                  size={12}
-                  weight="700"
-                  color={isLightTheme ? "#0B0B0F" : colors.primary}
-                >
-                  Modify
+                <Feather name="info" size={16} color={colors.primary} />
+                <AppText size={12} style={{ flex: 1 }}>
+                  Keep your essential health metrics visible for faster daily
+                  tracking. You can turn them all off if you prefer a cleaner
+                  Home screen.
                 </AppText>
-              </Pressable>
-            </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.todayTrackerRow}
-            >
-              {homeTrackerItems
-                .filter((item) => visibleHomeTrackers[item.key])
-                .map((item) => (
-                  <Pressable
+              </View>
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {homeTrackerItems.map((item) => (
+                  <View
                     key={item.key}
-                    onPress={item.onPress}
-                    disabled={!item.onPress || quickLogging}
-                    style={styles.todayTrackerItem}
-                  >
-                    <View style={styles.todayTrackerLabel}>
-                      <Feather
-                        name={item.icon}
-                        size={13}
-                        color={colors.mutedForeground}
-                      />
-                      <AppText
-                        size={10}
-                        weight="700"
-                        color={colors.mutedForeground}
-                        style={{ textTransform: "uppercase", letterSpacing: 0.7 }}
-                      >
-                        {item.label}
-                      </AppText>
-                    </View>
-                    <AppText size={15} weight="700">
-                      {item.value}
-                    </AppText>
-                    {item.actionLabel ? (
-                      <View
-                        style={[
-                          styles.trackerQuickAction,
-                          { backgroundColor: colors.elevated },
-                        ]}
-                      >
-                        <Feather
-                          name="plus-circle"
-                          size={12}
-                          color={colors.primary}
-                        />
-                        <AppText size={10} weight="700" color={colors.primary}>
-                          {item.actionLabel}
-                        </AppText>
-                      </View>
-                    ) : null}
-                  </Pressable>
-                ))}
-            </ScrollView>
-            {isSignedIn ? (
-              <Pressable
-                onPress={() => setTrackingOpen((v) => !v)}
-                style={styles.trackerDetailsButton}
-                hitSlop={8}
-              >
-                <AppText size={12} weight="700" color={colors.mutedForeground}>
-                  {trackingOpen
-                    ? "Hide detailed progress"
-                    : "View detailed progress"}
-                </AppText>
-                <Feather
-                  name={trackingOpen ? "chevron-up" : "chevron-down"}
-                  size={15}
-                  color={colors.primary}
-                />
-              </Pressable>
-            ) : null}
-          </View>
-          <Modal
-            visible={trackerSettingsOpen}
-            transparent
-            animationType="slide"
-            onRequestClose={() => setTrackerSettingsOpen(false)}
-          >
-            <View style={styles.trackerModalRoot}>
-              <Pressable
-                style={StyleSheet.absoluteFill}
-                onPress={() => setTrackerSettingsOpen(false)}
-              />
-              <View
-                style={[
-                  styles.trackerSheet,
-                  { backgroundColor: colors.background },
-                ]}
-              >
-                <View style={styles.trackerSheetHandle} />
-                <View style={styles.trackerSheetTitleRow}>
-                  <View style={{ flex: 1 }}>
-                    <AppText size={19} weight="700">
-                      Health trackers
-                    </AppText>
-                    <AppText size={12} muted style={{ marginTop: 3 }}>
-                      Select the widgets shown on your Home screen.
-                    </AppText>
-                  </View>
-                  <Pressable
-                    onPress={() => setTrackerSettingsOpen(false)}
                     style={[
-                      styles.trackerCloseButton,
-                      { backgroundColor: colors.elevated },
+                      styles.trackerSettingRow,
+                      { borderBottomColor: colors.border },
                     ]}
                   >
                     <Feather
-                      name="x"
+                      name={item.icon}
                       size={18}
-                      color={colors.mutedForeground}
+                      color={colors.foreground}
                     />
-                  </Pressable>
-                </View>
-                <View
-                  style={[
-                    styles.trackerRecommendation,
-                    {
-                      backgroundColor: colors.primary + "12",
-                      borderColor: colors.primary + "35",
-                    },
-                  ]}
-                >
-                  <Feather name="info" size={16} color={colors.primary} />
-                  <AppText size={12} style={{ flex: 1 }}>
-                    Keep your essential health metrics visible for faster daily
-                    tracking.
-                  </AppText>
-                </View>
-                <ScrollView showsVerticalScrollIndicator={false}>
-                  {homeTrackerItems.map((item) => (
-                    <View
-                      key={item.key}
-                      style={[
-                        styles.trackerSettingRow,
-                        { borderBottomColor: colors.border },
-                      ]}
-                    >
-                      <Feather
-                        name={item.icon}
-                        size={18}
-                        color={colors.foreground}
-                      />
-                      <AppText size={15} style={{ flex: 1 }}>
-                        {item.label}
-                      </AppText>
-                      <Switch
-                        value={visibleHomeTrackers[item.key]}
-                        onValueChange={(value) =>
-                          setHomeTrackerVisible(item.key, value)
-                        }
-                        trackColor={{
-                          false: colors.elevated,
-                          true: colors.primary + "88",
-                        }}
-                        thumbColor={
-                          visibleHomeTrackers[item.key]
-                            ? colors.primary
-                            : colors.mutedForeground
-                        }
-                      />
-                    </View>
-                  ))}
-                </ScrollView>
-              </View>
+                    <AppText size={15} style={{ flex: 1 }}>
+                      {item.label}
+                    </AppText>
+                    <Switch
+                      accessibilityLabel={`Show ${item.label}`}
+                      value={visibleHomeTrackers[item.key]}
+                      onValueChange={(value) =>
+                        setHomeTrackerVisible(item.key, value)
+                      }
+                      trackColor={{
+                        false: colors.elevated,
+                        true: colors.primary + "88",
+                      }}
+                      thumbColor={
+                        visibleHomeTrackers[item.key]
+                          ? colors.primary
+                          : colors.mutedForeground
+                      }
+                    />
+                  </View>
+                ))}
+              </ScrollView>
             </View>
-          </Modal>
+          </View>
+        </Modal>
           {isSignedIn && trackingOpen ? (
           <>
           <View style={styles.heroWrap}>
@@ -1728,6 +1416,7 @@ export default function HomeScreen() {
       {/* Explore packages — swipeable category cards (falls back to plan
           cards when no categories are configured). Guests only. */}
       {showDiscovery &&
+      secondaryReady &&
       packageCategoriesSettled &&
       (packageCategories.length > 0 || packages.length > 0) ? (
         <>
@@ -1783,12 +1472,23 @@ export default function HomeScreen() {
         </>
       ) : null}
 
+      {secondaryReady ? (
+        <CommunityFeed
+          compact
+          onViewAll={() => router.push("/community")}
+          onSubmit={() => router.push("/community")}
+        />
+      ) : null}
+
       {/* Shop by category — hidden for active members (waits for the
           membership check to settle so it never flashes in for members) */}
-      {membershipSettled && !isMember ? <ShopByCategory /> : null}
+      {membershipSettled && !isMember && secondaryReady ? (
+        <ShopByCategory />
+      ) : null}
 
       {/* Home banner slider (admin-managed) */}
       <HeroSlider
+        slides={homeContentQuery.data ?? []}
         gyms={heroGyms}
         isMember={isMember}
         membershipSettled={membershipSettled}
@@ -1808,14 +1508,15 @@ export default function HomeScreen() {
         nearSlide={
           isSignedIn ? undefined : { onOpenGym: () => router.push("/gyms") }
         }
+        showFallback={false}
       />
 
-      {/* Watch our story (member testimonials) */}
+      {/* Member Experiences (member testimonials) */}
       <StorySection />
 
       {/* Top rated gyms — hidden for active members (waits for the
           membership check to settle so it never flashes in for members) */}
-      {membershipSettled && !isMember ? (
+      {membershipSettled && !isMember && secondaryReady ? (
         <>
           <SectionHeader
             title="Top rated gyms"
@@ -1907,7 +1608,7 @@ export default function HomeScreen() {
 
       {/* Guest sign-in nudge */}
       {!isSignedIn ? (
-        <Pressable onPress={() => router.push("/(auth)/sign-in")}>
+        <Pressable onPress={() => router.push(memberAuthHref("/(tabs)"))}>
           <Card style={[styles.joinCta, SOFT_SHADOW]} tone="elevated">
             <View style={[styles.joinIcon, { backgroundColor: colors.primary }]}>
               <Feather name="user-plus" size={22} color={colors.primaryForeground} />
@@ -1925,12 +1626,23 @@ export default function HomeScreen() {
         </Pressable>
       ) : null}
     </Screen>
-      <NotificationBell />
-      {isSignedIn ? <CoachFab /> : null}
+      {isSignedIn && secondaryReady ? <NotificationBell /> : null}
+      {isSignedIn ? (
+        <CoachFab
+          bottom={
+            membershipInactive
+              ? JOIN_BAR_BOTTOM +
+                membershipBarHeight +
+                JOIN_BAR_TO_COACH_GAP
+              : undefined
+          }
+        />
+      ) : null}
       {membershipInactive ? (
         <JoinMembershipBar
           expired={membership?.status === "expired"}
           onJoin={() => router.push("/book-package")}
+          onHeightChange={setMembershipBarHeight}
         />
       ) : null}
       {showWelcome ? (
@@ -1938,6 +1650,202 @@ export default function HomeScreen() {
           memberName={meQuery.data?.name ?? ""}
           onDone={dismissWelcome}
         />
+      ) : null}
+    </View>
+  );
+}
+
+type HomeHeroRenderSlide = {
+  key: string;
+  slide?: HomeSlide;
+};
+
+function HomeHeroSlider({
+  slides: homeSlides,
+  isMember,
+  membershipSettled,
+  onExplore,
+  onOpenUrl,
+}: {
+  slides: HomeSlide[];
+  isMember: boolean;
+  membershipSettled: boolean;
+  onExplore: () => void;
+  onOpenUrl: (url: string, title?: string) => void;
+}) {
+  const colors = useColors();
+  const { width } = useWindowDimensions();
+  const slideWidth = Math.max(1, width - 40);
+  const slideHeight = Math.round(slideWidth * (510 / 720));
+  const scrollRef = useRef<ScrollView>(null);
+  const [active, setActive] = useState(0);
+  const activeRef = useRef(0);
+
+  const visibleSlides = useMemo(
+    () =>
+      homeSlides.filter((slide) => {
+        if ((slide.kind as string) !== "hero") return false;
+        if (slide.audience === "all") return true;
+        if (!membershipSettled) return false;
+        if (slide.audience === "members") return isMember;
+        return !isMember;
+      }),
+    [homeSlides, isMember, membershipSettled],
+  );
+  const heroSlides: HomeHeroRenderSlide[] = useMemo(
+    () =>
+      visibleSlides.length > 0
+        ? visibleSlides.map((slide) => ({
+            key: `hero-${slide.id}`,
+            slide,
+          }))
+        : [{ key: "hero-default" }],
+    [visibleSlides],
+  );
+  const total = heroSlides.length;
+
+  useEffect(() => {
+    activeRef.current = active;
+  }, [active]);
+
+  useEffect(() => {
+    if (active < total) return;
+    setActive(0);
+    activeRef.current = 0;
+    scrollRef.current?.scrollTo({ x: 0, animated: false });
+  }, [active, total]);
+
+  const goToNext = useCallback(() => {
+    if (total <= 1) return;
+    const next = (activeRef.current + 1) % total;
+    scrollRef.current?.scrollTo({ x: next * slideWidth, animated: true });
+    setActive(next);
+  }, [slideWidth, total]);
+
+  useEffect(() => {
+    if (total <= 1) return;
+    const timer = setTimeout(goToNext, 4500);
+    return () => clearTimeout(timer);
+  }, [active, goToNext, total]);
+
+  const onMomentumEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const next = Math.max(
+      0,
+      Math.min(total - 1, Math.round(event.nativeEvent.contentOffset.x / slideWidth)),
+    );
+    setActive(next);
+  };
+
+  const openSlide = (slide?: HomeSlide) => {
+    if (!slide?.ctaUrl) {
+      onExplore();
+      return;
+    }
+    onOpenUrl(slide.ctaUrl, slide.title || undefined);
+  };
+
+  return (
+    <View style={styles.homeHeroWrap}>
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={onMomentumEnd}
+      >
+        {heroSlides.map((item) => {
+          const slide = item.slide;
+          const imageUri = slide ? resolveImageUrl(slide.mediaUrl) : undefined;
+          const hasText = !!(slide?.title || slide?.subtitle || slide?.ctaLabel);
+          return (
+            <Pressable
+              key={item.key}
+              onPress={() => openSlide(slide)}
+              style={{ width: slideWidth }}
+              accessibilityRole="button"
+              accessibilityLabel={slide?.title || "Home hero"}
+            >
+              <View
+                style={[
+                  styles.homeHeroPanel,
+                  { height: slideHeight, backgroundColor: colors.card },
+                ]}
+              >
+                <ExpoImage
+                  source={imageUri ? { uri: imageUri } : DEFAULT_HOME_HERO}
+                  style={StyleSheet.absoluteFill}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                />
+                {hasText ? (
+                  <>
+                    <LinearGradient
+                      colors={["transparent", "rgba(8,12,8,0.88)"]}
+                      start={{ x: 0.5, y: 0.25 }}
+                      end={{ x: 0.5, y: 1 }}
+                      style={StyleSheet.absoluteFill}
+                      pointerEvents="none"
+                    />
+                    <View style={styles.homeHeroCopy}>
+                      {slide?.title ? (
+                        <AppText size={22} weight="700" color="#FFFFFF">
+                          {slide.title}
+                        </AppText>
+                      ) : null}
+                      {slide?.subtitle ? (
+                        <AppText
+                          size={13}
+                          color="rgba(255,255,255,0.78)"
+                          style={{ marginTop: 4 }}
+                        >
+                          {slide.subtitle}
+                        </AppText>
+                      ) : null}
+                      {slide?.ctaLabel ? (
+                        <View
+                          style={[
+                            styles.sliderCtaPill,
+                            { backgroundColor: colors.primary },
+                          ]}
+                        >
+                          <AppText
+                            size={13}
+                            weight="700"
+                            color={colors.primaryForeground}
+                          >
+                            {slide.ctaLabel}
+                          </AppText>
+                          <Feather
+                            name="arrow-right"
+                            size={14}
+                            color={colors.primaryForeground}
+                          />
+                        </View>
+                      ) : null}
+                    </View>
+                  </>
+                ) : null}
+              </View>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+      {total > 1 ? (
+        <View style={styles.homeHeroDots}>
+          {heroSlides.map((item, index) => (
+            <View
+              key={item.key}
+              style={[
+                styles.dot,
+                {
+                  backgroundColor:
+                    index === active ? colors.primary : colors.border,
+                  width: index === active ? 22 : 7,
+                },
+              ]}
+            />
+          ))}
+        </View>
       ) : null}
     </View>
   );
@@ -1972,6 +1880,7 @@ function isVideoSlide(item: RenderSlide): boolean {
 }
 
 function HeroSlider({
+  slides: homeSlides,
   gyms,
   isMember,
   membershipSettled,
@@ -1979,7 +1888,9 @@ function HeroSlider({
   onOpenUrl,
   aiSlide,
   nearSlide,
+  showFallback = true,
 }: {
+  slides: HomeSlide[];
   gyms: Gym[];
   isMember: boolean;
   membershipSettled: boolean;
@@ -1989,6 +1900,8 @@ function HeroSlider({
   aiSlide?: { needsAssessment: boolean; onPress: () => void };
   /** When set, a "Gyms near me" slide is appended to the carousel. */
   nearSlide?: { onOpenGym: () => void };
+  /** Legacy banners can opt out of the old code-generated fallback. */
+  showFallback?: boolean;
 }) {
   const colors = useColors();
   const { width } = useWindowDimensions();
@@ -1999,9 +1912,10 @@ function HeroSlider({
   const [active, setActive] = useState(0);
   const activeRef = useRef(0);
 
-  const slidesQuery = useListHomeSlides();
-  const adminSlides = (slidesQuery.data ?? []).filter(
-    (slide) => (slide.kind as string) !== "shortcut",
+  const adminSlides = homeSlides.filter(
+    (slide) =>
+      (slide.kind as string) !== "shortcut" &&
+      (slide.kind as string) !== "hero",
   );
 
   // Show only slides targeted at this viewer: "all" for everyone, "members"
@@ -2031,22 +1945,28 @@ function HeroSlider({
             type: "admin" as const,
             slide: s,
           }))
-        : [
+        : showFallback
+        ? [
             { key: "brand", type: "brand" as const },
             ...gyms.map((g) => ({
               key: `g${g.id}`,
               type: "gym" as const,
               gym: g,
             })),
-          ];
+          ]
+        : [];
     // "Gyms near me" rides in the same carousel — swipe to find the closest
     // branches (or enable location if it's off).
-    if (nearSlide) base.push({ key: "near", type: "near" as const });
+    if (nearSlide && base.length > 0) {
+      base.push({ key: "near", type: "near" as const });
+    }
     // Signed-in users get the AI coach as the last slide of the same carousel
     // so the banner and AI share one row — swipe to reach the coach.
-    if (aiSlide) base.push({ key: "ai", type: "ai" as const });
+    if (aiSlide && base.length > 0) {
+      base.push({ key: "ai", type: "ai" as const });
+    }
     return base;
-  }, [visibleAdminSlides, gyms, aiSlide, nearSlide]);
+  }, [visibleAdminSlides, gyms, aiSlide, nearSlide, showFallback]);
 
   const total = slides.length;
 
@@ -2372,7 +2292,7 @@ function StorySection() {
 
   return (
     <>
-      <SectionHeader title="Watch our story" />
+      <SectionHeader title="Member Experiences" />
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -2411,9 +2331,11 @@ function StorySection() {
               <AppText size={12} color={colors.primary} style={{ marginTop: 2 }}>
                 {s.role}
               </AppText>
-              <AppText muted size={13} style={{ marginTop: 8 }} numberOfLines={3}>
-                “{s.quote}”
-              </AppText>
+              {s.quote ? (
+                <AppText muted size={13} style={{ marginTop: 8 }} numberOfLines={3}>
+                  “{s.quote}”
+                </AppText>
+              ) : null}
             </View>
           </Pressable>
         ))}
@@ -3190,61 +3112,7 @@ function StatCard({
 }
 
 /** Compact wallet balance shown at the top-left of Home for signed-in users. */
-function WalletBalancePill() {
-  const colors = useColors();
-  const router = useRouter();
-  const referralQuery = useGetMyReferralInfo({
-    query: { queryKey: getGetMyReferralInfoQueryKey() },
-  });
-  const balance = referralQuery.data?.balanceInr ?? 0;
-  if (!referralQuery.isSuccess) return null;
-  return (
-    <Pressable
-      onPress={() => router.push("/(tabs)/store")}
-      style={({ pressed }) => [
-        styles.walletBalancePill,
-        {
-          backgroundColor: colors.card,
-          borderColor: colors.primary + "55",
-          opacity: pressed ? 0.7 : 1,
-        },
-      ]}
-    >
-        <View
-          style={{
-            width: 30,
-            height: 30,
-            borderRadius: 15,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: `${colors.primary}22`,
-          }}
-        >
-          <Feather name="gift" size={16} color={colors.primary} />
-        </View>
-        <AppText weight="700" size={11} color={colors.mutedForeground}>
-          WALLET
-        </AppText>
-        <AppText weight="700" size={14} color={colors.primary}>
-          {balance.toLocaleString("en-IN")} pts
-        </AppText>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
-  walletBalancePill: {
-    alignSelf: "flex-start",
-    minHeight: 40,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingLeft: 5,
-    paddingRight: 12,
-    marginBottom: 10,
-  },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -3327,7 +3195,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 16,
     right: 16,
-    bottom: 14,
+    bottom: JOIN_BAR_BOTTOM,
     borderRadius: 16,
   },
   joinBar: {
@@ -3345,82 +3213,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  topPagerWrap: { marginTop: 20, marginBottom: 4 },
-  topPagerDots: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 10,
-  },
-  topPagerDot: { height: 7, borderRadius: 4 },
   premiumCard: {
     borderRadius: 20,
     overflow: "hidden",
     padding: 14,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
-  },
-  premiumBadge: {
-    paddingHorizontal: 9,
-    paddingVertical: 3,
-    borderRadius: 999,
-    borderWidth: 1,
-  },
-  premiumAvatarCamBadge: {
-    position: "absolute",
-    right: -2,
-    bottom: -2,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  premiumAvatarRing: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    borderWidth: 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  premiumAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
-  premiumDivider: {
-    height: 1,
-    backgroundColor: "rgba(255,255,255,0.06)",
-    marginVertical: 12,
-  },
-  premiumRenewStrip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  premiumRenewBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    borderRadius: 13,
-    paddingVertical: 11,
-  },
-  premiumManageBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    borderRadius: 16,
-    paddingVertical: 12,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",
   },
@@ -3431,6 +3227,28 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     borderRadius: 30,
     ...SOFT_SHADOW,
+  },
+  homeHeroWrap: {
+    marginTop: 4,
+    marginBottom: 8,
+    borderRadius: 24,
+    ...SOFT_SHADOW,
+  },
+  homeHeroPanel: {
+    overflow: "hidden",
+    justifyContent: "flex-end",
+    borderRadius: 24,
+  },
+  homeHeroCopy: {
+    paddingHorizontal: 18,
+    paddingBottom: 18,
+  },
+  homeHeroDots: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 8,
   },
   catTileList: {
     gap: 12,
@@ -3763,56 +3581,74 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   todayTrackerCard: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 18,
     marginBottom: 20,
-    overflow: "hidden",
   },
   todayTrackerHeader: {
-    minHeight: 48,
-    paddingHorizontal: 14,
+    minHeight: 34,
+    paddingHorizontal: 2,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "rgba(128,128,128,0.18)",
+    gap: 12,
   },
-  todayPill: { flexDirection: "row", alignItems: "center", gap: 5 },
-  modifyTrackersButton: {
-    minHeight: 32,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 16,
-    paddingHorizontal: 11,
+  todayHeaderLine: {
+    height: StyleSheet.hairlineWidth,
+    flex: 1,
+  },
+  todayPill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
+    paddingHorizontal: 17,
+    paddingVertical: 8,
+    borderRadius: 999,
   },
-  todayTrackerRow: { paddingHorizontal: 6, paddingVertical: 12 },
-  todayTrackerItem: {
-    width: 102,
-    minHeight: 76,
-    paddingHorizontal: 10,
-    gap: 6,
-    borderRightWidth: StyleSheet.hairlineWidth,
-    borderRightColor: "rgba(128,128,128,0.22)",
-  },
-  todayTrackerLabel: { flexDirection: "row", alignItems: "center", gap: 5 },
-  trackerQuickAction: {
-    alignSelf: "flex-start",
-    borderRadius: 12,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
+  modifyTrackersButton: {
+    minHeight: 28,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 14,
+    paddingHorizontal: 9,
     flexDirection: "row",
     alignItems: "center",
-    gap: 3,
+    gap: 4,
   },
-  trackerDetailsButton: {
-    minHeight: 38,
+  todayTrackerRow: {
+    paddingHorizontal: 0,
+    paddingVertical: 13,
+  },
+  trackerEmptyState: {
+    minHeight: 62,
     paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  trackerReportAction: {
+    width: 46,
+    height: 40,
+    marginLeft: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 5,
+  },
+  todayMenuRoot: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  todayMenu: {
+    borderRadius: 22,
+    padding: 20,
+    gap: 12,
+    ...SOFT_SHADOW,
+  },
+  todayMenuDone: {
+    alignSelf: "flex-end",
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 999,
   },
   trackerModalRoot: {
     flex: 1,
@@ -3863,6 +3699,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+  },
+  trackerDetailsButton: {
+    minHeight: 34,
+    paddingHorizontal: 2,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 5,
   },
   heroWrap: { marginBottom: 28 },
   sectionToggleRow: {

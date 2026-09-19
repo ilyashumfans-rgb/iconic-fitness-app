@@ -20,6 +20,7 @@ import { ModalHeader } from "@/components/ModalHeader";
 import { Screen } from "@/components/Screen";
 import { EmptyState, ErrorView, LoadingView } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
+import { memberAuthHref } from "@/lib/memberAuth";
 import {
   challengePeriodLabel,
   challengeProgressPct,
@@ -45,7 +46,13 @@ export default function ChallengeDetailScreen() {
   const leave = useLeaveChallenge();
   const [busy, setBusy] = useState(false);
 
-  if (isLoaded && !isSignedIn) return <Redirect href="/(auth)/sign-in" />;
+  if (isLoaded && !isSignedIn) {
+    return (
+      <Redirect
+        href={memberAuthHref(`/challenge/${encodeURIComponent(String(id))}`)}
+      />
+    );
+  }
 
   const c = query.data;
 

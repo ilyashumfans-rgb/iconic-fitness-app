@@ -1,4 +1,4 @@
-import { useClerk, useUser } from "@clerk/expo";
+import { useAuth, useClerk, useUser } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
 import {
   getGetMeQueryKey,
@@ -65,6 +65,7 @@ export default function ProfileScreen() {
   const colors = useColors();
   const router = useRouter();
   const { user } = useUser();
+  const { isLoaded, isSignedIn, userId } = useAuth();
   const { signOut } = useClerk();
   const resetAuthClient = useAuthClientReset();
   const { isGuest, exitGuest } = useGuest();
@@ -109,7 +110,12 @@ export default function ProfileScreen() {
   const [pGoal, setPGoal] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
-  const [reminderOn, setReminderOn] = useState(false);
+  const [reminderOn, setReminderOn] = useState(true);
+  const [reminderLoading, setReminderLoading] = useState(true);
+  const [reminderBusy, setReminderBusy] = useState(false);
+  const [reminderError, setReminderError] = useState<string | null>(null);
+
+  const isMember = isLoaded && !!isSignedIn && !isGuest;
 
   useEffect(() => {
     const g = goalsQuery.data;
@@ -138,8 +144,32 @@ export default function ProfileScreen() {
   }, [meQuery.data]);
 
   useEffect(() => {
-    void areRemindersOn().then(setReminderOn);
-  }, []);
+    let active = true;
+    setReminderLoading(true);
+    setReminderError(null);
+    if (!isMember || !userId) {
+      setReminderOn(false);
+      setReminderLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+    void areRemindersOn(userId)
+      .then((enabled) => {
+        if (active) setReminderOn(enabled);
+      })
+      .catch(() => {
+        if (active) {
+          setReminderError("Could not load reminder preferences.");
+        }
+      })
+      .finally(() => {
+        if (active) setReminderLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [isMember, userId]);
 
   const onSaveProfile = async () => {
     if (!pName.trim()) {
@@ -216,23 +246,30 @@ export default function ProfileScreen() {
   };
 
   const onToggleReminder = async (value: boolean) => {
-    if (Platform.OS === "web") {
-      Alert.alert("Not available", "Reminders work on the mobile app.");
-      return;
-    }
-    if (value) {
-      const ok = await scheduleActionReminders();
-      if (!ok) {
-        Alert.alert(
-          "Permission needed",
-          "Enable notifications in your device settings to get reminders.",
-        );
-        return;
+    if (!isMember || !userId || reminderLoading || reminderBusy) return;
+    setReminderBusy(true);
+    setReminderError(null);
+    try {
+      if (value) {
+        const ok = await scheduleActionReminders(userId);
+        if (!ok) {
+          const message =
+            "Enable notifications in your device settings to get reminders.";
+          setReminderError(message);
+          Alert.alert("Permission needed", message);
+          return;
+        }
+        setReminderOn(true);
+      } else {
+        await cancelActionReminders(userId);
+        setReminderOn(false);
       }
-      setReminderOn(true);
-    } else {
-      await cancelActionReminders();
-      setReminderOn(false);
+    } catch {
+      const message = "Could not update reminders. Please try again.";
+      setReminderError(message);
+      Alert.alert("Error", message);
+    } finally {
+      setReminderBusy(false);
     }
   };
 
@@ -249,7 +286,7 @@ export default function ProfileScreen() {
 
   const onLogIn = () => {
     exitGuest();
-    router.replace("/(auth)/sign-in");
+    router.replace("/(auth)/welcome");
   };
 
   const onSignOut = () => {
@@ -566,6 +603,17 @@ export default function ProfileScreen() {
 
           {/* Personal details (manage profile) */}
           <SectionHeader title="Personal details" />
+          <Card style={{ gap: 8 }}>
+            <AppText weight="700" size={16}>Fitness Profile</AppText>
+            <AppText muted size={13}>
+              Update your private goals, routine, equipment and self-reported starting point. This is not a medical assessment.
+            </AppText>
+            <Button
+              label="Edit Fitness Profile"
+              variant="secondary"
+              onPress={() => router.push("/fitness-setup?edit=1")}
+            />
+          </Card>
           <Card style={{ gap: 14 }}>
             <Field label="Name" value={pName} onChangeText={setPName} />
             <Field
@@ -716,40 +764,54 @@ export default function ProfileScreen() {
       </Card>
 
       {/* Reminders */}
-      <SectionHeader title="Daily reminders" />
-      <Card style={{ gap: 14 }}>
-        <View style={styles.switchRow}>
-          <View style={{ flex: 1 }}>
-            <AppText weight="600" size={15}>
-              Daily action reminders
-            </AppText>
-            <AppText muted size={13}>
-              Gentle nudges through the day for water, meals, your workout, steps
-              and sleep.
-            </AppText>
-          </View>
-          <Switch
-            value={reminderOn}
-            onValueChange={onToggleReminder}
-            trackColor={{ true: colors.primary, false: colors.elevated }}
-            thumbColor="#fff"
-          />
-        </View>
-        {reminderOn ? (
-          <View style={{ gap: 8 }}>
-            {ACTION_REMINDERS.map((r) => (
-              <View key={r.key} style={styles.reminderRow}>
-                <AppText muted size={13} style={{ width: 76 }}>
-                  {formatHour(r.hour, r.minute)}
+      {!isGuest ? (
+        <>
+          <SectionHeader title="Daily reminders" />
+          <Card style={{ gap: 14 }}>
+            <View style={styles.switchRow}>
+              <View style={{ flex: 1 }}>
+                <AppText weight="600" size={15}>
+                  Daily action reminders
                 </AppText>
-                <AppText size={13} style={{ flex: 1 }}>
-                  {r.title}
+                <AppText muted size={13}>
+                  Gentle nudges through the day for water, meals, your workout, steps
+                  and sleep.
                 </AppText>
               </View>
-            ))}
-          </View>
-        ) : null}
-      </Card>
+              <Switch
+                value={reminderOn}
+                onValueChange={onToggleReminder}
+                disabled={reminderLoading || reminderBusy || !isMember}
+                testID="daily-reminders-toggle"
+                trackColor={{ true: colors.primary, false: colors.elevated }}
+                thumbColor="#fff"
+              />
+            </View>
+            <AppText muted size={12}>
+              {Platform.OS === "web"
+                ? "Preference saved here. Reminders are delivered by the mobile app only."
+                : reminderBusy
+                  ? "Updating reminder schedule…"
+                  : reminderError ??
+                    "Delivered by this device when notifications are allowed."}
+            </AppText>
+            {reminderOn ? (
+              <View style={{ gap: 8 }}>
+                {ACTION_REMINDERS.map((r) => (
+                  <View key={r.key} style={styles.reminderRow}>
+                    <AppText muted size={13} style={{ width: 76 }}>
+                      {formatHour(r.hour, r.minute)}
+                    </AppText>
+                    <AppText size={13} style={{ flex: 1 }}>
+                      {r.title}
+                    </AppText>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+          </Card>
+        </>
+      ) : null}
 
       <View style={{ marginTop: 28 }}>
         {isGuest ? (

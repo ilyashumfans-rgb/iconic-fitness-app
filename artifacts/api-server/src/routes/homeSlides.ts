@@ -5,7 +5,10 @@ import { requireAdmin } from "../lib/adminAuth";
 
 const router: IRouter = Router();
 
-const KINDS = ["image", "gif", "youtube", "shortcut"] as const;
+// "hero" is the dedicated image-only Home hero carousel. Keep the existing
+// image/gif/youtube values so previously published banner content continues to
+// work without a migration or destructive reseed.
+const KINDS = ["hero", "image", "gif", "youtube", "shortcut"] as const;
 type SlideKind = (typeof KINDS)[number];
 
 const AUDIENCES = ["all", "members", "customers"] as const;
@@ -56,7 +59,8 @@ function validateMedia(kind: SlideKind, mediaUrl: string): string | null {
       return "Provide a valid YouTube link for a YouTube slide";
     return null;
   }
-  // image / gif slides must reference an http(s) URL or an uploaded db-image.
+  // hero / image / gif slides must reference an http(s) URL or an uploaded
+  // db-image.
   if (!/^(https?:\/\/|\/)/.test(mediaUrl))
     return "Upload an image/GIF or provide a valid image URL";
   if (isValidYoutube(mediaUrl))

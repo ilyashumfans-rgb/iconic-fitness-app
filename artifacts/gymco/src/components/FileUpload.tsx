@@ -10,25 +10,62 @@ type Props = {
 };
 
 const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
-const MAX_IMAGE_DIMENSION = 2400;
+const MAX_IMAGE_DIMENSION = 1280;
 // Production's edge proxy can intermittently reject large request bodies with a
 // 403 before they ever reach our server, and multi-MB uploads are slow (a big
 // PNG can appear to "hang"). So we never pass raster images through untouched —
 // every image is re-encoded down to a small, fast, reliably-accepted payload.
-const TARGET_MAX_BYTES = 3 * 1024 * 1024;
+const TARGET_MAX_BYTES = 500 * 1024;
+
+async function isAnimatedWebp(file: File): Promise<boolean> {
+  if (file.type !== "image/webp") return false;
+  // Animated WebP uses an ANIM RIFF chunk. Do not draw it through canvas,
+  // because canvas only exposes its first frame.
+  const bytes = new Uint8Array(await file.slice(0, 1024).arrayBuffer());
+  for (let i = 12; i + 3 < bytes.length; i += 1) {
+    if (
+      bytes[i] === 0x41 &&
+      bytes[i + 1] === 0x4e &&
+      bytes[i + 2] === 0x49 &&
+      bytes[i + 3] === 0x4d
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
 
 // Normalise an image the user picked so the upload is small and the server will
 // accept it:
 // - phone/desktop formats the server rejects (HEIC, BMP, TIFF, AVIF, …) are
 //   re-encoded to JPEG
-// - every image is downscaled to MAX_IMAGE_DIMENSION and compressed under
+// - every still image is downscaled to MAX_IMAGE_DIMENSION and compressed near
 //   TARGET_MAX_BYTES (quality first, then dimensions)
 // - EXIF orientation is baked in so photos aren't rotated
-// Only PDFs pass through untouched (size-checked).
-async function prepareForUpload(file: File): Promise<File> {
+// - GIF and WebP are sent intact so the server can preserve animation when
+//   producing animated WebP; alpha-bearing stills are encoded as WebP
+// Only PDFs and audio pass through untouched (size-checked).
+export async function prepareForUpload(file: File): Promise<File> {
   if (file.type === "application/pdf") {
     if (file.size > MAX_UPLOAD_BYTES) {
       throw new Error("This file is too large. Please pick one under 15MB.");
+    }
+    return file;
+  }
+  if (file.type.startsWith("audio/")) {
+    if (file.size > 2 * 1024 * 1024) {
+      throw new Error("Audio files must be under 2MB.");
+    }
+    return file;
+  }
+  const isGif = file.type === "image/gif" || /\.gif$/i.test(file.name);
+  // Canvas/createImageBitmap decodes only a GIF's first frame. Keep the
+  // original bytes so Sharp can turn every frame into animated WebP server-side.
+  // Animated WebP is also left intact for the same reason. Still WebP files
+  // continue through the resize path below.
+  if (isGif || (await isAnimatedWebp(file))) {
+    if (file.size > MAX_UPLOAD_BYTES) {
+      throw new Error("This image is too large. Please pick one under 15MB.");
     }
     return file;
   }
@@ -46,9 +83,9 @@ async function prepareForUpload(file: File): Promise<File> {
     }
   }
 
-  // Preserve transparency for PNG/WebP sources (e.g. logos with alpha);
-  // photos become JPEG to keep the upload small.
-  const keepAlpha = file.type === "image/png" || file.type === "image/webp";
+  // Preserve transparency (e.g. logos) in WebP; photos become JPEG to keep
+  // transfer size low. PNG must not fall back to JPEG because that drops alpha.
+  const keepAlpha = file.type === "image/png" || file.type === "image/webp" || /\.(png|webp)$/i.test(file.name);
   const baseName = file.name.replace(/\.[^.]+$/, "") || "image";
 
   const renderToBlob = (
@@ -71,30 +108,22 @@ async function prepareForUpload(file: File): Promise<File> {
   };
 
   try {
-    let outType = keepAlpha ? "image/png" : "image/jpeg";
-    let ext = keepAlpha ? "png" : "jpg";
+    let outType = keepAlpha ? "image/webp" : "image/jpeg";
+    let ext = keepAlpha ? "webp" : "jpg";
     let dim = MAX_IMAGE_DIMENSION;
-    let quality = 0.85;
+    let quality = 0.78;
 
     let blob = await renderToBlob(dim, outType, quality);
     if (!blob) {
       throw new Error("Could not process this image. Try a different file.");
     }
 
-    // A transparent PNG photo can still be huge; drop to JPEG (loses alpha)
-    // when it won't fit, since a reliable upload is the priority.
-    if (blob.size > TARGET_MAX_BYTES && outType === "image/png") {
-      outType = "image/jpeg";
-      ext = "jpg";
-      blob = (await renderToBlob(dim, outType, quality)) ?? blob;
-    }
-
     // Progressively reduce quality, then dimensions, until it fits the target.
-    while (blob.size > TARGET_MAX_BYTES && (quality > 0.5 || dim > 800)) {
+    while (blob.size > TARGET_MAX_BYTES && (quality > 0.5 || dim > 640)) {
       if (quality > 0.5) {
-        quality = Math.max(0.5, quality - 0.15);
+        quality = Math.max(0.5, quality - 0.1);
       } else {
-        dim = Math.max(800, Math.round(dim * 0.8));
+        dim = Math.max(640, Math.round(dim * 0.8));
       }
       const next = await renderToBlob(dim, outType, quality);
       if (!next) break;

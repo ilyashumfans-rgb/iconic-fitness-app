@@ -2,6 +2,7 @@ import app from "./app";
 import { logger } from "./lib/logger";
 import { ensureSessionTable } from "./lib/adminAuth";
 import { ensureStoreColumns } from "./routes/store";
+import { ensureCommunityTables } from "./routes/community";
 
 const rawPort = process.env["PORT"];
 
@@ -26,6 +27,12 @@ async function main(): Promise<void> {
     await ensureStoreColumns();
   } catch (err) {
     logger.error({ err }, "Could not ensure store columns");
+  }
+  try {
+    await ensureCommunityTables();
+  } catch (err) {
+    logger.error({ err }, "Could not ensure community tables");
+    throw err;
   }
 
   app.listen(port, (err) => {

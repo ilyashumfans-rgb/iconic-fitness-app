@@ -20,6 +20,7 @@ import { ModalHeader } from "@/components/ModalHeader";
 import { Screen } from "@/components/Screen";
 import { EmptyState, ErrorView, LoadingView } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
+import { memberAuthHref } from "@/lib/memberAuth";
 
 const SCORE_COLORS = {
   green: "#22C55E",
@@ -90,7 +91,7 @@ export default function EngagementPlanScreen() {
     ) : null;
 
   if (isLoaded && !isSignedIn) {
-    return <Redirect href="/(auth)/sign-in" />;
+    return <Redirect href={memberAuthHref("/engagement-plan")} />;
   }
 
   const isLoading = engagementQuery.isLoading || planQuery.isLoading;

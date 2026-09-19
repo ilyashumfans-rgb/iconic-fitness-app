@@ -7,6 +7,25 @@ import { customFetch } from "@workspace/api-client-react";
 import { resolveImageUrl } from "@/lib/images";
 
 const REMINDERS_KEY = "iconic.remindersOn";
+const REMINDER_ACCOUNT_KEY_PREFIX = `${REMINDERS_KEY}:`;
+const REMINDER_IDS_KEY_PREFIX = "iconic.actionReminderIds:";
+const ACTION_REMINDER_NOTIFICATION_TYPE = "action-reminder";
+
+type ReminderAccountId = string | null | undefined;
+
+function accountStorageSuffix(accountId: ReminderAccountId): string {
+  return accountId ? encodeURIComponent(accountId) : "default";
+}
+
+function preferenceStorageKey(accountId: ReminderAccountId): string {
+  return accountId
+    ? `${REMINDER_ACCOUNT_KEY_PREFIX}${accountStorageSuffix(accountId)}`
+    : REMINDERS_KEY;
+}
+
+function idsStorageKey(accountId: ReminderAccountId): string {
+  return `${REMINDER_IDS_KEY_PREFIX}${accountStorageSuffix(accountId)}`;
+}
 
 export type ActionReminder = {
   key: string;
@@ -170,6 +189,174 @@ export async function ensureNotificationPermission(): Promise<boolean> {
   return requested.granted;
 }
 
+let legacyPreferenceOperation: Promise<void> = Promise.resolve();
+
+/**
+ * Reminder preferences are account-scoped where an authenticated account is
+ * available. Older builds stored one device-wide value, so migrate that value
+ * to the first account that reads it. This preserves an explicit old opt-out
+ * without making a later member inherit another member's choice.
+ */
+async function readReminderPreference(
+  accountId: ReminderAccountId,
+): Promise<boolean> {
+  const key = preferenceStorageKey(accountId);
+  const raw = await AsyncStorage.getItem(key);
+  if (raw !== null) return raw !== "0";
+
+  if (accountId) {
+    const migration = legacyPreferenceOperation.then(async () => {
+      // Re-read inside the serialized migration so More, Profile, and the
+      // launch initializer cannot race while moving the old device-wide key.
+      const current = await AsyncStorage.getItem(key);
+      if (current !== null) return current !== "0";
+      const legacy = await AsyncStorage.getItem(REMINDERS_KEY);
+      if (legacy === "0" || legacy === "1") {
+        await AsyncStorage.setItem(key, legacy);
+        await AsyncStorage.removeItem(REMINDERS_KEY);
+        return legacy !== "0";
+      }
+      return true;
+    });
+    legacyPreferenceOperation = migration.then(
+      () => undefined,
+      () => undefined,
+    );
+    return migration;
+  }
+
+  // Daily reminders are opt-out, not opt-in. A missing preference means ON.
+  return true;
+}
+
+async function writeReminderPreference(
+  accountId: ReminderAccountId,
+  enabled: boolean,
+): Promise<void> {
+  await AsyncStorage.setItem(preferenceStorageKey(accountId), enabled ? "1" : "0");
+}
+
+async function getStoredReminderIds(
+  accountId: ReminderAccountId,
+): Promise<string[]> {
+  try {
+    const raw = await AsyncStorage.getItem(idsStorageKey(accountId));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed)
+      ? parsed.filter((id): id is string => typeof id === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+async function saveStoredReminderIds(
+  accountId: ReminderAccountId,
+  ids: string[],
+): Promise<void> {
+  if (ids.length === 0) {
+    await AsyncStorage.removeItem(idsStorageKey(accountId));
+    return;
+  }
+  await AsyncStorage.setItem(idsStorageKey(accountId), JSON.stringify(ids));
+}
+
+function reminderForRequest(
+  request: Notifications.NotificationRequest,
+): ActionReminder | null {
+  const data = request.content.data;
+  if (
+    data &&
+    data.iconicNotification === ACTION_REMINDER_NOTIFICATION_TYPE &&
+    typeof data.reminderKey === "string"
+  ) {
+    return (
+      ACTION_REMINDERS.find((reminder) => reminder.key === data.reminderKey) ??
+      null
+    );
+  }
+
+  // Builds before reminder IDs were tracked did not add metadata. Recognise
+  // only the exact action reminder title/body pairs so unrelated local and push
+  // notifications are never cancelled.
+  return (
+    ACTION_REMINDERS.find(
+      (reminder) =>
+        request.content.title === reminder.title &&
+        request.content.body === reminder.body,
+    ) ?? null
+  );
+}
+
+function isAccountReminder(
+  request: Notifications.NotificationRequest,
+  accountId: ReminderAccountId,
+): boolean {
+  const data = request.content.data;
+  return (
+    data?.iconicNotification === ACTION_REMINDER_NOTIFICATION_TYPE &&
+    (data.accountId === accountId ||
+      (accountId == null && data.accountId == null))
+  );
+}
+
+function isCompleteReminderSet(
+  requests: Notifications.NotificationRequest[],
+  accountId: ReminderAccountId,
+): boolean {
+  const matching = requests.filter((request) => isAccountReminder(request, accountId));
+  if (matching.length !== ACTION_REMINDERS.length) return false;
+  const keys = new Set(
+    matching
+      .map((request) => request.content.data?.reminderKey)
+      .filter((key): key is string => typeof key === "string"),
+  );
+  return (
+    keys.size === ACTION_REMINDERS.length &&
+    ACTION_REMINDERS.every((reminder) => keys.has(reminder.key))
+  );
+}
+
+async function cancelScheduledReminderRequests(
+  requests: Notifications.NotificationRequest[],
+): Promise<void> {
+  await Promise.all(
+    requests.map(async (request) => {
+      try {
+        await Notifications.cancelScheduledNotificationAsync(request.identifier);
+      } catch {
+        // The OS may have already removed an expired/corrupt request.
+      }
+    }),
+  );
+}
+
+async function cancelScheduledReminderIds(ids: string[]): Promise<void> {
+  await Promise.all(
+    ids.map(async (identifier) => {
+      try {
+        await Notifications.cancelScheduledNotificationAsync(identifier);
+      } catch {
+        // The OS may have already removed an expired/corrupt request.
+      }
+    }),
+  );
+}
+
+// Scheduling and cancelling touch the same OS-level list. Serialise those
+// operations so two screens cannot interleave a toggle and create duplicates.
+let reminderOperation: Promise<void> = Promise.resolve();
+
+function withReminderOperation<T>(operation: () => Promise<T>): Promise<T> {
+  const next = reminderOperation.then(operation, operation);
+  reminderOperation = next.then(
+    () => undefined,
+    () => undefined,
+  );
+  return next;
+}
+
 /**
  * Fire a notification right now (with sound). Used when the app detects a new
  * server-side notification while open, so the member gets an audible heads-up
@@ -210,57 +397,199 @@ export async function presentLocalNotification(
 
 /**
  * Schedule the full set of daily action reminders (water, meals, workout, steps,
- * sleep). Replaces any previously scheduled reminders. Returns false if
- * unsupported or permission was denied.
+ * sleep). Replaces only previously scheduled action reminders for this account.
+ * Returns false if unsupported or permission was denied.
  */
-export async function scheduleActionReminders(): Promise<boolean> {
-  if (Platform.OS === "web") return false;
-  const granted = await ensureNotificationPermission();
-  if (!granted) return false;
-
-  await ensureAndroidChannel();
-  await Notifications.cancelAllScheduledNotificationsAsync();
-  for (const r of ACTION_REMINDERS) {
-    await Notifications.scheduleNotificationAsync({
-      content: { title: r.title, body: r.body, sound: "default" },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DAILY,
-        hour: r.hour,
-        minute: r.minute,
-        channelId: ANDROID_CHANNEL_ID,
-      },
-    });
+export async function scheduleActionReminders(
+  accountId?: string | null,
+): Promise<boolean> {
+  // Web has no native scheduler in this app. Still persist the member's
+  // preference so the same account sees the correct value on another session;
+  // the UI explicitly explains that delivery is mobile-only.
+  if (Platform.OS === "web") {
+    await writeReminderPreference(accountId, true);
+    return true;
   }
-  await AsyncStorage.setItem(REMINDERS_KEY, "1");
-  return true;
+
+  return withReminderOperation(async () => {
+    const granted = await ensureNotificationPermission();
+    if (!granted) return false;
+
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    const accountRequests = scheduled.filter((request) =>
+      isAccountReminder(request, accountId),
+    );
+    const legacyRequests = scheduled.filter(
+      (request) =>
+        reminderForRequest(request) !== null &&
+        request.content.data?.iconicNotification !==
+          ACTION_REMINDER_NOTIFICATION_TYPE,
+    );
+
+    // A launch/toggle can safely call this repeatedly. Do not recreate an
+    // already-complete set, and never touch unrelated push/local notifications.
+    if (
+      legacyRequests.length === 0 &&
+      isCompleteReminderSet(accountRequests, accountId)
+    ) {
+      await writeReminderPreference(accountId, true);
+      return true;
+    }
+
+    // Remove only action reminders. Legacy reminders are unscoped because old
+    // builds did not record an account, but their exact title/body identifies
+    // them without affecting any other notification.
+    const existingToReplace = [
+      ...accountRequests,
+      ...legacyRequests.filter(
+        (request) => !accountRequests.some((item) => item.identifier === request.identifier),
+      ),
+    ];
+    await cancelScheduledReminderRequests(existingToReplace);
+    await saveStoredReminderIds(accountId, []);
+
+    await ensureAndroidChannel();
+    const createdIds: string[] = [];
+    try {
+      for (const r of ACTION_REMINDERS) {
+        const identifier = await Notifications.scheduleNotificationAsync({
+          content: {
+            title: r.title,
+            body: r.body,
+            sound: "default",
+            data: {
+              iconicNotification: ACTION_REMINDER_NOTIFICATION_TYPE,
+              reminderKey: r.key,
+              accountId: accountId ?? null,
+            },
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DAILY,
+            hour: r.hour,
+            minute: r.minute,
+            channelId: ANDROID_CHANNEL_ID,
+          },
+        });
+        createdIds.push(identifier);
+      }
+    } catch (error) {
+      await cancelScheduledReminderIds(createdIds).catch(() => {});
+      throw error;
+    }
+    await saveStoredReminderIds(accountId, createdIds);
+    await writeReminderPreference(accountId, true);
+    return true;
+  });
 }
 
-export async function cancelActionReminders(): Promise<void> {
-  if (Platform.OS === "web") return;
-  await Notifications.cancelAllScheduledNotificationsAsync();
-  // Explicit opt-out — reminders are ON by default, so record "0" rather than
-  // clearing the key (a missing key means "use the default: on").
-  await AsyncStorage.setItem(REMINDERS_KEY, "0");
+export async function cancelActionReminders(
+  accountId?: string | null,
+): Promise<void> {
+  if (Platform.OS === "web") {
+    await writeReminderPreference(accountId, false);
+    return;
+  }
+
+  await withReminderOperation(async () => {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    const storedIds = await getStoredReminderIds(accountId);
+    const requestsToCancel = scheduled.filter(
+      (request) =>
+        storedIds.includes(request.identifier) ||
+        isAccountReminder(request, accountId) ||
+        // Clean up reminders created by a pre-metadata build, but leave every
+        // unrelated local/push notification untouched.
+        (reminderForRequest(request) !== null &&
+          request.content.data?.iconicNotification !==
+            ACTION_REMINDER_NOTIFICATION_TYPE),
+    );
+    await cancelScheduledReminderRequests(requestsToCancel);
+    await saveStoredReminderIds(accountId, []);
+    // Explicit opt-out — a missing key means the default: on.
+    await writeReminderPreference(accountId, false);
+  });
 }
 
 /** Reminders are on by default; only an explicit toggle-off ("0") disables them. */
-export async function areRemindersOn(): Promise<boolean> {
-  if (Platform.OS === "web") return false;
-  const raw = await AsyncStorage.getItem(REMINDERS_KEY);
-  return raw !== "0";
+export async function areRemindersOn(
+  accountId?: string | null,
+): Promise<boolean> {
+  return readReminderPreference(accountId);
 }
 
 /**
- * Called on app launch: keep daily reminders scheduled for everyone who hasn't
- * explicitly turned them off. Safe to call repeatedly (reschedules in place);
- * silently does nothing if notification permission is denied.
+ * Called once when an authenticated member session becomes available. Native
+ * sessions get real OS reminders only after permission is granted; web sessions
+ * only retain the preference because this app does not deliver web reminders.
  */
-export async function ensureDefaultReminders(): Promise<void> {
-  if (Platform.OS === "web") return;
+export async function ensureDefaultReminders(
+  accountId?: string | null,
+): Promise<void> {
   try {
-    if (!(await areRemindersOn())) return;
-    await scheduleActionReminders();
+    await withReminderOperation(async () => {
+      if (!(await readReminderPreference(accountId))) return;
+      if (Platform.OS === "web") return;
+
+      const granted = await ensureNotificationPermission();
+      if (!granted) return;
+
+      const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+      const accountRequests = scheduled.filter((request) =>
+        isAccountReminder(request, accountId),
+      );
+      const legacyRequests = scheduled.filter(
+        (request) =>
+          reminderForRequest(request) !== null &&
+          request.content.data?.iconicNotification !==
+            ACTION_REMINDER_NOTIFICATION_TYPE,
+      );
+      if (
+        legacyRequests.length === 0 &&
+        isCompleteReminderSet(accountRequests, accountId)
+      ) {
+        return;
+      }
+
+      const existingToReplace = [
+        ...accountRequests,
+        ...legacyRequests.filter(
+          (request) =>
+            !accountRequests.some((item) => item.identifier === request.identifier),
+        ),
+      ];
+      await cancelScheduledReminderRequests(existingToReplace);
+      await saveStoredReminderIds(accountId, []);
+      await ensureAndroidChannel();
+      const createdIds: string[] = [];
+      try {
+        for (const r of ACTION_REMINDERS) {
+          const identifier = await Notifications.scheduleNotificationAsync({
+            content: {
+              title: r.title,
+              body: r.body,
+              sound: "default",
+              data: {
+                iconicNotification: ACTION_REMINDER_NOTIFICATION_TYPE,
+                reminderKey: r.key,
+                accountId: accountId ?? null,
+              },
+            },
+            trigger: {
+              type: Notifications.SchedulableTriggerInputTypes.DAILY,
+              hour: r.hour,
+              minute: r.minute,
+              channelId: ANDROID_CHANNEL_ID,
+            },
+          });
+          createdIds.push(identifier);
+        }
+      } catch (error) {
+        await cancelScheduledReminderIds(createdIds).catch(() => {});
+        throw error;
+      }
+      await saveStoredReminderIds(accountId, createdIds);
+    });
   } catch {
-    // Never let reminder scheduling break app startup.
+    // Reminder scheduling must never prevent the member app from starting.
   }
 }

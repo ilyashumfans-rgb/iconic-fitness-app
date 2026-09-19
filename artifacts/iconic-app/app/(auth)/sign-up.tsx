@@ -1,7 +1,12 @@
 import { useSignUp, useSSO } from "@clerk/expo";
 import { useSignInWithApple } from "@clerk/expo/apple";
 import * as AuthSession from "expo-auth-session";
-import { Link, useRouter } from "expo-router";
+import {
+  Link,
+  Redirect,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -23,10 +28,16 @@ import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/hooks/useGuest";
 import { setPendingUsername } from "@/lib/pendingUsername";
 import { customFetch } from "@workspace/api-client-react";
-
-WebBrowser.maybeCompleteAuthSession();
+import { memberAuthHref } from "@/lib/memberAuth";
 
 export default function SignUpScreen() {
+  const params = useLocalSearchParams<{ returnTo?: string | string[] }>();
+  return <Redirect href={memberAuthHref(params.returnTo)} />;
+}
+
+// Kept as a legacy verification form for old bundles. The active create
+// account path is the email subflow opened from the branded welcome screen.
+function LegacySignUpScreen() {
   const colors = useColors();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -313,7 +324,7 @@ export default function SignUpScreen() {
               <AppText muted size={14}>
                 Already a member?{" "}
               </AppText>
-              <Link href="/(auth)/sign-in" asChild>
+              <Link href="/(auth)/welcome" asChild>
                 <Pressable hitSlop={8}>
                   <AppText weight="700" size={14} color={colors.primary}>
                     Log in

@@ -24,6 +24,8 @@ import type {
   AiChatOutput,
   ApplyReferralCodeBody,
   AssessmentBooking,
+  AutoSyncMemberMobile503,
+  AutomaticMobileSyncResult,
   BookAssessmentRequest,
   Booking,
   BookingInput,
@@ -35,16 +37,25 @@ import type {
   CheckinInput,
   ClassSession,
   ClassSessionDetail,
+  CommunityCoach,
+  CommunityPost,
+  CommunityPostCreated,
+  CommunityPostPage,
+  CommunityTrainer,
   Complaint,
   ComplaintCreate,
   ComplaintFollowUpRequest,
   CouponPreviewRequest,
   CouponPreviewResponse,
+  CreateCommunityPostRequest,
   CreateMembershipRenewal409,
   CreatePackageBookingRequest,
   CreateTrainerBookingRequest,
   DailySummary,
   DashboardSummary,
+  FitnessJourney,
+  FitnessSetup,
+  FitnessSetupStepSave,
   GetMealDayParams,
   GetPackageBookingParams,
   GetProgressParams,
@@ -58,10 +69,13 @@ import type {
   HealthStatus,
   HomeSlide,
   ListClassesParams,
+  ListCommunityPostsParams,
+  ListCommunityTrainersParams,
   ListGymsParams,
   ListLiveTrainersParams,
   ListMembershipPackagesParams,
   ListMyBookingsParams,
+  ListMyCommunityPostsParams,
   ListStoreProductsParams,
   ListTrainerPackagesParams,
   ListTrainersParams,
@@ -73,6 +87,7 @@ import type {
   MembershipLookupResult,
   MembershipPayment,
   MembershipPlan,
+  MobileSyncRequest,
   MyAssessment,
   MyEngagement,
   MyEngagementPlan,
@@ -94,6 +109,7 @@ import type {
   StoreOrder,
   StoreProduct,
   SubmitPtTrialFeedbackRequest,
+  SyncMemberMobile200,
   Trainer,
   TrainerBooking,
   TrainerBookingCreated,
@@ -486,6 +502,224 @@ export const useUpdateMe = <TError = ErrorType<unknown>,
       return useMutation(getUpdateMeMutationOptions(options));
     }
 
+export const getGetFitnessSetupUrl = () => {
+
+
+
+
+  return `/api/fitness-setup`
+}
+
+/**
+ * @summary Get the caller's private first-login fitness setup progress
+ */
+export const getFitnessSetup = async ( options?: RequestInit): Promise<FitnessSetup> => {
+
+  return customFetch<FitnessSetup>(getGetFitnessSetupUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFitnessSetupQueryKey = () => {
+    return [
+    `/api/fitness-setup`
+    ] as const;
+    }
+
+
+export const getGetFitnessSetupQueryOptions = <TData = Awaited<ReturnType<typeof getFitnessSetup>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFitnessSetup>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFitnessSetupQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFitnessSetup>>> = ({ signal }) => getFitnessSetup({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFitnessSetup>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFitnessSetupQueryResult = NonNullable<Awaited<ReturnType<typeof getFitnessSetup>>>
+export type GetFitnessSetupQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the caller's private first-login fitness setup progress
+ */
+
+export function useGetFitnessSetup<TData = Awaited<ReturnType<typeof getFitnessSetup>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFitnessSetup>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFitnessSetupQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSaveFitnessSetupStepUrl = () => {
+
+
+
+
+  return `/api/fitness-setup`
+}
+
+/**
+ * @summary Save one private fitness setup step for the caller
+ */
+export const saveFitnessSetupStep = async (fitnessSetupStepSave: FitnessSetupStepSave, options?: RequestInit): Promise<FitnessSetup> => {
+
+  return customFetch<FitnessSetup>(getSaveFitnessSetupStepUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      fitnessSetupStepSave,)
+  }
+);}
+
+
+
+
+export const getSaveFitnessSetupStepMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveFitnessSetupStep>>, TError,{data: BodyType<FitnessSetupStepSave>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveFitnessSetupStep>>, TError,{data: BodyType<FitnessSetupStepSave>}, TContext> => {
+
+const mutationKey = ['saveFitnessSetupStep'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveFitnessSetupStep>>, {data: BodyType<FitnessSetupStepSave>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  saveFitnessSetupStep(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveFitnessSetupStepMutationResult = NonNullable<Awaited<ReturnType<typeof saveFitnessSetupStep>>>
+    export type SaveFitnessSetupStepMutationBody = BodyType<FitnessSetupStepSave>
+    export type SaveFitnessSetupStepMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Save one private fitness setup step for the caller
+ */
+export const useSaveFitnessSetupStep = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveFitnessSetupStep>>, TError,{data: BodyType<FitnessSetupStepSave>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveFitnessSetupStep>>,
+        TError,
+        {data: BodyType<FitnessSetupStepSave>},
+        TContext
+      > => {
+      return useMutation(getSaveFitnessSetupStepMutationOptions(options));
+    }
+
+export const getCompleteFitnessSetupUrl = () => {
+
+
+
+
+  return `/api/fitness-setup/complete`
+}
+
+/**
+ * @summary Complete the caller's first-login fitness setup
+ */
+export const completeFitnessSetup = async ( options?: RequestInit): Promise<FitnessSetup> => {
+
+  return customFetch<FitnessSetup>(getCompleteFitnessSetupUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getCompleteFitnessSetupMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeFitnessSetup>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof completeFitnessSetup>>, TError,void, TContext> => {
+
+const mutationKey = ['completeFitnessSetup'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof completeFitnessSetup>>, void> = () => {
+
+
+          return  completeFitnessSetup(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CompleteFitnessSetupMutationResult = NonNullable<Awaited<ReturnType<typeof completeFitnessSetup>>>
+
+    export type CompleteFitnessSetupMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Complete the caller's first-login fitness setup
+ */
+export const useCompleteFitnessSetup = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeFitnessSetup>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof completeFitnessSetup>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCompleteFitnessSetupMutationOptions(options));
+    }
+
 export const getGetDashboardUrl = () => {
 
 
@@ -572,7 +806,7 @@ export const getListHomeSlidesUrl = () => {
 }
 
 /**
- * @summary Active home banner slides (public)
+ * @summary Active Home hero and banner slides (public)
  */
 export const listHomeSlides = async ( options?: RequestInit): Promise<HomeSlide[]> => {
 
@@ -619,7 +853,7 @@ export type ListHomeSlidesQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Active home banner slides (public)
+ * @summary Active Home hero and banner slides (public)
  */
 
 export function useListHomeSlides<TData = Awaited<ReturnType<typeof listHomeSlides>>, TError = ErrorType<unknown>>(
@@ -1803,6 +2037,224 @@ export const useLookupMembership = <TError = ErrorType<LookupMembership429>,
       > => {
       return useMutation(getLookupMembershipMutationOptions(options));
     }
+
+export const getSyncMemberMobileUrl = () => {
+
+
+
+
+  return `/api/memberships/sync`
+}
+
+/**
+ * @summary Explicitly sync a mobile with YoActiv for the signed-in member
+ */
+export const syncMemberMobile = async (mobileSyncRequest: MobileSyncRequest, options?: RequestInit): Promise<SyncMemberMobile200> => {
+
+  return customFetch<SyncMemberMobile200>(getSyncMemberMobileUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      mobileSyncRequest,)
+  }
+);}
+
+
+
+
+export const getSyncMemberMobileMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof syncMemberMobile>>, TError,{data: BodyType<MobileSyncRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof syncMemberMobile>>, TError,{data: BodyType<MobileSyncRequest>}, TContext> => {
+
+const mutationKey = ['syncMemberMobile'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof syncMemberMobile>>, {data: BodyType<MobileSyncRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  syncMemberMobile(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SyncMemberMobileMutationResult = NonNullable<Awaited<ReturnType<typeof syncMemberMobile>>>
+    export type SyncMemberMobileMutationBody = BodyType<MobileSyncRequest>
+    export type SyncMemberMobileMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Explicitly sync a mobile with YoActiv for the signed-in member
+ */
+export const useSyncMemberMobile = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof syncMemberMobile>>, TError,{data: BodyType<MobileSyncRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof syncMemberMobile>>,
+        TError,
+        {data: BodyType<MobileSyncRequest>},
+        TContext
+      > => {
+      return useMutation(getSyncMemberMobileMutationOptions(options));
+    }
+
+export const getAutoSyncMemberMobileUrl = () => {
+
+
+
+
+  return `/api/memberships/sync/automatic`
+}
+
+/**
+ * @summary Refresh membership using only the signed-in member's server-only sync receipt
+ */
+export const autoSyncMemberMobile = async ( options?: RequestInit): Promise<AutomaticMobileSyncResult> => {
+
+  return customFetch<AutomaticMobileSyncResult>(getAutoSyncMemberMobileUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getAutoSyncMemberMobileMutationOptions = <TError = ErrorType<AutoSyncMemberMobile503>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof autoSyncMemberMobile>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof autoSyncMemberMobile>>, TError,void, TContext> => {
+
+const mutationKey = ['autoSyncMemberMobile'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof autoSyncMemberMobile>>, void> = () => {
+
+
+          return  autoSyncMemberMobile(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AutoSyncMemberMobileMutationResult = NonNullable<Awaited<ReturnType<typeof autoSyncMemberMobile>>>
+
+    export type AutoSyncMemberMobileMutationError = ErrorType<AutoSyncMemberMobile503>
+
+    /**
+ * @summary Refresh membership using only the signed-in member's server-only sync receipt
+ */
+export const useAutoSyncMemberMobile = <TError = ErrorType<AutoSyncMemberMobile503>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof autoSyncMemberMobile>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof autoSyncMemberMobile>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getAutoSyncMemberMobileMutationOptions(options));
+    }
+
+export const getGetFitnessJourneyUrl = () => {
+
+
+
+
+  return `/api/memberships/journey`
+}
+
+/**
+ * @summary Authoritative eligibility and actual kick-starter trial progress
+ */
+export const getFitnessJourney = async ( options?: RequestInit): Promise<FitnessJourney> => {
+
+  return customFetch<FitnessJourney>(getGetFitnessJourneyUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFitnessJourneyQueryKey = () => {
+    return [
+    `/api/memberships/journey`
+    ] as const;
+    }
+
+
+export const getGetFitnessJourneyQueryOptions = <TData = Awaited<ReturnType<typeof getFitnessJourney>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFitnessJourney>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFitnessJourneyQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFitnessJourney>>> = ({ signal }) => getFitnessJourney({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFitnessJourney>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFitnessJourneyQueryResult = NonNullable<Awaited<ReturnType<typeof getFitnessJourney>>>
+export type GetFitnessJourneyQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Authoritative eligibility and actual kick-starter trial progress
+ */
+
+export function useGetFitnessJourney<TData = Awaited<ReturnType<typeof getFitnessJourney>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFitnessJourney>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFitnessJourneyQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getGetMyMembershipUrl = () => {
 
@@ -6037,5 +6489,552 @@ export const useCreateCheckin = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreateCheckinMutationOptions(options));
+    }
+
+export const getListCommunityPostsUrl = (params?: ListCommunityPostsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/community?${stringifiedParams}` : `/api/community`
+}
+
+/**
+ * @summary Approved public community transformation feed
+ */
+export const listCommunityPosts = async (params?: ListCommunityPostsParams, options?: RequestInit): Promise<CommunityPostPage> => {
+
+  return customFetch<CommunityPostPage>(getListCommunityPostsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCommunityPostsQueryKey = (params?: ListCommunityPostsParams,) => {
+    return [
+    `/api/community`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListCommunityPostsQueryOptions = <TData = Awaited<ReturnType<typeof listCommunityPosts>>, TError = ErrorType<unknown>>(params?: ListCommunityPostsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCommunityPosts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCommunityPostsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCommunityPosts>>> = ({ signal }) => listCommunityPosts(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCommunityPosts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCommunityPostsQueryResult = NonNullable<Awaited<ReturnType<typeof listCommunityPosts>>>
+export type ListCommunityPostsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Approved public community transformation feed
+ */
+
+export function useListCommunityPosts<TData = Awaited<ReturnType<typeof listCommunityPosts>>, TError = ErrorType<unknown>>(
+ params?: ListCommunityPostsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCommunityPosts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCommunityPostsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateCommunityPostUrl = () => {
+
+
+
+
+  return `/api/community`
+}
+
+/**
+ * @summary Submit a before and after transformation for moderation
+ */
+export const createCommunityPost = async (createCommunityPostRequest: CreateCommunityPostRequest, options?: RequestInit): Promise<CommunityPostCreated> => {
+
+  return customFetch<CommunityPostCreated>(getCreateCommunityPostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createCommunityPostRequest,)
+  }
+);}
+
+
+
+
+export const getCreateCommunityPostMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCommunityPost>>, TError,{data: BodyType<CreateCommunityPostRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCommunityPost>>, TError,{data: BodyType<CreateCommunityPostRequest>}, TContext> => {
+
+const mutationKey = ['createCommunityPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCommunityPost>>, {data: BodyType<CreateCommunityPostRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createCommunityPost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCommunityPostMutationResult = NonNullable<Awaited<ReturnType<typeof createCommunityPost>>>
+    export type CreateCommunityPostMutationBody = BodyType<CreateCommunityPostRequest>
+    export type CreateCommunityPostMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Submit a before and after transformation for moderation
+ */
+export const useCreateCommunityPost = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCommunityPost>>, TError,{data: BodyType<CreateCommunityPostRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createCommunityPost>>,
+        TError,
+        {data: BodyType<CreateCommunityPostRequest>},
+        TContext
+      > => {
+      return useMutation(getCreateCommunityPostMutationOptions(options));
+    }
+
+export const getListMyCommunityPostsUrl = (params?: ListMyCommunityPostsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/community/mine?${stringifiedParams}` : `/api/community/mine`
+}
+
+/**
+ * @summary The signed-in member's submissions and moderation statuses
+ */
+export const listMyCommunityPosts = async (params?: ListMyCommunityPostsParams, options?: RequestInit): Promise<CommunityPostPage> => {
+
+  return customFetch<CommunityPostPage>(getListMyCommunityPostsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyCommunityPostsQueryKey = (params?: ListMyCommunityPostsParams,) => {
+    return [
+    `/api/community/mine`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListMyCommunityPostsQueryOptions = <TData = Awaited<ReturnType<typeof listMyCommunityPosts>>, TError = ErrorType<unknown>>(params?: ListMyCommunityPostsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyCommunityPosts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyCommunityPostsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyCommunityPosts>>> = ({ signal }) => listMyCommunityPosts(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyCommunityPosts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMyCommunityPostsQueryResult = NonNullable<Awaited<ReturnType<typeof listMyCommunityPosts>>>
+export type ListMyCommunityPostsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary The signed-in member's submissions and moderation statuses
+ */
+
+export function useListMyCommunityPosts<TData = Awaited<ReturnType<typeof listMyCommunityPosts>>, TError = ErrorType<unknown>>(
+ params?: ListMyCommunityPostsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyCommunityPosts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMyCommunityPostsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetCommunityCoachUrl = (id: number,) => {
+
+
+
+
+  return `/api/community/${id}/coach`
+}
+
+/**
+ * @summary The currently available coach attached to a community submission
+ */
+export const getCommunityCoach = async (id: number, options?: RequestInit): Promise<CommunityCoach> => {
+
+  return customFetch<CommunityCoach>(getGetCommunityCoachUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCommunityCoachQueryKey = (id: number,) => {
+    return [
+    `/api/community/${id}/coach`
+    ] as const;
+    }
+
+
+export const getGetCommunityCoachQueryOptions = <TData = Awaited<ReturnType<typeof getCommunityCoach>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCommunityCoach>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCommunityCoachQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCommunityCoach>>> = ({ signal }) => getCommunityCoach(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCommunityCoach>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCommunityCoachQueryResult = NonNullable<Awaited<ReturnType<typeof getCommunityCoach>>>
+export type GetCommunityCoachQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary The currently available coach attached to a community submission
+ */
+
+export function useGetCommunityCoach<TData = Awaited<ReturnType<typeof getCommunityCoach>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCommunityCoach>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCommunityCoachQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetCommunityPostUrl = (id: number,) => {
+
+
+
+
+  return `/api/community/${id}`
+}
+
+/**
+ * @summary A community submission when approved, owned by the member, or viewed by an admin
+ */
+export const getCommunityPost = async (id: number, options?: RequestInit): Promise<CommunityPost> => {
+
+  return customFetch<CommunityPost>(getGetCommunityPostUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCommunityPostQueryKey = (id: number,) => {
+    return [
+    `/api/community/${id}`
+    ] as const;
+    }
+
+
+export const getGetCommunityPostQueryOptions = <TData = Awaited<ReturnType<typeof getCommunityPost>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCommunityPost>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCommunityPostQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCommunityPost>>> = ({ signal }) => getCommunityPost(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCommunityPost>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCommunityPostQueryResult = NonNullable<Awaited<ReturnType<typeof getCommunityPost>>>
+export type GetCommunityPostQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary A community submission when approved, owned by the member, or viewed by an admin
+ */
+
+export function useGetCommunityPost<TData = Awaited<ReturnType<typeof getCommunityPost>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCommunityPost>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCommunityPostQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListCommunityTrainersUrl = (params: ListCommunityTrainersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/community/trainers?${stringifiedParams}` : `/api/community/trainers`
+}
+
+/**
+ * @summary Active linked PT trainers for a selected branch
+ */
+export const listCommunityTrainers = async (params: ListCommunityTrainersParams, options?: RequestInit): Promise<CommunityTrainer[]> => {
+
+  return customFetch<CommunityTrainer[]>(getListCommunityTrainersUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCommunityTrainersQueryKey = (params?: ListCommunityTrainersParams,) => {
+    return [
+    `/api/community/trainers`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListCommunityTrainersQueryOptions = <TData = Awaited<ReturnType<typeof listCommunityTrainers>>, TError = ErrorType<unknown>>(params: ListCommunityTrainersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCommunityTrainers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCommunityTrainersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCommunityTrainers>>> = ({ signal }) => listCommunityTrainers(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCommunityTrainers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCommunityTrainersQueryResult = NonNullable<Awaited<ReturnType<typeof listCommunityTrainers>>>
+export type ListCommunityTrainersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Active linked PT trainers for a selected branch
+ */
+
+export function useListCommunityTrainers<TData = Awaited<ReturnType<typeof listCommunityTrainers>>, TError = ErrorType<unknown>>(
+ params: ListCommunityTrainersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCommunityTrainers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCommunityTrainersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getWithdrawCommunityPostUrl = (id: number,) => {
+
+
+
+
+  return `/api/community/${id}/withdraw`
+}
+
+/**
+ * @summary Withdraw the signed-in member's community submission
+ */
+export const withdrawCommunityPost = async (id: number, options?: RequestInit): Promise<CommunityPostCreated> => {
+
+  return customFetch<CommunityPostCreated>(getWithdrawCommunityPostUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getWithdrawCommunityPostMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof withdrawCommunityPost>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof withdrawCommunityPost>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['withdrawCommunityPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof withdrawCommunityPost>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  withdrawCommunityPost(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WithdrawCommunityPostMutationResult = NonNullable<Awaited<ReturnType<typeof withdrawCommunityPost>>>
+
+    export type WithdrawCommunityPostMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Withdraw the signed-in member's community submission
+ */
+export const useWithdrawCommunityPost = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof withdrawCommunityPost>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof withdrawCommunityPost>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getWithdrawCommunityPostMutationOptions(options));
     }
 

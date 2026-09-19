@@ -51,14 +51,15 @@ export const HealthCheckResponse = zod.object({
  */
 export const GetMeResponse = zod.object({
   "id": zod.number(),
+  "username": zod.string().nullable(),
   "name": zod.string(),
   "email": zod.string(),
   "mobile": zod.string(),
   "gender": zod.string(),
-  "age": zod.number(),
-  "heightCm": zod.number(),
-  "weightKg": zod.number(),
-  "fitnessGoal": zod.string(),
+  "age": zod.number().nullable().describe('Null until a member supplies a real age'),
+  "heightCm": zod.number().nullable().describe('Null until a member supplies a real height'),
+  "weightKg": zod.number().nullable().describe('Null until a member supplies a real weight'),
+  "fitnessGoal": zod.string().nullable().describe('Null until a member supplies a real goal'),
   "avatarUrl": zod.string(),
   "city": zod.string(),
   "bmi": zod.number(),
@@ -84,6 +85,7 @@ export const GetMeResponse = zod.object({
  * @summary Update the current user profile
  */
 export const UpdateMeBody = zod.object({
+  "username": zod.string().nullish(),
   "name": zod.string().optional(),
   "mobile": zod.string().optional(),
   "gender": zod.string().optional(),
@@ -98,14 +100,15 @@ export const UpdateMeBody = zod.object({
 
 export const UpdateMeResponse = zod.object({
   "id": zod.number(),
+  "username": zod.string().nullable(),
   "name": zod.string(),
   "email": zod.string(),
   "mobile": zod.string(),
   "gender": zod.string(),
-  "age": zod.number(),
-  "heightCm": zod.number(),
-  "weightKg": zod.number(),
-  "fitnessGoal": zod.string(),
+  "age": zod.number().nullable().describe('Null until a member supplies a real age'),
+  "heightCm": zod.number().nullable().describe('Null until a member supplies a real height'),
+  "weightKg": zod.number().nullable().describe('Null until a member supplies a real weight'),
+  "fitnessGoal": zod.string().nullable().describe('Null until a member supplies a real goal'),
   "avatarUrl": zod.string(),
   "city": zod.string(),
   "bmi": zod.number(),
@@ -124,6 +127,155 @@ export const UpdateMeResponse = zod.object({
   "bmr": zod.number().describe('Basal metabolic rate (kcal); 0 if unknown'),
   "tdee": zod.number().describe('Maintenance calories (kcal); 0 if unknown'),
   "bodyFatPct": zod.number().describe('Estimated body fat %; 0 if unknown')
+})
+
+
+/**
+ * @summary Get the caller's private first-login fitness setup progress
+ */
+export const getFitnessSetupResponseCurrentStepMax = 4;
+
+export const getFitnessSetupResponseMovementLimitationsMax = 500;
+
+
+
+export const GetFitnessSetupResponse = zod.object({
+  "exists": zod.boolean().describe('Whether this member has saved an optional setup profile'),
+  "requiredForOnboarding": zod.boolean().describe('Only true for a newly provisioned member until completed'),
+  "currentStep": zod.number().min(1).max(getFitnessSetupResponseCurrentStepMax),
+  "completed": zod.boolean(),
+  "completedAt": zod.coerce.date().nullish(),
+  "unitSystem": zod.enum(['metric', 'imperial']).nullish(),
+  "heightCm": zod.number().nullish().describe('Canonical centimetres'),
+  "weightKg": zod.number().nullish().describe('Canonical kilograms'),
+  "age": zod.number().nullish(),
+  "goals": zod.array(zod.string()).optional(),
+  "interests": zod.array(zod.string()).optional(),
+  "experienceLevel": zod.enum(['new', 'returning', 'experienced', 'not_sure']).nullish(),
+  "activityLevel": zod.enum(['low', 'light', 'moderate', 'high', 'not_sure']).nullish(),
+  "selfReportedAbility": zod.enum(['beginner', 'building', 'confident', 'not_sure']).nullish(),
+  "movementLimitations": zod.string().max(getFitnessSetupResponseMovementLimitationsMax).nullish().describe('Optional self-reported movement considerations; not a diagnosis or medical assessment'),
+  "routineDays": zod.array(zod.string()).optional(),
+  "preferredTime": zod.enum(['morning', 'afternoon', 'evening', 'flexible', 'not_sure']).nullish(),
+  "workoutLocation": zod.enum(['gym', 'home', 'both', 'not_sure']).nullish(),
+  "equipment": zod.array(zod.string()).optional(),
+  "dietPreference": zod.enum(['vegetarian', 'non_vegetarian', 'vegan', 'eggetarian', 'no_preference', 'not_sure']).nullish()
+})
+
+
+/**
+ * @summary Save one private fitness setup step for the caller
+ */
+export const saveFitnessSetupStepBodyStepMax = 4;
+
+export const saveFitnessSetupStepBodyHeightCmMin = 80;
+export const saveFitnessSetupStepBodyHeightCmMax = 260;
+
+export const saveFitnessSetupStepBodyWeightKgMin = 20;
+export const saveFitnessSetupStepBodyWeightKgMax = 400;
+
+export const saveFitnessSetupStepBodyAgeMin = 13;
+export const saveFitnessSetupStepBodyAgeMax = 120;
+
+export const saveFitnessSetupStepBodyGoalsItemMax = 60;
+
+export const saveFitnessSetupStepBodyGoalsMax = 8;
+
+export const saveFitnessSetupStepBodyInterestsItemMax = 60;
+
+export const saveFitnessSetupStepBodyInterestsMax = 12;
+
+export const saveFitnessSetupStepBodyMovementLimitationsMax = 500;
+
+export const saveFitnessSetupStepBodyRoutineDaysMax = 7;
+
+export const saveFitnessSetupStepBodyEquipmentItemMax = 60;
+
+export const saveFitnessSetupStepBodyEquipmentMax = 12;
+
+
+
+export const SaveFitnessSetupStepBody = zod.object({
+  "step": zod.number().min(1).max(saveFitnessSetupStepBodyStepMax),
+  "unitSystem": zod.enum(['metric', 'imperial']).nullish(),
+  "height": zod.number().nullish().describe('Height in the selected UI unit (cm for metric, inches for imperial); normalized to heightCm on the server'),
+  "weight": zod.number().nullish().describe('Weight in the selected UI unit (kg for metric, pounds for imperial); normalized to weightKg on the server'),
+  "heightCm": zod.number().min(saveFitnessSetupStepBodyHeightCmMin).max(saveFitnessSetupStepBodyHeightCmMax).nullish(),
+  "weightKg": zod.number().min(saveFitnessSetupStepBodyWeightKgMin).max(saveFitnessSetupStepBodyWeightKgMax).nullish(),
+  "age": zod.number().min(saveFitnessSetupStepBodyAgeMin).max(saveFitnessSetupStepBodyAgeMax).nullish(),
+  "goals": zod.array(zod.string().max(saveFitnessSetupStepBodyGoalsItemMax)).max(saveFitnessSetupStepBodyGoalsMax).nullish(),
+  "interests": zod.array(zod.string().max(saveFitnessSetupStepBodyInterestsItemMax)).max(saveFitnessSetupStepBodyInterestsMax).nullish(),
+  "experienceLevel": zod.enum(['new', 'returning', 'experienced', 'not_sure']).nullish(),
+  "activityLevel": zod.enum(['low', 'light', 'moderate', 'high', 'not_sure']).nullish(),
+  "selfReportedAbility": zod.enum(['beginner', 'building', 'confident', 'not_sure']).nullish(),
+  "movementLimitations": zod.string().max(saveFitnessSetupStepBodyMovementLimitationsMax).nullish(),
+  "routineDays": zod.array(zod.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])).max(saveFitnessSetupStepBodyRoutineDaysMax).nullish(),
+  "preferredTime": zod.enum(['morning', 'afternoon', 'evening', 'flexible', 'not_sure']).nullish(),
+  "workoutLocation": zod.enum(['gym', 'home', 'both', 'not_sure']).nullish(),
+  "equipment": zod.array(zod.string().max(saveFitnessSetupStepBodyEquipmentItemMax)).max(saveFitnessSetupStepBodyEquipmentMax).nullish(),
+  "dietPreference": zod.enum(['vegetarian', 'non_vegetarian', 'vegan', 'eggetarian', 'no_preference', 'not_sure']).nullish()
+})
+
+export const saveFitnessSetupStepResponseCurrentStepMax = 4;
+
+export const saveFitnessSetupStepResponseMovementLimitationsMax = 500;
+
+
+
+export const SaveFitnessSetupStepResponse = zod.object({
+  "exists": zod.boolean().describe('Whether this member has saved an optional setup profile'),
+  "requiredForOnboarding": zod.boolean().describe('Only true for a newly provisioned member until completed'),
+  "currentStep": zod.number().min(1).max(saveFitnessSetupStepResponseCurrentStepMax),
+  "completed": zod.boolean(),
+  "completedAt": zod.coerce.date().nullish(),
+  "unitSystem": zod.enum(['metric', 'imperial']).nullish(),
+  "heightCm": zod.number().nullish().describe('Canonical centimetres'),
+  "weightKg": zod.number().nullish().describe('Canonical kilograms'),
+  "age": zod.number().nullish(),
+  "goals": zod.array(zod.string()).optional(),
+  "interests": zod.array(zod.string()).optional(),
+  "experienceLevel": zod.enum(['new', 'returning', 'experienced', 'not_sure']).nullish(),
+  "activityLevel": zod.enum(['low', 'light', 'moderate', 'high', 'not_sure']).nullish(),
+  "selfReportedAbility": zod.enum(['beginner', 'building', 'confident', 'not_sure']).nullish(),
+  "movementLimitations": zod.string().max(saveFitnessSetupStepResponseMovementLimitationsMax).nullish().describe('Optional self-reported movement considerations; not a diagnosis or medical assessment'),
+  "routineDays": zod.array(zod.string()).optional(),
+  "preferredTime": zod.enum(['morning', 'afternoon', 'evening', 'flexible', 'not_sure']).nullish(),
+  "workoutLocation": zod.enum(['gym', 'home', 'both', 'not_sure']).nullish(),
+  "equipment": zod.array(zod.string()).optional(),
+  "dietPreference": zod.enum(['vegetarian', 'non_vegetarian', 'vegan', 'eggetarian', 'no_preference', 'not_sure']).nullish()
+})
+
+
+/**
+ * @summary Complete the caller's first-login fitness setup
+ */
+export const completeFitnessSetupResponseCurrentStepMax = 4;
+
+export const completeFitnessSetupResponseMovementLimitationsMax = 500;
+
+
+
+export const CompleteFitnessSetupResponse = zod.object({
+  "exists": zod.boolean().describe('Whether this member has saved an optional setup profile'),
+  "requiredForOnboarding": zod.boolean().describe('Only true for a newly provisioned member until completed'),
+  "currentStep": zod.number().min(1).max(completeFitnessSetupResponseCurrentStepMax),
+  "completed": zod.boolean(),
+  "completedAt": zod.coerce.date().nullish(),
+  "unitSystem": zod.enum(['metric', 'imperial']).nullish(),
+  "heightCm": zod.number().nullish().describe('Canonical centimetres'),
+  "weightKg": zod.number().nullish().describe('Canonical kilograms'),
+  "age": zod.number().nullish(),
+  "goals": zod.array(zod.string()).optional(),
+  "interests": zod.array(zod.string()).optional(),
+  "experienceLevel": zod.enum(['new', 'returning', 'experienced', 'not_sure']).nullish(),
+  "activityLevel": zod.enum(['low', 'light', 'moderate', 'high', 'not_sure']).nullish(),
+  "selfReportedAbility": zod.enum(['beginner', 'building', 'confident', 'not_sure']).nullish(),
+  "movementLimitations": zod.string().max(completeFitnessSetupResponseMovementLimitationsMax).nullish().describe('Optional self-reported movement considerations; not a diagnosis or medical assessment'),
+  "routineDays": zod.array(zod.string()).optional(),
+  "preferredTime": zod.enum(['morning', 'afternoon', 'evening', 'flexible', 'not_sure']).nullish(),
+  "workoutLocation": zod.enum(['gym', 'home', 'both', 'not_sure']).nullish(),
+  "equipment": zod.array(zod.string()).optional(),
+  "dietPreference": zod.enum(['vegetarian', 'non_vegetarian', 'vegan', 'eggetarian', 'no_preference', 'not_sure']).nullish()
 })
 
 
@@ -198,11 +350,11 @@ export const GetDashboardResponse = zod.object({
 
 
 /**
- * @summary Active home banner slides (public)
+ * @summary Active Home hero and banner slides (public)
  */
 export const ListHomeSlidesResponseItem = zod.object({
   "id": zod.number(),
-  "kind": zod.enum(['image', 'gif', 'youtube']),
+  "kind": zod.enum(['hero', 'image', 'gif', 'youtube', 'shortcut']),
   "mediaUrl": zod.string().describe('db-image URL \/ GIF URL, or a YouTube URL when kind=youtube'),
   "title": zod.string(),
   "subtitle": zod.string(),
@@ -597,6 +749,42 @@ export const LookupMembershipResponse = zod.object({
   "found": zod.boolean(),
   "memberName": zod.string().describe('Masked member name (e.g. \"Rah••• K.\"); empty when not found'),
   "branchName": zod.string().describe('Branch of the member\'s primary plan; empty when not found')
+})
+
+
+/**
+ * @summary Explicitly sync a mobile with YoActiv for the signed-in member
+ */
+export const SyncMemberMobileBody = zod.object({
+  "mobile": zod.string()
+})
+
+export const SyncMemberMobileResponse = zod.object({
+  "synced": zod.boolean()
+})
+
+
+/**
+ * @summary Refresh membership using only the signed-in member's server-only sync receipt
+ */
+export const AutoSyncMemberMobileResponse = zod.object({
+  "synced": zod.boolean(),
+  "reason": zod.enum(['synced', 'confirmation_required', 'mobile_conflict'])
+})
+
+
+/**
+ * @summary Authoritative eligibility and actual kick-starter trial progress
+ */
+export const GetFitnessJourneyResponse = zod.object({
+  "ownerId": zod.string(),
+  "eligible": zod.boolean(),
+  "reason": zod.string(),
+  "hasBooking": zod.boolean(),
+  "assigned": zod.boolean(),
+  "completedCount": zod.number(),
+  "trainerName": zod.string(),
+  "trainerPhotoUrl": zod.string().optional()
 })
 
 
@@ -1708,6 +1896,166 @@ export const createCheckinBodyMethodDefault = `qr`;
 export const CreateCheckinBody = zod.object({
   "gymId": zod.number(),
   "method": zod.enum(['qr', 'manual']).default(createCheckinBodyMethodDefault)
+})
+
+
+/**
+ * @summary Approved public community transformation feed
+ */
+export const listCommunityPostsQueryLimitMax = 50;
+
+
+
+
+export const ListCommunityPostsQueryParams = zod.object({
+  "limit": zod.coerce.number().min(1).max(listCommunityPostsQueryLimitMax).optional(),
+  "beforeId": zod.coerce.number().min(1).optional()
+})
+
+export const ListCommunityPostsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "caption": zod.string(),
+  "trainerName": zod.string().nullish(),
+  "authorName": zod.string(),
+  "authorAvatarUrl": zod.string().nullish(),
+  "beforeImageUrl": zod.string().nullish(),
+  "afterImageUrl": zod.string().nullish(),
+  "submittedAt": zod.coerce.date(),
+  "status": zod.enum(['pending', 'approved', 'rejected', 'unpublished', 'withdrawn']).optional(),
+  "rejectionReason": zod.string().nullish(),
+  "publicSharingConsent": zod.boolean().optional(),
+  "reviewedAt": zod.coerce.date().nullish()
+})),
+  "nextBeforeId": zod.number().nullable()
+})
+
+
+/**
+ * @summary Submit a before and after transformation for moderation
+ */
+export const createCommunityPostBodyCaptionMax = 1200;
+
+
+
+export const CreateCommunityPostBody = zod.object({
+  "caption": zod.string().max(createCommunityPostBodyCaptionMax),
+  "beforeImage": zod.string().describe('Base64 or data URL encoded JPEG, PNG, or WebP still photo'),
+  "afterImage": zod.string().describe('Base64 or data URL encoded JPEG, PNG, or WebP still photo'),
+  "publicSharingConsent": zod.boolean(),
+  "trainerStaffId": zod.number().nullish(),
+  "gymId": zod.number().nullish()
+})
+
+
+/**
+ * @summary The signed-in member's submissions and moderation statuses
+ */
+export const listMyCommunityPostsQueryLimitMax = 50;
+
+
+
+
+export const ListMyCommunityPostsQueryParams = zod.object({
+  "limit": zod.coerce.number().min(1).max(listMyCommunityPostsQueryLimitMax).optional(),
+  "beforeId": zod.coerce.number().min(1).optional()
+})
+
+export const ListMyCommunityPostsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "caption": zod.string(),
+  "trainerName": zod.string().nullish(),
+  "authorName": zod.string(),
+  "authorAvatarUrl": zod.string().nullish(),
+  "beforeImageUrl": zod.string().nullish(),
+  "afterImageUrl": zod.string().nullish(),
+  "submittedAt": zod.coerce.date(),
+  "status": zod.enum(['pending', 'approved', 'rejected', 'unpublished', 'withdrawn']).optional(),
+  "rejectionReason": zod.string().nullish(),
+  "publicSharingConsent": zod.boolean().optional(),
+  "reviewedAt": zod.coerce.date().nullish()
+})),
+  "nextBeforeId": zod.number().nullable()
+})
+
+
+/**
+ * @summary The currently available coach attached to a community submission
+ */
+
+
+
+export const GetCommunityCoachParams = zod.object({
+  "id": zod.coerce.number().min(1)
+})
+
+export const GetCommunityCoachResponse = zod.object({
+  "name": zod.string(),
+  "photoUrl": zod.string().nullable(),
+  "gymId": zod.number(),
+  "gymName": zod.string(),
+  "trainerId": zod.string()
+})
+
+
+/**
+ * @summary A community submission when approved, owned by the member, or viewed by an admin
+ */
+
+
+
+export const GetCommunityPostParams = zod.object({
+  "id": zod.coerce.number().min(1)
+})
+
+export const GetCommunityPostResponse = zod.object({
+  "id": zod.number(),
+  "caption": zod.string(),
+  "trainerName": zod.string().nullish(),
+  "authorName": zod.string(),
+  "authorAvatarUrl": zod.string().nullish(),
+  "beforeImageUrl": zod.string().nullish(),
+  "afterImageUrl": zod.string().nullish(),
+  "submittedAt": zod.coerce.date(),
+  "status": zod.enum(['pending', 'approved', 'rejected', 'unpublished', 'withdrawn']).optional(),
+  "rejectionReason": zod.string().nullish(),
+  "publicSharingConsent": zod.boolean().optional(),
+  "reviewedAt": zod.coerce.date().nullish()
+})
+
+
+/**
+ * @summary Active linked PT trainers for a selected branch
+ */
+
+
+
+export const ListCommunityTrainersQueryParams = zod.object({
+  "gymId": zod.coerce.number().min(1)
+})
+
+export const ListCommunityTrainersResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string()
+})
+export const ListCommunityTrainersResponse = zod.array(ListCommunityTrainersResponseItem)
+
+
+/**
+ * @summary Withdraw the signed-in member's community submission
+ */
+
+
+
+export const WithdrawCommunityPostParams = zod.object({
+  "id": zod.coerce.number().min(1)
+})
+
+export const WithdrawCommunityPostResponse = zod.object({
+  "id": zod.number(),
+  "status": zod.enum(['pending', 'withdrawn']),
+  "submittedAt": zod.coerce.date()
 })
 
 

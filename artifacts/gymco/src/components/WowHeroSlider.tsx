@@ -114,7 +114,7 @@ export function WowHeroSlider({
       image: STOCK.city,
       eyebrow: "Unlimited access",
       title: "Walk into any gym in your city",
-      body: "One pass. 600+ gyms and studios. Zero commitments.",
+      body: "One pass. 17 gyms and studios. Zero commitments.",
       cta: { label: "Explore gyms", href: "/explore" },
       accent: (
         <div className="h-14 w-14 rounded-2xl bg-white/15 backdrop-blur-md ring-1 ring-white/30 flex items-center justify-center">

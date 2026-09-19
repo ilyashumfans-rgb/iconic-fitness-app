@@ -4,7 +4,13 @@ import { customFetch } from "@workspace/api-client-react";
 import { Feather } from "@expo/vector-icons";
 import * as AuthSession from "expo-auth-session";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link, useFocusEffect, useRouter } from "expo-router";
+import {
+  Link,
+  Redirect,
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -27,8 +33,7 @@ import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/hooks/useGuest";
 import { ThemeContext } from "@/hooks/useTheme";
 import { openExternal, websiteUrl } from "@/lib/links";
-
-WebBrowser.maybeCompleteAuthSession();
+import { memberAuthHref } from "@/lib/memberAuth";
 
 // The login is a permanently dark, cinematic brand screen — force the dark
 // palette for this subtree so it never washes out in system light mode.
@@ -40,6 +45,14 @@ const FORCE_DARK = {
 };
 
 export default function SignInScreen() {
+  const params = useLocalSearchParams<{ returnTo?: string | string[] }>();
+  return <Redirect href={memberAuthHref(params.returnTo)} />;
+}
+
+// Kept as a legacy email form for old bundles that may still reference this
+// module. New member entry points always use the branded welcome screen, whose
+// Continue with Email action owns the active email/password/verification flow.
+function LegacySignInScreen() {
   return (
     <ThemeContext.Provider value={FORCE_DARK}>
       <SignInContent />
@@ -793,7 +806,7 @@ function SignInContent() {
               <AppText muted size={14}>
                 New here?{" "}
               </AppText>
-              <Link href="/(auth)/sign-up" asChild>
+              <Link href="/(auth)/welcome" asChild>
                 <Pressable hitSlop={8}>
                   <AppText weight="700" size={14} color={colors.primary}>
                     Create account

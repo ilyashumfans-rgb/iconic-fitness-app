@@ -16,6 +16,7 @@ import { ModalHeader } from "@/components/ModalHeader";
 import { Screen } from "@/components/Screen";
 import { EmptyState, ErrorView, LoadingView } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
+import { memberAuthHref } from "@/lib/memberAuth";
 import { istDateLabel } from "@/lib/dates";
 
 /** "14:30" → "2:30 PM" */
@@ -50,7 +51,7 @@ export default function PtDetailsScreen() {
   });
 
   if (isLoaded && !isSignedIn) {
-    return <Redirect href="/(auth)/sign-in" />;
+    return <Redirect href={memberAuthHref("/pt-details")} />;
   }
 
   const program = query.data;

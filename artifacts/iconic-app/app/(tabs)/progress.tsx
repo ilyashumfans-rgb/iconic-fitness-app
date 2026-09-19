@@ -1,49 +1,105 @@
+import React, { useState } from "react";
+import { View, StyleSheet, ScrollView, Pressable, Platform, Alert } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetProgress,
   useGetTrackingSummary,
-  type ProgressDay,
+  useAddWater,
+  getGetTrackingSummaryQueryKey,
 } from "@workspace/api-client-react";
-import { useRouter } from "expo-router";
-import { useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
-import { Card } from "@/components/Card";
-import { HexProgress } from "@/components/HexProgress";
 import { Screen } from "@/components/Screen";
-import { LoadingView, Segmented } from "@/components/ui-bits";
-import { WeeklyBars } from "@/components/WeeklyBars";
+import { LoadingView } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
 import { istToday } from "@/lib/dates";
+import { useBodyStats } from "@/hooks/useBodyStats";
 
-type Metric = "caloriesIn" | "steps" | "activeMinutes";
+// Import tabs
+import { OverviewTab } from "@/components/progress/OverviewTab";
+import { BodyTab } from "@/components/progress/BodyTab";
+import { WorkoutsTab } from "@/components/progress/WorkoutsTab";
+import { NutritionTab } from "@/components/progress/NutritionTab";
 
-const METRICS: Record<
-  Metric,
-  { label: string; color: keyof ReturnType<typeof useColors>; suffix?: string }
-> = {
-  caloriesIn: { label: "Calories", color: "calorie" },
-  steps: { label: "Steps", color: "steps" },
-  activeMinutes: { label: "Active min", color: "water", suffix: "m" },
-};
+type TabType = "Overview" | "Body" | "Workouts" | "Nutrition";
+const TABS: TabType[] = ["Overview", "Body", "Workouts", "Nutrition"];
 
 export default function ProgressScreen() {
   const colors = useColors();
   const router = useRouter();
-  const [metric, setMetric] = useState<Metric>("caloriesIn");
-  const progressQuery = useGetProgress({ days: 7 });
+  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<TabType>("Overview");
+
+  // State for "More" menu
+  const [showMenu, setShowMenu] = useState(false);
+
+  // Queries
+  const progressQuery = useGetProgress({ days: 30 }); // Need 30 days for month stats
   const summaryQuery = useGetTrackingSummary({ date: istToday() });
+  const { data: bodyData, loading: bodyLoading } = useBodyStats();
+  const addWater = useAddWater();
 
   const report = progressQuery.data;
-  const days = report?.days ?? [];
-  const cfg = METRICS[metric];
-
   const summary = summaryQuery.data;
-  const weeklyDone = summary?.weeklyWorkouts ?? 0;
-  const weeklyGoal = Math.max(1, summary?.weeklyGoal ?? 5);
-  const weeklyPct = Math.min(1, weeklyDone / weeklyGoal);
-  const weeklyToGo = Math.max(0, weeklyGoal - weeklyDone);
+  const isQueryLoading = progressQuery.isLoading || summaryQuery.isLoading || bodyLoading;
+
+  // Overview Data Processing
+  const workoutsThisMonth = report ? report.totalWorkouts : null;
+  const activeDaysThisMonth = report ? (report.days || []).filter(d => d.workouts > 0 || d.activeMinutes > 0 || d.caloriesOut > 0).length : null;
+  const caloriesBurned = report ? (report.days || []).reduce((sum, d) => sum + (d.caloriesOut || 0), 0) : null;
+
+  // Weight
+  const weightLog = bodyData?.weightLog || [];
+  const currentWeight = weightLog.length > 0 ? weightLog[weightLog.length - 1].kg : null;
+  const previousWeight = weightLog.length > 1 ? weightLog[weightLog.length - 2].kg : null;
+  const weightChange = currentWeight != null && previousWeight != null ? +(currentWeight - previousWeight).toFixed(1) : null;
+
+  // Water
+  const waterIntakeLiters = summary ? (summary.waterMl || 0) / 1000 : 0;
+  const waterGoalLiters = summary ? (summary.waterGoalMl || 3000) / 1000 : 3;
+
+  const handleAddWater = async () => {
+    try {
+      await addWater.mutateAsync({ data: { amountMl: 250 } });
+      await summaryQuery.refetch();
+      await queryClient.invalidateQueries({
+        queryKey: getGetTrackingSummaryQueryKey(),
+      });
+    } catch (err: any) {
+      Alert.alert("Error", "Could not add water");
+    }
+  };
+
+  const handleLogWeight = () => {
+    setActiveTab("Body");
+  };
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "Overview":
+        return (
+          <OverviewTab
+            workoutsThisMonth={workoutsThisMonth}
+            activeDaysThisMonth={activeDaysThisMonth}
+            caloriesBurned={caloriesBurned}
+            currentWeight={currentWeight}
+            weightChange={weightChange}
+            waterIntakeLiters={waterIntakeLiters}
+            waterGoalLiters={waterGoalLiters}
+            onAddWater={handleAddWater}
+            onLogWeight={handleLogWeight}
+          />
+        );
+      case "Body":
+        return <BodyTab />;
+      case "Workouts":
+        return <WorkoutsTab />;
+      case "Nutrition":
+        return <NutritionTab />;
+    }
+  };
 
   return (
     <Screen
@@ -52,365 +108,113 @@ export default function ProgressScreen() {
         void progressQuery.refetch();
         void summaryQuery.refetch();
       }}
-      contentContainerStyle={{ paddingTop: 8 }}
+      contentContainerStyle={{ paddingTop: Platform.OS === 'web' ? 16 : 8, paddingHorizontal: 16 }}
     >
-      <AppText weight="700" size={28} style={{ marginBottom: 16 }}>
-        Progress
-      </AppText>
+      {/* Header */}
+      <View style={styles.header}>
+        <AppText weight="700" size={28}>
+          My Progress
+        </AppText>
+        <Pressable onPress={() => setShowMenu(!showMenu)} hitSlop={10}>
+          <Feather name="more-vertical" size={24} color={colors.text} />
+        </Pressable>
+      </View>
 
-      {progressQuery.isLoading && !report ? (
-        <LoadingView />
-      ) : (
-        <>
-          {/* Body & measurements entry */}
-          <Pressable
-            onPress={() => router.push("/body")}
-            style={({ pressed }) => [
-              styles.bodyLink,
-              {
-                backgroundColor: colors.card,
-                borderColor: colors.border,
-                borderRadius: colors.radius,
-                opacity: pressed ? 0.8 : 1,
-              },
-            ]}
-          >
-            <View
-              style={[styles.bodyLinkIcon, { backgroundColor: colors.primary + "22" }]}
-            >
-              <Feather name="trending-up" size={18} color={colors.primary} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <AppText weight="700" size={15}>
-                Body & Weight
-              </AppText>
-              <AppText muted size={12}>
-                Track weight, BMI and measurements
-              </AppText>
-            </View>
-            <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
-          </Pressable>
-
-          {/* Meal plans entry */}
-          <Pressable
-            onPress={() => router.push("/meal-plans")}
-            style={({ pressed }) => [
-              styles.bodyLink,
-              {
-                backgroundColor: colors.card,
-                borderColor: colors.border,
-                borderRadius: colors.radius,
-                opacity: pressed ? 0.8 : 1,
-              },
-            ]}
-          >
-            <View
-              style={[styles.bodyLinkIcon, { backgroundColor: colors.primary + "22" }]}
-            >
-              <Feather name="book-open" size={18} color={colors.primary} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <AppText weight="700" size={15}>
-                Meal Plans
-              </AppText>
-              <AppText muted size={12}>
-                Goal-based plans with macros done for you
-              </AppText>
-            </View>
-            <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
-          </Pressable>
-
-          {/* Habit tracker entry */}
-          <Pressable
-            onPress={() => router.push("/habits")}
-            style={({ pressed }) => [
-              styles.bodyLink,
-              {
-                backgroundColor: colors.card,
-                borderColor: colors.border,
-                borderRadius: colors.radius,
-                opacity: pressed ? 0.8 : 1,
-              },
-            ]}
-          >
-            <View
-              style={[styles.bodyLinkIcon, { backgroundColor: colors.primary + "22" }]}
-            >
-              <Feather name="check-circle" size={18} color={colors.primary} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <AppText weight="700" size={15}>
-                Habit Tracker
-              </AppText>
-              <AppText muted size={12}>
-                Build daily habits and keep your streak
-              </AppText>
-            </View>
-            <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
-          </Pressable>
-
-          {/* AI Coach entry */}
-          <Pressable
-            onPress={() => router.push("/coach")}
-            style={({ pressed }) => [
-              styles.bodyLink,
-              {
-                backgroundColor: colors.card,
-                borderColor: colors.border,
-                borderRadius: colors.radius,
-                opacity: pressed ? 0.8 : 1,
-              },
-            ]}
-          >
-            <View
-              style={[styles.bodyLinkIcon, { backgroundColor: colors.primary + "22" }]}
-            >
-              <Feather name="message-circle" size={18} color={colors.primary} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <AppText weight="700" size={15}>
-                AI Coach
-              </AppText>
-              <AppText muted size={12}>
-                Personalized advice from your own data
-              </AppText>
-            </View>
-            <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
-          </Pressable>
-
-          {/* Challenges entry */}
-          <Pressable
-            onPress={() => router.push("/challenges")}
-            style={({ pressed }) => [
-              styles.bodyLink,
-              {
-                backgroundColor: colors.card,
-                borderColor: colors.border,
-                borderRadius: colors.radius,
-                opacity: pressed ? 0.8 : 1,
-              },
-            ]}
-          >
-            <View
-              style={[styles.bodyLinkIcon, { backgroundColor: colors.primary + "22" }]}
-            >
-              <Feather name="award" size={18} color={colors.primary} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <AppText weight="700" size={15}>
-                Challenges
-              </AppText>
-              <AppText muted size={12}>
-                Join challenges and climb the leaderboard
-              </AppText>
-            </View>
-            <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
-          </Pressable>
-
-          {/* Weekly target hero */}
-          <Card style={styles.hero}>
-            <View style={styles.heroHead}>
-              <AppText weight="700" size={17}>
-                Weekly Target
-              </AppText>
-              <View style={styles.heroPill}>
-                <Feather name="target" size={12} color={colors.primary} />
-                <AppText size={12} weight="600" color={colors.primary}>
-                  {weeklyDone}/{weeklyGoal} sessions
-                </AppText>
-              </View>
-            </View>
-            <View style={styles.heroBody}>
-              <HexProgress
-                progress={weeklyPct}
-                centerMain={`${Math.round(weeklyPct * 100)}%`}
-                centerBottom={
-                  weeklyToGo === 0 ? "Goal smashed" : `${weeklyToGo} to go`
-                }
-              />
-            </View>
-            <AppText muted size={13} style={{ textAlign: "center" }}>
-              {weeklyToGo === 0
-                ? "You hit your weekly workout goal. Incredible work."
-                : `${weeklyToGo} more workout${weeklyToGo === 1 ? "" : "s"} to hit your weekly goal.`}
-            </AppText>
-          </Card>
-
-          {/* Highlight cards */}
-          <View style={styles.grid}>
-            <Highlight
-              icon="zap"
-              tint={colors.primary}
-              value={`${report?.streakDays ?? 0}`}
-              label="day streak"
-            />
-            <Highlight
-              icon="repeat"
-              tint={colors.water}
-              value={`${report?.totalWorkouts ?? 0}`}
-              label="workouts (7d)"
-            />
-            <Highlight
-              icon="navigation"
-              tint={colors.calorie}
-              value={`${Math.round((report?.totalSteps ?? 0) / 1000)}k`}
-              label="steps (7d)"
-            />
-            <Highlight
-              icon="pie-chart"
-              tint={colors.protein}
-              value={`${report?.avgCaloriesIn ?? 0}`}
-              label="avg kcal/day"
-            />
-          </View>
-
-          {/* Trend chart */}
-          <Card style={{ marginTop: 8 }}>
-            <View style={styles.chartHead}>
-              <AppText weight="700" size={17}>
-                7-day trend
-              </AppText>
-            </View>
-            <View style={{ marginBottom: 16 }}>
-              <Segmented
-                value={metric}
-                onChange={setMetric}
-                options={[
-                  { value: "caloriesIn", label: "Calories" },
-                  { value: "steps", label: "Steps" },
-                  { value: "activeMinutes", label: "Active" },
-                ]}
-              />
-            </View>
-            <WeeklyBars
-              data={days.map((d: ProgressDay) => ({
-                label: d.label,
-                value: d[metric],
-              }))}
-              color={colors[cfg.color] as string}
-              suffix={cfg.suffix}
-            />
-          </Card>
-
-          {/* Daily breakdown */}
-          <AppText weight="700" size={18} style={{ marginTop: 28, marginBottom: 14 }}>
-            Daily breakdown
-          </AppText>
-          <View style={{ gap: 10 }}>
-            {[...days].reverse().map((d: ProgressDay) => (
-              <Card key={d.date} style={styles.dayRow}>
-                <View style={styles.dayBadge}>
-                  <AppText weight="700" size={13} color={colors.primary}>
-                    {d.label}
-                  </AppText>
-                </View>
-                <DayStat icon="droplet" text={`${(d.waterMl / 1000).toFixed(1)}L`} />
-                <DayStat icon="coffee" text={`${d.caloriesIn}`} />
-                <DayStat icon="navigation" text={`${d.steps}`} />
-                <DayStat icon="activity" text={`${d.workouts}`} />
-              </Card>
-            ))}
-          </View>
-        </>
+      {/* Menu Dropdown */}
+      {showMenu && (
+        <View style={[styles.menu, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <MenuLink icon="check-circle" label="Habit Tracker" onPress={() => { setShowMenu(false); router.push("/habits"); }} />
+          <MenuLink icon="message-circle" label="AI Coach" onPress={() => { setShowMenu(false); router.push("/coach"); }} />
+          <MenuLink icon="award" label="Challenges" onPress={() => { setShowMenu(false); router.push("/challenges"); }} />
+          <MenuLink icon="file-text" label="Health Report" onPress={() => { setShowMenu(false); router.push("/health-report"); }} />
+        </View>
       )}
+
+      {/* Custom Tabs */}
+      <View style={[styles.tabContainer, { borderBottomColor: colors.border }]}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {TABS.map((tab) => {
+            const isActive = tab === activeTab;
+            return (
+              <Pressable
+                key={tab}
+                onPress={() => setActiveTab(tab)}
+                style={[
+                  styles.tab,
+                  isActive && { borderBottomColor: colors.primary, borderBottomWidth: 3 },
+                ]}
+              >
+                <AppText
+                  size={16}
+                  weight={isActive ? "700" : "500"}
+                  color={isActive ? colors.text : colors.mutedForeground}
+                >
+                  {tab}
+                </AppText>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* Tab Content */}
+      <View style={styles.content}>
+        {isQueryLoading && !report ? <LoadingView /> : renderTabContent()}
+      </View>
     </Screen>
   );
 }
 
-function Highlight({
-  icon,
-  tint,
-  value,
-  label,
-}: {
-  icon: keyof typeof Feather.glyphMap;
-  tint: string;
-  value: string;
-  label: string;
-}) {
+function MenuLink({ icon, label, onPress }: { icon: any; label: string; onPress: () => void }) {
   const colors = useColors();
   return (
-    <Card style={styles.highlight}>
-      <View style={[styles.hlIcon, { backgroundColor: tint + "22" }]}>
-        <Feather name={icon} size={18} color={tint} />
-      </View>
-      <AppText weight="700" size={24}>
-        {value}
-      </AppText>
-      <AppText muted size={12}>
-        {label}
-      </AppText>
-    </Card>
-  );
-}
-
-function DayStat({
-  icon,
-  text,
-}: {
-  icon: keyof typeof Feather.glyphMap;
-  text: string;
-}) {
-  const colors = useColors();
-  return (
-    <View style={styles.dayStat}>
-      <Feather name={icon} size={13} color={colors.mutedForeground} />
-      <AppText size={12}>{text}</AppText>
-    </View>
+    <Pressable onPress={onPress} style={styles.menuLink}>
+      <Feather name={icon} size={18} color={colors.primary} style={{ width: 24 }} />
+      <AppText size={15}>{label}</AppText>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  hero: { alignItems: "center", gap: 14, marginBottom: 16, paddingVertical: 22 },
-  heroHead: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    width: "100%",
+    marginBottom: 20,
+    zIndex: 10, // for menu overlay
   },
-  heroPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  heroBody: { alignItems: "center", justifyContent: "center" },
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 16 },
-  highlight: { width: "47.5%", gap: 6 },
-  hlIcon: {
-    width: 38,
-    height: 38,
+  menu: {
+    position: "absolute",
+    top: 50,
+    right: 0,
     borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 4,
+    borderWidth: 1,
+    padding: 8,
+    zIndex: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+    minWidth: 200,
   },
-  bodyLink: {
+  menuLink: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    padding: 14,
-    marginBottom: 16,
-    borderWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
   },
-  bodyLinkIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  chartHead: { marginBottom: 14 },
-  dayRow: {
+  tabContainer: {
     flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 14,
-    gap: 6,
+    borderBottomWidth: 1,
+    marginBottom: 20,
   },
-  dayBadge: { flex: 1 },
-  dayStat: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    width: 58,
+  tab: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginRight: 8,
   },
+  content: {
+    flex: 1,
+  }
 });

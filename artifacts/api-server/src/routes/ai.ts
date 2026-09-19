@@ -3,6 +3,7 @@ import { and, eq, gte, sql } from "drizzle-orm";
 import {
   db,
   faqsTable,
+  fitnessSetupTable,
   usersTable,
   waterLogsTable,
   mealLogsTable,
@@ -17,16 +18,18 @@ import {
 } from "@workspace/api-zod";
 import { requireUser } from "../lib/currentUser";
 import { computeHealthMetrics, deriveGoals, weightPlan } from "../lib/healthMetrics";
+import { ensureFitnessSetupTable } from "../lib/fitnessSetup";
+import { coachProfileSource } from "../lib/fitnessSetupPolicy";
 
 const router: IRouter = Router();
 
 const SYSTEM_PROMPT = `You are the friendly AI assistant for Iconic Fitness, one of Bengaluru's leading fitness chains. Answer member and visitor questions clearly, warmly, and concisely. Only use the information below. If you don't know an answer, say so politely and suggest contacting the team on WhatsApp at +91 94800 00248. Do not invent prices, timings, or branches. Keep replies short and helpful. Do not use emojis.
 
 ABOUT
-Iconic Fitness is one of Bengaluru's leading fitness chains, offering premium gym facilities, certified personal training, group classes, and in-house diet consultations across 16+ branches in Bengaluru. The mission is to help members transform their fitness safely and effectively through expert coaching and a supportive community.
+Iconic Fitness is one of Bengaluru's leading fitness chains, offering premium gym facilities, certified personal training, group classes, and in-house diet consultations across 17 branches in Bengaluru. The mission is to help members transform their fitness safely and effectively through expert coaching and a supportive community.
 
 BRANCHES (all memberships give access to every location)
-Koramangala (1st Block, ST Bed, 5th Block, 7th Block), BTM Layout & Thavarekere, Maruti Nagar, HSR Layout (Sector 2 & 7), Indiranagar (80 Feet Road), JP Nagar (7th Phase & Puttanahalli), Bellandur (Green Glen Layout & next to Centro Mall), Marathahalli, and Whitefield - Seegehalli.
+Koramangala (1st Block, ST Bed, 5th Block, 7th Block), BTM Layout & Thavarekere, Maruti Nagar, HSR Layout (Sector 2 & 7), Indiranagar (80 Feet Road), JP Nagar (7th Phase & Puttanahalli), Bellandur (Green Glen Layout & next to Centro Mall), Marathahalli, Whitefield - Seegehalli, and Sarjapur.
 
 OPERATING HOURS
 Most branches: 5:00 AM to 11:00 PM. Some branches open until 12:00 AM. Open 7 days a week, all year round.
@@ -163,13 +166,17 @@ Your job:
 - Keep replies concise and skimmable. Use short paragraphs or simple dashes for lists. Plain text only — no markdown headings, no emojis.
 - When suggesting a workout or meals, be specific and realistic for a gym member in Bengaluru, India (Indian foods are great examples for nutrition).
 
-ONBOARDING ASSESSMENT (do this FIRST when the member has not completed their assessment — see ASSESSMENT STATUS below):
+STARTING PROFILE (see STARTING PROFILE STATUS below):
+- When a completed private Starting Profile is available, do NOT repeat its body, goal, experience, activity, ability, routine, equipment, or diet questions. Use those self-reported answers to tailor advice.
+- A Starting Profile is private self-reported planning information, not a medical, staff, or AI assessment. It never means an assessment booking was completed.
+- Never ask for injuries, diagnoses, conditions, medication, smoking, alcohol, or other medical history as a requirement. If a member voluntarily raises pain, injury, or a health concern, advise consulting a qualified clinician or trainer and adapt conservatively.
+
+ONBOARDING ASSESSMENT (only when no completed Starting Profile and the member has not completed their assessment — see ASSESSMENT STATUS below):
 - Your first goal with a new member is a friendly fitness assessment. Open by asking ONE clear question: are they new to the gym / just starting out, or already training regularly (experienced)? Adapt everything to their answer — gentle, foundational guidance for beginners; more advanced programming for experienced members.
 - Then collect the rest conversationally, just a few questions at a time (never dump a long form, never ask everything at once). Cover, over several messages:
   - Personal: age, gender, height (cm), current weight (kg), target weight (kg), occupation, daily activity level (sedentary / light / moderate / active / very_active).
-  - Health: any conditions (diabetes, blood pressure, thyroid, asthma, heart disease, joint pain), previous injuries, current medications, smoking, alcohol. Reassure them this only helps keep their plan safe and they can skip anything.
   - Goal: their main goal (weight loss, muscle gain, fat loss, body recomposition, strength, endurance, or general fitness).
-  - Lifestyle: typical sleep hours, stress level (low / medium / high), food preference (veg / non-veg / vegan / eggetarian), whether they train at a gym or at home, and minutes available per workout.
+   - Lifestyle: food preference, whether they train at a gym or at home, and minutes available per workout. All optional/sensitive questions can be skipped.
 - Acknowledge answers warmly as you go. Once you have enough, call the save_assessment tool with everything collected (omit anything they declined). Saving also calculates their health metrics and sets personalized daily goals automatically — do not make the member do math.
 - After saving, present their results in plain language: BMI (with category), estimated body fat %, BMR, daily calorie target, protein and water targets, ideal weight range, and a fitness score.
 - Use their HEIGHT and WEIGHT to tell them concretely what to do: whether they should lose, gain, or maintain weight, roughly how many kg, and a realistic timeframe at a safe pace (about 0.5 kg/week to lose, 0.25 kg/week to gain). Use the "Weight plan (from height & weight)" line in MEMBER DATA below as your basis — never recommend crash dieting or losing weight too fast. If they're already in the healthy range, focus on body composition (strength + recomposition) rather than the scale.
@@ -203,11 +210,12 @@ function dateNDaysAgo(n: number): string {
 }
 
 async function buildCoachContext(userId: number): Promise<string> {
+  await ensureFitnessSetupTable();
   const today = dateNDaysAgo(0);
   const weekSince = dateNDaysAgo(6);
   const since90 = dateNDaysAgo(89);
 
-  const [profileRows, waterRows, mealRows, workoutTodayRows, weekRows] =
+  const [profileRows, setupRows, waterRows, mealRows, workoutTodayRows, weekRows] =
     await Promise.all([
       db
         .select({
@@ -231,6 +239,10 @@ async function buildCoachContext(userId: number): Promise<string> {
         })
         .from(usersTable)
         .where(eq(usersTable.id, userId)),
+      db
+        .select()
+        .from(fitnessSetupTable)
+        .where(eq(fitnessSetupTable.userId, userId)),
       db
         .select({ ml: sql<number>`coalesce(sum(${waterLogsTable.amountMl}),0)::int` })
         .from(waterLogsTable)
@@ -307,6 +319,35 @@ async function buildCoachContext(userId: number): Promise<string> {
   }
 
   const p = profileRows[0];
+  const setup = setupRows[0];
+  const setupDone = !!setup?.completedAt;
+  // Never allow a self-reported setup—regardless of its edited timestamp—to
+  // override a completed authoritative assessment's overlapping body data.
+  // Setup can still supplement only non-overlapping routine preferences below.
+  const profileSource = coachProfileSource(
+    p?.assessmentCompletedAt ?? null,
+    setup?.completedAt ?? null,
+  );
+  const useSetupValues = profileSource === "setup";
+  const effectiveAge = useSetupValues ? setup?.age ?? p?.age ?? 0 : p?.age ?? 0;
+  const effectiveHeightCm = useSetupValues
+    ? setup?.heightCm ?? p?.heightCm ?? 0
+    : p?.heightCm ?? 0;
+  const effectiveWeightKg = useSetupValues
+    ? setup?.weightKg ?? p?.weightKg ?? 0
+    : p?.weightKg ?? 0;
+  const effectiveExperience = useSetupValues
+    ? setup?.experienceLevel ?? p?.experienceLevel
+    : p?.experienceLevel;
+  const effectiveActivity = useSetupValues
+    ? setup?.activityLevel ?? p?.activityLevel
+    : p?.activityLevel;
+  const effectiveFood = useSetupValues
+    ? setup?.dietPreference ?? p?.foodPreference
+    : p?.foodPreference;
+  const effectiveGoal = useSetupValues
+    ? (Array.isArray(setup?.goals) && setup.goals[0]) || p?.fitnessGoal
+    : p?.fitnessGoal;
   const water = waterRows[0];
   const meals = mealRows[0];
   const w = workoutTodayRows[0];
@@ -319,18 +360,18 @@ async function buildCoachContext(userId: number): Promise<string> {
   const weeklyGoal = p?.weeklyGoal ?? 5;
 
   const metrics = computeHealthMetrics({
-    heightCm: p?.heightCm ?? 0,
-    weightKg: p?.weightKg ?? 0,
-    age: p?.age ?? 0,
+    heightCm: effectiveHeightCm,
+    weightKg: effectiveWeightKg,
+    age: effectiveAge,
     gender: p?.gender ?? null,
-    activityLevel: p?.activityLevel ?? null,
+    activityLevel: effectiveActivity ?? null,
   });
   const weightRec = weightPlan({
-    heightCm: p?.heightCm ?? 0,
-    weightKg: p?.weightKg ?? 0,
-    age: p?.age ?? 0,
+    heightCm: effectiveHeightCm,
+    weightKg: effectiveWeightKg,
+    age: effectiveAge,
     gender: p?.gender ?? null,
-    activityLevel: p?.activityLevel ?? null,
+    activityLevel: effectiveActivity ?? null,
     targetWeightKg: p?.targetWeightKg ?? null,
   });
   const assessmentDone = !!p?.assessmentCompletedAt;
@@ -341,23 +382,62 @@ async function buildCoachContext(userId: number): Promise<string> {
           86_400_000,
       )
     : null;
-  const isNewMember = (p?.experienceLevel ?? "").toLowerCase() === "new";
+  const isNewMember = (effectiveExperience ?? "").toLowerCase() === "new";
   const inFirstMonth =
     isNewMember && daysSinceAssessment != null && daysSinceAssessment < 30;
 
   return [
     "MEMBER DATA (live, in Asia/Kolkata time):",
     `Name: ${p?.name ?? "Member"}`,
-    `Profile: ${p?.age ?? "?"} yrs, ${p?.gender ?? "?"}, ${p?.heightCm ?? "?"} cm, ${p?.weightKg ?? "?"} kg`,
-    `Primary goal: ${p?.fitnessGoal ?? "general_fitness"}`,
+    `Profile: ${effectiveAge || "?"} yrs, ${p?.gender ?? "?"}, ${effectiveHeightCm || "?"} cm, ${effectiveWeightKg || "?"} kg${useSetupValues ? " (from newer private Starting Profile)" : ""}`,
+    `Primary goal: ${effectiveGoal ?? "not set"}`,
     `ASSESSMENT STATUS: ${
       assessmentDone
         ? `COMPLETED on ${istDateStr(new Date(p!.assessmentCompletedAt as unknown as string))} — skip onboarding, give daily guidance.`
-        : "NOT COMPLETED — run the onboarding assessment before anything else."
+        : setupDone
+          ? "NOT COMPLETED — a Starting Profile is complete, so use it for coaching and do not repeat an onboarding intake."
+          : "NOT COMPLETED — offer a short non-medical onboarding intake, with every optional/sensitive answer skippable."
     }`,
-    `Experience level: ${p?.experienceLevel ?? "unknown"}`,
-    `Activity level: ${p?.activityLevel ?? "unknown"}`,
-    `Food preference: ${p?.foodPreference ?? "unknown"}`,
+    `STARTING PROFILE STATUS: ${
+      setupDone
+        ? "COMPLETED — use this private self-reported setup; do not repeat its questionnaire and do not treat it as a medical or staff assessment."
+        : "NOT COMPLETED — do not request medical history; offer the optional in-app Starting Profile when useful."
+    }`,
+    setupDone
+      ? `Starting profile (private self-report): ${JSON.stringify(
+          assessmentDone
+            ? {
+                // With an authoritative assessment, supplement preferences
+                // only. Do not place conflicting body/goal/diet/activity
+                // values next to assessment data in the model context.
+                interests: setup?.interests,
+                ability: setup?.selfReportedAbility,
+                routineDays: setup?.routineDays,
+                preferredTime: setup?.preferredTime,
+                workoutLocation: setup?.workoutLocation,
+                equipment: setup?.equipment,
+              }
+            : {
+                age: setup?.age,
+                heightCm: setup?.heightCm,
+                weightKg: setup?.weightKg,
+                goals: setup?.goals,
+                interests: setup?.interests,
+                experienceLevel: setup?.experienceLevel,
+                activityLevel: setup?.activityLevel,
+                ability: setup?.selfReportedAbility,
+                routineDays: setup?.routineDays,
+                preferredTime: setup?.preferredTime,
+                workoutLocation: setup?.workoutLocation,
+                equipment: setup?.equipment,
+                dietPreference: setup?.dietPreference,
+                movementLimitations: setup?.movementLimitations,
+              },
+        ).slice(0, 1200)}`
+      : null,
+    `Experience level: ${effectiveExperience ?? "unknown"}`,
+    `Activity level: ${effectiveActivity ?? "unknown"}`,
+    `Food preference: ${effectiveFood ?? "unknown"}`,
     `Target weight: ${p?.targetWeightKg != null ? `${p.targetWeightKg} kg` : "not set"}`,
     p?.assessment
       ? `Assessment details: ${JSON.stringify(p.assessment).slice(0, 900)}`
@@ -747,18 +827,18 @@ async function runCoachTool(
         };
 
         const goals = deriveGoals({
-          heightCm,
-          weightKg,
-          age,
+          heightCm: heightCm ?? 0,
+          weightKg: weightKg ?? 0,
+          age: age ?? 0,
           gender,
           activityLevel,
           fitnessGoal,
           experienceLevel,
         });
         const metrics = computeHealthMetrics({
-          heightCm,
-          weightKg,
-          age,
+          heightCm: heightCm ?? 0,
+          weightKg: weightKg ?? 0,
+          age: age ?? 0,
           gender,
           activityLevel,
         });
@@ -767,10 +847,10 @@ async function runCoachTool(
         // Once stamped, keep the original completion time.
         const missing = [
           experienceLevel == null && "experience level (new/experienced)",
-          !(age > 0) && "age",
+          !(age != null && age > 0) && "age",
           !gender && "gender",
-          !(heightCm > 0) && "height",
-          !(weightKg > 0) && "weight",
+          !(heightCm != null && heightCm > 0) && "height",
+          !(weightKg != null && weightKg > 0) && "weight",
           !fitnessGoal && "main goal",
         ].filter((m): m is string => !!m);
         const coreComplete = missing.length === 0;

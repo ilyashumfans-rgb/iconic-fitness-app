@@ -1,7 +1,7 @@
 import "@/lib/silenceExpoGoPushWarning";
 
 import { ClerkProvider, useAuth } from "@clerk/expo";
-import { Pressable, Text, View } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
 import { tokenCache } from "@clerk/expo/token-cache";
 import {
   Inter_400Regular,
@@ -17,6 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setAuthTokenGetter, setBaseUrl } from "@workspace/api-client-react";
 import { Stack } from "expo-router";
 import * as Notifications from "expo-notifications";
+import * as WebBrowser from "expo-web-browser";
 import { ensureDefaultReminders } from "@/lib/notifications";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -25,15 +26,23 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AnimatedSplash } from "@/components/AnimatedSplash";
+import { AutomaticMembershipSync } from "@/components/AutomaticMembershipSync";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PendingMobileLink } from "@/components/PendingMobileLink";
 import { PendingUsernameLink } from "@/components/PendingUsernameLink";
 import { useColors } from "@/hooks/useColors";
-import { GuestProvider } from "@/hooks/useGuest";
+import { GuestProvider, useGuest } from "@/hooks/useGuest";
 import { AuthClientResetContext } from "@/hooks/useAuthClientReset";
 import { ThemeProvider, useTheme } from "@/hooks/useTheme";
+import { completeSsoWebCallback } from "@/lib/ssoRedirect";
 
 SplashScreen.preventAutoHideAsync();
+// The SSO popup returns to /sso-callback on web. This layout is loaded before
+// the async Clerk configuration/bootstrap, so it is the only reliable place to
+// give Expo WebBrowser its same-origin postMessage hand-off immediately.
+completeSsoWebCallback(Platform.OS, () =>
+  WebBrowser.maybeCompleteAuthSession(),
+);
 
 // Cache-first data loading: screens render instantly from the last known data
 // (persisted to device storage across app launches) while a background refetch
@@ -58,11 +67,11 @@ const queryPersister = createAsyncStoragePersister({
 // anything personal (profile, orders, bookings, notifications, wallet…)
 // stays in memory only, so nothing private can leak to the next person
 // who opens the app on a shared phone.
+const PUBLIC_PERSIST_EXACT = new Set(["/api/memberships"]);
 const PUBLIC_PERSIST_PREFIXES = [
   "/api/gyms",
   "/api/classes",
   "/api/trainers",
-  "/api/memberships",
   "/api/package-categories",
   "/api/membership-packages",
   "/api/store/products",
@@ -76,9 +85,13 @@ function isPublicPersistableQuery(query: { queryKey: readonly unknown[] }): bool
   const first = query.queryKey[0];
   return (
     typeof first === "string" &&
-    PUBLIC_PERSIST_PREFIXES.some(
-      (p) => first === p || first.startsWith(`${p}/`) || first.startsWith(`${p}?`),
-    )
+    (PUBLIC_PERSIST_EXACT.has(first) ||
+      PUBLIC_PERSIST_PREFIXES.some(
+        (p) =>
+          first === p ||
+          first.startsWith(`${p}/`) ||
+          first.startsWith(`${p}?`),
+      ))
   );
 }
 
@@ -116,6 +129,23 @@ function ApiAuthBridge() {
   return null;
 }
 
+/**
+ * Reminder defaults belong to an authenticated member session, not the app
+ * shell. Keeping this below Clerk/Guest providers avoids scheduling reminders
+ * for guests and lets the notification preference stay account-specific.
+ */
+function MemberReminderInitializer() {
+  const { isLoaded, isSignedIn, userId } = useAuth();
+  const { isGuest } = useGuest();
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || isGuest || !userId) return;
+    void ensureDefaultReminders(userId);
+  }, [isLoaded, isSignedIn, isGuest, userId]);
+
+  return null;
+}
+
 function RootLayoutNav() {
   const colors = useColors();
   const { scheme } = useTheme();
@@ -130,11 +160,19 @@ function RootLayoutNav() {
       >
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="sso-callback" />
+        <Stack.Screen name="fitness-setup" />
+        <Stack.Screen
+          name="community"
+          options={{ presentation: "modal", headerShown: false }}
+        />
         <Stack.Screen name="exercise/[slug]" />
         <Stack.Screen name="workout/[id]" />
         <Stack.Screen name="workout/generate" />
         <Stack.Screen name="meal-plan/[id]" />
         <Stack.Screen name="trainer/[id]" />
+        <Stack.Screen name="community-post/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="community-coach/[id]" options={{ headerShown: false }} />
         <Stack.Screen
           name="book-trainer"
           options={{ presentation: "modal", headerShown: false }}
@@ -318,12 +356,6 @@ export default function RootLayout() {
     return () => clearTimeout(t);
   }, []);
 
-  // Daily action reminders are ON by default — keep them scheduled on every
-  // launch unless the user explicitly turned them off in Settings.
-  useEffect(() => {
-    void ensureDefaultReminders();
-  }, []);
-
   // A build without a usable Clerk configuration must not hard-crash. EAS
   // builds obtain it from the API above because they do not inherit Replit
   // deployment environment variables.
@@ -424,9 +456,11 @@ export default function RootLayout() {
                 }}
               >
                 <ApiAuthBridge />
+                <AutomaticMembershipSync />
                 <PendingMobileLink />
                 <PendingUsernameLink />
                 <GuestProvider>
+                  <MemberReminderInitializer />
                   <GestureHandlerRootView style={{ flex: 1 }}>
                     <RootLayoutNav />
                     {!splashDone ? (

@@ -4,11 +4,16 @@ import { Pressable, StyleSheet, View } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
 
+type CoachFabProps = {
+  /** Absolute bottom position within the current screen. */
+  bottom?: number;
+};
+
 /**
  * WhatsApp-style floating chat button: animated bot avatar pinned to the
  * bottom-right corner; tapping it opens the AI chat.
  */
-export function CoachFab() {
+export function CoachFab({ bottom = 24 }: CoachFabProps) {
   const colors = useColors();
   const router = useRouter();
 
@@ -19,6 +24,7 @@ export function CoachFab() {
         styles.fab,
         {
           borderColor: colors.primary,
+          bottom,
           transform: [{ scale: pressed ? 0.92 : 1 }],
         },
       ]}

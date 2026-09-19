@@ -21,6 +21,7 @@ import { ModalHeader } from "@/components/ModalHeader";
 import { Screen } from "@/components/Screen";
 import { ErrorView, LoadingView } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
+import { memberAuthHref } from "@/lib/memberAuth";
 import { istDateLabel } from "@/lib/dates";
 
 function notify(title: string, message: string) {
@@ -96,7 +97,7 @@ export default function ComplaintScreen() {
   }
 
   if (isLoaded && !isSignedIn) {
-    return <Redirect href="/(auth)/sign-in" />;
+    return <Redirect href={memberAuthHref("/complaint")} />;
   }
 
   async function onSubmit() {

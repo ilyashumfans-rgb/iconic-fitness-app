@@ -10,7 +10,9 @@ export type HomeSlideKind = typeof HomeSlideKind[keyof typeof HomeSlideKind];
 
 
 export const HomeSlideKind = {
+  hero: 'hero',
   image: 'image',
   gif: 'gif',
   youtube: 'youtube',
+  shortcut: 'shortcut',
 } as const;

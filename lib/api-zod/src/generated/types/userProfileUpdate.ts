@@ -7,6 +7,7 @@
  */
 
 export interface UserProfileUpdate {
+  username?: string | null;
   name?: string;
   mobile?: string;
   gender?: string;

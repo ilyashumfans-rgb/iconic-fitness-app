@@ -98,6 +98,7 @@ import AdminBlogManagement from "@/pages/admin/BlogManagement";
 import AdminPtManager from "@/pages/admin/PtManager";
 import AdminMemberEngagement from "@/pages/admin/MemberEngagement";
 import AdminMessagingSettings from "@/pages/admin/MessagingSettings";
+import AdminCommunity from "@/pages/admin/Community";
 import StaffLogin from "@/pages/staff/Login";
 import StaffDashboard from "@/pages/staff/Dashboard";
 import StaffPartnerOnboarding from "@/pages/staff/PartnerOnboarding";
@@ -400,6 +401,7 @@ function AppShell() {
         <Route path="/admin/pt" component={AdminPtManager} />
         <Route path="/admin/member-engagement" component={AdminMemberEngagement} />
         <Route path="/admin/messaging" component={AdminMessagingSettings} />
+        <Route path="/admin/community" component={AdminCommunity} />
         <Route path="/admin/tickets" component={AdminTickets} />
         <Route path="/admin/complaints" component={AdminComplaints} />
         <Route component={NotFound} />

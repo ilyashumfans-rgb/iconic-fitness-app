@@ -49,7 +49,7 @@ import { cn } from "@/lib/utils";
 const popularCities = ["Bangalore"];
 
 const stats = [
-  { value: "16+", label: "Premium gyms" },
+  { value: "17", label: "Premium gyms" },
   { value: "1", label: "City live" },
   { value: "100%", label: "Satisfaction Members" },
   { value: "4.9", label: "App rating" },
@@ -98,7 +98,7 @@ const steps = [
   {
     icon: MapPin,
     title: "Pick any gym",
-    body: "Discover 500+ premium gyms across India. Switch on a whim — your pass works everywhere.",
+    body: "Discover 17 premium gyms across India. Switch on a whim — your pass works everywhere.",
   },
   {
     icon: Calendar,
@@ -420,7 +420,7 @@ function Hero() {
             transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
             className="block text-gradient-brand"
           >
-            16+ Gyms.
+            17 Gyms.
           </motion.span>
         </h1>
 

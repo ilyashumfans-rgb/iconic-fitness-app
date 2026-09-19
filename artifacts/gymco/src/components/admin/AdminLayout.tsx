@@ -34,6 +34,7 @@ import {
   HelpCircle,
   TicketPercent,
   X,
+  Images,
 } from "lucide-react";
 import { adminApi, type AdminUser } from "@/lib/adminApi";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -253,6 +254,11 @@ const SECTIONS: Section[] = [
         label: "Notifications",
         href: "/admin/notifications",
         icon: <Megaphone className="h-4 w-4" />,
+      },
+      {
+        label: "Community",
+        href: "/admin/community",
+        icon: <Images className="h-4 w-4" />,
       },
     ],
   },

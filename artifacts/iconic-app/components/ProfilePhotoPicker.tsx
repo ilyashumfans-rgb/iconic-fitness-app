@@ -8,6 +8,7 @@ import { ActivityIndicator, Alert, Image, Linking, Platform, Pressable, View } f
 import { AppText } from "@/components/AppText";
 import { useColors } from "@/hooks/useColors";
 import { resolveImageUrl } from "@/lib/images";
+import { prepareMobileImageForUpload } from "@/lib/imageUpload";
 
 function notify(title: string, message: string) {
   if (Platform.OS === "web") {
@@ -55,7 +56,7 @@ const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
 /**
  * Member profile photo: shows the current photo (or an initial) with
  * "Camera" / "Gallery" actions. The picked image is uploaded to the server
- * (compressed there), saved as the member's avatar, and synced everywhere
+ * (prepared on-device and compressed again server-side), saved as the member's avatar, and synced everywhere
  * the member's photo is shown (member card, account page).
  */
 /**
@@ -74,16 +75,21 @@ export function useProfilePhotoUpload() {
 
   const UPLOAD_TIMEOUT_MS = 30_000;
 
-  async function uploadFromUri(uri: string) {
+  async function uploadFromUri(
+    uri: string,
+    dimensions?: { width?: number | null; height?: number | null },
+  ) {
     setBusy(true);
     setFailedUri(null);
     // Abort the upload if it stalls (slow/dead mobile connection) so the
     // spinner never hangs indefinitely.
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
+    let timer: ReturnType<typeof setTimeout> | null = null;
     try {
-      const fetched = await fetch(uri);
+      const prepared = await prepareMobileImageForUpload(uri, "avatar", dimensions);
+      const fetched = await fetch(prepared.uri);
       const blob = await fetched.blob();
+      timer = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
       const uploaded = await customFetch<{ url: string }>(
         "/api/storage/uploads/inline",
         {
@@ -92,7 +98,7 @@ export function useProfilePhotoUpload() {
           signal: controller.signal,
           headers: {
             "x-filename": "profile-photo.jpg",
-            "content-type": "application/octet-stream",
+            "content-type": "image/jpeg",
           },
         },
       );
@@ -113,7 +119,7 @@ export function useProfilePhotoUpload() {
             : "Please try again.",
       );
     } finally {
-      clearTimeout(timer);
+      if (timer) clearTimeout(timer);
       setBusy(false);
     }
   }
@@ -130,8 +136,8 @@ export function useProfilePhotoUpload() {
       }
     }
     const result = await ImagePicker.launchImageLibraryAsync(PICKER_OPTIONS);
-    const uri = result.canceled ? null : result.assets?.[0]?.uri;
-    if (uri) await uploadFromUri(uri);
+    const asset = result.canceled ? null : result.assets?.[0];
+    if (asset?.uri) await uploadFromUri(asset.uri, asset);
   }
 
   async function takePhoto() {
@@ -147,8 +153,8 @@ export function useProfilePhotoUpload() {
       return;
     }
     const result = await ImagePicker.launchCameraAsync(PICKER_OPTIONS);
-    const uri = result.canceled ? null : result.assets?.[0]?.uri;
-    if (uri) await uploadFromUri(uri);
+    const asset = result.canceled ? null : result.assets?.[0];
+    if (asset?.uri) await uploadFromUri(asset.uri, asset);
   }
 
   /** Ask Camera-or-Gallery in one tap (used by tappable avatars). */

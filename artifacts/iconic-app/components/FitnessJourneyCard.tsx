@@ -12,12 +12,9 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import {
   getListMyPtTrialFeedbackQueryKey,
-  getGetMyPtProgramQueryKey,
-  getListMyTrainerBookingsQueryKey,
-  useGetMyPtProgram,
   useListMyPtTrialFeedback,
-  useListMyTrainerBookings,
   useSubmitPtTrialFeedback,
+  type FitnessJourney,
 } from "@workspace/api-client-react";
 import { AppText } from "@/components/AppText";
 import { useColors } from "@/hooks/useColors";
@@ -34,19 +31,13 @@ type StepState = "done" | "current" | "upcoming";
  * assignment, completed sessions) and the two feedback steps open a
  * star-rating modal. Hidden once the whole journey is finished.
  */
-export function FitnessJourneyCard() {
+export function FitnessJourneyCard({ journey }: { journey: FitnessJourney }) {
   const colors = useColors();
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const bookingsQuery = useListMyTrainerBookings({
-    query: { queryKey: getListMyTrainerBookingsQueryKey() },
-  });
-  const ptQuery = useGetMyPtProgram({
-    query: { queryKey: getGetMyPtProgramQueryKey() },
-  });
   const feedbackQuery = useListMyPtTrialFeedback({
-    query: { queryKey: getListMyPtTrialFeedbackQueryKey() },
+    query: { queryKey: [...getListMyPtTrialFeedbackQueryKey(), journey.ownerId] },
   });
   const submitFeedback = useSubmitPtTrialFeedback();
 
@@ -55,17 +46,12 @@ export function FitnessJourneyCard() {
   const [comment, setComment] = useState("");
   const [saving, setSaving] = useState(false);
 
-  // Wait for all three queries to settle so steps never flash wrong states.
-  const settled =
-    (bookingsQuery.isSuccess || bookingsQuery.isError) &&
-    (ptQuery.isSuccess || ptQuery.isError) &&
-    (feedbackQuery.isSuccess || feedbackQuery.isError);
-  if (!settled) return null;
+  // Query errors are not an empty history or permission to offer a trial.
+  if (!feedbackQuery.isSuccess || feedbackQuery.isFetching || !journey.eligible) return null;
 
-  const hasBooking = (bookingsQuery.data ?? []).length > 0;
-  const pt = ptQuery.data;
-  const assigned = !!pt?.active;
-  const completed = pt?.completedCount ?? 0;
+  const hasBooking = journey.hasBooking;
+  const assigned = journey.assigned;
+  const completed = journey.completedCount;
   const feedback = feedbackQuery.data ?? [];
   const fb1 = feedback.some((f) => f.sessionNo === 1);
   const fb2 = feedback.some((f) => f.sessionNo === 2);
@@ -101,6 +87,7 @@ export function FitnessJourneyCard() {
       await queryClient.invalidateQueries({
         queryKey: getListMyPtTrialFeedbackQueryKey(),
       });
+      await queryClient.invalidateQueries({ queryKey: ["/api/memberships/journey"] });
       setFeedbackFor(null);
     } catch {
       // Keep the modal open so the member can retry.
@@ -109,9 +96,7 @@ export function FitnessJourneyCard() {
     }
   };
 
-  const trainerPhoto = assigned
-    ? resolveImageUrl(pt?.trainerPhotoUrl || null)
-    : null;
+  const trainerPhoto = assigned ? resolveImageUrl(journey.trainerPhotoUrl || null) : null;
 
   const steps: {
     label: string;
@@ -126,7 +111,7 @@ export function FitnessJourneyCard() {
     },
     {
       label: assigned
-        ? `Accepted by ${pt?.trainerName ?? "your trainer"}`
+        ? `Accepted by ${journey.trainerName || "your trainer"}`
         : "Trainer assignment",
       photoUrl: trainerPhoto,
     },
@@ -155,7 +140,7 @@ export function FitnessJourneyCard() {
           <Feather name="zap" size={16} color="#0A0C08" />
         </View>
         <AppText size={17} weight="700" color={colors.foreground} style={{ flex: 1 }}>
-          Let's start your fitness journey
+          Start your journey
         </AppText>
       </View>
 

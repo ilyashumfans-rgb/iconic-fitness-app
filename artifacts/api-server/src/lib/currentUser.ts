@@ -1,8 +1,10 @@
 import type { Request, Response, NextFunction, RequestHandler } from "express";
 import { getAuth, clerkClient } from "@clerk/express";
 import { eq } from "drizzle-orm";
-import { db, usersTable } from "@workspace/db";
+import { db, fitnessSetupTable, usersTable } from "@workspace/db";
 import { grantSignupBonus } from "./signupBonus";
+import { ensureFitnessSetupTable } from "./fitnessSetup";
+import { requiresFirstLoginSetup } from "./fitnessSetupPolicy";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -37,33 +39,50 @@ async function jitProvision(clerkUserId: string): Promise<number> {
     email = u.emailAddresses[0]?.emailAddress ?? email;
     avatarUrl = u.imageUrl ?? "";
   } catch {
-    // Clerk lookup failed — fall back to placeholders; user can edit profile.
+    // Clerk lookup failed — retain only an account identity. The separate
+    // starting profile remains blank; we never invent body measurements.
   }
 
-  const inserted = await db
-    .insert(usersTable)
-    .values({
-      clerkUserId,
-      name,
-      email,
-      mobile: "",
-      gender: "prefer_not_to_say",
-      age: 25,
-      heightCm: 170,
-      weightKg: 70,
-      fitnessGoal: "general_fitness",
-      avatarUrl,
-      city: "Bengaluru",
-      memberCode: randomMemberCode(),
-    })
-    .onConflictDoNothing({ target: usersTable.clerkUserId })
-    .returning({ id: usersTable.id });
-  if (inserted[0]) {
+  // The marker and member insert are one transaction. If creating the marker
+  // fails, the user is not silently classified as an existing member on their
+  // next login. It is only ever made for the successful INSERT winner, never
+  // for a legacy user found above or a concurrent conflict winner.
+  await ensureFitnessSetupTable();
+  const insertedId = await db.transaction(async (tx) => {
+    const inserted = await tx
+      .insert(usersTable)
+      .values({
+        clerkUserId,
+        name,
+        email,
+        mobile: "",
+        gender: "prefer_not_to_say",
+        // No guessed body data. The private setup row below starts entirely
+        // null and becomes the source for a member's self-reported answers.
+        age: null,
+        heightCm: null,
+        weightKg: null,
+        fitnessGoal: null,
+        avatarUrl,
+        city: "Bengaluru",
+        memberCode: randomMemberCode(),
+      })
+      .onConflictDoNothing({ target: usersTable.clerkUserId })
+      .returning({ id: usersTable.id });
+    if (!inserted[0]) return null;
+    await tx.insert(fitnessSetupTable).values({
+      userId: inserted[0].id,
+      requiredForOnboarding: requiresFirstLoginSetup(true),
+      currentStep: 1,
+    });
+    return inserted[0].id;
+  });
+  if (insertedId) {
     // Welcome (signup) bonus: admin-configurable points credited exactly once
     // per new member — the (refType, refId) unique index makes this idempotent
     // even if two first requests race. Best effort; never blocks login.
-    void grantSignupBonus(inserted[0].id);
-    return inserted[0].id;
+    void grantSignupBonus(insertedId);
+    return insertedId;
   }
 
   // Lost the race against a concurrent insert — re-select the winner.

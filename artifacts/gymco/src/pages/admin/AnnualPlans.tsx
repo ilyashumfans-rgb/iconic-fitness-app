@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
 import { adminApi, type PackageCategoryRow } from "@/lib/adminApi";
+import { prepareForUpload } from "@/components/FileUpload";
 import {
   Check,
   Image as ImageIcon,
@@ -17,30 +18,6 @@ const inputCls =
   "w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-lime-500/60";
 
 const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
-
-// Compress raster images so uploads stay small/reliable; GIFs pass through raw.
-async function compressImage(file: File): Promise<File> {
-  const bitmap = await createImageBitmap(file);
-  const maxDim = 1280;
-  const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
-  const w = Math.max(1, Math.round(bitmap.width * scale));
-  const h = Math.max(1, Math.round(bitmap.height * scale));
-  const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return file;
-  ctx.drawImage(bitmap, 0, 0, w, h);
-  const keepAlpha = file.type === "image/png" || file.type === "image/webp";
-  const type = keepAlpha ? "image/png" : "image/jpeg";
-  const blob = await new Promise<Blob | null>((r) =>
-    canvas.toBlob(r, type, 0.85),
-  );
-  bitmap.close?.();
-  if (!blob) return file;
-  const base = file.name.replace(/\.[^.]+$/, "") || "image";
-  return new File([blob], `${base}.${keepAlpha ? "png" : "jpg"}`, { type });
-}
 
 async function uploadInline(file: File): Promise<string> {
   const res = await fetch("/api/storage/uploads/inline", {
@@ -103,8 +80,7 @@ function PlanForm({
     }
     setUploading(true);
     try {
-      const isGif = file.type === "image/gif";
-      const toUpload = isGif ? file : await compressImage(file);
+      const toUpload = await prepareForUpload(file);
       const url = await uploadInline(toUpload);
       setF((prev) => ({ ...prev, imageUrl: url }));
     } catch (e) {
@@ -392,8 +368,7 @@ function CategoriesPanel({
     }
     setUploadingId(id);
     try {
-      const isGif = file.type === "image/gif";
-      const toUpload = isGif ? file : await compressImage(file);
+      const toUpload = await prepareForUpload(file);
       const url = await uploadInline(toUpload);
       await adminApi.packageCategories.update(id, { imageUrl: url });
       onChanged();

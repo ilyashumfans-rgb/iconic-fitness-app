@@ -163,7 +163,7 @@ const CONTENT: Record<string, InfoContent> = {
     title: "Wellness benefits your team will actually use",
     icon: Sparkles,
     subtitle:
-      "Give your employees access to 120+ gyms in Bangalore — one bill, full visibility.",
+      "Give your employees access to 17 gyms in Bangalore — one bill, full visibility.",
     sections: [
       {
         heading: "Why companies choose Iconic Fitness",
@@ -205,7 +205,7 @@ const CONTENT: Record<string, InfoContent> = {
       },
       {
         q: "What if a gym is full?",
-        a: "Open another nearby gym in the app — your pass works at all 120+ partner gyms in Bangalore.",
+        a: "Open another nearby gym in the app — your pass works at all 17 partner gyms in Bangalore.",
       },
       {
         q: "Can I bring a guest?",
@@ -366,27 +366,98 @@ const CONTENT: Record<string, InfoContent> = {
     eyebrow: "Legal",
     title: "Privacy policy",
     icon: Shield,
-    subtitle: "Last updated · May 2026",
+    subtitle: "Last updated · August 2026",
     sections: [
       {
-        heading: "What we collect",
-        body: "Account info (name, email, phone), visit history, payment info (processed by our payment partners — we never store full card numbers), device and usage data, and optional location data for finding nearby gyms.",
+        heading: "Who we are",
+        body: "Iconic Fitness India Pvt. Ltd. ('Iconic Fitness', 'we', 'us', 'our') operates the Iconic Fitness mobile app and website (iconicfitnessindia.com). This policy explains what personal data we collect, why we collect it, and how you can control it. By using our app or website you agree to the practices described here.",
       },
       {
-        heading: "How we use it",
-        body: "To operate your membership, process payments, prevent fraud, send service updates, personalise gym and class recommendations, and improve the product.",
+        heading: "Data we collect",
+        body: [
+          "Account information — your name, email address, and mobile phone number when you register.",
+          "Profile photos — photos you voluntarily upload for your member profile. These are stored on our servers and displayed to gym staff when you check in.",
+          "Location — with your permission, we access device GPS to show nearby gyms and calculate distances. Location is used only while the app is open and is never recorded in the background.",
+          "Payment information — billing details such as cardholder name and masked card/UPI identifiers when you purchase a membership or store product. Full card numbers are never stored by us; they are handled directly by our payment partners (Airpay and Razorpay) who are PCI-DSS compliant.",
+          "Fitness and usage data — workouts you log, classes you book, gyms you visit, and in-app activity, used to personalise recommendations.",
+          "Device and technical data — device model, operating system, app version, IP address, and crash reports, used for debugging and security.",
+          "Communications — messages you send us via support chat, email, or our contact form.",
+        ],
       },
       {
-        heading: "Who we share with",
-        body: "Partner gyms receive your name and member ID when you visit. Payment processors handle billing. We never sell your data to advertisers.",
+        heading: "How we use your data",
+        body: [
+          "Create and manage your membership account.",
+          "Process payments through Airpay and Razorpay.",
+          "Verify your identity at partner gym check-in points.",
+          "Show your profile photo to gym staff during check-in.",
+          "Display gyms near your current location (only with your explicit permission).",
+          "Send transaction receipts, membership reminders, and service notifications via email, SMS, or push notification.",
+          "Detect and prevent fraud and unauthorized access.",
+          "Improve our app features and fix bugs using anonymized usage data.",
+          "Respond to your support queries.",
+        ],
+      },
+      {
+        heading: "Payments — Airpay and Razorpay",
+        body: "All payment transactions on Iconic Fitness are processed by Airpay (Ezeepay Finance Pvt. Ltd.) and Razorpay Software Pvt. Ltd. When you make a payment you are subject to their respective privacy policies in addition to ours. We receive a payment confirmation and a masked summary (last 4 digits, payment method type) but never the full card number, CVV, or bank credentials. Both processors are RBI-registered and PCI-DSS Level 1 certified.",
+      },
+      {
+        heading: "Location data",
+        body: "We request location access only to show gyms near you. You will be asked for permission before location is accessed. You can revoke location permission at any time in your device Settings. If you deny permission, the app works normally — you can still search gyms by city or name. We do not track your location in the background or share GPS co-ordinates with third parties.",
+      },
+      {
+        heading: "Photos and images",
+        body: "Profile photos you upload are stored on our servers and are visible to gym staff at partner locations to help with check-in. We do not share your photo with advertisers or use it for facial recognition. You can remove your photo at any time from Profile → Edit Profile. If you delete your account, your photo is permanently deleted within 30 days.",
+      },
+      {
+        heading: "Who we share your data with",
+        body: [
+          "Partner gyms — your name, member ID, photo, and membership status when you check in at a facility.",
+          "Airpay and Razorpay — payment data to process transactions.",
+          "Cloud infrastructure providers — we use reputable cloud providers to host our servers; they act as data processors under our instructions.",
+          "Legal and regulatory authorities — if required by law, court order, or to protect the rights and safety of our users.",
+          "We do not sell, rent, or trade your personal data to advertisers or data brokers.",
+        ],
+      },
+      {
+        heading: "Data retention",
+        body: "We retain your account data for as long as your account is active or as required by law. Transactional records (invoices, payment logs) are kept for 7 years as required under Indian accounting law. If you request deletion, non-financial personal data (name, email, phone, photo) is erased within 30 days.",
+      },
+      {
+        heading: "Security",
+        body: "We use industry-standard measures including HTTPS encryption, secure data storage, and access controls to protect your data. Passwords are never stored in plain text. However, no internet transmission is 100% secure — please use a strong, unique password and enable two-factor authentication if available.",
+      },
+      {
+        heading: "Children's privacy",
+        body: "Our services are not directed at children under 13. We do not knowingly collect data from children under 13. Members aged 13–17 require parental or guardian consent. If you believe we have inadvertently collected data from a child, contact us immediately and we will delete it.",
       },
       {
         heading: "Your rights",
-        body: "Access, export or delete your data anytime from Profile → Privacy. Or email iconicfitnessindia@gmail.com.",
+        body: [
+          "Access — request a copy of the personal data we hold about you.",
+          "Correction — ask us to correct inaccurate information.",
+          "Deletion — request permanent deletion of your account and personal data.",
+          "Portability — receive your data in a structured, machine-readable format.",
+          "Withdrawal of consent — revoke location or notification permissions at any time in your device Settings.",
+          "To exercise any right, email iconicfitnessindia@gmail.com with the subject line 'Privacy Request'. We will respond within 30 days.",
+        ],
       },
       {
-        heading: "Contact",
-        body: "Questions about privacy? Reach our Data Protection Officer at iconicfitnessindia@gmail.com.",
+        heading: "Data deletion requests",
+        body: "To delete your account and all associated personal data, email iconicfitnessindia@gmail.com with the subject 'Delete My Account' from the email address linked to your account. Include your registered phone number for verification. We will confirm deletion within 30 days. Note that anonymized transaction records required by law are retained separately and cannot be deleted.",
+      },
+      {
+        heading: "Changes to this policy",
+        body: "We may update this policy from time to time. If we make material changes we will notify you via the app or by email at least 14 days before the change takes effect. Continued use of the service after the effective date constitutes acceptance of the updated policy.",
+      },
+      {
+        heading: "Governing law",
+        body: "This policy is governed by the laws of India. Any disputes arising from it are subject to the exclusive jurisdiction of the courts of Bengaluru, Karnataka.",
+      },
+      {
+        heading: "Contact our Data Protection Officer",
+        body: "Iconic Fitness India Pvt. Ltd. · Flat No. 43, Koramangala 1st Block, Bengaluru, Karnataka 560034 · Email: iconicfitnessindia@gmail.com · Phone: 070262 76888",
       },
     ],
   },
@@ -395,39 +466,82 @@ const CONTENT: Record<string, InfoContent> = {
     eyebrow: "Legal",
     title: "Terms of service",
     icon: FileText,
-    subtitle: "Last updated · May 2026",
+    subtitle: "Last updated · August 2026",
     sections: [
       {
         heading: "Acceptance",
-        body: "By creating a Iconic Fitness account, you agree to these terms. If you don't agree, please don't use the service.",
+        body: "By creating an Iconic Fitness account or using any Iconic Fitness facility, mobile application, or website (iconicfitnessindia.com), you ('Member', 'you') agree to these Terms of Service and all policies incorporated by reference, including our Privacy Policy, Refund Policy, and Cookie Policy. If you do not agree, please do not create an account or use the service. These terms constitute a legally binding agreement between you and Iconic Fitness India Pvt. Ltd. ('Iconic Fitness', 'we', 'us', 'our').",
       },
       {
         heading: "Eligibility",
-        body: "You must be 16 or older to create an account. Members under 18 require parental consent for paid plans.",
+        body: "You must be at least 16 years of age to create an account. Members aged 16–17 require written parental or guardian consent before purchasing a paid membership plan. Members under 13 are not permitted to use the service. By registering, you confirm that the information you provide is accurate and that you meet the age requirement.",
       },
       {
-        heading: "Membership",
-        body: "Membership is valid only for the selected plan duration. Plans renew automatically until cancelled. Pricing may change with 30 days' notice. Plan benefits are subject to fair-use limits stated in your plan. Membership freezes, extensions, and special requests are subject to company policy and management approval. Promotional offers cannot be combined unless specifically stated by Iconic Fitness. Facilities, amenities, and services may vary from branch to branch, and management may change operating hours, schedules, facilities, or policies without prior notice.",
+        heading: "Membership and subscriptions",
+        body: [
+          "Membership plans are valid for the duration stated at the time of purchase (e.g. 1 month, 3 months, 6 months, 12 months).",
+          "Auto-renewal: Where a membership plan is set to renew automatically, your saved payment method will be charged at the then-current rate at the end of each billing period unless you cancel in advance. To cancel, contact us at iconicfitnessindia@gmail.com or WhatsApp +91 94800 00248 before your renewal date.",
+          "Pricing: Membership fees may change with at least 30 days' advance notice sent to your registered email address. The new price takes effect from your next renewal.",
+          "Plan benefits are subject to fair-use limits described in your chosen plan. Promotional offers cannot be combined unless Iconic Fitness expressly states otherwise.",
+          "Facilities, amenities, class schedules, and operating hours vary by branch and may be updated by management without prior notice.",
+          "Membership freezes, extensions, and special accommodations are subject to company policy and require management approval.",
+        ],
       },
       {
         heading: "Membership transfer",
-        body: "Membership is intended for personal use. A membership may be transferred only under the following conditions: the transferee must be a new (non-existing) Iconic Fitness member — existing members are not eligible to receive transferred memberships; only the membership can be transferred — Personal Training packages, diet plans, promotional offers, add-on services, and any other purchased packages are non-transferable; a minimum of 60 days of active membership validity must be available at the time of the transfer request; the applicable membership transfer fee must be paid; and membership transfer is subject to management approval and verification.",
+        body: "Membership is intended for personal, non-commercial use by the registered member only. A membership may be transferred to another individual subject to all of the following conditions: (a) the recipient must be a new, non-existing Iconic Fitness member — existing members are not eligible to receive transferred memberships; (b) only the base membership may be transferred — Personal Training packages, diet plans, promotional benefits, add-on services, merchandise, and any other purchased packages are non-transferable; (c) a minimum of 60 days of active membership validity must remain at the time the transfer request is submitted; (d) the applicable membership transfer fee must be paid in full; and (e) the transfer is subject to management approval and identity verification. Iconic Fitness reserves the right to decline any transfer request.",
       },
       {
-        heading: "Conduct & club rules",
-        body: "Members must follow all gym rules, safety guidelines, and staff instructions. Be respectful to staff and members at every facility. Lockers are provided for temporary use only during workouts, and Iconic Fitness is not responsible for the loss, theft, or damage of members' personal belongings. Any damage caused to gym equipment due to negligence or misuse may be charged to the member. Misconduct, abusive behaviour, or violation of club policies may result in suspension or cancellation of membership without refund. Members should consult a qualified medical practitioner before starting any fitness program.",
+        heading: "Conduct and club rules",
+        body: [
+          "Members must follow all gym rules, safety guidelines, and staff instructions at every Iconic Fitness facility.",
+          "Respect for staff and fellow members is mandatory. Harassment, discriminatory behaviour, or intimidation of any kind will result in immediate suspension or termination of membership without refund.",
+          "Lockers are provided for temporary use during workouts only. Iconic Fitness is not responsible for the loss, theft, or damage of personal belongings.",
+          "Any damage to gym equipment or property caused by negligence or misuse may be charged to the responsible member.",
+          "Members are responsible for returning all equipment to its designated place after use and for maintaining hygiene standards (e.g. wiping down equipment).",
+          "Members should consult a qualified medical practitioner before commencing any fitness programme, particularly if they have a pre-existing medical condition.",
+        ],
       },
       {
-        heading: "Liability",
-        body: "Exercise carries inherent risk. By using Iconic Fitness you acknowledge that Iconic Fitness and its partners are not liable for injury sustained during workouts. Always train within your ability.",
+        heading: "Liability and assumption of risk",
+        body: "Physical exercise and use of gym equipment carry inherent risks including, but not limited to, muscular strain, joint injuries, cardiovascular events, and in rare circumstances, permanent disability or death. By using Iconic Fitness facilities or the app, you voluntarily assume all such risks. To the fullest extent permitted by applicable law, Iconic Fitness, its directors, employees, trainers, and partner gyms are not liable for any injury, illness, loss, or damage sustained during the use of our facilities or services, except where such harm results from the proven gross negligence or wilful misconduct of Iconic Fitness.",
       },
       {
-        heading: "Legal Waiver, Declaration & Indemnity",
-        body: "By purchasing a membership and using any Iconic Fitness facility, the member declares they are physically and mentally fit to exercise (and will consult a doctor about any medical condition first); understands that exercise, strength training, cardio, group classes and gym equipment involve inherent risks including injury, illness, permanent disability or, in rare cases, death; participates voluntarily at their own risk; agrees to follow all safety instructions, gym rules and staff/trainer directions; and, to the fullest extent permitted by law, releases Iconic Fitness, its directors, shareholders, management, employees, trainers, agents and affiliates from any claims arising from use of the facilities or fitness activities, except where caused by the proven negligence or willful misconduct of Iconic Fitness. Iconic Fitness does not provide medical treatment or supervision and is not responsible for pre-existing conditions or health issues arising during or after workouts. Members are responsible for their personal belongings; Iconic Fitness is not liable for loss, theft or damage to personal property. Members agree to indemnify and hold harmless Iconic Fitness from third-party claims arising from their actions or rule violations. Payment and/or use of the Iconic Fitness App or facilities constitutes electronic acceptance of this agreement, including the Terms & Conditions and No Refund Policy, and is legally binding to the extent permitted under applicable law.",
+        heading: "Legal waiver, declaration, and indemnity",
+        body: "By purchasing a membership and using any Iconic Fitness facility, you declare that: (a) you are physically and mentally fit to exercise and will consult a doctor before starting if you have any medical condition; (b) you understand the inherent risks of exercise, strength training, group classes, and gym equipment; (c) you participate voluntarily and at your own risk; (d) you agree to follow all safety instructions, gym rules, and trainer directions; and (e) to the fullest extent permitted by law, you release Iconic Fitness, its directors, shareholders, management, employees, trainers, agents, and affiliates from any claims arising from your use of the facilities, except where caused by Iconic Fitness's proven negligence or wilful misconduct. You further agree to indemnify and hold harmless Iconic Fitness from any third-party claims arising from your actions or violations of these terms. Payment and/or use of the Iconic Fitness app or facilities constitutes electronic acceptance of this agreement.",
+      },
+      {
+        heading: "Intellectual property",
+        body: "All content on the Iconic Fitness app and website — including text, graphics, logos, class videos, workout plans, and software — is the property of Iconic Fitness India Pvt. Ltd. or its licensors and is protected under applicable Indian copyright and intellectual property laws. You may not reproduce, distribute, modify, or create derivative works from any content without our prior written consent.",
+      },
+      {
+        heading: "Account security",
+        body: "You are responsible for maintaining the confidentiality of your account credentials and for all activity that occurs under your account. Notify us immediately at iconicfitnessindia@gmail.com if you suspect unauthorised access. We are not liable for loss resulting from unauthorised use of your account where you have not taken reasonable precautions.",
+      },
+      {
+        heading: "Digital Personal Data Protection Act 2023 (India)",
+        body: [
+          "Iconic Fitness processes your personal data as a 'Data Fiduciary' under the Digital Personal Data Protection Act, 2023 ('DPDP Act'). We collect and process personal data only for lawful, specific, and stated purposes as described in our Privacy Policy.",
+          "As a Data Principal (member), you have the right to: access a summary of your personal data processed by us; correct or update inaccurate personal data; request erasure of your personal data where it is no longer necessary for the stated purpose; nominate another individual to exercise your rights in the event of your death or incapacity; and withdraw consent for non-essential data processing at any time.",
+          "We will respond to all DPDP rights requests within the timelines prescribed under the Act.",
+          "We do not transfer your personal data outside India except where required to fulfil a service (e.g. payment processing by RBI-regulated processors) and in compliance with applicable cross-border transfer requirements under the DPDP Act.",
+        ],
+      },
+      {
+        heading: "Grievance officer",
+        body: "In accordance with the Information Technology Act, 2000, the Consumer Protection Act, 2019, and the Digital Personal Data Protection Act, 2023, the details of our Grievance Officer are as follows — Name: Mohammed Suhail (CEO, Iconic Fitness India Pvt. Ltd.) · Address: Flat No. 43, Koramangala 1st Block, Bengaluru, Karnataka 560034 · Email: iconicfitnessindia@gmail.com · Phone: 070262 76888 · Working hours: Monday to Saturday, 9:00 AM – 6:00 PM IST. Any grievance or complaint regarding the service, data processing, or breach of these terms must be submitted in writing to the Grievance Officer. We will acknowledge receipt within 48 hours and resolve the grievance within 30 days of receipt.",
+      },
+      {
+        heading: "Changes to these terms",
+        body: "We may update these Terms of Service from time to time. If we make material changes, we will notify you via the app or by email at least 14 days before the changes take effect. Your continued use of the service after the effective date constitutes acceptance of the updated terms. If you do not agree to the revised terms, you must stop using the service before the effective date.",
       },
       {
         heading: "Governing law",
-        body: "These terms are governed by the laws of India. Disputes are subject to the courts of Bangalore.",
+        body: "These Terms of Service are governed by and construed in accordance with the laws of India, including the Information Technology Act 2000, the Consumer Protection Act 2019, and the Digital Personal Data Protection Act 2023. Any dispute arising out of or in connection with these terms shall be subject to the exclusive jurisdiction of the competent courts in Bengaluru, Karnataka, India.",
+      },
+      {
+        heading: "Contact",
+        body: "Iconic Fitness India Pvt. Ltd. · Flat No. 43, Koramangala 1st Block, Bengaluru, Karnataka 560034 · Email: iconicfitnessindia@gmail.com · Phone: 070262 76888 · Mon–Sat, 9 AM – 6 PM IST",
       },
     ],
   },
@@ -436,28 +550,62 @@ const CONTENT: Record<string, InfoContent> = {
     eyebrow: "Legal",
     title: "Cookie policy",
     icon: Cookie,
-    subtitle: "Last updated · May 2026",
+    subtitle: "Last updated · August 2026",
     sections: [
       {
         heading: "What are cookies",
-        body: "Small text files stored by your browser when you visit a website. They help us remember your preferences and keep you signed in.",
+        body: "Cookies are small text files that a website stores on your device when you visit or sign in. They allow the service to remember your login state and preferences so you do not have to re-enter information on each visit. Similar technologies — such as device-local storage used by our mobile app — serve the same purpose and are covered by this policy.",
       },
       {
-        heading: "Cookies we use",
+        heading: "How we use cookies",
         body: [
-          "Essential — sign-in, session, security. Cannot be disabled.",
-          "Analytics — anonymous traffic patterns to improve the product.",
-          "Preferences — theme, city, language.",
-          "Marketing — measure campaign effectiveness (opt-in).",
+          "To keep you signed in securely during your session and across return visits.",
+          "To protect our service against cross-site request forgery (CSRF) and other security threats.",
+          "To remember your preferences such as your selected city and display settings.",
+          "To maintain session continuity during payment checkout with our payment processors.",
         ],
       },
       {
-        heading: "Managing cookies",
-        body: "You can clear or block cookies in your browser settings. Disabling essential cookies will prevent sign-in from working.",
+        heading: "Cookies and local storage we use",
+        body: [
+          "COOKIES — small files stored in your browser.",
+          "  · sidebar_state | Purpose: Remembers whether the admin sidebar is open or collapsed | Duration: 7 days | Set by: Iconic Fitness (website UI)",
+          "  · gymco.admin.sid | Purpose: Maintains your staff or admin login session (HTTP-only, not readable by scripts) | Duration: 7 days or until sign-out | Set by: Iconic Fitness server",
+          "  · clerk_* (e.g. __session, __client_uat) | Purpose: Manages member authentication state and token refresh | Duration: Session to 30 days | Set by: Clerk Inc. (our authentication provider)",
+          "LOCAL STORAGE — browser storage that persists until cleared (not transmitted with requests).",
+          "  · iconic-theme | Purpose: Stores your light/dark mode preference | Set by: Iconic Fitness website",
+          "  · iconic.cart.v1 | Purpose: Saves items in your store cart between visits | Set by: Iconic Fitness website",
+          "SESSION STORAGE — temporary browser storage cleared when the tab is closed.",
+          "  · iconic.embed | Purpose: Flags when the site is embedded in a partner iframe so the layout adjusts correctly | Set by: Iconic Fitness website",
+        ],
       },
       {
-        heading: "Third parties",
-        body: "Payment partners and analytics providers may set their own cookies. See their respective policies for details.",
+        heading: "Third-party cookies",
+        body: "The clerk_* cookies listed above are set by Clerk Inc., our member authentication provider, under their own privacy policy (clerk.com/privacy). When you make a purchase, you are redirected to a hosted checkout page operated by Airpay (Ezeepay Finance Pvt. Ltd.) or Razorpay Software Pvt. Ltd. Those pages may set their own cookies and local storage entries. We do not control or have visibility into what those processors store; please refer to their respective cookie and privacy policies: Razorpay — razorpay.com/privacy; Airpay / Ezeepay — ezeepay.in. We do not currently use advertising or analytics tracking cookies on our own pages.",
+      },
+      {
+        heading: "Cookies and the mobile app",
+        body: "The Iconic Fitness mobile app does not use browser cookies. Member authentication tokens are managed by Clerk's native token cache (which uses the device's secure storage on iOS and Android). Separately, the app uses AsyncStorage for local query caching and non-sensitive preferences such as dismissed prompts. This data stays on your device; authentication tokens are cleared when you sign out, and cached preferences are cleared when you uninstall the app.",
+      },
+      {
+        heading: "Managing cookies",
+        body: [
+          "Because we use only functional cookies and local storage (no advertising or analytics tracking cookies), there is no opt-in banner required for core site functionality.",
+          "Browser settings — you can clear or block cookies and local storage at any time through your browser. Chrome: Settings → Privacy and Security → Cookies; Firefox: Settings → Privacy & Security; Safari: Preferences → Privacy; Edge: Settings → Cookies and site permissions.",
+          "Effect of disabling cookies — blocking the gymco.admin.sid or clerk_* cookies will prevent staff or member sign-in respectively. Clearing local storage will reset your theme preference and empty your cart. None of these affect your membership account data, which is stored on our servers.",
+        ],
+      },
+      {
+        heading: "Data retention and DPDP Act",
+        body: "Cookie data that constitutes personal data under the Digital Personal Data Protection Act, 2023 ('DPDP Act') is handled in accordance with our Privacy Policy. Preference data is retained for the durations shown in the table above. You may request deletion of personal data linked to your account by emailing iconicfitnessindia@gmail.com with the subject line 'Privacy Request'.",
+      },
+      {
+        heading: "Changes to this policy",
+        body: "We may update this Cookie Policy to reflect changes in our practices or applicable law. If we introduce new categories of cookies (for example analytics or marketing cookies), we will update this policy and notify you via the app or by email at least 14 days in advance. Continued use of the service after the effective date constitutes acceptance of the updated policy.",
+      },
+      {
+        heading: "Contact",
+        body: "For any questions about our use of cookies, contact our Data Protection Officer — Iconic Fitness India Pvt. Ltd. · Flat No. 43, Koramangala 1st Block, Bengaluru, Karnataka 560034 · Email: iconicfitnessindia@gmail.com · Phone: 070262 76888",
       },
     ],
   },

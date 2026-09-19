@@ -16,6 +16,7 @@ import { Card } from "@/components/Card";
 import { ModalHeader } from "@/components/ModalHeader";
 import { EmptyState, ErrorView, LoadingView } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
+import { memberAuthHref } from "@/lib/memberAuth";
 
 const TRACK_STEPS = ["placed", "confirmed", "shipped", "delivered"] as const;
 
@@ -50,7 +51,7 @@ export default function OrdersScreen() {
   });
 
   if (isLoaded && !isSignedIn) {
-    return <Redirect href="/(auth)/sign-in" />;
+    return <Redirect href={memberAuthHref("/orders")} />;
   }
 
   return (

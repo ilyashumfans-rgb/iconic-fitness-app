@@ -558,7 +558,7 @@ export default function GymDetail() {
                 <ul className="mt-5 space-y-2.5">
                   {[
                     "Unlimited access, 7 days a week",
-                    "Access 16+ Gyms Across Bengaluru",
+                    "Access 17 Gyms Across Bengaluru",
                   ].map((line) => (
                     <li
                       key={line}

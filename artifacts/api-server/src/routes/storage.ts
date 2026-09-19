@@ -12,6 +12,9 @@ const svc = new ObjectStorageService();
 
 const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
 const ALLOWED_PREFIXES = ["image/", "application/pdf"];
+const MAX_IMAGE_INPUT_BYTES = 10 * 1024 * 1024;
+const MAX_IMAGE_INPUT_PIXELS = 36_000_000;
+const MAX_STORED_IMAGE_BYTES = 1 * 1024 * 1024;
 const DB_IMAGE_CACHE_MAX_BYTES = 32 * 1024 * 1024;
 const DB_IMAGE_CACHE_ITEM_MAX_BYTES = 2 * 1024 * 1024;
 type CachedDbImage = { data: Buffer; mimeType: string };
@@ -126,34 +129,53 @@ function isAudioMime(mime: string): boolean {
 }
 
 const MAX_IMAGE_DIMENSION = 1280;
-const WEBP_QUALITY = 80;
+const WEBP_QUALITIES = [80, 70, 60, 50];
 
-// Resize to <=1280px and re-encode as (animated) WebP. Keeps the original
-// bytes only when they are already WebP and smaller than the re-encode.
-async function compressImage(
+// Decode, resize and always re-encode raster uploads as (animated) WebP.
+// Re-encoding is intentional: it verifies that the claimed image can really be
+// decoded, strips unneeded metadata, retains alpha, and prevents an existing
+// WebP from bypassing the stored-size limit.
+export async function compressImage(
   body: Buffer,
   mimeType: string,
 ): Promise<{ data: Buffer; mimeType: string }> {
   const animated = mimeType === "image/gif" || mimeType === "image/webp";
-  const image = sharp(body, { animated, failOn: "error" });
-  const meta = await image.metadata();
+  const input = sharp(body, {
+    animated,
+    failOn: "error",
+    limitInputPixels: MAX_IMAGE_INPUT_PIXELS,
+  });
+  const meta = await input.metadata();
   if (!meta.width || !meta.height) {
     throw new Error("Could not read image dimensions");
   }
-  const out = await image
-    .resize({
-      width: MAX_IMAGE_DIMENSION,
-      height: MAX_IMAGE_DIMENSION,
-      fit: "inside",
-      withoutEnlargement: true,
-    })
-    .webp({ quality: WEBP_QUALITY, effort: 4 })
-    .toBuffer();
-  // If the original was already a smaller WebP, keep it as-is.
-  if (mimeType === "image/webp" && body.length <= out.length) {
-    return { data: body, mimeType };
+  if (meta.width * meta.height > MAX_IMAGE_INPUT_PIXELS) {
+    throw new Error("Image exceeds the 36 megapixel processing limit");
   }
-  return { data: out, mimeType: "image/webp" };
+
+  for (const quality of WEBP_QUALITIES) {
+    // Start from the original bytes for every pass. Re-encoding a previous
+    // lossy result makes quality unpredictable and can flatten animation.
+    const out = await sharp(body, {
+      animated,
+      failOn: "error",
+      limitInputPixels: MAX_IMAGE_INPUT_PIXELS,
+    })
+      .rotate()
+      .resize({
+        width: MAX_IMAGE_DIMENSION,
+        height: MAX_IMAGE_DIMENSION,
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .webp({ quality, effort: 4 })
+      .toBuffer();
+    if (out.length <= MAX_STORED_IMAGE_BYTES) {
+      return { data: out, mimeType: "image/webp" };
+    }
+  }
+
+  throw new Error("Compressed image exceeds the 1MB storage limit");
 }
 
 router.post(
@@ -188,6 +210,13 @@ router.post(
       res.status(413).json({ error: "Audio file too large (max 2MB)" });
       return;
     }
+    if (
+      sniffedType.startsWith("image/") &&
+      body.length > MAX_IMAGE_INPUT_BYTES
+    ) {
+      res.status(413).json({ error: "Image file too large (max 10MB before compression)" });
+      return;
+    }
     // Compress images before storing so raw multi-MB blobs never hit the DB.
     // PDFs and audio are stored as-is.
     let stored = { data: body, mimeType: sniffedType };
@@ -196,8 +225,13 @@ router.post(
         stored = await compressImage(body, sniffedType);
       } catch (error) {
         req.log.error({ err: error }, "Failed to process uploaded image");
+        const detail = error instanceof Error ? error.message : "";
         res.status(422).json({
-          error: "Could not process this image. Please upload a valid PNG, JPEG, GIF or WebP file.",
+          error: detail.includes("pixel")
+            ? "Image exceeds the 36 megapixel processing limit"
+            : detail.includes("storage limit")
+              ? "Compressed image is too large. Please choose a smaller image."
+              : "Could not decode or compress this image. Please upload a valid PNG, JPEG, GIF or WebP file.",
         });
         return;
       }
@@ -261,6 +295,12 @@ router.post("/storage/uploads/request-url", async (req: Request, res: Response) 
   }
   if (size > MAX_UPLOAD_BYTES) {
     res.status(413).json({ error: `File too large (max ${MAX_UPLOAD_BYTES / (1024 * 1024)}MB)` });
+    return;
+  }
+  if (contentType.toLowerCase().startsWith("image/")) {
+    res.status(400).json({
+      error: "Image uploads must use /storage/uploads/inline so they can be validated and compressed",
+    });
     return;
   }
   if (!ALLOWED_PREFIXES.some((p) => contentType.startsWith(p))) {

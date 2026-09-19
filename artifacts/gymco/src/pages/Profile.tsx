@@ -46,7 +46,7 @@ export default function Profile() {
       setFormData({
         name: user.name,
         city: user.city,
-        fitnessGoal: user.fitnessGoal,
+        fitnessGoal: user.fitnessGoal ?? "",
         weeklyGoal: user.weeklyGoal
       });
     }

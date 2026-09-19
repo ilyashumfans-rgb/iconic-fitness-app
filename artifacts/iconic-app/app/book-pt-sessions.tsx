@@ -26,6 +26,7 @@ import { CalendarPicker } from "@/components/DateTimePickers";
 import { useColors } from "@/hooks/useColors";
 import { istDateLabel, istToday } from "@/lib/dates";
 import { openPayment } from "@/lib/links";
+import { memberAuthHref } from "@/lib/memberAuth";
 
 // Paid PT session packages for the member's branch: live prices from the
 // gym-management system, hosted Razorpay checkout, and a booking row that
@@ -81,6 +82,7 @@ export default function BookPtSessionsScreen() {
   // Keep the hosted checkout link so the member can re-open it if they
   // closed the payment window before finishing.
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   useEffect(() => {
     const me = meQuery.data;
@@ -125,6 +127,7 @@ export default function BookPtSessionsScreen() {
   }
 
   async function onPay() {
+    setPaymentError(null);
     if (!hasGym || !selectedPkg) {
       Alert.alert("Pick a package", "Please choose a PT package to continue.");
       return;
@@ -143,9 +146,12 @@ export default function BookPtSessionsScreen() {
         },
       });
       setBookingId(created.id);
-      setPaymentUrl(created.paymentUrl);
+      setPaymentUrl(created.paymentUrl ?? null);
       await openPayment(created.paymentUrl);
     } catch (err) {
+      setPaymentError(
+        err instanceof Error ? err.message : "Could not start payment. Please try again.",
+      );
       Alert.alert(
         "Could not start payment",
         err instanceof Error ? err.message : "Please try again.",
@@ -189,6 +195,15 @@ export default function BookPtSessionsScreen() {
                   ? "The payment didn't go through. No money was taken — you can try again."
                   : "Complete the payment in the browser window, then come back here."}
             </AppText>
+            {paymentError ? (
+              <AppText
+                size={13}
+                color="#ff6b6b"
+                style={{ textAlign: "center", marginTop: 4 }}
+              >
+                {paymentError}
+              </AppText>
+            ) : null}
             {paid ? (
               <View style={{ gap: 10, alignSelf: "stretch" }}>
                 <Button
@@ -204,6 +219,7 @@ export default function BookPtSessionsScreen() {
                 onPress={() => {
                   setBookingId(null);
                   setPaymentUrl(null);
+                  setPaymentError(null);
                 }}
               />
             ) : (
@@ -224,7 +240,16 @@ export default function BookPtSessionsScreen() {
                 {paymentUrl ? (
                   <Button
                     label="Re-open payment page"
-                    onPress={() => void openPayment(paymentUrl)}
+                    onPress={() => {
+                      setPaymentError(null);
+                      void openPayment(paymentUrl).catch((err) => {
+                        setPaymentError(
+                          err instanceof Error
+                            ? err.message
+                            : "Could not open the payment page. Please try again.",
+                        );
+                      });
+                    }}
                     icon="external-link"
                   />
                 ) : null}
@@ -233,6 +258,7 @@ export default function BookPtSessionsScreen() {
                   onPress={() => {
                     setBookingId(null);
                     setPaymentUrl(null);
+                    setPaymentError(null);
                   }}
                 />
               </View>
@@ -322,7 +348,15 @@ export default function BookPtSessionsScreen() {
           <Button
             label="Log in"
             icon="log-in"
-            onPress={() => router.push("/(auth)/welcome")}
+            onPress={() =>
+              router.push(
+                memberAuthHref(
+                  `/book-pt-sessions?gymId=${encodeURIComponent(
+                    String(params.gymId ?? ""),
+                  )}&gymName=${encodeURIComponent(gymName)}`,
+                ),
+              )
+            }
           />
         </Card>
       ) : (
@@ -334,6 +368,15 @@ export default function BookPtSessionsScreen() {
             Pay securely online — once the payment lands, the team assigns
             your trainer and your sessions begin.
           </AppText>
+          {paymentError ? (
+            <AppText
+              size={13}
+              color="#ff6b6b"
+              style={{ marginBottom: 14 }}
+            >
+              {paymentError}
+            </AppText>
+          ) : null}
 
           <View style={{ gap: 10, marginBottom: 16 }}>
             {packages.map((p) => (

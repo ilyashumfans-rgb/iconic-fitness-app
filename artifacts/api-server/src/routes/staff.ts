@@ -77,18 +77,18 @@ router.post(
   },
 );
 
-// Google (Clerk) sign-in for staff. Requires a verified Clerk session (the
+// Social (Clerk) sign-in for staff. Requires a verified Clerk session (the
 // mobile app sends a Bearer token, web sends the __session cookie). The
-// Google account's verified email must match an existing, active staff row —
+// account's verified primary email must match an existing, active staff row —
 // there is NO just-in-time provisioning: only accounts the admin created
 // (e.g. trainer email IDs taken from the active members view) can get in.
 router.post(
-  "/staff/google-login",
+  ["/staff/sso-login", "/staff/google-login"],
   async (req: Request, res: Response): Promise<void> => {
     const auth = getAuth(req);
     const clerkUserId = auth?.userId;
     if (!clerkUserId) {
-      res.status(401).json({ error: "Sign in with Google first" });
+      res.status(401).json({ error: "Complete social sign-in first" });
       return;
     }
     let email = "";
@@ -103,12 +103,12 @@ router.post(
       email = (primary?.emailAddress ?? "").toLowerCase().trim();
       verified = primary?.verification?.status === "verified";
     } catch (err) {
-      req.log?.error({ err }, "Clerk user lookup failed in staff google-login");
-      res.status(502).json({ error: "Could not verify Google account" });
+      req.log?.error({ err }, "Clerk user lookup failed in staff sso-login");
+      res.status(502).json({ error: "Could not verify sign-in account" });
       return;
     }
     if (!email || !verified) {
-      res.status(403).json({ error: "Email not verified by Google" });
+      res.status(403).json({ error: "Primary email is not verified" });
       return;
     }
     const [row] = await db
@@ -118,7 +118,7 @@ router.post(
     if (!row) {
       res.status(403).json({
         error:
-          "This Google account isn't registered as staff. Ask the admin to add your email.",
+          "This account isn't registered as staff. Ask the admin to add its verified email.",
       });
       return;
     }

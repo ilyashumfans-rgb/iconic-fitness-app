@@ -1,12 +1,10 @@
 import { Feather } from "@expo/vector-icons";
 import { useAuth } from "@clerk/expo";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import {
-  getMe,
-  updateMe,
   useLookupMembership,
 } from "@workspace/api-client-react";
 
@@ -15,6 +13,7 @@ import { Button } from "@/components/Button";
 import { Field } from "@/components/Field";
 import { useColors } from "@/hooks/useColors";
 import { clearPendingMobile, setPendingMobile } from "@/lib/pendingMobile";
+import { syncMobileAndRefresh } from "@/lib/syncMemberMobile";
 
 /**
  * "Already an Iconic member?" widget for the sign-in/up screens.
@@ -24,14 +23,18 @@ import { clearPendingMobile, setPendingMobile } from "@/lib/pendingMobile";
  * user finishes login/signup, PendingMobileLink (root layout) writes it to
  * their profile so their plan connects automatically.
  */
-export function MemberMobileVerify() {
+export function MemberMobileVerify({ initialMobile = "", syncMode = false, onSynced }: { initialMobile?: string; syncMode?: boolean; onSynced?: () => void } = {}) {
   const colors = useColors();
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, userId } = useAuth();
+  const currentOwner = useRef<string | null>(null);
+  const mounted = useRef(true);
+  currentOwner.current = isSignedIn ? (userId ?? null) : null;
   const queryClient = useQueryClient();
   const lookup = useLookupMembership();
+  const { mutate: lookupMember } = lookup;
   const [linking, setLinking] = useState(false);
 
-  const [mobile, setMobile] = useState("");
+  const [mobile, setMobile] = useState(initialMobile);
   const [result, setResult] = useState<
     | { state: "idle" }
     | { state: "invalid" }
@@ -40,40 +43,35 @@ export function MemberMobileVerify() {
     | { state: "notFound" }
   >({ state: "idle" });
 
+  useEffect(() => () => {
+    mounted.current = false;
+    currentOwner.current = null;
+  }, []);
+
   const onVerify = useCallback(() => {
+    const ownerAtLookup = currentOwner.current;
     const digits = mobile.replace(/\D/g, "");
     if (digits.length < 10) {
       setResult({ state: "invalid" });
       return;
     }
     const normalized = digits.slice(-10);
-    lookup.mutate(
+    lookupMember(
       { data: { mobile: normalized } },
       {
         onSuccess: async (res) => {
+          // An outstanding pre-login/account-A lookup cannot link account B.
+          if (!mounted.current || currentOwner.current !== ownerAtLookup) return;
           if (res.found) {
             if (isSignedIn) {
               setLinking(true);
               try {
-                const me = await getMe();
-                const currentDigits = (me.mobile ?? "")
-                  .replace(/\D/g, "")
-                  .slice(-10);
-                if (currentDigits !== normalized) {
-                  await updateMe({ mobile: normalized });
-                }
+                await syncMobileAndRefresh(queryClient, normalized, undefined,
+                  () => mounted.current && currentOwner.current === ownerAtLookup, ownerAtLookup);
+                if (!mounted.current || currentOwner.current !== ownerAtLookup) return;
                 await clearPendingMobile();
-                await queryClient.invalidateQueries({
-                  predicate: (query) => {
-                    const key = query.queryKey[0];
-                    return (
-                      typeof key === "string" &&
-                      (key.startsWith("/api/me") ||
-                        key.startsWith("/api/memberships/mine"))
-                    );
-                  },
-                });
               } catch {
+                if (!mounted.current || currentOwner.current !== ownerAtLookup) return;
                 setResult({
                   state: "error",
                   message:
@@ -81,7 +79,7 @@ export function MemberMobileVerify() {
                 });
                 return;
               } finally {
-                setLinking(false);
+                if (mounted.current) setLinking(false);
               }
             } else {
               await setPendingMobile(normalized);
@@ -91,12 +89,14 @@ export function MemberMobileVerify() {
               memberName: res.memberName,
               branchName: res.branchName,
             });
+            if (isSignedIn) onSynced?.();
           } else {
             setResult({ state: "notFound" });
             void clearPendingMobile();
           }
         },
         onError: () => {
+          if (!mounted.current || currentOwner.current !== ownerAtLookup) return;
           setResult({
             state: "error",
             message:
@@ -105,7 +105,7 @@ export function MemberMobileVerify() {
         },
       },
     );
-  }, [isSignedIn, mobile, lookup, queryClient]);
+  }, [isSignedIn, mobile, lookupMember, queryClient, onSynced]);
 
   return (
     <View
@@ -117,12 +117,13 @@ export function MemberMobileVerify() {
       <View style={styles.headerRow}>
         <Feather name="user-check" size={15} color={colors.primary} />
         <AppText size={13} weight="700" color={colors.primary}>
-          Already an Iconic member?
+          {syncMode ? "Sync your gym membership" : "Already an Iconic member?"}
         </AppText>
       </View>
       <AppText size={12} muted>
-        Enter your gym-registered mobile number — we&apos;ll connect your plan
-        automatically after you log in or create an account.
+        {syncMode
+          ? "Confirm your gym-registered mobile number to fetch your latest membership details."
+          : "Enter your gym-registered mobile number — we'll connect your plan automatically after you log in or create an account."}
       </AppText>
 
       <View style={styles.inputRow}>
@@ -140,7 +141,7 @@ export function MemberMobileVerify() {
           />
         </View>
         <Button
-          label="Verify"
+          label={syncMode ? "Sync" : "Verify"}
           onPress={onVerify}
           loading={lookup.isPending || linking}
           variant="secondary"

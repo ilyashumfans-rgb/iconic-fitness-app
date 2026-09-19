@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
+import { prepareForUpload } from "@/components/FileUpload";
 import { adminApi, type YoactivAdminPackage } from "@/lib/adminApi";
 import {
   Select,
@@ -28,30 +29,6 @@ import { Pencil, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
 const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
-
-// Compress raster images so uploads stay small/reliable; GIFs pass through raw.
-async function compressImage(file: File): Promise<File> {
-  const bitmap = await createImageBitmap(file);
-  const maxDim = 1280;
-  const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
-  const w = Math.max(1, Math.round(bitmap.width * scale));
-  const h = Math.max(1, Math.round(bitmap.height * scale));
-  const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return file;
-  ctx.drawImage(bitmap, 0, 0, w, h);
-  const keepAlpha = file.type === "image/png" || file.type === "image/webp";
-  const type = keepAlpha ? "image/png" : "image/jpeg";
-  const blob = await new Promise<Blob | null>((r) =>
-    canvas.toBlob(r, type, 0.85),
-  );
-  bitmap.close?.();
-  if (!blob) return file;
-  const base = file.name.replace(/\.[^.]+$/, "") || "image";
-  return new File([blob], `${base}.${keepAlpha ? "png" : "jpg"}`, { type });
-}
 
 async function uploadInline(file: File): Promise<string> {
   const res = await fetch("/api/storage/uploads/inline", {
@@ -102,8 +79,7 @@ function EditContentDialog({
     }
     setUploading(true);
     try {
-      const isGif = file.type === "image/gif";
-      const toUpload = isGif ? file : await compressImage(file);
+      const toUpload = await prepareForUpload(file);
       const url = await uploadInline(toUpload);
       setImageUrl(url);
     } catch (e) {

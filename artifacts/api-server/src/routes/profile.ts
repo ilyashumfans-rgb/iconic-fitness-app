@@ -5,10 +5,15 @@ import { GetMeResponse, UpdateMeBody, UpdateMeResponse } from "@workspace/api-zo
 import { requireUser } from "../lib/currentUser";
 import { computeHealthMetrics } from "../lib/healthMetrics";
 import { sendMemberWelcome } from "../lib/messaging";
+import {
+  MEMBER_USERNAME_RULE,
+  normalizeMemberUsername,
+} from "../lib/memberUsername";
 
 const router: IRouter = Router();
 
-function bmi(heightCm: number, weightKg: number) {
+function bmi(heightCm: number | null, weightKg: number | null) {
+  if (heightCm == null || weightKg == null || heightCm <= 0 || weightKg <= 0) return 0;
   const m = heightCm / 100;
   return Math.round((weightKg / (m * m)) * 10) / 10;
 }
@@ -44,14 +49,15 @@ async function loadProfile(userId: number) {
     ),
   );
   const metrics = computeHealthMetrics({
-    heightCm: user.heightCm,
-    weightKg: user.weightKg,
-    age: user.age,
+    heightCm: user.heightCm ?? 0,
+    weightKg: user.weightKg ?? 0,
+    age: user.age ?? 0,
     gender: user.gender,
     activityLevel: user.activityLevel,
   });
   return {
     id: user.id,
+    username: user.username,
     name: user.name,
     email: user.email,
     mobile: user.mobile,
@@ -96,6 +102,17 @@ router.patch("/me", requireUser, async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+  const hasUsername = Object.prototype.hasOwnProperty.call(
+    parsed.data,
+    "username",
+  );
+  const username = hasUsername
+    ? normalizeMemberUsername(parsed.data.username)
+    : null;
+  if (hasUsername && username === undefined) {
+    res.status(400).json({ error: MEMBER_USERNAME_RULE });
+    return;
+  }
   // The avatar must be a real uploaded image on our server — a free-text URL
   // would bypass the payment flow's member-photo rule and could put arbitrary
   // content on the member card gym staff see.
@@ -122,7 +139,21 @@ router.patch("/me", requireUser, async (req, res): Promise<void> => {
     .from(usersTable)
     .where(eq(usersTable.id, req.userId!));
 
-  await db.update(usersTable).set(parsed.data).where(eq(usersTable.id, req.userId!));
+  try {
+    await db
+      .update(usersTable)
+      .set(hasUsername ? { ...parsed.data, username } : parsed.data)
+      .where(eq(usersTable.id, req.userId!));
+  } catch (err: unknown) {
+    const dbCode =
+      (err as { code?: string })?.code ??
+      (err as { cause?: { code?: string } })?.cause?.code;
+    if (dbCode === "23505") {
+      res.status(409).json({ error: "That username is already taken." });
+      return;
+    }
+    throw err;
+  }
   const data = await loadProfile(req.userId!);
 
   // Send a welcome message the first time a member saves their phone number.

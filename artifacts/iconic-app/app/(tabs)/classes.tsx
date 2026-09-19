@@ -1,5 +1,6 @@
 import { useAuth } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import {
   getGetMyMembershipQueryKey,
   getListMyBookingsQueryKey,
@@ -27,13 +28,19 @@ import {
   Segmented,
 } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
+import { memberAuthHref } from "@/lib/memberAuth";
 import { formatClock, formatDateLabel } from "@/lib/dates";
 
 const CATEGORIES = ["All", "HIIT", "Yoga", "Strength", "Cardio", "Pilates"];
 
 export default function ClassesScreen() {
+  const router = useRouter();
   const colors = useColors();
-  const [tab, setTab] = useState<"discover" | "mine">("discover");
+  const { tab: initialTab } = useLocalSearchParams<{ tab?: "mine" | "discover" }>();
+  const [tab, setTab] = useState<"discover" | "mine">(initialTab === "mine" ? "mine" : "discover");
+  useFocusEffect(useCallback(() => {
+    if (initialTab === "mine") setTab("mine");
+  }, [initialTab]));
   const [category, setCategory] = useState("All");
   const queryClient = useQueryClient();
 
@@ -71,6 +78,10 @@ export default function ClassesScreen() {
 
   const onBook = useCallback(
     async (session: ClassSession) => {
+      if (!isSignedIn) {
+        router.push(memberAuthHref("/(tabs)/classes?tab=discover"));
+        return;
+      }
       setBusyId(session.id);
       try {
         await createBooking.mutateAsync({ data: { classId: session.id } });
@@ -84,7 +95,7 @@ export default function ClassesScreen() {
         setBusyId(null);
       }
     },
-    [createBooking, queryClient],
+    [createBooking, isSignedIn, queryClient, router],
   );
 
   const onCheckIn = useCallback(

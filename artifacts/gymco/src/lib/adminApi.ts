@@ -11,7 +11,7 @@ export type AdminUser = {
 
 export type HomeSlide = {
   id: number;
-  kind: "image" | "gif" | "youtube" | "shortcut";
+  kind: "hero" | "image" | "gif" | "youtube" | "shortcut";
   mediaUrl: string;
   title: string;
   subtitle: string;
@@ -109,6 +109,35 @@ export type AdminAssessmentRow = {
     bmi: number | null;
   } | null;
 };
+
+export type CommunityStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "unpublished"
+  | "withdrawn";
+
+export type CommunityAdminPost = {
+  id: number;
+  caption: string;
+  trainerName: string | null;
+  authorName: string;
+  authorAvatarUrl: string | null;
+  beforeImageUrl: string | null;
+  afterImageUrl: string | null;
+  submittedAt: string;
+  status: CommunityStatus;
+  rejectionReason: string | null;
+  publicSharingConsent: boolean;
+  reviewedAt: string | null;
+};
+
+export type CommunityAdminPage = {
+  items: CommunityAdminPost[];
+  nextBeforeId: number | null;
+};
+
+export type CommunityReviewAction = "approve" | "reject" | "unpublish";
 
 export type AgencyAccount = {
   id: number;
@@ -423,6 +452,32 @@ export const adminApi = {
       request<any>(`/admin/complaints/${id}`, {
         method: "PATCH",
         body: JSON.stringify(body),
+      }),
+  },
+  community: {
+    list: (
+      status: CommunityStatus,
+      params?: { limit?: number; beforeId?: number },
+    ) => {
+      const query = new URLSearchParams({ status });
+      if (params?.limit !== undefined) query.set("limit", String(params.limit));
+      if (params?.beforeId !== undefined) {
+        query.set("beforeId", String(params.beforeId));
+      }
+      return request<CommunityAdminPage>(`/admin/community?${query.toString()}`);
+    },
+    review: (
+      id: number,
+      action: CommunityReviewAction,
+      reason?: string,
+    ) =>
+      request<{
+        id: number;
+        status: CommunityStatus;
+        rejectionReason: string;
+      }>(`/admin/community/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ action, ...(reason ? { reason } : {}) }),
       }),
   },
   leads: {

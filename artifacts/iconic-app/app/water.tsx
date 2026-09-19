@@ -20,6 +20,7 @@ import { Screen } from "@/components/Screen";
 import { EmptyState } from "@/components/ui-bits";
 import { ModalHeader } from "@/components/ModalHeader";
 import { useColors } from "@/hooks/useColors";
+import { memberAuthHref } from "@/lib/memberAuth";
 import { formatClock, istToday } from "@/lib/dates";
 
 const QUICK = [250, 500, 750];
@@ -67,7 +68,9 @@ export default function WaterScreen() {
     await refresh();
   };
 
-  if (isLoaded && !isSignedIn) return <Redirect href="/(auth)/sign-in" />;
+  if (isLoaded && !isSignedIn) {
+    return <Redirect href={memberAuthHref("/water")} />;
+  }
 
   return (
     <Screen edges={["top"]} contentContainerStyle={{ paddingTop: 8 }}>

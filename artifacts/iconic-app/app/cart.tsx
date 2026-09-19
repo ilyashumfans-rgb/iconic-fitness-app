@@ -34,6 +34,7 @@ import { useColors } from "@/hooks/useColors";
 import { cartKey, useCart } from "@/lib/cart";
 import { resolveImageUrl } from "@/lib/images";
 import { openPayment } from "@/lib/links";
+import { memberAuthHref } from "@/lib/memberAuth";
 
 export default function CartScreen() {
   const colors = useColors();
@@ -86,12 +87,12 @@ export default function CartScreen() {
       if (Platform.OS === "web") {
         // eslint-disable-next-line no-alert
         if (window.confirm(`Login required\n${msg}`)) {
-          router.push("/(auth)/welcome");
+          router.push(memberAuthHref("/cart"));
         }
       } else {
         Alert.alert("Login required", msg, [
           { text: "Cancel", style: "cancel" },
-          { text: "Log in", onPress: () => router.push("/(auth)/welcome") },
+          { text: "Log in", onPress: () => router.push(memberAuthHref("/cart")) },
         ]);
       }
       return;

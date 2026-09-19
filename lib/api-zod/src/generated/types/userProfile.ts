@@ -8,14 +8,19 @@
 
 export interface UserProfile {
   id: number;
+  username: string | null;
   name: string;
   email: string;
   mobile: string;
   gender: string;
-  age: number;
-  heightCm: number;
-  weightKg: number;
-  fitnessGoal: string;
+  /** Null until a member supplies a real age */
+  age: number | null;
+  /** Null until a member supplies a real height */
+  heightCm: number | null;
+  /** Null until a member supplies a real weight */
+  weightKg: number | null;
+  /** Null until a member supplies a real goal */
+  fitnessGoal: string | null;
   avatarUrl: string;
   city: string;
   bmi: number;

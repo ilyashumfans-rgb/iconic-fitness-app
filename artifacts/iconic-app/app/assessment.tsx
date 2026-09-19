@@ -19,6 +19,7 @@ import { ModalHeader } from "@/components/ModalHeader";
 import { Screen } from "@/components/Screen";
 import { EmptyState, ErrorView, LoadingView } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
+import { memberAuthHref } from "@/lib/memberAuth";
 import { istToday } from "@/lib/dates";
 
 function confirm(title: string, message: string, onYes: () => void) {
@@ -88,7 +89,7 @@ export default function AssessmentScreen() {
   });
 
   if (isLoaded && !isSignedIn) {
-    return <Redirect href="/(auth)/sign-in" />;
+    return <Redirect href={memberAuthHref("/assessment")} />;
   }
 
   if (query.isLoading) {

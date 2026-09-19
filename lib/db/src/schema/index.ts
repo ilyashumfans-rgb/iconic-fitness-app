@@ -22,10 +22,13 @@ export const usersTable = pgTable(
   email: text("email").notNull(),
   mobile: text("mobile").notNull(),
   gender: text("gender").notNull(),
-  age: integer("age").notNull(),
-  heightCm: real("height_cm").notNull(),
-  weightKg: real("weight_kg").notNull(),
-  fitnessGoal: text("fitness_goal").notNull(),
+   // New accounts may not have supplied body data yet. Their actual answers
+   // live in fitness_setup; null is intentionally different from a guessed
+   // default and legacy populated profiles remain untouched.
+   age: integer("age"),
+   heightCm: real("height_cm"),
+   weightKg: real("weight_kg"),
+   fitnessGoal: text("fitness_goal"),
   avatarUrl: text("avatar_url").notNull(),
   city: text("city").notNull(),
   dailyCalories: integer("daily_calories").notNull().default(0),
@@ -68,6 +71,53 @@ export const usersTable = pgTable(
     uniqueIndex("users_referral_code_unique")
       .on(t.referralCode)
       .where(sql`referral_code IS NOT NULL AND referral_code <> ''`),
+  ],
+);
+
+// A private, member-authored starting profile. This is deliberately separate
+// from the staff/AI assessment fields on users: it must never imply that an
+// assessment was booked or completed, and it must not overwrite a verified
+// assessment or an older member profile.
+export const fitnessSetupTable = pgTable(
+  "fitness_setup",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").notNull().unique(),
+    // Only rows created alongside a brand-new Clerk provision require the
+    // first-login flow. A row created later from Profile is editable, never
+    // retroactively required for an established member.
+    requiredForOnboarding: boolean("required_for_onboarding")
+      .notNull()
+      .default(false),
+    currentStep: integer("current_step").notNull().default(1),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    unitSystem: text("unit_system"),
+    heightCm: real("height_cm"),
+    weightKg: real("weight_kg"),
+    age: integer("age"),
+    goals: jsonb("goals"),
+    interests: jsonb("interests"),
+    experienceLevel: text("experience_level"),
+    activityLevel: text("activity_level"),
+    selfReportedAbility: text("self_reported_ability"),
+    movementLimitations: text("movement_limitations"),
+    routineDays: jsonb("routine_days"),
+    preferredTime: text("preferred_time"),
+    workoutLocation: text("workout_location"),
+    equipment: jsonb("equipment"),
+    dietPreference: text("diet_preference"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("fitness_setup_required_progress_idx").on(
+      t.requiredForOnboarding,
+      t.completedAt,
+    ),
   ],
 );
 
@@ -559,11 +609,13 @@ export const agencyUsersTable = pgTable("agency_users", {
 });
 
 // Home banner slides shown at the top of the mobile Home screen. Admins manage
-// these (images / GIFs uploaded to db-images, or YouTube links). Rendered in
-// sortOrder; only active rows are served to members.
+// these (hero images / legacy images / GIFs uploaded to db-images, or YouTube
+// links). Rendered in sortOrder; only active rows are served to members. The
+// kind is intentionally text so adding the dedicated hero purpose needs no
+// destructive migration.
 export const homeSlidesTable = pgTable("home_slides", {
   id: serial("id").primaryKey(),
-  kind: text("kind").notNull().default("image"), // image | gif | youtube
+  kind: text("kind").notNull().default("image"), // hero | image | gif | youtube | shortcut
   mediaUrl: text("media_url").notNull().default(""), // db-image URL, gif URL, or YouTube URL
   title: text("title").notNull().default(""),
   subtitle: text("subtitle").notNull().default(""),
@@ -1305,6 +1357,54 @@ export const uploadedImagesTable = pgTable("uploaded_images", {
     .notNull()
     .defaultNow(),
 });
+
+// Community transformations are deliberately kept out of uploaded_images:
+// that legacy store is public, whereas unreviewed member photos are private.
+// The API authorizes every community_media read against its parent post.
+export const communityPostsTable = pgTable(
+  "community_posts",
+  {
+    id: serial("id").primaryKey(),
+    authorUserId: integer("author_user_id").notNull(),
+    caption: text("caption").notNull().default(""),
+    trainerStaffId: integer("trainer_staff_id"),
+    trainerYoactivStaffId: text("trainer_yoactiv_staff_id"),
+    trainerName: text("trainer_name").notNull().default(""),
+    status: text("status").notNull().default("pending"), // pending | approved | rejected | unpublished | withdrawn
+    publicSharingConsent: boolean("public_sharing_consent").notNull().default(false),
+    rejectionReason: text("rejection_reason").notNull().default(""),
+    reviewedByAdminId: integer("reviewed_by_admin_id"),
+    submittedAt: timestamp("submitted_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("community_posts_status_submitted_idx").on(t.status, t.submittedAt),
+    index("community_posts_author_submitted_idx").on(t.authorUserId, t.submittedAt),
+  ],
+);
+
+// Private, compressed still-photo bytes. Never expose this table through the
+// generic public db-images endpoint; use /community/media/:id instead.
+export const communityMediaTable = pgTable(
+  "community_media",
+  {
+    id: text("id").primaryKey(),
+    postId: integer("post_id").notNull(),
+    kind: text("kind").notNull(), // before | after
+    mimeType: text("mime_type").notNull(),
+    sizeBytes: integer("size_bytes").notNull(),
+    dataBase64: text("data_base64").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("community_media_post_kind_unique").on(t.postId, t.kind),
+    index("community_media_post_idx").on(t.postId),
+  ],
+);
 
 // ─── Daily wellness tracking (Iconic Fitness mobile app) ───
 // Per-entry logs; daily totals are computed by summing rows for a given

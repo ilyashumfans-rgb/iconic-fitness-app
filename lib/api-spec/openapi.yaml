@@ -10,6 +10,7 @@ servers:
 tags:
   - name: health
   - name: profile
+  - name: fitness-setup
   - name: gyms
   - name: classes
   - name: bookings
@@ -25,6 +26,8 @@ tags:
     description: Member gym check-ins
   - name: ai
     description: Iconic Fitness AI assistant
+  - name: community
+    description: Member transformation stories. Photos remain private until an admin approves a consented submission.
 paths:
   /ai/chat:
     post:
@@ -112,6 +115,44 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/UserProfile" }
 
+  /fitness-setup:
+    get:
+      operationId: getFitnessSetup
+      tags: [fitness-setup]
+      summary: Get the caller's private first-login fitness setup progress
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FitnessSetup" }
+    patch:
+      operationId: saveFitnessSetupStep
+      tags: [fitness-setup]
+      summary: Save one private fitness setup step for the caller
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FitnessSetupStepSave" }
+      responses:
+        "200":
+          description: Saved setup progress
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FitnessSetup" }
+  /fitness-setup/complete:
+    post:
+      operationId: completeFitnessSetup
+      tags: [fitness-setup]
+      summary: Complete the caller's first-login fitness setup
+      responses:
+        "200":
+          description: Completed setup
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FitnessSetup" }
+
   /dashboard:
     get:
       operationId: getDashboard
@@ -128,7 +169,7 @@ paths:
     get:
       operationId: listHomeSlides
       tags: [gyms]
-      summary: Active home banner slides (public)
+      summary: Active Home hero and banner slides (public)
       responses:
         "200":
           description: OK
@@ -405,6 +446,61 @@ paths:
                 required: [error]
                 properties:
                   error: { type: string }
+  /memberships/sync:
+    post:
+      operationId: syncMemberMobile
+      tags: [memberships]
+      summary: Explicitly sync a mobile with YoActiv for the signed-in member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MobileSyncRequest"
+      responses:
+        "200":
+          description: Mobile saved and server-only sync receipt recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [synced]
+                properties:
+                  synced:
+                    type: boolean
+  /memberships/sync/automatic:
+    post:
+      operationId: autoSyncMemberMobile
+      tags: [memberships]
+      summary: Refresh membership using only the signed-in member's server-only sync receipt
+      responses:
+        "200":
+          description: Automatic sync result; confirmation_required means the member must explicitly verify a mobile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AutomaticMobileSyncResult"
+        "503":
+          description: The trusted membership could not be refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [error]
+                properties:
+                  error: { type: string }
+  /memberships/journey:
+    get:
+      operationId: getFitnessJourney
+      tags: [memberships]
+      summary: Authoritative eligibility and actual kick-starter trial progress
+      responses:
+        "200":
+          description: Fail-closed member journey
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FitnessJourney"
   /memberships/mine:
     get:
       operationId: getMyMembership
@@ -1283,6 +1379,116 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Checkin" }
 
+  /community:
+    get:
+      operationId: listCommunityPosts
+      tags: [community]
+      summary: Approved public community transformation feed
+      parameters:
+        - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 50 } }
+        - { in: query, name: beforeId, schema: { type: integer, minimum: 1 } }
+      responses:
+        "200":
+          description: Approved submissions only
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommunityPostPage" }
+    post:
+      operationId: createCommunityPost
+      tags: [community]
+      summary: Submit a before and after transformation for moderation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateCommunityPostRequest" }
+      responses:
+        "201":
+          description: Pending submission created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommunityPostCreated" }
+  /community/mine:
+    get:
+      operationId: listMyCommunityPosts
+      tags: [community]
+      summary: The signed-in member's submissions and moderation statuses
+      parameters:
+        - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 50 } }
+        - { in: query, name: beforeId, schema: { type: integer, minimum: 1 } }
+      responses:
+        "200":
+          description: Member submissions
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommunityPostPage" }
+  /community/{id}/coach:
+    get:
+      operationId: getCommunityCoach
+      tags: [community]
+      summary: The currently available coach attached to a community submission
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: Available coach visible to the caller
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommunityCoach" }
+  /community/{id}:
+    get:
+      operationId: getCommunityPost
+      tags: [community]
+      summary: A community submission when approved, owned by the member, or viewed by an admin
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: Submission visible to the caller
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommunityPost" }
+  /community/trainers:
+    get:
+      operationId: listCommunityTrainers
+      tags: [community]
+      summary: Active linked PT trainers for a selected branch
+      parameters:
+        - in: query
+          name: gymId
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: Available trainers, or an empty list for an unmapped branch
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CommunityTrainer" }
+  /community/{id}/withdraw:
+    post:
+      operationId: withdrawCommunityPost
+      tags: [community]
+      summary: Withdraw the signed-in member's community submission
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: Withdrawn
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommunityPostCreated" }
+
 components:
   schemas:
     NotificationSounds:
@@ -1315,11 +1521,68 @@ components:
       properties:
         status: { type: string }
 
+    CommunityTrainer:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+    CommunityCoach:
+      type: object
+      required: [name, photoUrl, gymId, gymName, trainerId]
+      properties:
+        name: { type: string }
+        photoUrl: { type: ["string", "null"] }
+        gymId: { type: integer }
+        gymName: { type: string }
+        trainerId: { type: string }
+    CreateCommunityPostRequest:
+      type: object
+      required: [caption, beforeImage, afterImage, publicSharingConsent]
+      properties:
+        caption: { type: string, maxLength: 1200 }
+        beforeImage: { type: string, description: "Base64 or data URL encoded JPEG, PNG, or WebP still photo" }
+        afterImage: { type: string, description: "Base64 or data URL encoded JPEG, PNG, or WebP still photo" }
+        publicSharingConsent: { type: boolean, const: true }
+        trainerStaffId: { type: integer, nullable: true }
+        gymId: { type: integer, nullable: true }
+    CommunityPostCreated:
+      type: object
+      required: [id, status, submittedAt]
+      properties:
+        id: { type: integer }
+        status: { type: string, enum: [pending, withdrawn] }
+        submittedAt: { type: string, format: date-time }
+    CommunityPost:
+      type: object
+      required: [id, caption, authorName, submittedAt]
+      properties:
+        id: { type: integer }
+        caption: { type: string }
+        trainerName: { type: string, nullable: true }
+        authorName: { type: string }
+        authorAvatarUrl: { type: string, nullable: true }
+        beforeImageUrl: { type: string, nullable: true }
+        afterImageUrl: { type: string, nullable: true }
+        submittedAt: { type: string, format: date-time }
+        status: { type: string, enum: [pending, approved, rejected, unpublished, withdrawn] }
+        rejectionReason: { type: string, nullable: true }
+        publicSharingConsent: { type: boolean }
+        reviewedAt: { type: string, format: date-time, nullable: true }
+    CommunityPostPage:
+      type: object
+      required: [items, nextBeforeId]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/CommunityPost" }
+        nextBeforeId: { type: integer, nullable: true }
+
     UserProfile:
       type: object
       required:
         [
-          id, name, email, mobile, gender, age, heightCm, weightKg,
+          id, username, name, email, mobile, gender, age, heightCm, weightKg,
           fitnessGoal, avatarUrl, city, bmi, fitnessScore,
           dailyCalories, dailyWaterMl, dailySleepHours, restingHr,
           streakDays, weeklyWorkouts, weeklyGoal, joinedAt,
@@ -1327,14 +1590,15 @@ components:
         ]
       properties:
         id: { type: integer }
+        username: { type: string, nullable: true }
         name: { type: string }
         email: { type: string }
         mobile: { type: string }
         gender: { type: string }
-        age: { type: integer }
-        heightCm: { type: number }
-        weightKg: { type: number }
-        fitnessGoal: { type: string }
+        age: { type: integer, nullable: true, description: "Null until a member supplies a real age" }
+        heightCm: { type: number, nullable: true, description: "Null until a member supplies a real height" }
+        weightKg: { type: number, nullable: true, description: "Null until a member supplies a real weight" }
+        fitnessGoal: { type: string, nullable: true, description: "Null until a member supplies a real goal" }
         avatarUrl: { type: string }
         city: { type: string }
         bmi: { type: number }
@@ -1373,6 +1637,7 @@ components:
     UserProfileUpdate:
       type: object
       properties:
+        username: { type: string, nullable: true }
         name: { type: string }
         mobile: { type: string }
         gender: { type: string }
@@ -1384,12 +1649,59 @@ components:
         city: { type: string }
         weeklyGoal: { type: integer }
 
+    FitnessSetup:
+      type: object
+      required: [requiredForOnboarding, currentStep, completed, exists]
+      properties:
+        exists: { type: boolean, description: "Whether this member has saved an optional setup profile" }
+        requiredForOnboarding: { type: boolean, description: "Only true for a newly provisioned member until completed" }
+        currentStep: { type: integer, minimum: 1, maximum: 4 }
+        completed: { type: boolean }
+        completedAt: { type: string, format: date-time, nullable: true }
+        unitSystem: { type: string, nullable: true, enum: [metric, imperial] }
+        heightCm: { type: number, nullable: true, description: "Canonical centimetres" }
+        weightKg: { type: number, nullable: true, description: "Canonical kilograms" }
+        age: { type: integer, nullable: true }
+        goals: { type: array, items: { type: string } }
+        interests: { type: array, items: { type: string } }
+        experienceLevel: { type: string, nullable: true, enum: [new, returning, experienced, not_sure] }
+        activityLevel: { type: string, nullable: true, enum: [low, light, moderate, high, not_sure] }
+        selfReportedAbility: { type: string, nullable: true, enum: [beginner, building, confident, not_sure] }
+        movementLimitations: { type: string, nullable: true, maxLength: 500, description: "Optional self-reported movement considerations; not a diagnosis or medical assessment" }
+        routineDays: { type: array, items: { type: string } }
+        preferredTime: { type: string, nullable: true, enum: [morning, afternoon, evening, flexible, not_sure] }
+        workoutLocation: { type: string, nullable: true, enum: [gym, home, both, not_sure] }
+        equipment: { type: array, items: { type: string } }
+        dietPreference: { type: string, nullable: true, enum: [vegetarian, non_vegetarian, vegan, eggetarian, no_preference, not_sure] }
+    FitnessSetupStepSave:
+      type: object
+      required: [step]
+      properties:
+        step: { type: integer, minimum: 1, maximum: 4 }
+        unitSystem: { type: string, enum: [metric, imperial], nullable: true }
+        height: { type: number, nullable: true, description: "Height in the selected UI unit (cm for metric, inches for imperial); normalized to heightCm on the server" }
+        weight: { type: number, nullable: true, description: "Weight in the selected UI unit (kg for metric, pounds for imperial); normalized to weightKg on the server" }
+        heightCm: { type: number, nullable: true, minimum: 80, maximum: 260 }
+        weightKg: { type: number, nullable: true, minimum: 20, maximum: 400 }
+        age: { type: integer, nullable: true, minimum: 13, maximum: 120 }
+        goals: { type: array, nullable: true, maxItems: 8, items: { type: string, maxLength: 60 } }
+        interests: { type: array, nullable: true, maxItems: 12, items: { type: string, maxLength: 60 } }
+        experienceLevel: { type: string, nullable: true, enum: [new, returning, experienced, not_sure] }
+        activityLevel: { type: string, nullable: true, enum: [low, light, moderate, high, not_sure] }
+        selfReportedAbility: { type: string, nullable: true, enum: [beginner, building, confident, not_sure] }
+        movementLimitations: { type: string, nullable: true, maxLength: 500 }
+        routineDays: { type: array, nullable: true, maxItems: 7, items: { type: string, enum: [mon, tue, wed, thu, fri, sat, sun] } }
+        preferredTime: { type: string, nullable: true, enum: [morning, afternoon, evening, flexible, not_sure] }
+        workoutLocation: { type: string, nullable: true, enum: [gym, home, both, not_sure] }
+        equipment: { type: array, nullable: true, maxItems: 12, items: { type: string, maxLength: 60 } }
+        dietPreference: { type: string, nullable: true, enum: [vegetarian, non_vegetarian, vegan, eggetarian, no_preference, not_sure] }
+
     HomeSlide:
       type: object
       required: [id, kind, mediaUrl, title, subtitle, ctaLabel, ctaUrl, audience]
       properties:
         id: { type: integer }
-        kind: { type: string, enum: [image, gif, youtube] }
+        kind: { type: string, enum: [hero, image, gif, youtube, shortcut] }
         mediaUrl:
           { type: string, description: "db-image URL / GIF URL, or a YouTube URL when kind=youtube" }
         title: { type: string }
@@ -1632,6 +1944,41 @@ components:
         name: { type: string }
         sortOrder: { type: integer }
         imageUrl: { type: string }
+    MobileSyncRequest:
+      type: object
+      required: [mobile]
+      properties:
+        mobile:
+          type: string
+    AutomaticMobileSyncResult:
+      type: object
+      required: [synced, reason]
+      properties:
+        synced:
+          type: boolean
+        reason:
+          type: string
+          enum: [synced, confirmation_required, mobile_conflict]
+    FitnessJourney:
+      type: object
+      required: [ownerId, eligible, reason, hasBooking, assigned, completedCount, trainerName]
+      properties:
+        ownerId:
+          type: string
+        eligible:
+          type: boolean
+        reason:
+          type: string
+        hasBooking:
+          type: boolean
+        assigned:
+          type: boolean
+        completedCount:
+          type: integer
+        trainerName:
+          type: string
+        trainerPhotoUrl:
+          type: string
     MyMembership:
       type: object
       required: [planId, planName, renewsOn, classesUsed, classesIncluded, gymsAccessed, status]

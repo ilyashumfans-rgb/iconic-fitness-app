@@ -5,6 +5,7 @@ import engagementRouter from "./engagement";
 import assessmentRouter from "./assessment";
 import ptDashboardRouter from "./ptDashboard";
 import profileRouter from "./profile";
+import fitnessSetupRouter from "./fitnessSetup";
 import dashboardRouter from "./dashboard";
 import gymsRouter from "./gyms";
 import classesRouter from "./classes";
@@ -36,11 +37,13 @@ import couponsRouter from "./coupons";
 import messagingRouter from "./messaging";
 import settingsRouter from "./settings";
 import webhooksRouter from "./webhooks";
+import communityRouter from "./community";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(profileRouter);
+router.use(fitnessSetupRouter);
 router.use(dashboardRouter);
 router.use(gymsRouter);
 router.use(classesRouter);
@@ -76,5 +79,6 @@ router.use(couponsRouter);
 router.use(messagingRouter);
 router.use(settingsRouter);
 router.use(webhooksRouter);
+router.use(communityRouter);
 
 export default router;

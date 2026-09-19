@@ -263,56 +263,114 @@ function toStatus(raw: string | undefined): "active" | "paused" | "expired" {
   return s === "active" ? "active" : "expired";
 }
 
-// Small in-memory cache so /memberships/mine doesn't hit YoActiv on every
-// poll. Successes cached 5 min; failures cached 60s (avoids hammering a
-// struggling upstream while still recovering quickly).
-const cache = new Map<
+/**
+ * A member lookup fans out to branch discovery and one or more profile
+ * requests. Several authenticated routes can ask for that same profile at
+ * once (for example, Home + payments after a sign-in). Share only the
+ * currently running request; do not retain a private profile after it
+ * settles. This keeps plan/photo identity fresh while avoiding a burst of
+ * duplicate YoActiv calls.
+ *
+ * The cap is deliberate: a stream of unique mobiles must not grow this map
+ * without bound while YoActiv is slow. Requests arriving after the cap run
+ * independently rather than being retained in memory.
+ */
+const MAX_MEMBER_LOOKUPS_IN_FLIGHT = 128;
+const MEMBER_LOOKUP_KEY_SEPARATOR = "\u0000";
+const memberLookupsInFlight = new Map<
   string,
-  { at: number; ttlMs: number; value: YoactivMemberProfile | null }
+  Promise<YoactivMemberProfile | null>
 >();
-const SUCCESS_TTL_MS = 5 * 60 * 1000;
-const FAILURE_TTL_MS = 60 * 1000;
+const emailLookupsInFlight = new Map<
+  string,
+  Promise<YoactivMemberProfile | null>
+>();
+
+function memberLookupContextKey(
+  kind: "mobile" | "email",
+  identity: string,
+  configs: KeyConfig[],
+): string {
+  // Include both the concrete key and its branch set. The same mobile must
+  // not share a request if key/branch resolution changes, and a branch-scoped
+  // request must never be confused with another branch context. The key is
+  // internal only and is never logged or returned.
+  const targets = configs
+    .map((config) => ({
+      apiKey: config.apiKey,
+      branchIds: [...config.branchIds].sort((a, b) => a - b),
+    }))
+    .sort((a, b) => {
+      const branches = a.branchIds.join(",");
+      const otherBranches = b.branchIds.join(",");
+      return branches.localeCompare(otherBranches) || a.apiKey.localeCompare(b.apiKey);
+    });
+  return `${kind}${MEMBER_LOOKUP_KEY_SEPARATOR}${identity}${MEMBER_LOOKUP_KEY_SEPARATOR}${JSON.stringify(targets)}`;
+}
+
+function shareMemberLookup(
+  map: Map<string, Promise<YoactivMemberProfile | null>>,
+  key: string,
+  task: () => Promise<YoactivMemberProfile | null>,
+): Promise<YoactivMemberProfile | null> {
+  const existing = map.get(key);
+  if (existing) return existing;
+  if (map.size >= MAX_MEMBER_LOOKUPS_IN_FLIGHT) return task();
+
+  let shared: Promise<YoactivMemberProfile | null>;
+  shared = task().finally(() => {
+    // An explicit invalidation can remove an older promise before it settles.
+    // Do not delete a newer request that reused the same key.
+    if (map.get(key) === shared) map.delete(key);
+  });
+  map.set(key, shared);
+  return shared;
+}
 
 /**
- * Drop the cached lookup for a mobile so the next /memberships/mine fetch is
- * fresh — call after a payment lands, or the member sees a stale "no plan"
- * for up to 5 minutes.
+ * Drop currently shared work for a mobile so a post-payment request starts
+ * fresh. In-flight fetches cannot be cancelled safely, but removing their
+ * map entries prevents a subsequent caller from joining that older result.
  */
 export function invalidateYoactivMemberCache(
   rawMobile: string | null | undefined,
 ): void {
   const mobile = normalizeMobile(rawMobile);
-  if (mobile) cache.delete(mobile);
+  if (!mobile) return;
+  const prefix = `mobile${MEMBER_LOOKUP_KEY_SEPARATOR}${mobile}${MEMBER_LOOKUP_KEY_SEPARATOR}`;
+  for (const key of memberLookupsInFlight.keys()) {
+    if (key.startsWith(prefix)) memberLookupsInFlight.delete(key);
+  }
 }
 
 /**
  * Look up a member across all configured YoActiv keys/branches by mobile.
  * Returns null when the mobile isn't found anywhere (or nothing configured).
- * Throws only on unexpected transport errors when nothing cached.
+ * Unexpected upstream errors are logged and return null so local membership
+ * fallback behavior remains intact.
  */
 export async function fetchYoactivMemberByMobile(
   rawMobile: string | null | undefined,
+  options: { requireComplete?: boolean } = {},
 ): Promise<YoactivMemberProfile | null> {
   const mobile = normalizeMobile(rawMobile);
   if (!mobile) return null;
   const configs = await yoactivKeyConfigs();
   if (configs.length === 0) return null;
 
-  const cached = cache.get(mobile);
-  if (cached && Date.now() - cached.at < cached.ttlMs) return cached.value;
-
-  try {
-    const profile = await withDeadline(
-      lookupAcrossKeys(mobile, configs),
-      LOOKUP_BUDGET_MS,
-    );
-    cache.set(mobile, { at: Date.now(), ttlMs: SUCCESS_TTL_MS, value: profile });
-    return profile;
-  } catch (err) {
-    logger.warn({ err, mobile: `…${mobile.slice(-4)}` }, "yoactiv lookup failed");
-    cache.set(mobile, { at: Date.now(), ttlMs: FAILURE_TTL_MS, value: null });
-    return null;
-  }
+  const key = memberLookupContextKey("mobile", mobile, configs) +
+    (options.requireComplete ? ":complete" : "");
+  return shareMemberLookup(memberLookupsInFlight, key, async () => {
+    try {
+      return await withDeadline(
+        lookupAcrossKeys(mobile, configs, options.requireComplete),
+        LOOKUP_BUDGET_MS,
+      );
+    } catch (err) {
+      logger.warn({ err, mobile: `…${mobile.slice(-4)}` }, "yoactiv lookup failed");
+      return null;
+    }
+  });
 }
 
 // Overall time budget for one member lookup — /memberships/mine is polled
@@ -334,9 +392,10 @@ async function withDeadline<T>(promise: Promise<T>, ms: number): Promise<T> {
 async function lookupAcrossKeys(
   mobile: string,
   configs: KeyConfig[],
+  requireComplete = false,
 ): Promise<YoactivMemberProfile | null> {
   const results = await Promise.all(
-    configs.map((config) => lookupForKey(mobile, config)),
+    configs.map((config) => lookupForKey(mobile, config, requireComplete)),
   );
   const found = results.filter((r): r is YoactivMemberProfile => r !== null);
   if (found.length === 0) return null;
@@ -354,6 +413,7 @@ async function lookupAcrossKeys(
 async function lookupForKey(
   mobile: string,
   config: KeyConfig,
+  requireComplete = false,
 ): Promise<YoactivMemberProfile | null> {
   // Ask which branches this member belongs to (any branch header works for
   // the key), then fetch the full profile from each matching branch.
@@ -363,10 +423,14 @@ async function lookupForKey(
     const res = await yoactivPost<{
       Results?: Array<{ Branch_Id?: number }>;
     }>("/Users/Branches", config.apiKey, probeBranch, { Mobile_No: mobile });
+    if (requireComplete && !Array.isArray(res.Results)) {
+      throw new Error("YoActiv branch discovery could not be verified");
+    }
     memberBranches = (res.Results ?? [])
       .map((b) => b.Branch_Id ?? 0)
       .filter((id) => config.branchIds.includes(id));
   } catch {
+    if (requireComplete) throw new Error("YoActiv branch discovery incomplete");
     // Branch discovery failed — fall back to probing every branch directly
     // (in parallel below, bounded by the overall lookup deadline).
     memberBranches = config.branchIds;
@@ -387,6 +451,11 @@ async function lookupForKey(
   let photoUrl: string | null = null;
   let branchCount = 0;
   for (const settled of fetches) {
+    if (requireComplete && (settled.status !== "fulfilled" ||
+      settled.value.data.Error || !settled.value.data.MemberId ||
+      !Array.isArray(settled.value.data.Results))) {
+      throw new Error("YoActiv member profile incomplete");
+    }
     if (settled.status !== "fulfilled") continue;
     const { branchId, data } = settled.value;
     if (data.Error || !data.MemberId) continue;
@@ -736,11 +805,6 @@ const memberListCache = new Map<
   number,
   { at: number; ttlMs: number; value: YoactivMemberRow[] }
 >();
-const memberEmailCache = new Map<
-  string,
-  { at: number; ttlMs: number; value: YoactivMemberProfile | null }
->();
-
 function normalizeEmail(raw: string | null | undefined): string | null {
   const email = (raw ?? "").trim().toLowerCase();
   if (
@@ -763,8 +827,6 @@ export async function fetchYoactivMemberByVerifiedEmail(
 ): Promise<YoactivMemberProfile | null> {
   const email = normalizeEmail(rawEmail);
   if (!email) return null;
-  const cached = memberEmailCache.get(email);
-  if (cached && Date.now() - cached.at < cached.ttlMs) return cached.value;
 
   const configs = await yoactivKeyConfigs();
   const branchIds = [
@@ -780,43 +842,31 @@ export async function fetchYoactivMemberByVerifiedEmail(
   ];
   if (branchIds.length === 0) return null;
 
-  try {
-    const directories = await Promise.all(
-      branchIds.map((branchId) => fetchYoactivMemberList(branchId)),
-    );
-    const matches = directories
-      .flat()
-      .filter((member) => normalizeEmail(member.email) === email);
-    const byMobile = new Map<string, YoactivMemberRow>();
-    for (const match of matches) {
-      const mobile = normalizeMobile(match.mobile);
-      if (mobile) byMobile.set(mobile, match);
-    }
-    if (byMobile.size !== 1) {
-      memberEmailCache.set(email, {
-        at: Date.now(),
-        ttlMs: FAILURE_TTL_MS,
-        value: null,
-      });
+  const key = memberLookupContextKey("email", email, configs);
+  return shareMemberLookup(emailLookupsInFlight, key, async () => {
+    try {
+      const directories = await Promise.all(
+        branchIds.map((branchId) => fetchYoactivMemberList(branchId)),
+      );
+      const matches = directories
+        .flat()
+        .filter((member) => normalizeEmail(member.email) === email);
+      const byMobile = new Map<string, YoactivMemberRow>();
+      for (const match of matches) {
+        const mobile = normalizeMobile(match.mobile);
+        if (mobile) byMobile.set(mobile, match);
+      }
+      // Exact, unique matches only: duplicated emails fail closed. Keep this
+      // check immediately before the mobile lookup so the verified-email
+      // fallback cannot accidentally select an arbitrary member.
+      if (byMobile.size !== 1) return null;
+      const [match] = byMobile.values();
+      return await fetchYoactivMemberByMobile(match!.mobile);
+    } catch (err) {
+      logger.warn({ err }, "yoactiv verified-email lookup failed");
       return null;
     }
-    const [match] = byMobile.values();
-    const profile = await fetchYoactivMemberByMobile(match!.mobile);
-    memberEmailCache.set(email, {
-      at: Date.now(),
-      ttlMs: profile ? SUCCESS_TTL_MS : FAILURE_TTL_MS,
-      value: profile,
-    });
-    return profile;
-  } catch (err) {
-    logger.warn({ err }, "yoactiv verified-email lookup failed");
-    memberEmailCache.set(email, {
-      at: Date.now(),
-      ttlMs: FAILURE_TTL_MS,
-      value: null,
-    });
-    return null;
-  }
+  });
 }
 
 /**
@@ -1104,7 +1154,7 @@ export async function createYoactivPaymentUrl(args: {
   };
   const basePayload = {
     memberId: String(args.memberId),
-    Busid: "1",
+    Busid: String(args.target.branchId),
     Booktype: 0,
     Amount: args.amountInr,
     SuccessURL: args.successUrl,

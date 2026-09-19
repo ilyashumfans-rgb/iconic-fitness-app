@@ -17,9 +17,10 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Image as ExpoImage } from "expo-image";
-import { Alert, Pressable, View } from "react-native";
+import { Alert, Platform, Pressable, View, ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
@@ -36,6 +37,7 @@ import { istDateLabel, istToday } from "@/lib/dates";
 import { resolveImageUrl } from "@/lib/images";
 import { submitLead } from "@/lib/leads";
 import { openPayment } from "@/lib/links";
+import { memberAuthHref } from "@/lib/memberAuth";
 
 export default function BookPackageScreen() {
   const router = useRouter();
@@ -109,6 +111,12 @@ export default function BookPackageScreen() {
   const [busy, setBusy] = useState(false);
   const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
   const [bookingId, setBookingId] = useState<number | null>(null);
+  // Keep the hosted checkout link so a blocked async popup can be opened
+  // again from a direct button gesture without creating another booking.
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const submitGuardRef = useRef(false);
+  const paymentOpenGuardRef = useRef(false);
   // Guest purchases poll status with the access token returned at creation.
   const [bookingToken, setBookingToken] = useState<string | null>(null);
 
@@ -133,6 +141,14 @@ export default function BookPackageScreen() {
   const status = bookingId !== null ? statusQuery.data?.status : undefined;
   const selectedPkg = packages.find((p) => p.id === pkgId) ?? null;
 
+  useEffect(() => {
+    // A blocked popup error is no longer actionable once the gateway reports
+    // a terminal result; don't leave stale checkout errors above success.
+    if (status === "paid" || status === "failed") {
+      setCheckoutError(null);
+    }
+  }, [status]);
+
   // Coupon first, then points on the remainder — both leave at least ₹1
   // payable (the gateway needs a real charge). Server re-validates both.
   const couponDiscount = selectedPkg && coupon ? coupon.discountInr : 0;
@@ -152,6 +168,13 @@ export default function BookPackageScreen() {
     setCoupon(null);
   }, [pkgId]);
 
+  // Auto-select the first package for the plan selection screen
+  useEffect(() => {
+    if (paidFlow && pkgId === null && packages.length > 0) {
+      setPkgId(packages[0].id);
+    }
+  }, [paidFlow, pkgId, packages]);
+
   // Points are debited server-side when the payment lands; refresh the wallet
   // and the membership (the new plan should replace "Join membership" cues).
   useEffect(() => {
@@ -167,52 +190,63 @@ export default function BookPackageScreen() {
 
   function validateContact(): boolean {
     if (name.trim().length < 2) {
-      Alert.alert("Name required", "Please enter your full name.");
+      setCheckoutError("Name required — please enter your full name.");
+      if (paidFlow) setCheckoutStep(2);
       return false;
     }
     if (!/^[+0-9 ()-]{7,}$/.test(phone.trim())) {
-      Alert.alert("Phone required", "Please enter a valid phone number.");
+      setCheckoutError("Phone required — please enter a valid phone number.");
+      if (paidFlow) setCheckoutStep(2);
       return false;
     }
     return true;
   }
 
   function continueToDetails() {
+    setCheckoutError(null);
     if (!selectedPkg) {
-      Alert.alert("Pick a package", "Please choose a package to continue.");
+      setCheckoutError("Pick a package — please choose a package to continue.");
       return;
     }
     setCheckoutStep(2);
   }
 
   function continueToPayment() {
+    setCheckoutError(null);
     if (!validateContact()) return;
     if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      Alert.alert("Check your email", "Please enter a valid email address.");
+      setCheckoutError("Check your email — please enter a valid email address.");
+      setCheckoutStep(2);
       return;
     }
     setCheckoutStep(3);
   }
 
   async function onPay() {
-    if (gymId === null || !selectedPkg) {
-      Alert.alert("Pick a package", "Please choose a package to continue.");
-      return;
-    }
-    if (!validateContact()) return;
-    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      Alert.alert("Check your email", "Please enter a valid email address.");
-      return;
-    }
-    if (!termsAccepted) {
-      Alert.alert(
-        "Terms & Conditions",
-        "Please accept the Terms & Conditions to continue with the payment.",
-      );
-      return;
-    }
-    setBusy(true);
+    // React Native can deliver two presses before the busy state is rendered.
+    // Guard synchronously so only one booking mutation can be created.
+    if (submitGuardRef.current) return;
+    submitGuardRef.current = true;
+    setCheckoutError(null);
     try {
+      if (gymId === null || !selectedPkg) {
+        setCheckoutError("Pick a package — please choose a package to continue.");
+        setCheckoutStep(1);
+        return;
+      }
+      if (!validateContact()) return;
+      if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+        setCheckoutError("Check your email — please enter a valid email address.");
+        setCheckoutStep(2);
+        return;
+      }
+      if (!termsAccepted) {
+        setCheckoutError(
+          "Terms & Conditions — please accept the terms before continuing with payment.",
+        );
+        return;
+      }
+      setBusy(true);
       const created = await createBooking.mutateAsync({
         data: {
           gymId,
@@ -228,20 +262,27 @@ export default function BookPackageScreen() {
         },
       });
       setBookingId(created.id);
+      setPaymentUrl(created.paymentUrl ?? null);
       setBookingToken(created.token ?? null);
       await openPayment(created.paymentUrl);
     } catch (err) {
-      Alert.alert(
-        "Could not start payment",
-        err instanceof Error ? err.message : "Please try again.",
+      setCheckoutError(
+        err instanceof Error ? err.message : "Could not start payment. Please try again.",
       );
     } finally {
       setBusy(false);
+      submitGuardRef.current = false;
     }
   }
 
   async function onEnquire() {
-    if (!validateContact()) return;
+    if (submitGuardRef.current) return;
+    submitGuardRef.current = true;
+    setCheckoutError(null);
+    if (!validateContact()) {
+      submitGuardRef.current = false;
+      return;
+    }
     setBusy(true);
     try {
       await submitLead({
@@ -259,12 +300,31 @@ export default function BookPackageScreen() {
         [{ text: "Done", onPress: () => router.back() }],
       );
     } catch (err) {
-      Alert.alert(
-        "Could not send",
-        err instanceof Error ? err.message : "Please try again.",
+      setCheckoutError(
+        err instanceof Error ? err.message : "Could not send your request. Please try again.",
       );
     } finally {
       setBusy(false);
+      submitGuardRef.current = false;
+    }
+  }
+
+  async function reopenPayment() {
+    if (paymentOpenGuardRef.current) return;
+    paymentOpenGuardRef.current = true;
+    setCheckoutError(null);
+    try {
+      // An absent URL is intentionally passed through to the shared validator
+      // so malformed API responses are visible instead of becoming a no-op.
+      await openPayment(paymentUrl ?? "");
+    } catch (err) {
+      setCheckoutError(
+        err instanceof Error
+          ? err.message
+          : "Could not open the payment page. Please try again.",
+      );
+    } finally {
+      paymentOpenGuardRef.current = false;
     }
   }
 
@@ -296,6 +356,10 @@ export default function BookPackageScreen() {
                   ? "The payment didn't go through. No money was taken — you can try again."
                   : "Complete the payment in the browser window, then come back here."}
             </AppText>
+            {checkoutError ? <CheckoutError message={checkoutError} /> : null}
+            {!paid && !failed && statusQuery.isError && !checkoutError ? (
+              <CheckoutError message="We couldn't check the payment status just now. You can continue to the payment page or try checking again." />
+            ) : null}
             {paid && isSignedIn && !meQuery.data?.avatarUrl ? (
               <View
                 style={{
@@ -354,7 +418,17 @@ export default function BookPackageScreen() {
               ) : (
                 <Button
                   label="Log in to continue"
-                  onPress={() => router.replace("/(auth)/welcome")}
+                  onPress={() =>
+                    router.replace(
+                      memberAuthHref(
+                        `/book-package?planName=${encodeURIComponent(
+                          interestedIn,
+                        )}&gymId=${encodeURIComponent(
+                          gymId !== null ? String(gymId) : (params.gymId ?? ""),
+                        )}`,
+                      ),
+                    )
+                  }
                 />
               )
             ) : failed ? (
@@ -363,9 +437,35 @@ export default function BookPackageScreen() {
                 onPress={() => {
                   setBookingId(null);
                   setBookingToken(null);
+                  setPaymentUrl(null);
+                  setCheckoutError(null);
                 }}
               />
-            ) : null}
+            ) : (
+              <View style={{ gap: 10, alignSelf: "stretch", marginTop: 4 }}>
+                <Button
+                  label="Continue to payment"
+                  onPress={() => void reopenPayment()}
+                  icon="external-link"
+                />
+                <Button
+                  label="Check payment status"
+                  onPress={() => void statusQuery.refetch()}
+                  loading={statusQuery.isFetching}
+                  icon="refresh-cw"
+                />
+                <Button
+                  label="Cancel and go back"
+                  variant="secondary"
+                  onPress={() => {
+                    setBookingId(null);
+                    setBookingToken(null);
+                    setPaymentUrl(null);
+                    setCheckoutError(null);
+                  }}
+                />
+              </View>
+            )}
           </View>
         </Card>
       </Screen>
@@ -406,6 +506,168 @@ export default function BookPackageScreen() {
   }
 
   // ── Step 2: pick a package & pay ──────────────────────────────────────────
+  if (paidFlow && checkoutStep === 1) {
+    const isPremium = selectedPkg?.name?.toLowerCase().includes("premium") || selectedPkg?.serviceName?.toLowerCase().includes("premium");
+    const headerTitle = isPremium ? "Premium Membership" : "Membership Plans";
+    
+    return (
+      <View style={{ flex: 1, backgroundColor: "#0A0A0A" }}>
+        
+        <SafeAreaView edges={["top", "bottom"]} style={{ flex: 1 }}>
+          {/* Header */}
+          <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingTop: Platform.OS === "web" ? 52 : 16, paddingBottom: 16 }}>
+            <Pressable 
+              accessibilityRole="button"
+              accessibilityLabel="Change branch"
+              hitSlop={12}
+              onPress={() => {
+                setGymId(null);
+                setPkgId(null);
+                setCheckoutStep(1);
+              }} 
+              style={{ paddingRight: 16 }}
+            >
+              <Feather name="arrow-left" size={24} color="#FFF" />
+            </Pressable>
+            <View style={{ flex: 1 }}>
+              <AppText weight="700" size={17} color="#FFF">
+                {headerTitle}
+              </AppText>
+              <AppText weight="500" size={12} color="#AAA">
+                {selectedGym?.name ?? "Branch"}
+              </AppText>
+            </View>
+          </View>
+
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 32, paddingTop: 20 }}>
+            <ExpoImage
+              source={require("@/assets/images/membership-premium-artwork.jpg")}
+              style={{ width: "100%", aspectRatio: 764 / 913 }}
+              contentFit="contain"
+              accessibilityLabel="Iconic Premium membership promotional artwork"
+            />
+            <View style={{ paddingHorizontal: 20, marginBottom: 24 }}>
+
+              {/* Package Description as Bullet Points */}
+              <View style={{ marginTop: 24, gap: 14 }}>
+                {selectedPkg?.description ? (
+                  selectedPkg.description.split('\n').filter(l => l.trim().length > 0).map((line, i) => (
+                    <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                      <Feather name="check-circle" size={18} color="#FFF" />
+                      <AppText weight="600" size={14} color="#E0E0E0" style={{ flex: 1 }}>
+                        {line.trim()}
+                      </AppText>
+                    </View>
+                  ))
+                ) : (
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                    <Feather name="check-circle" size={18} color="#FFF" />
+                    <AppText weight="600" size={14} color="#E0E0E0" style={{ flex: 1 }}>
+                      {selectedPkg?.name || "Select a package below"}
+                    </AppText>
+                  </View>
+                )}
+              </View>
+            </View>
+
+            {/* Horizontal Packages */}
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 20, gap: 12, paddingBottom: 16 }}
+            >
+              {packages.map(p => {
+                const isSelected = p.id === pkgId;
+                const isFeatured = /\b15[\s-]*months?\b/i.test(`${p.name} ${p.duration ?? ""}`);
+                return (
+                  <Pressable
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: isSelected }}
+                    accessibilityLabel={`${p.name}, ₹${p.amountInr.toLocaleString("en-IN")}`}
+                    key={p.id}
+                    onPress={() => setPkgId(p.id)}
+                    style={{
+                      width: 160,
+                      backgroundColor: isFeatured ? "rgba(245, 213, 71, 0.10)" : isSelected ? "rgba(163, 230, 53, 0.08)" : "rgba(30, 30, 30, 0.7)",
+                      borderWidth: 2,
+                      borderColor: isFeatured ? "#F5D547" : isSelected ? "#A3E635" : "#333",
+                      borderRadius: 16,
+                      padding: 16,
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      minHeight: 160,
+                    }}
+                  >
+                    {isFeatured ? (
+                      <View style={{ backgroundColor: "#F5D547", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4, marginBottom: 12 }}>
+                        <AppText size={12} weight="700" color="#15130A">Featured</AppText>
+                      </View>
+                    ) : null}
+                    <View style={{ alignItems: "center", width: "100%", flex: 1 }}>
+                      {p.duration ? (
+                        <AppText weight="600" size={14} color={isSelected ? "#FFF" : "#AAA"} style={{ textAlign: "center", marginBottom: 6 }}>
+                          {p.duration}
+                        </AppText>
+                      ) : null}
+                      <AppText weight="500" size={13} color={isSelected ? "#E0E0E0" : "#B5B5B5"} style={{ textAlign: "center", marginBottom: 12 }}>
+                        {p.name}
+                      </AppText>
+                      
+                      <View style={{ flex: 1, justifyContent: "center" }}>
+                        <AppText weight="700" size={20} color="#FFF" style={{ textAlign: "center" }}>
+                          ₹{p.amountInr.toLocaleString("en-IN")}
+                        </AppText>
+                      </View>
+                    </View>
+
+                    <View style={{ 
+                      width: 22, 
+                      height: 22, 
+                      borderRadius: 11, 
+                      borderWidth: 2, 
+                      borderColor: isSelected ? "#A3E635" : "#555",
+                      alignItems: "center", 
+                      justifyContent: "center",
+                      marginTop: 12,
+                      backgroundColor: isSelected ? "rgba(163,230,53,0.2)" : "transparent"
+                    }}>
+                      {isSelected && <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#A3E635" }} />}
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+
+            <View style={{ paddingHorizontal: 20, marginTop: 12 }}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={continueToDetails}
+                style={{
+                  backgroundColor: "#A3E635",
+                  borderRadius: 999,
+                  paddingVertical: 16,
+                  alignItems: "center",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  gap: 8,
+                }}
+              >
+                <AppText weight="700" size={16} color="#0A0A0A">
+                  Continue with this plan
+                </AppText>
+                <Feather name="arrow-right" size={20} color="#0A0A0A" />
+              </Pressable>
+              
+              <AppText weight="600" size={10} color="#888" style={{ textAlign: "center", marginTop: 16, letterSpacing: 1 }}>
+                MORE BENEFITS. A STRONGER TOMORROW.
+              </AppText>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
   return (
     <Screen contentContainerStyle={{ paddingBottom: 40 }}>
       <ModalHeader title="Buy a package" />
@@ -490,26 +752,7 @@ export default function BookPackageScreen() {
                 ? "Enter the contact details for your membership."
                 : "Choose your start date, apply a coupon if you have one, and confirm the terms."}
         </AppText>
-
-        {paidFlow && checkoutStep === 1 ? (
-          <>
-            <View style={{ gap: 10, marginBottom: 20 }}>
-              {packages.map((p) => (
-                <PackageOption
-                  key={p.id}
-                  pkg={p}
-                  selected={p.id === pkgId}
-                  onPress={() => setPkgId(p.id)}
-                />
-              ))}
-            </View>
-            <Button
-              label="Next"
-              onPress={continueToDetails}
-              icon="arrow-right"
-            />
-          </>
-        ) : null}
+        {checkoutError ? <CheckoutError message={checkoutError} /> : null}
 
         {(!paidFlow || checkoutStep === 2) ? (
           <>
@@ -726,6 +969,28 @@ export default function BookPackageScreen() {
        </Card>
       )}
     </Screen>
+  );
+}
+
+function CheckoutError({ message }: { message: string }) {
+  const colors = useColors();
+  return (
+    <View
+      accessibilityRole="alert"
+      style={{
+        alignSelf: "stretch",
+        marginBottom: 14,
+        padding: 12,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: "#ff6b6b",
+        backgroundColor: colors.destructive + "18",
+      }}
+    >
+      <AppText size={13} color="#ff6b6b">
+        {message}
+      </AppText>
+    </View>
   );
 }
 

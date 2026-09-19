@@ -27,6 +27,7 @@ import { EmptyState, ErrorView, LoadingView } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
 import { istDateInNDays, istToday } from "@/lib/dates";
 import { openExternal } from "@/lib/links";
+import { memberAuthHref } from "@/lib/memberAuth";
 
 function notify(title: string, message: string) {
   if (Platform.OS === "web") {
@@ -112,7 +113,10 @@ export default function BookPtPlanScreen() {
   }, [status, queryClient]);
 
   if (isLoaded && !isSignedIn) {
-    return <Redirect href="/(auth)/sign-in" />;
+    const returnTo = validGym
+      ? `/book-pt-plan?gymId=${encodeURIComponent(String(gymId))}`
+      : "/book-pt-plan";
+    return <Redirect href={memberAuthHref(returnTo)} />;
   }
 
   async function onPay() {

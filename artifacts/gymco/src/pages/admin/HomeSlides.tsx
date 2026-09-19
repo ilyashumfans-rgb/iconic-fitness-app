@@ -12,6 +12,7 @@ import {
   Link2,
 } from "lucide-react";
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
+import { prepareForUpload } from "@/components/FileUpload";
 import { adminApi, type HomeSlide } from "@/lib/adminApi";
 
 type Audience = "all" | "members" | "customers";
@@ -38,7 +39,7 @@ const AUDIENCE_LABEL: Record<Audience, string> = {
 
 type Draft = {
   mediaType: "upload" | "youtube";
-  kind: "image" | "gif" | "youtube";
+  kind: "hero" | "image" | "gif" | "youtube";
   mediaUrl: string;
   title: string;
   subtitle: string;
@@ -58,6 +59,11 @@ const EMPTY_DRAFT: Draft = {
   ctaUrl: "",
   audience: "all",
   isActive: true,
+};
+
+const EMPTY_HERO_DRAFT: Draft = {
+  ...EMPTY_DRAFT,
+  kind: "hero",
 };
 
 const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
@@ -115,31 +121,6 @@ function youtubeThumb(url: string): string | null {
   return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null;
 }
 
-// Compress non-GIF raster images so uploads stay small and reliable.
-// GIFs are uploaded untouched so animation is preserved.
-async function compressImage(file: File): Promise<File> {
-  const bitmap = await createImageBitmap(file);
-  const maxDim = 1920;
-  const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
-  const w = Math.max(1, Math.round(bitmap.width * scale));
-  const h = Math.max(1, Math.round(bitmap.height * scale));
-  const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return file;
-  ctx.drawImage(bitmap, 0, 0, w, h);
-  const keepAlpha = file.type === "image/png" || file.type === "image/webp";
-  const type = keepAlpha ? "image/png" : "image/jpeg";
-  const blob = await new Promise<Blob | null>((r) =>
-    canvas.toBlob(r, type, 0.85),
-  );
-  bitmap.close?.();
-  if (!blob) return file;
-  const base = file.name.replace(/\.[^.]+$/, "") || "image";
-  return new File([blob], `${base}.${keepAlpha ? "png" : "jpg"}`, { type });
-}
-
 async function uploadInline(file: File): Promise<string> {
   const res = await fetch("/api/storage/uploads/inline", {
     method: "POST",
@@ -169,11 +150,13 @@ function SlideEditor({
   submitLabel,
   onSubmit,
   onCancel,
+  heroMode = false,
 }: {
   initial: Draft;
   submitLabel: string;
   onSubmit: (draft: Draft) => Promise<void>;
   onCancel?: () => void;
+  heroMode?: boolean;
 }) {
   const [draft, setDraft] = useState<Draft>(initial);
   const [busy, setBusy] = useState(false);
@@ -196,10 +179,14 @@ function SlideEditor({
     }
     setUploading(true);
     try {
-      const isGif = file.type === "image/gif";
-      const toUpload = isGif ? file : await compressImage(file);
+      const isGif = file.type === "image/gif" || /\.gif$/i.test(file.name);
+      if (heroMode && isGif) {
+        setErr("Hero slides use a still image. Upload JPG, PNG, or WebP.");
+        return;
+      }
+      const toUpload = await prepareForUpload(file);
       const url = await uploadInline(toUpload);
-      set({ mediaUrl: url, kind: isGif ? "gif" : "image" });
+      set({ mediaUrl: url, kind: heroMode ? "hero" : isGif ? "gif" : "image" });
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Upload failed");
     } finally {
@@ -218,13 +205,17 @@ function SlideEditor({
       );
       return;
     }
-    if (draft.mediaType === "youtube" && !youtubeId(draft.mediaUrl)) {
+    if (!heroMode && draft.mediaType === "youtube" && !youtubeId(draft.mediaUrl)) {
       setErr("That doesn't look like a valid YouTube link.");
       return;
     }
     setBusy(true);
     try {
-      const kind = draft.mediaType === "youtube" ? "youtube" : draft.kind;
+      const kind = heroMode
+        ? "hero"
+        : draft.mediaType === "youtube"
+          ? "youtube"
+          : draft.kind;
       await onSubmit({ ...draft, kind });
       if (!onCancel) setDraft(EMPTY_DRAFT); // reset only for the create form
     } catch (e) {
@@ -240,35 +231,43 @@ function SlideEditor({
   return (
     <div className="space-y-4">
       {/* Media type toggle */}
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => set({ mediaType: "upload", kind: "image" })}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border ${
-            draft.mediaType === "upload"
-              ? "bg-lime-500 text-white border-lime-500"
-              : "bg-white text-slate-600 border-lime-200"
-          }`}
-        >
-          <ImageIcon className="h-3.5 w-3.5" /> Image / GIF
-        </button>
-        <button
-          type="button"
-          onClick={() => set({ mediaType: "youtube", kind: "youtube" })}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border ${
-            draft.mediaType === "youtube"
-              ? "bg-lime-500 text-white border-lime-500"
-              : "bg-white text-slate-600 border-lime-200"
-          }`}
-        >
-          <Youtube className="h-3.5 w-3.5" /> YouTube link
-        </button>
-      </div>
+      {heroMode ? (
+        <div className="rounded-lg border border-lime-200 bg-lime-50 px-3 py-2 text-xs text-lime-800">
+          Hero image slider · recommended image ratio 720 × 510 (1.41:1).
+          Upload a still JPG, PNG, or WebP; the app displays it as the large
+          image panel above the shortcut circles.
+        </div>
+      ) : (
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => set({ mediaType: "upload", kind: "image" })}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border ${
+              draft.mediaType === "upload"
+                ? "bg-lime-500 text-white border-lime-500"
+                : "bg-white text-slate-600 border-lime-200"
+            }`}
+          >
+            <ImageIcon className="h-3.5 w-3.5" /> Image / GIF
+          </button>
+          <button
+            type="button"
+            onClick={() => set({ mediaType: "youtube", kind: "youtube" })}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border ${
+              draft.mediaType === "youtube"
+                ? "bg-lime-500 text-white border-lime-500"
+                : "bg-white text-slate-600 border-lime-200"
+            }`}
+          >
+            <Youtube className="h-3.5 w-3.5" /> YouTube link
+          </button>
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-[200px_1fr]">
         {/* Preview + media picker */}
         <div>
-          <div className="aspect-[16/9] rounded-lg overflow-hidden bg-lime-50 border border-lime-200 flex items-center justify-center">
+          <div className={`${heroMode ? "aspect-[720/510]" : "aspect-[16/9]"} rounded-lg overflow-hidden bg-lime-50 border border-lime-200 flex items-center justify-center`}>
             {preview ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -280,7 +279,7 @@ function SlideEditor({
               <span className="text-[11px] text-slate-400">No media yet</span>
             )}
           </div>
-          {draft.mediaType === "upload" ? (
+          {heroMode || draft.mediaType === "upload" ? (
             <>
               <button
                 type="button"
@@ -293,12 +292,20 @@ function SlideEditor({
                 ) : (
                   <Upload className="h-3.5 w-3.5" />
                 )}
-                {uploading ? "Uploading…" : "Upload image / GIF"}
+                {uploading
+                  ? "Uploading…"
+                  : heroMode
+                    ? "Upload hero image"
+                    : "Upload image / GIF"}
               </button>
               <input
                 ref={fileRef}
                 type="file"
-                accept="image/png,image/jpeg,image/webp,image/gif"
+                accept={
+                  heroMode
+                    ? "image/png,image/jpeg,image/webp"
+                    : "image/png,image/jpeg,image/webp,image/gif"
+                }
                 className="hidden"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
@@ -433,7 +440,7 @@ function ShortcutEditor({
     }
     setUploading(true);
     try {
-      const uploaded = await compressImage(file);
+      const uploaded = await prepareForUpload(file);
       const mediaUrl = await uploadInline(uploaded);
       setDraft((current) => ({ ...current, mediaUrl }));
     } catch (e) {
@@ -487,18 +494,21 @@ function ShortcutEditor({
             ) : (
               <Upload className="h-3.5 w-3.5" />
             )}
-            Upload logo
+            Upload image / GIF
           </button>
           <input
             ref={fileRef}
             type="file"
-            accept="image/png,image/jpeg,image/webp"
+            accept="image/png,image/jpeg,image/webp,image/gif,.gif"
             className="hidden"
             onChange={(event) => {
               const file = event.target.files?.[0];
               if (file) void handleFile(file);
             }}
           />
+          <p className="mt-2 text-center text-[11px] text-slate-500">
+            PNG, JPG, WebP or animated GIF
+          </p>
         </div>
         <div className="space-y-3">
           <input
@@ -587,7 +597,7 @@ function ShortcutEditor({
       <div className="flex gap-2">
         <button
           type="button"
-          disabled={busy}
+          disabled={busy || uploading}
           onClick={() => void submit()}
           className="inline-flex items-center gap-2 rounded-lg bg-lime-500 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
         >
@@ -627,7 +637,10 @@ export default function AdminHomeSlides() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const slideItems = slides.filter((slide) => slide.kind !== "shortcut");
+  const heroItems = slides.filter((slide) => slide.kind === "hero");
+  const slideItems = slides.filter(
+    (slide) => slide.kind !== "shortcut" && slide.kind !== "hero",
+  );
   const shortcutItems = slides.filter((slide) => slide.kind === "shortcut");
 
   const load = async () => {
@@ -659,6 +672,20 @@ export default function AdminHomeSlides() {
     await load();
   };
 
+  const createHero = async (draft: Draft) => {
+    await adminApi.homeSlides.create({
+      kind: "hero",
+      mediaUrl: draft.mediaUrl,
+      title: draft.title,
+      subtitle: draft.subtitle,
+      ctaLabel: draft.ctaLabel,
+      ctaUrl: draft.ctaUrl,
+      audience: draft.audience,
+      isActive: draft.isActive,
+    });
+    await load();
+  };
+
   const createShortcut = async (draft: ShortcutDraft) => {
     await adminApi.homeSlides.create({
       kind: "shortcut",
@@ -676,6 +703,21 @@ export default function AdminHomeSlides() {
   const update = async (id: number, draft: Draft) => {
     await adminApi.homeSlides.update(id, {
       kind: draft.kind,
+      mediaUrl: draft.mediaUrl,
+      title: draft.title,
+      subtitle: draft.subtitle,
+      ctaLabel: draft.ctaLabel,
+      ctaUrl: draft.ctaUrl,
+      audience: draft.audience,
+      isActive: draft.isActive,
+    });
+    setEditingId(null);
+    await load();
+  };
+
+  const updateHero = async (id: number, draft: Draft) => {
+    await adminApi.homeSlides.update(id, {
+      kind: "hero",
       mediaUrl: draft.mediaUrl,
       title: draft.title,
       subtitle: draft.subtitle,
@@ -734,8 +776,146 @@ export default function AdminHomeSlides() {
     s.kind === "youtube" ? youtubeThumb(s.mediaUrl) : s.mediaUrl;
 
   return (
-    <AdminLayout title="Home Slider">
+    <AdminLayout title="Home Hero & Slider">
       <div className="max-w-5xl space-y-6">
+        <AdminCard className="p-5">
+          <h2 className="text-sm font-bold text-slate-900 mb-1">
+            Home Hero slider
+          </h2>
+          <p className="text-[12px] text-slate-500 mb-4">
+            Add the large image carousel shown at the top of the app Home
+            screen. Recommended upload size is <strong>720 × 510 px (1.41:1)</strong>;
+            this keeps the full hero visual crisp on phones. Hero slides have
+            their own order, audience, active state, destination, and CTA.
+          </p>
+          <SlideEditor
+            initial={EMPTY_HERO_DRAFT}
+            submitLabel="Add hero slide"
+            onSubmit={createHero}
+            heroMode
+          />
+        </AdminCard>
+
+        <AdminCard className="p-5">
+          <h2 className="text-sm font-bold text-slate-900 mb-4">
+            Current Home Hero slides
+          </h2>
+          {loading ? (
+            <div className="text-sm text-slate-400 py-6 text-center">
+              Loading…
+            </div>
+          ) : heroItems.length === 0 ? (
+            <div className="rounded-lg bg-lime-50 p-4 text-sm text-slate-600">
+              No uploaded hero slides yet. The app uses its bundled starter
+              hero until you add one here; adding a hero never changes or
+              removes existing Home banner content.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {heroItems.map((s, i) => {
+                const preview = previewFor(s);
+                return (
+                  <div
+                    key={s.id}
+                    className="rounded-xl border border-lime-100 p-3"
+                  >
+                    {editingId === s.id ? (
+                      <SlideEditor
+                        initial={slideToDraft(s)}
+                        submitLabel="Save hero changes"
+                        onSubmit={(d) => updateHero(s.id, d)}
+                        onCancel={() => setEditingId(null)}
+                        heroMode
+                      />
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        <div className="w-36 shrink-0 aspect-[720/510] rounded-lg overflow-hidden bg-lime-50 border border-lime-100 flex items-center justify-center">
+                          {preview ? (
+                            <img
+                              src={preview}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-[10px] text-slate-400">
+                              no media
+                            </span>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-slate-900 truncate">
+                              {s.title || "(untitled hero)"}
+                            </span>
+                            <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-lime-100 text-lime-700 font-bold">
+                              hero
+                            </span>
+                            <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-sky-100 text-sky-700 font-bold">
+                              {AUDIENCE_LABEL[s.audience]}
+                            </span>
+                            {!s.isActive ? (
+                              <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-slate-200 text-slate-500 font-bold">
+                                hidden
+                              </span>
+                            ) : null}
+                          </div>
+                          {s.subtitle ? (
+                            <div className="text-[12px] text-slate-500 truncate">
+                              {s.subtitle}
+                            </div>
+                          ) : null}
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            onClick={() => move(heroItems, i, -1)}
+                            disabled={i === 0}
+                            title="Move up"
+                            className="h-8 w-8 flex items-center justify-center rounded-lg border border-lime-200 text-slate-500 hover:bg-lime-50 disabled:opacity-30"
+                          >
+                            <ArrowUp className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => move(heroItems, i, 1)}
+                            disabled={i === heroItems.length - 1}
+                            title="Move down"
+                            className="h-8 w-8 flex items-center justify-center rounded-lg border border-lime-200 text-slate-500 hover:bg-lime-50 disabled:opacity-30"
+                          >
+                            <ArrowDown className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => toggleActive(s)}
+                            title={s.isActive ? "Hide" : "Show"}
+                            className="h-8 w-8 flex items-center justify-center rounded-lg border border-lime-200 text-slate-500 hover:bg-lime-50"
+                          >
+                            {s.isActive ? (
+                              <Eye className="h-4 w-4" />
+                            ) : (
+                              <EyeOff className="h-4 w-4" />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => setEditingId(s.id)}
+                            className="px-3 h-8 flex items-center rounded-lg border border-lime-200 text-slate-600 text-xs font-semibold hover:bg-lime-50"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => remove(s.id, "hero slide")}
+                            title="Delete"
+                            className="h-8 w-8 flex items-center justify-center rounded-lg border border-rose-200 text-rose-500 hover:bg-rose-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </AdminCard>
+
         <AdminCard className="p-5">
           <h2 className="text-sm font-bold text-slate-900 mb-1">
             Home shortcut circles
@@ -863,11 +1043,12 @@ export default function AdminHomeSlides() {
 
         <AdminCard className="p-5">
           <h2 className="text-sm font-bold text-slate-900 mb-1">
-            Add a slide
+            Add a legacy Home banner slide
           </h2>
           <p className="text-[12px] text-slate-500 mb-4">
             Upload a photo or animated GIF, or paste a YouTube link. Slides show
-            in the banner at the top of the app Home screen.
+            in the existing Home banner area below the hero. Existing banner
+            rows are preserved separately from the new Hero slider.
           </p>
           <SlideEditor
             initial={EMPTY_DRAFT}
@@ -878,7 +1059,7 @@ export default function AdminHomeSlides() {
 
         <AdminCard className="p-5">
           <h2 className="text-sm font-bold text-slate-900 mb-4">
-            Current slides
+            Existing Home banner slides
           </h2>
           {err ? (
             <div className="text-[12px] text-rose-500 mb-3">{err}</div>

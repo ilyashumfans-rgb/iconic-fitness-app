@@ -18,6 +18,7 @@ import { ModalHeader } from "@/components/ModalHeader";
 import { Screen } from "@/components/Screen";
 import { EmptyState, ErrorView, LoadingView } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
+import { memberAuthHref } from "@/lib/memberAuth";
 
 function formatWhen(iso: string): string {
   const d = new Date(iso);
@@ -45,7 +46,7 @@ export default function ReferScreen() {
   const [applying, setApplying] = useState(false);
 
   if (isLoaded && !isSignedIn) {
-    return <Redirect href="/(auth)/sign-in" />;
+    return <Redirect href={memberAuthHref("/refer")} />;
   }
 
   const info = infoQuery.data;

@@ -13,10 +13,13 @@ import { View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
+import { DailyReminders } from "@/components/DailyReminders";
 import { ModalHeader } from "@/components/ModalHeader";
 import { Screen } from "@/components/Screen";
 import { EmptyState, ErrorView, LoadingView } from "@/components/ui-bits";
+import { useGuest } from "@/hooks/useGuest";
 import { useColors } from "@/hooks/useColors";
+import { memberAuthHref } from "@/lib/memberAuth";
 
 function formatWhen(iso: string): string {
   const d = new Date(iso);
@@ -32,7 +35,8 @@ function formatWhen(iso: string): string {
 }
 
 export default function NotificationsScreen() {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn, userId } = useAuth();
+  const { isGuest } = useGuest();
   const query = useListMyNotifications();
   const markAll = useMarkAllNotificationsRead();
   const queryClient = useQueryClient();
@@ -59,7 +63,10 @@ export default function NotificationsScreen() {
     });
   }, [hasUnread, markAll, queryClient]);
 
-  if (isLoaded && !isSignedIn) return <Redirect href="/(auth)/sign-in" />;
+  if (isLoaded && !isSignedIn) {
+    return <Redirect href={memberAuthHref("/notifications")} />;
+  }
+  const isMember = isLoaded && !!isSignedIn && !isGuest;
 
   return (
     <Screen
@@ -68,6 +75,8 @@ export default function NotificationsScreen() {
       onRefresh={() => void query.refetch()}
     >
       <ModalHeader title="Notifications" />
+
+      {isMember && userId ? <DailyReminders accountId={userId} /> : null}
 
       {query.isLoading ? (
         <LoadingView />

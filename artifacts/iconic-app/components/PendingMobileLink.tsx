@@ -1,8 +1,10 @@
 import { useAuth } from "@clerk/expo";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
+import { Alert } from "react-native";
 
-import { getMe, updateMe } from "@workspace/api-client-react";
+import { getMe } from "@workspace/api-client-react";
+import { syncMobileAndRefresh } from "@/lib/syncMemberMobile";
 
 import { clearPendingMobile, getPendingMobile } from "@/lib/pendingMobile";
 
@@ -19,24 +21,26 @@ import { clearPendingMobile, getPendingMobile } from "@/lib/pendingMobile";
  * - One attempt per sign-in session; failures retry on the next app start.
  */
 export function PendingMobileLink() {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, userId } = useAuth();
   const queryClient = useQueryClient();
-  const attempted = useRef(false);
+  const attempted = useRef<string | null>(null);
 
   useEffect(() => {
     if (!isSignedIn) {
-      attempted.current = false;
+      attempted.current = null;
       return;
     }
-    if (attempted.current) return;
-    attempted.current = true;
+    if (!userId || attempted.current === userId) return;
+    attempted.current = userId;
+    let cancelled = false;
 
     void (async () => {
       try {
         const mobile = await getPendingMobile();
-        if (!mobile) return;
+        if (!mobile || cancelled) return;
 
         const me = await getMe();
+        if (cancelled) return;
         const currentDigits = (me.mobile ?? "").replace(/\D/g, "").slice(-10);
         if (currentDigits && currentDigits !== mobile) {
           // This account already belongs to a different mobile — never
@@ -45,28 +49,24 @@ export function PendingMobileLink() {
           return;
         }
 
-        if (currentDigits !== mobile) {
-          await updateMe({ mobile });
-        }
+        await syncMobileAndRefresh(
+          queryClient, mobile, undefined, () => !cancelled, userId,
+        );
+        if (cancelled) return;
         await clearPendingMobile();
 
-        // Profile + membership views should immediately reflect the link.
-        await queryClient.invalidateQueries({
-          predicate: (query) => {
-            const key = query.queryKey[0];
-            if (typeof key !== "string") return false;
-            return (
-              key.startsWith("/api/me") ||
-              key.startsWith("/api/memberships/mine")
-            );
-          },
-        });
       } catch {
         // Leave the stash in place — we'll retry on the next app start;
         // the member can also set their mobile from the Profile tab.
+        if (!cancelled) {
+          Alert.alert("Membership sync incomplete", "Please open Profile and sync your gym mobile again. Your trial offer stays hidden until sync succeeds.");
+        }
       }
     })();
-  }, [isSignedIn, queryClient]);
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignedIn, userId, queryClient]);
 
   return null;
 }

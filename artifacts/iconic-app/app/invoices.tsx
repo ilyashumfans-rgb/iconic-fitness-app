@@ -18,6 +18,7 @@ import { ModalHeader } from "@/components/ModalHeader";
 import { Screen } from "@/components/Screen";
 import { EmptyState, ErrorView, LoadingView, SectionHeader } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
+import { memberAuthHref } from "@/lib/memberAuth";
 import { istDateLabel } from "@/lib/dates";
 import { buildInvoiceHtml } from "@/lib/invoiceHtml";
 
@@ -40,7 +41,7 @@ export default function InvoicesScreen() {
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   if (isLoaded && !isSignedIn) {
-    return <Redirect href="/(auth)/sign-in" />;
+    return <Redirect href={memberAuthHref("/invoices")} />;
   }
 
   const payments = paymentsQuery.data ?? [];
@@ -75,7 +76,7 @@ export default function InvoicesScreen() {
           await Sharing.shareAsync(uri, {
             mimeType: "application/pdf",
             UTI: "com.adobe.pdf",
-            dialogTitle: `Invoice ${p.billId || ""}`.trim(),
+            dialogTitle: `Receipt ${p.billId || ""}`.trim(),
           });
         } else {
           await Print.printAsync({ html });
@@ -86,7 +87,7 @@ export default function InvoicesScreen() {
       // a message when it looks like a real failure.
       const msg = err instanceof Error ? err.message : "";
       if (msg && !/cancel|dismiss/i.test(msg)) {
-        Alert.alert("Download failed", "Could not generate the invoice. Please try again.");
+        Alert.alert("Receipt unavailable", "Could not generate the receipt. Please try again.");
       }
     } finally {
       setDownloadingId(null);
@@ -99,10 +100,20 @@ export default function InvoicesScreen() {
 
       {paymentsQuery.isLoading || membershipQuery.isLoading ? (
         <LoadingView />
-      ) : paymentsQuery.isError ? (
-        <ErrorView onRetry={() => paymentsQuery.refetch()} />
+      ) : paymentsQuery.isError || membershipQuery.isError ? (
+        <ErrorView
+          onRetry={() => {
+            void paymentsQuery.refetch();
+            void membershipQuery.refetch();
+          }}
+        />
       ) : (
         <View style={{ gap: 20 }}>
+          <AppText muted size={12}>
+            Payment records are loaded from the gym billing system. Downloads are
+            app-generated receipts based on those records; official tax-invoice PDFs
+            are not provided by this member API.
+          </AppText>
           <Card style={{ gap: 12 }}>
             <AppText weight="700" size={16}>
               Membership details
@@ -174,12 +185,14 @@ export default function InvoicesScreen() {
           </Card>
 
           <View>
-            <SectionHeader title={`All invoices${payments.length ? ` (${payments.length})` : ""}`} />
+            <SectionHeader
+              title={`Payment records${payments.length ? ` (${payments.length})` : ""}`}
+            />
             {payments.length === 0 ? (
               <EmptyState
                 icon="file-text"
-                title="No invoices yet"
-                message="Invoices from the gym billing system will appear here once you have a plan."
+                title="No payment records yet"
+                message="Payment records from the gym billing system will appear here once you have a plan."
               />
             ) : (
               <Card style={{ gap: 0 }}>
@@ -220,7 +233,7 @@ export default function InvoicesScreen() {
                         ) : null}
                       </View>
                       <Button
-                        label={downloadingId === id ? "Preparing…" : "Download"}
+                        label={downloadingId === id ? "Preparing…" : "Receipt"}
                         icon="download"
                         full={false}
                         loading={downloadingId === id}

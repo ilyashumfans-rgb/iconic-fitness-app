@@ -35,16 +35,92 @@ export interface HealthStatus {
   status: string;
 }
 
+export interface CommunityTrainer {
+  id: number;
+  name: string;
+}
+
+export interface CommunityCoach {
+  name: string;
+  /** @nullable */
+  photoUrl: string | null;
+  gymId: number;
+  gymName: string;
+  trainerId: string;
+}
+
+export interface CreateCommunityPostRequest {
+  /** @maxLength 1200 */
+  caption: string;
+  /** Base64 or data URL encoded JPEG, PNG, or WebP still photo */
+  beforeImage: string;
+  /** Base64 or data URL encoded JPEG, PNG, or WebP still photo */
+  afterImage: string;
+  publicSharingConsent: true;
+  trainerStaffId?: number | null;
+  gymId?: number | null;
+}
+
+export type CommunityPostCreatedStatus = typeof CommunityPostCreatedStatus[keyof typeof CommunityPostCreatedStatus];
+
+
+export const CommunityPostCreatedStatus = {
+  pending: 'pending',
+  withdrawn: 'withdrawn',
+} as const;
+
+export interface CommunityPostCreated {
+  id: number;
+  status: CommunityPostCreatedStatus;
+  submittedAt: string;
+}
+
+export type CommunityPostStatus = typeof CommunityPostStatus[keyof typeof CommunityPostStatus];
+
+
+export const CommunityPostStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+  unpublished: 'unpublished',
+  withdrawn: 'withdrawn',
+} as const;
+
+export interface CommunityPost {
+  id: number;
+  caption: string;
+  trainerName?: string | null;
+  authorName: string;
+  authorAvatarUrl?: string | null;
+  beforeImageUrl?: string | null;
+  afterImageUrl?: string | null;
+  submittedAt: string;
+  status?: CommunityPostStatus;
+  rejectionReason?: string | null;
+  publicSharingConsent?: boolean;
+  reviewedAt?: string | null;
+}
+
+export interface CommunityPostPage {
+  items: CommunityPost[];
+  nextBeforeId: number | null;
+}
+
 export interface UserProfile {
   id: number;
+  username: string | null;
   name: string;
   email: string;
   mobile: string;
   gender: string;
-  age: number;
-  heightCm: number;
-  weightKg: number;
-  fitnessGoal: string;
+  /** Null until a member supplies a real age */
+  age: number | null;
+  /** Null until a member supplies a real height */
+  heightCm: number | null;
+  /** Null until a member supplies a real weight */
+  weightKg: number | null;
+  /** Null until a member supplies a real goal */
+  fitnessGoal: string | null;
   avatarUrl: string;
   city: string;
   bmi: number;
@@ -85,6 +161,7 @@ export interface MembershipLookupResult {
 }
 
 export interface UserProfileUpdate {
+  username?: string | null;
   name?: string;
   mobile?: string;
   gender?: string;
@@ -97,13 +174,251 @@ export interface UserProfileUpdate {
   weeklyGoal?: number;
 }
 
+export type FitnessSetupUnitSystem = typeof FitnessSetupUnitSystem[keyof typeof FitnessSetupUnitSystem] | null;
+
+
+export const FitnessSetupUnitSystem = {
+  metric: 'metric',
+  imperial: 'imperial',
+} as const;
+
+export type FitnessSetupExperienceLevel = typeof FitnessSetupExperienceLevel[keyof typeof FitnessSetupExperienceLevel] | null;
+
+
+export const FitnessSetupExperienceLevel = {
+  new: 'new',
+  returning: 'returning',
+  experienced: 'experienced',
+  not_sure: 'not_sure',
+} as const;
+
+export type FitnessSetupActivityLevel = typeof FitnessSetupActivityLevel[keyof typeof FitnessSetupActivityLevel] | null;
+
+
+export const FitnessSetupActivityLevel = {
+  low: 'low',
+  light: 'light',
+  moderate: 'moderate',
+  high: 'high',
+  not_sure: 'not_sure',
+} as const;
+
+export type FitnessSetupSelfReportedAbility = typeof FitnessSetupSelfReportedAbility[keyof typeof FitnessSetupSelfReportedAbility] | null;
+
+
+export const FitnessSetupSelfReportedAbility = {
+  beginner: 'beginner',
+  building: 'building',
+  confident: 'confident',
+  not_sure: 'not_sure',
+} as const;
+
+export type FitnessSetupPreferredTime = typeof FitnessSetupPreferredTime[keyof typeof FitnessSetupPreferredTime] | null;
+
+
+export const FitnessSetupPreferredTime = {
+  morning: 'morning',
+  afternoon: 'afternoon',
+  evening: 'evening',
+  flexible: 'flexible',
+  not_sure: 'not_sure',
+} as const;
+
+export type FitnessSetupWorkoutLocation = typeof FitnessSetupWorkoutLocation[keyof typeof FitnessSetupWorkoutLocation] | null;
+
+
+export const FitnessSetupWorkoutLocation = {
+  gym: 'gym',
+  home: 'home',
+  both: 'both',
+  not_sure: 'not_sure',
+} as const;
+
+export type FitnessSetupDietPreference = typeof FitnessSetupDietPreference[keyof typeof FitnessSetupDietPreference] | null;
+
+
+export const FitnessSetupDietPreference = {
+  vegetarian: 'vegetarian',
+  non_vegetarian: 'non_vegetarian',
+  vegan: 'vegan',
+  eggetarian: 'eggetarian',
+  no_preference: 'no_preference',
+  not_sure: 'not_sure',
+} as const;
+
+export interface FitnessSetup {
+  /** Whether this member has saved an optional setup profile */
+  exists: boolean;
+  /** Only true for a newly provisioned member until completed */
+  requiredForOnboarding: boolean;
+  /**
+     * @minimum 1
+     * @maximum 4
+     */
+  currentStep: number;
+  completed: boolean;
+  completedAt?: string | null;
+  unitSystem?: FitnessSetupUnitSystem;
+  /** Canonical centimetres */
+  heightCm?: number | null;
+  /** Canonical kilograms */
+  weightKg?: number | null;
+  age?: number | null;
+  goals?: string[];
+  interests?: string[];
+  experienceLevel?: FitnessSetupExperienceLevel;
+  activityLevel?: FitnessSetupActivityLevel;
+  selfReportedAbility?: FitnessSetupSelfReportedAbility;
+  /**
+     * Optional self-reported movement considerations; not a diagnosis or medical assessment
+     * @maxLength 500
+     */
+  movementLimitations?: string | null;
+  routineDays?: string[];
+  preferredTime?: FitnessSetupPreferredTime;
+  workoutLocation?: FitnessSetupWorkoutLocation;
+  equipment?: string[];
+  dietPreference?: FitnessSetupDietPreference;
+}
+
+export type FitnessSetupStepSaveUnitSystem = typeof FitnessSetupStepSaveUnitSystem[keyof typeof FitnessSetupStepSaveUnitSystem] | null;
+
+
+export const FitnessSetupStepSaveUnitSystem = {
+  metric: 'metric',
+  imperial: 'imperial',
+} as const;
+
+export type FitnessSetupStepSaveExperienceLevel = typeof FitnessSetupStepSaveExperienceLevel[keyof typeof FitnessSetupStepSaveExperienceLevel] | null;
+
+
+export const FitnessSetupStepSaveExperienceLevel = {
+  new: 'new',
+  returning: 'returning',
+  experienced: 'experienced',
+  not_sure: 'not_sure',
+} as const;
+
+export type FitnessSetupStepSaveActivityLevel = typeof FitnessSetupStepSaveActivityLevel[keyof typeof FitnessSetupStepSaveActivityLevel] | null;
+
+
+export const FitnessSetupStepSaveActivityLevel = {
+  low: 'low',
+  light: 'light',
+  moderate: 'moderate',
+  high: 'high',
+  not_sure: 'not_sure',
+} as const;
+
+export type FitnessSetupStepSaveSelfReportedAbility = typeof FitnessSetupStepSaveSelfReportedAbility[keyof typeof FitnessSetupStepSaveSelfReportedAbility] | null;
+
+
+export const FitnessSetupStepSaveSelfReportedAbility = {
+  beginner: 'beginner',
+  building: 'building',
+  confident: 'confident',
+  not_sure: 'not_sure',
+} as const;
+
+export type FitnessSetupStepSaveRoutineDaysItem = typeof FitnessSetupStepSaveRoutineDaysItem[keyof typeof FitnessSetupStepSaveRoutineDaysItem];
+
+
+export const FitnessSetupStepSaveRoutineDaysItem = {
+  mon: 'mon',
+  tue: 'tue',
+  wed: 'wed',
+  thu: 'thu',
+  fri: 'fri',
+  sat: 'sat',
+  sun: 'sun',
+} as const;
+
+export type FitnessSetupStepSavePreferredTime = typeof FitnessSetupStepSavePreferredTime[keyof typeof FitnessSetupStepSavePreferredTime] | null;
+
+
+export const FitnessSetupStepSavePreferredTime = {
+  morning: 'morning',
+  afternoon: 'afternoon',
+  evening: 'evening',
+  flexible: 'flexible',
+  not_sure: 'not_sure',
+} as const;
+
+export type FitnessSetupStepSaveWorkoutLocation = typeof FitnessSetupStepSaveWorkoutLocation[keyof typeof FitnessSetupStepSaveWorkoutLocation] | null;
+
+
+export const FitnessSetupStepSaveWorkoutLocation = {
+  gym: 'gym',
+  home: 'home',
+  both: 'both',
+  not_sure: 'not_sure',
+} as const;
+
+export type FitnessSetupStepSaveDietPreference = typeof FitnessSetupStepSaveDietPreference[keyof typeof FitnessSetupStepSaveDietPreference] | null;
+
+
+export const FitnessSetupStepSaveDietPreference = {
+  vegetarian: 'vegetarian',
+  non_vegetarian: 'non_vegetarian',
+  vegan: 'vegan',
+  eggetarian: 'eggetarian',
+  no_preference: 'no_preference',
+  not_sure: 'not_sure',
+} as const;
+
+export interface FitnessSetupStepSave {
+  /**
+     * @minimum 1
+     * @maximum 4
+     */
+  step: number;
+  unitSystem?: FitnessSetupStepSaveUnitSystem;
+  /** Height in the selected UI unit (cm for metric, inches for imperial); normalized to heightCm on the server */
+  height?: number | null;
+  /** Weight in the selected UI unit (kg for metric, pounds for imperial); normalized to weightKg on the server */
+  weight?: number | null;
+  /**
+     * @minimum 80
+     * @maximum 260
+     */
+  heightCm?: number | null;
+  /**
+     * @minimum 20
+     * @maximum 400
+     */
+  weightKg?: number | null;
+  /**
+     * @minimum 13
+     * @maximum 120
+     */
+  age?: number | null;
+  /** @maxItems 8 */
+  goals?: string[] | null;
+  /** @maxItems 12 */
+  interests?: string[] | null;
+  experienceLevel?: FitnessSetupStepSaveExperienceLevel;
+  activityLevel?: FitnessSetupStepSaveActivityLevel;
+  selfReportedAbility?: FitnessSetupStepSaveSelfReportedAbility;
+  /** @maxLength 500 */
+  movementLimitations?: string | null;
+  /** @maxItems 7 */
+  routineDays?: FitnessSetupStepSaveRoutineDaysItem[] | null;
+  preferredTime?: FitnessSetupStepSavePreferredTime;
+  workoutLocation?: FitnessSetupStepSaveWorkoutLocation;
+  /** @maxItems 12 */
+  equipment?: string[] | null;
+  dietPreference?: FitnessSetupStepSaveDietPreference;
+}
+
 export type HomeSlideKind = typeof HomeSlideKind[keyof typeof HomeSlideKind];
 
 
 export const HomeSlideKind = {
+  hero: 'hero',
   image: 'image',
   gif: 'gif',
   youtube: 'youtube',
+  shortcut: 'shortcut',
 } as const;
 
 /**
@@ -333,6 +648,35 @@ export interface PackageCategory {
   name: string;
   sortOrder: number;
   imageUrl?: string;
+}
+
+export interface MobileSyncRequest {
+  mobile: string;
+}
+
+export type AutomaticMobileSyncResultReason = typeof AutomaticMobileSyncResultReason[keyof typeof AutomaticMobileSyncResultReason];
+
+
+export const AutomaticMobileSyncResultReason = {
+  synced: 'synced',
+  confirmation_required: 'confirmation_required',
+  mobile_conflict: 'mobile_conflict',
+} as const;
+
+export interface AutomaticMobileSyncResult {
+  synced: boolean;
+  reason: AutomaticMobileSyncResultReason;
+}
+
+export interface FitnessJourney {
+  ownerId: string;
+  eligible: boolean;
+  reason: string;
+  hasBooking: boolean;
+  assigned: boolean;
+  completedCount: number;
+  trainerName: string;
+  trainerPhotoUrl?: string;
 }
 
 export type MyMembershipStatus = typeof MyMembershipStatus[keyof typeof MyMembershipStatus];
@@ -1253,6 +1597,14 @@ export type LookupMembership429 = {
   error: string;
 };
 
+export type SyncMemberMobile200 = {
+  synced: boolean;
+};
+
+export type AutoSyncMemberMobile503 = {
+  error: string;
+};
+
 export type CreateMembershipRenewal409 = {
   error: string;
 };
@@ -1342,5 +1694,36 @@ export type GetProgressParams = {
  * Number of trailing days (1-31)
  */
 days?: number;
+};
+
+export type ListCommunityPostsParams = {
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+limit?: number;
+/**
+ * @minimum 1
+ */
+beforeId?: number;
+};
+
+export type ListMyCommunityPostsParams = {
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+limit?: number;
+/**
+ * @minimum 1
+ */
+beforeId?: number;
+};
+
+export type ListCommunityTrainersParams = {
+/**
+ * @minimum 1
+ */
+gymId: number;
 };
 

@@ -5,6 +5,7 @@ import { ActivityIndicator, View, Platform, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { TabIcon } from "@/components/TabIcon";
+import { FitnessSetupGate } from "@/components/FitnessSetupGate";
 import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/hooks/useGuest";
 
@@ -17,7 +18,7 @@ export default function TabsLayout() {
   // Edge-to-edge Android: the tab bar must clear the system nav bar, or the
   // labels get overlapped/clipped by the gesture/3-button navigation area.
   const bottomInset =
-    Platform.OS === "ios" ? 28 : Math.max(insets.bottom, 12);
+    Platform.OS === "ios" ? Math.max(insets.bottom, 20) : Math.max(insets.bottom, 8);
 
   // Fail-safe: if Clerk can't finish loading (slow/blocked network on a real
   // device), don't trap the user on a spinner forever — fall through to sign-in,
@@ -49,6 +50,7 @@ export default function TabsLayout() {
   }
 
   return (
+    <FitnessSetupGate>
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -58,16 +60,20 @@ export default function TabsLayout() {
           backgroundColor: colors.card,
           borderTopColor: colors.background === "#000000" || colors.background === "#121212" ? "transparent" : colors.border,
           borderTopWidth: colors.background === "#000000" || colors.background === "#121212" ? 0 : StyleSheet.hairlineWidth,
-          height: (Platform.OS === "ios" ? 60 : 64) + bottomInset,
-          paddingTop: 8,
+          height: 56 + bottomInset,
+          paddingTop: 4,
           paddingBottom: bottomInset,
           elevation: 0, // Remove android shadow for flatter premium look
           shadowOpacity: 0,
         },
         tabBarLabelStyle: {
           fontFamily: "Inter_600SemiBold",
-          fontSize: 11,
+          fontSize: 10,
+          lineHeight: 14,
+          marginBottom: 2,
         },
+        tabBarLabelPosition: "below-icon",
+        tabBarItemStyle: { paddingHorizontal: 0 },
       }}
     >
       <Tabs.Screen
@@ -108,13 +114,28 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="store"
+        name="pt"
         options={{
-          title: "Store",
-          href: isGuest ? null : undefined,
+          title: "Get a Coach",
+          tabBarAccessibilityLabel: "Get a Coach",
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon name="users" size={size} color={color} focused={focused} />
+          ),
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            router.push("/trainers");
+          },
+        }}
+      />
+      <Tabs.Screen
+        name="classes"
+        options={{
+          title: "Classes",
           tabBarIcon: ({ color, size, focused }) => (
             <TabIcon
-              name="shopping-bag"
+              name="calendar"
               size={size}
               color={color}
               focused={focused}
@@ -140,23 +161,6 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="pt"
-        options={{
-          title: isGuest ? "Get a Coach" : "PT Dashboard",
-          tabBarIcon: ({ color, size, focused }) => (
-            <TabIcon name="users" size={size} color={color} focused={focused} />
-          ),
-        }}
-        listeners={{
-          tabPress: (e) => {
-            // The tab is a shortcut: open the Personal Trainers screen
-            // instead of switching tabs.
-            e.preventDefault();
-            router.push("/trainers");
-          },
-        }}
-      />
-      <Tabs.Screen
         name="more"
         options={{
           title: "More",
@@ -167,8 +171,9 @@ export default function TabsLayout() {
       />
       {/* Reachable from the More tab, hidden from the tab bar. */}
       <Tabs.Screen name="train" options={{ href: null }} />
-      <Tabs.Screen name="classes" options={{ href: null }} />
+      <Tabs.Screen name="store" options={{ href: null }} />
       <Tabs.Screen name="profile" options={{ href: null }} />
     </Tabs>
+    </FitnessSetupGate>
   );
 }

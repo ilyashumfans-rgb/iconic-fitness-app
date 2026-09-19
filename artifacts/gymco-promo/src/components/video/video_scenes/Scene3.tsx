@@ -38,7 +38,7 @@ export function Scene3() {
             animate={phase >= 2 ? { scale: 1 } : { scale: 0.8 }}
             transition={{ type: "spring", stiffness: 400, damping: 15 }}
           >
-            500+
+            17
           </motion.h2>
           <p className="text-[2.5vw] font-body font-semibold tracking-wide text-white uppercase mt-4">
             Premium Gyms

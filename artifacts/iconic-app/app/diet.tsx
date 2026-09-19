@@ -20,6 +20,7 @@ import { ModalHeader } from "@/components/ModalHeader";
 import { Screen } from "@/components/Screen";
 import { Chip, ChipRow, EmptyState } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
+import { memberAuthHref } from "@/lib/memberAuth";
 import { MEAL_ICON, MEAL_LABEL } from "@/lib/icons";
 import { istToday } from "@/lib/dates";
 
@@ -89,7 +90,9 @@ export default function DietScreen() {
     await refresh();
   };
 
-  if (isLoaded && !isSignedIn) return <Redirect href="/(auth)/sign-in" />;
+  if (isLoaded && !isSignedIn) {
+    return <Redirect href={memberAuthHref("/diet")} />;
+  }
 
   return (
     <Screen edges={["top"]} contentContainerStyle={{ paddingTop: 8 }}>

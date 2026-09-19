@@ -23,6 +23,7 @@ import {
 import { requireUser } from "../lib/currentUser";
 import { normalizeMemberUsername } from "../lib/memberUsername";
 import { microCache } from "../lib/microCache";
+import fitnessJourneyRouter from "./fitnessJourney";
 import {
   createYoactivPaymentUrl,
   ensureYoactivMemberId,
@@ -36,6 +37,7 @@ import {
 } from "../lib/yoactiv";
 
 const router: IRouter = Router();
+router.use(fitnessJourneyRouter);
 
 // 30s micro-cache for the public plan/category catalogs (admin edits rare).
 const CATALOG_TTL_MS = 30_000;

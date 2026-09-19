@@ -4,7 +4,6 @@ import { Feather } from "@expo/vector-icons";
 import * as AuthSession from "expo-auth-session";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
 import { useCallback, useState } from "react";
 import {
   Image,
@@ -29,8 +28,7 @@ import {
   staffFetch,
   type StaffProfile,
 } from "@/lib/staffSession";
-
-WebBrowser.maybeCompleteAuthSession();
+import { ssoRedirectOptions } from "@/lib/ssoRedirect";
 
 // Permanently dark, cinematic brand screen — force the dark palette so it
 // never washes out in system light mode.
@@ -147,7 +145,9 @@ function StaffLoginContent() {
         const { createdSessionId, setActive, signUp, authSessionResult } =
           await startSSOFlow({
             strategy: "oauth_google",
-            redirectUrl: AuthSession.makeRedirectUri(),
+            ...ssoRedirectOptions(Platform.OS, () =>
+              AuthSession.makeRedirectUri(),
+            ),
           });
         sessionId = createdSessionId;
         activateSession = setActive;
@@ -387,7 +387,7 @@ function StaffLoginContent() {
             </View>
 
             <Pressable
-              onPress={() => router.replace("/(auth)/sign-in")}
+              onPress={() => router.replace("/(auth)/welcome")}
               hitSlop={8}
               style={styles.switch}
             >
