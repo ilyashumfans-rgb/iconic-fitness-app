@@ -1,11 +1,11 @@
 import { Feather } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, type Href } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { useColors } from "@/hooks/useColors";
 
-export function ModalHeader({ title }: { title: string }) {
+export function ModalHeader({ title, fallbackHref }: { title: string; fallbackHref?: Href }) {
   const colors = useColors();
   const router = useRouter();
   return (
@@ -14,7 +14,15 @@ export function ModalHeader({ title }: { title: string }) {
         {title}
       </AppText>
       <Pressable
-        onPress={() => router.back()}
+        onPress={() => {
+          if (fallbackHref && !router.canGoBack()) {
+            router.replace(fallbackHref);
+          } else {
+            router.back();
+          }
+        }}
+        accessibilityRole="button"
+        accessibilityLabel={`Close ${title}`}
         hitSlop={10}
         style={[
           styles.close,

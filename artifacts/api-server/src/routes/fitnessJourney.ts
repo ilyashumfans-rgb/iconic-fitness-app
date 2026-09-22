@@ -8,6 +8,7 @@ import {
   AutoSyncMemberMobileResponse, SyncMemberMobileBody, GetFitnessJourneyResponse,
 } from "@workspace/api-zod";
 import { requireUser } from "../lib/currentUser";
+import { saveConfirmedJourneyBranch } from "../lib/memberJourneyBranchLink";
 import {
   journeyDecision, matchingMobileSync, planStartTimestamp, trustedMobileSyncIdentity,
 } from "../lib/fitnessJourney";
@@ -40,6 +41,8 @@ router.post("/memberships/sync", requireUser, async (req, res): Promise<void> =>
         iconicMobileSync: { version: 1, mobile, memberId: profile.memberId, syncedAt: Date.now() },
       },
     });
+    const primary = pickPrimaryMembership(profile);
+    if (primary?.status === "active") await saveConfirmedJourneyBranch(req.userId!, primary.branchId, mobile);
     res.json({ synced: true });
   } catch {
     res.status(503).json({ error: "Mobile sync could not be completed. Please retry." });
@@ -103,6 +106,8 @@ router.post("/memberships/sync/automatic", requireUser, async (req, res): Promis
     }
     // Deliberately do not rewrite the private receipt. A delayed automatic
     // request must never replace a newer receipt created by an explicit sync.
+    const primary = pickPrimaryMembership(profile);
+    if (primary?.status === "active") await saveConfirmedJourneyBranch(req.userId!, primary.branchId, receipt.mobile);
     res.json(AutoSyncMemberMobileResponse.parse({ synced: true, reason: "synced" }));
   } catch {
     res.status(503).json({ error: "Membership refresh is temporarily unavailable. Please retry." });

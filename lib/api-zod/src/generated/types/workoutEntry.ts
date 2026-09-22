@@ -13,5 +13,16 @@ export interface WorkoutEntry {
   durationMin: number;
   calories: number;
   steps: number;
+  exerciseName: string | null;
+  /**
+     * @minimum 1
+     * @maximum 100
+     */
+  sets: number | null;
+  /**
+     * @minimum 1
+     * @maximum 1000
+     */
+  reps: number | null;
   createdAt: Date;
 }

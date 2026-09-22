@@ -26,7 +26,6 @@ import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/hooks/useGuest";
 import { ThemeContext } from "@/hooks/useTheme";
 import { GoogleIcon } from "@/components/GoogleIcon";
-import { openExternal, websiteUrl } from "@/lib/links";
 import { memberAuthDestination } from "@/lib/memberAuth";
 import { ssoRedirectOptions } from "@/lib/ssoRedirect";
 import {
@@ -534,28 +533,6 @@ function WelcomeContent() {
             </View>
           </Pressable>
 
-          <View style={styles.legalLinks}>
-            <AppText size={12} color="#999" style={styles.legalText}>
-              By continuing, you agree to our{"\n"}
-              <AppText 
-                size={12} 
-                weight="700" 
-                color={LOGIN_LIME}
-                onPress={() => void openExternal(websiteUrl + "/terms")}
-              >
-                Terms of Service
-              </AppText>
-              {" "}and{" "}
-              <AppText 
-                size={12} 
-                weight="700" 
-                color={LOGIN_LIME}
-                onPress={() => void openExternal(websiteUrl + "/privacy")}
-              >
-                Privacy Policy
-              </AppText>
-            </AppText>
-          </View>
 
           <AppText weight="700" size={11} color="#666" style={styles.motto}>
             DISCIPLINE  BUILDS  FREEDOM
@@ -643,15 +620,6 @@ const styles = StyleSheet.create({
   optionTextCenter: {
     flex: 1,
     textAlign: "center",
-  },
-  legalLinks: {
-    marginTop: 3,
-    marginBottom: 0,
-    alignItems: "center",
-  },
-  legalText: {
-    textAlign: "center",
-    lineHeight: 18,
   },
   motto: {
     textAlign: "center",

@@ -246,6 +246,16 @@ const SECTIONS: Section[] = [
         icon: <HelpCircle className="h-4 w-4" />,
       },
       {
+        label: "Reviews",
+        href: "/admin/reviews",
+        icon: <Star className="h-4 w-4" />,
+      },
+      {
+        label: "Trainer Profiles",
+        href: "/admin/trainer-profiles",
+        icon: <UserCog className="h-4 w-4" />,
+      },
+      {
         label: "Coupons",
         href: "/admin/coupons",
         icon: <TicketPercent className="h-4 w-4" />,

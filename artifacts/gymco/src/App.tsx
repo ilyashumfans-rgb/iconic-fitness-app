@@ -48,6 +48,7 @@ import PartnerTeam from "@/pages/partner/Team";
 import VendorLogin from "@/pages/vendor/Login";
 import VendorDashboard from "@/pages/vendor/Dashboard";
 import AgencyLogin from "@/pages/agency/Login";
+import { StaffMemberJourney, PartnerMemberJourney, AgencyMemberJourney } from "@/pages/MemberJourney";
 import AgencyDashboard from "@/pages/agency/Dashboard";
 import VendorProducts from "@/pages/vendor/Products";
 import VendorOrders from "@/pages/vendor/Orders";
@@ -91,6 +92,8 @@ import AdminYoactivMembers from "@/pages/admin/YoactivMembers";
 import AdminYoactivPlans from "@/pages/admin/YoactivPlans";
 import AdminHomeSlides from "@/pages/admin/HomeSlides";
 import AdminFaqs from "@/pages/admin/Faqs";
+import AdminReviews from "@/pages/admin/Reviews";
+import AdminTrainerProfiles from "@/pages/admin/TrainerProfiles";
 import AdminCoupons from "@/pages/admin/Coupons";
 import AdminNotifications from "@/pages/admin/Notifications";
 import AdminLeads from "@/pages/admin/Leads";
@@ -114,6 +117,7 @@ import AdminTickets from "@/pages/admin/Tickets";
 import StaffTickets from "@/pages/staff/Tickets";
 import PartnerTickets from "@/pages/partner/Tickets";
 import PartnerComplaints from "@/pages/partner/Complaints";
+import PartnerAttendanceQr from "@/pages/partner/AttendanceQr";
 import AdminComplaints from "@/pages/admin/Complaints";
 
 const queryClient = new QueryClient();
@@ -316,6 +320,8 @@ function AppShell() {
     return (
       <Switch>
         <Route path="/agency/login" component={AgencyLogin} />
+        <Route path="/agency/member-journey" component={AgencyMemberJourney} />
+        <Route path="/agency/member-journey/:userId" component={AgencyMemberJourney} />
         <Route path="/agency" component={AgencyDashboard} />
         <Route component={NotFound} />
       </Switch>
@@ -326,10 +332,13 @@ function AppShell() {
     return (
       <Switch>
         <Route path="/partner/login" component={PartnerLogin} />
+        <Route path="/partner/member-journey" component={PartnerMemberJourney} />
+        <Route path="/partner/member-journey/:userId" component={PartnerMemberJourney} />
         <Route path="/partner" component={PartnerDashboard} />
         <Route path="/partner/gyms" component={PartnerGyms} />
         <Route path="/partner/bookings" component={PartnerBookings} />
         <Route path="/partner/members" component={PartnerMembers} />
+        <Route path="/partner/attendance-qr"><PartnerAttendanceQr /></Route>
         <Route path="/partner/classes" component={PartnerClasses} />
         <Route path="/partner/trainers" component={PartnerTrainers} />
         <Route path="/partner/schedule" component={PartnerSchedule} />
@@ -366,6 +375,9 @@ function AppShell() {
         <Route path="/admin/login" component={AdminLogin} />
         <Route path="/admin/sso-callback" component={AdminSsoCallback} />
         <Route path="/admin" component={AdminDashboard} />
+        <Route path="/admin/partners/:partnerId/attendance-qr">
+          {(params) => <PartnerAttendanceQr key={params.partnerId} adminPartnerId={Number(params.partnerId)} />}
+        </Route>
         <Route path="/admin/partners" component={AdminPartners} />
         <Route path="/admin/partner-onboarding" component={AdminPartnerOnboarding} />
         <Route path="/admin/reset-partner-password" component={AdminResetPartnerPassword} />
@@ -396,10 +408,13 @@ function AppShell() {
         <Route path="/admin/leads" component={AdminLeads} />
         <Route path="/admin/home-slider" component={AdminHomeSlides} />
         <Route path="/admin/faqs" component={AdminFaqs} />
+        <Route path="/admin/reviews" component={AdminReviews} />
+        <Route path="/admin/trainer-profiles" component={AdminTrainerProfiles} />
         <Route path="/admin/coupons" component={AdminCoupons} />
         <Route path="/admin/blogs" component={AdminBlogManagement} />
         <Route path="/admin/pt" component={AdminPtManager} />
         <Route path="/admin/member-engagement" component={AdminMemberEngagement} />
+        <Route path="/admin/member-engagement/journey/:userId" component={AdminMemberEngagement} />
         <Route path="/admin/messaging" component={AdminMessagingSettings} />
         <Route path="/admin/community" component={AdminCommunity} />
         <Route path="/admin/tickets" component={AdminTickets} />
@@ -413,6 +428,8 @@ function AppShell() {
     return (
       <Switch>
         <Route path="/staff/login" component={StaffLogin} />
+        <Route path="/staff/member-journey" component={StaffMemberJourney} />
+        <Route path="/staff/member-journey/:userId" component={StaffMemberJourney} />
         <Route path="/staff" component={StaffDashboard} />
         <Route path="/staff/partner-onboarding" component={StaffPartnerOnboarding} />
         <Route path="/staff/partners" component={StaffPartners} />

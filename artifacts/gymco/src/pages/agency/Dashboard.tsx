@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { agencyApi, type AgencyGxBooking, type AgencyUser } from "@/lib/agencyApi";
 import {
   BarChart3,
@@ -211,6 +211,7 @@ export default function AgencyDashboard() {
               </div>
             </div>
           </div>
+          <Link data-testid="link-agency-member-journey" href="/agency/member-journey" className="text-sm font-semibold text-lime-700">Member Journey</Link>
           <button
             onClick={logout}
             className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold"

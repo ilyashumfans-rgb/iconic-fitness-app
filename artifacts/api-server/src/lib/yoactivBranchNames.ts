@@ -9,6 +9,7 @@ export const YOACTIV_BRANCH_NAMES: Record<number, string> = {
   5695: "4th Block Koramangala",
   5812: "Seegehalli",
   5838: "5th Block Koramangala",
+  5912: "Sarjapur",
   5915: "BTM 1st Stage",
   6175: "7th Block Koramangala",
   6319: "HSR Layout Sector 7",
@@ -37,6 +38,7 @@ export const YOACTIV_BRANCH_NAMES: Record<number, string> = {
   7416: "Marathahalli (PT Sales)",
   7443: "Seegehalli (PT Sales)",
   7728: "Brookefield (PT Sales)",
+  7916: "Sarjapur (PT Sales)",
   7820: "Sandbox (test branch)",
 };
 
@@ -57,6 +59,7 @@ const PT_TO_MEMBERSHIP_BRANCH: Record<number, number> = {
   7416: 7415,
   7443: 5812,
   7728: 7727,
+  7916: 5912,
 };
 
 export function yoactivMembershipBranchId(branchId: number): number {

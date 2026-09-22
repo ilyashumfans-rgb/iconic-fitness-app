@@ -2,6 +2,14 @@ import { useAuth } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
 import {
   getGetMeQueryKey,
+  getGetMyMembershipQueryKey,
+  getListLiveTrainersQueryKey,
+  getGetMyPtProgramQueryKey,
+  getGetMyReferralInfoQueryKey,
+  useGetMyMembership,
+  useListLiveTrainers,
+  useGetMyPtProgram,
+  useGetMyReferralInfo,
   getGetTrainerBookingQueryKey,
   getListTrainerPackagesQueryKey,
   useCreateTrainerBooking,
@@ -11,7 +19,8 @@ import {
   type TrainerPackage,
 } from "@workspace/api-client-react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Alert, Pressable, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
@@ -27,23 +36,59 @@ import { useColors } from "@/hooks/useColors";
 import { istDateLabel, istToday } from "@/lib/dates";
 import { openPayment } from "@/lib/links";
 import { memberAuthHref } from "@/lib/memberAuth";
+import { LiveTrainerCard } from "@/components/LiveTrainerCard";
 
 // Paid PT session packages for the member's branch: live prices from the
 // gym-management system, hosted Razorpay checkout, and a booking row that
-// lands on the partner's PT Bookings page for trainer assignment.
-export default function BookPtSessionsScreen() {
+// lands on the partner's PT Bookings page with the selected live trainer.
+export default function BookPtSessionsScreen({ afterTrial = false }: { afterTrial?: boolean }) {
   const router = useRouter();
   const colors = useColors();
   const { isLoaded, isSignedIn } = useAuth();
-  const params = useLocalSearchParams<{ gymId?: string; gymName?: string }>();
-  const gymId = Number(params.gymId);
-  const hasGym = Number.isFinite(gymId) && gymId > 0;
-  const gymName = (params.gymName ?? "").trim();
+  const params = useLocalSearchParams<{ gymId?: string; gymName?: string; trainerId?: string }>();
+  const queryClient = useQueryClient();
+  const membershipQuery = useGetMyMembership({
+    query: { enabled: isLoaded && !!isSignedIn, queryKey: getGetMyMembershipQueryKey() },
+  });
+  // URL branch/name values are never authority for a paid member purchase.
+  const gymId = isSignedIn && membershipQuery.data?.status === "active" ? membershipQuery.data.homeGymId ?? 0 : 0;
+  const hasGym = gymId > 0;
+  const gymName = membershipQuery.data?.branchName ?? "";
+  const [trainerChoice, setTrainerChoice] = useState<{ gymId: number; id: string } | null>(null);
+  const consumedTrainerLink = useRef<string | null>(null);
+  const liveParams = { gymId };
+  const rosterQuery = useListLiveTrainers(liveParams, {
+    query: { enabled: hasGym, queryKey: getListLiveTrainersQueryKey(liveParams) },
+  });
+  const selectedTrainer = trainerChoice?.gymId === gymId && rosterQuery.isSuccess
+    ? rosterQuery.data?.find((t) => t.id === trainerChoice.id) ?? null : null;
+  useEffect(() => {
+    if (!params.trainerId) {
+      consumedTrainerLink.current = null;
+      return;
+    }
+    if (!rosterQuery.isSuccess) return;
+    const linkKey = `${gymId}:${params.trainerId}`;
+    if (consumedTrainerLink.current === linkKey) return;
+    const trainer = rosterQuery.data?.find((t) => t.id === params.trainerId);
+    if (trainer) {
+      consumedTrainerLink.current = linkKey;
+      setTrainerChoice({ gymId, id: trainer.id });
+    }
+  }, [rosterQuery.isSuccess, rosterQuery.data, params.trainerId, gymId]);
+  const programQuery = useGetMyPtProgram({
+    query: { enabled: afterTrial && !!isSignedIn, queryKey: getGetMyPtProgramQueryKey() },
+  });
+  const referralQuery = useGetMyReferralInfo({
+    query: { enabled: afterTrial && !!isSignedIn, queryKey: getGetMyReferralInfoQueryKey() },
+  });
+  const [usePoints, setUsePoints] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const pkgParams = hasGym ? { gymId } : { gymId: 0 };
   const packagesQuery = useListTrainerPackages(pkgParams, {
     query: {
-      enabled: hasGym,
+      enabled: hasGym && !!selectedTrainer,
       queryKey: getListTrainerPackagesQueryKey(pkgParams),
     },
   });
@@ -102,24 +147,40 @@ export default function BookPtSessionsScreen() {
   });
   const status = bookingId !== null ? statusQuery.data?.status : undefined;
   const selectedPkg = packages.find((p) => p.id === pkgId) ?? null;
+  const pointsDiscount = usePoints ? Math.min(referralQuery.data?.balanceInr ?? 0, Math.max(0, (selectedPkg?.amountInr ?? 0) - 1)) : 0;
 
   // Coupon leaves at least ₹1 payable; the server re-validates at checkout.
   const payableInr = selectedPkg
-    ? Math.max(1, selectedPkg.amountInr - (coupon?.discountInr ?? 0))
+    ? Math.max(1, selectedPkg.amountInr - (coupon?.discountInr ?? 0) - pointsDiscount)
     : 0;
 
   // A coupon is validated against one package's price — reset it if the
   // member switches packages.
   useEffect(() => {
     setCoupon(null);
+    setTermsAccepted(false);
   }, [pkgId]);
+  useEffect(() => {
+    setPkgId(null);
+    setCoupon(null);
+    setUsePoints(false);
+    setTermsAccepted(false);
+  }, [gymId, selectedTrainer?.id]);
+  useEffect(() => {
+    if (status === "paid") {
+      void queryClient.invalidateQueries({ queryKey: getGetMyPtProgramQueryKey() });
+      void queryClient.invalidateQueries({ queryKey: getGetMyReferralInfoQueryKey() });
+    }
+  }, [status, queryClient]);
 
   function validateContact(): boolean {
     if (name.trim().length < 2) {
+      setPaymentError("Please enter your full name.");
       Alert.alert("Name required", "Please enter your full name.");
       return false;
     }
     if (!/^[+0-9 ()-]{7,}$/.test(phone.trim())) {
+      setPaymentError("Please enter a valid phone number.");
       Alert.alert("Phone required", "Please enter a valid phone number.");
       return false;
     }
@@ -128,8 +189,12 @@ export default function BookPtSessionsScreen() {
 
   async function onPay() {
     setPaymentError(null);
-    if (!hasGym || !selectedPkg) {
+    if (!hasGym || !selectedTrainer || !selectedPkg || !isSignedIn) {
       Alert.alert("Pick a package", "Please choose a PT package to continue.");
+      return;
+    }
+    if (!termsAccepted) {
+      setPaymentError("Please accept the Terms & Conditions before payment.");
       return;
     }
     if (!validateContact()) return;
@@ -138,11 +203,14 @@ export default function BookPtSessionsScreen() {
       const created = await createBooking.mutateAsync({
         data: {
           gymId,
+          trainerId: selectedTrainer.id,
+          trainerName: selectedTrainer.name,
           packageId: selectedPkg.id,
           name: name.trim(),
           mobile: phone.trim(),
           preferredDate: date,
           ...(coupon ? { couponCode: coupon.code } : {}),
+          ...(pointsDiscount > 0 ? { redeemPoints: pointsDiscount } : {}),
         },
       });
       setBookingId(created.id);
@@ -190,9 +258,9 @@ export default function BookPtSessionsScreen() {
             </AppText>
             <AppText muted size={14} style={{ textAlign: "center" }}>
               {paid
-                ? `Your ${selectedPkg?.name ?? "PT"} package is booked${gymName ? ` at ${gymName}` : ""}. Your invoice will appear under Invoices, and the team will assign your trainer shortly.`
+                ? `Your ${selectedPkg?.name ?? "PT"} package with ${selectedTrainer?.name ?? "your selected trainer"} is booked${gymName ? ` at ${gymName}` : ""}. Your invoice will appear under Invoices.`
                 : failedPay
-                  ? "The payment didn't go through. No money was taken — you can try again."
+                  ? "Payment was not confirmed. If you were charged, contact the front desk before trying again."
                   : "Complete the payment in the browser window, then come back here."}
             </AppText>
             {paymentError ? (
@@ -254,12 +322,8 @@ export default function BookPtSessionsScreen() {
                   />
                 ) : null}
                 <Button
-                  label="Cancel and go back"
-                  onPress={() => {
-                    setBookingId(null);
-                    setPaymentUrl(null);
-                    setPaymentError(null);
-                  }}
+                  label="Leave payment pending"
+                  onPress={() => router.back()}
                 />
               </View>
             )}
@@ -267,6 +331,55 @@ export default function BookPtSessionsScreen() {
         </Card>
       </Screen>
     );
+  }
+  if (!isLoaded || (isSignedIn && membershipQuery.isLoading)) {
+    return <Screen><ModalHeader title="Book your PT sessions" /><LoadingView /></Screen>;
+  }
+  if (!isSignedIn) {
+    return <Screen><ModalHeader title="Book your PT sessions" /><Card>
+      <AppText weight="700">Sign in to book PT sessions</AppText>
+      <AppText muted>Your active membership determines your branch and available coaches.</AppText>
+      <Button label="Sign in" onPress={() => router.push(memberAuthHref(
+        `${afterTrial ? "/book-pt-plan" : "/book-pt-sessions"}${params.trainerId ? `?trainerId=${encodeURIComponent(params.trainerId)}` : ""}`,
+      ))} />
+    </Card></Screen>;
+  }
+  if (membershipQuery.isError) {
+    return <Screen><ModalHeader title="Book your PT sessions" /><ErrorView onRetry={() => void membershipQuery.refetch()} /></Screen>;
+  }
+  if (!hasGym) {
+    return <Screen><ModalHeader title="Book your PT sessions" /><EmptyState icon="users" title="Active membership required" message="Please contact your branch's front desk to activate your membership or enquire about personal training. Online PT payment is available only to active members with a home branch." /><Button label="Find your branch" onPress={() => router.push("/trainers")} /></Screen>;
+  }
+  if (afterTrial && !programQuery.isSuccess) {
+    return <Screen><ModalHeader title="Book your PT plan" />{programQuery.isError ? <ErrorView onRetry={() => void programQuery.refetch()} /> : <LoadingView />}</Screen>;
+  }
+  if (afterTrial && !programQuery.data?.kickstarterCompleted && !programQuery.data?.hasPaidPlan) {
+    return <Screen><ModalHeader title="Book your PT plan" /><EmptyState icon="clock" title="Finish your Kick Start trial" message="Your completed trial sessions must be recorded before continuing from this page. Contact your trainer if they are missing." /><Button label="PT details" onPress={() => router.replace("/pt-details")} /></Screen>;
+  }
+  // Trainer profiles precede every package loading/error/empty state.
+  if (!selectedTrainer) {
+    return <Screen contentContainerStyle={{ paddingBottom: 40 }} refreshing={rosterQuery.isRefetching} onRefresh={() => void rosterQuery.refetch()}>
+      <ModalHeader title="Choose your trainer" fallbackHref="/trainers" />
+      <AppText weight="600" color={colors.primary} style={{ marginBottom: 12 }}>{gymName || "Your home branch"}</AppText>
+      <AppText muted style={{ marginBottom: 16 }}>Choose a coach first, then view the branch's published PT packages.</AppText>
+      {rosterQuery.isError ? <ErrorView onRetry={() => void rosterQuery.refetch()} /> : !rosterQuery.isSuccess ? <LoadingView /> : !rosterQuery.data?.length ? <>
+        <EmptyState icon="users" title="No coaches listed" message="Your branch has not published its trainer roster. Ask the front desk to configure it before booking online." />
+        <Button label="Refresh trainers" onPress={() => void rosterQuery.refetch()} />
+      </> : <View style={{ gap: 14 }}>{rosterQuery.data.map((trainer) => (
+        <LiveTrainerCard
+          key={trainer.id}
+          trainer={trainer}
+          onPress={() => router.push({
+            pathname: "/live-trainer/[id]",
+            params: {
+              id: trainer.id,
+              gymId: String(gymId),
+              ...(afterTrial ? { afterTrial: "1" } : {}),
+            },
+          })}
+        />
+      ))}</View>}
+    </Screen>;
   }
 
   return (
@@ -276,6 +389,11 @@ export default function BookPtSessionsScreen() {
       onRefresh={() => void packagesQuery.refetch()}
     >
       <ModalHeader title="Book your PT sessions" />
+      <Card>
+        <AppText weight="700">{selectedTrainer.name}</AppText>
+        <AppText muted>{gymName || "Your home branch"}</AppText>
+        <Button label="Change trainer" onPress={() => setTrainerChoice(null)} />
+      </Card>
 
       {gymName ? (
         <View
@@ -329,6 +447,8 @@ export default function BookPtSessionsScreen() {
                 params: {
                   gymId: String(gymId),
                   gymName,
+                  trainerId: selectedTrainer.id,
+                  trainerName: selectedTrainer.name,
                 },
               })
             }
@@ -365,8 +485,7 @@ export default function BookPtSessionsScreen() {
             Choose your PT package
           </AppText>
           <AppText muted size={13} style={{ marginBottom: 16 }}>
-            Pay securely online — once the payment lands, the team assigns
-            your trainer and your sessions begin.
+            Pay securely online for sessions with {selectedTrainer.name}.
           </AppText>
           {paymentError ? (
             <AppText
@@ -422,8 +541,24 @@ export default function BookPtSessionsScreen() {
             kind="pt"
             mobile={phone}
             applied={coupon}
-            onApplied={setCoupon}
+            onApplied={(value) => { setCoupon(value); if (value) setUsePoints(false); }}
           />
+          {afterTrial && (referralQuery.data?.balanceInr ?? 0) > 0 ? (
+            <Button label={`${usePoints ? "✓ " : ""}Redeem wallet points (${referralQuery.data?.balanceInr ?? 0} available)`} onPress={() => { setUsePoints((value) => !value); setCoupon(null); }} />
+          ) : null}
+          {selectedPkg ? <View style={{ gap: 6, marginTop: 16 }}>
+            <AppText weight="700">Payment summary</AppText>
+            <AppText>{selectedTrainer.name} · {gymName || "Your home branch"}</AppText>
+            <AppText>{selectedPkg.name} · ₹{selectedPkg.amountInr.toLocaleString("en-IN")}</AppText>
+            {coupon ? <AppText muted>Coupon: −₹{coupon.discountInr.toLocaleString("en-IN")}</AppText> : null}
+            {pointsDiscount > 0 ? <AppText muted>Wallet: −₹{pointsDiscount.toLocaleString("en-IN")}</AppText> : null}
+            <AppText weight="700">Total ₹{payableInr.toLocaleString("en-IN")}</AppText>
+          </View> : null}
+          <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: termsAccepted }} onPress={() => setTermsAccepted((value) => !value)} style={{ flexDirection: "row", gap: 10, paddingVertical: 16 }}>
+            <Feather name={termsAccepted ? "check-square" : "square"} size={20} color={colors.primary} />
+            <AppText>I accept the Terms & Conditions</AppText>
+          </Pressable>
+          <Button label="Read Terms & Conditions" onPress={() => router.push("/terms")} />
 
           <View style={{ marginTop: 20 }}>
             <Button
@@ -434,6 +569,7 @@ export default function BookPtSessionsScreen() {
               }
               onPress={onPay}
               loading={busy}
+              disabled={!selectedPkg || !termsAccepted}
               icon="credit-card"
             />
           </View>

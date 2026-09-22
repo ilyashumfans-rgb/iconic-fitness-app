@@ -123,11 +123,13 @@ router.post("/leads", async (req: Request, res: Response): Promise<void> => {
     res.status(400).json({ error: "Please enter a valid phone number" });
     return;
   }
-  if (!preferredDate) {
+  // Website contact enquiries are messages, not scheduled gym visits.
+  const contactEnquiry = kind === "general" && source.startsWith("info:");
+  if (!preferredDate && !contactEnquiry) {
     res.status(400).json({ error: "Please choose a date for your visit" });
     return;
   }
-  if (!preferredTime) {
+  if (!preferredTime && !contactEnquiry) {
     res.status(400).json({ error: "Please choose a time for your visit" });
     return;
   }

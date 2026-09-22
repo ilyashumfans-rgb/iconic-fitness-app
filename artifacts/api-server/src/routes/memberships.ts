@@ -22,6 +22,7 @@ import {
 } from "@workspace/api-zod";
 import { requireUser } from "../lib/currentUser";
 import { normalizeMemberUsername } from "../lib/memberUsername";
+import { yoactivBranchName } from "../lib/yoactivBranchNames";
 import { microCache } from "../lib/microCache";
 import fitnessJourneyRouter from "./fitnessJourney";
 import {
@@ -352,7 +353,7 @@ router.get("/memberships/mine", requireUser, async (req, res): Promise<void> => 
       // Map the plan's YoActiv branch to our local gym so clients can scope
       // branch-specific content (trainers, classes) to the member's home gym.
       const [homeGym] = await db
-        .select({ id: gymsTable.id })
+        .select({ id: gymsTable.id, name: gymsTable.name })
         .from(gymsTable)
         .where(eq(gymsTable.yoactivBranchId, primary.branchId));
       res.json(
@@ -369,7 +370,7 @@ router.get("/memberships/mine", requireUser, async (req, res): Promise<void> => 
           source: "yoactiv",
           photoUrl: profile!.photoUrl,
           startedOn: primary.startDate,
-          branchName: primary.branchName,
+          branchName: homeGym?.name || yoactivBranchName(primary.branchId) || primary.branchName,
           homeGymId: homeGym?.id ?? null,
           expiryKnown: !!primary.expiryDate,
         }),

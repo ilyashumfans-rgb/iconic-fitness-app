@@ -11,6 +11,7 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+export * from "./branchReviews";
 
 export const usersTable = pgTable(
   "users",
@@ -792,6 +793,7 @@ export const checkinsTable = pgTable("checkins", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   gymId: integer("gym_id").notNull(),
+  checkedOutAt: timestamp("checked_out_at", { withTimezone: true }),
   checkedInAt: timestamp("checked_in_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -1090,6 +1092,8 @@ export const partnersTable = pgTable("partners", {
 });
 
 export const staffTable = pgTable("staff", {
+  journeyGymIds: integer("journey_gym_ids").array().notNull().default([]),
+  journeyRole: text("journey_role"),
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
@@ -1107,6 +1111,53 @@ export const staffTable = pgTable("staff", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
+});
+
+export const memberJourneysTable = pgTable("member_journeys", {
+  userId: integer("user_id").primaryKey().references(() => usersTable.id),
+  gymId: integer("gym_id").notNull().references(() => gymsTable.id),
+  version: integer("version").notNull().default(0),
+  healthHistory: jsonb("health_history"),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  reviewNote: text("review_note"),
+  trainerId: integer("trainer_id"),
+  generalTrainerId: integer("general_trainer_id"),
+  dieticianId: integer("dietician_id"),
+  dieticianNote: text("dietician_note"),
+  ptDecision: text("pt_decision"),
+  generalStartedAt: timestamp("general_started_at", { withTimezone: true }),
+  dueAt: timestamp("due_at", { withTimezone: true }),
+  attendanceDecision: text("attendance_decision"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+export const memberJourneyBranchLinksTable = pgTable("member_journey_branch_links", {
+  userId: integer("user_id").primaryKey().references(() => usersTable.id),
+  gymId: integer("gym_id").notNull().references(() => gymsTable.id),
+});
+export const memberJourneyEventsTable = pgTable("member_journey_events", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => memberJourneysTable.userId),
+  version: integer("version").notNull(),
+  action: text("action").notNull(),
+  actor: text("actor").notNull(),
+  payload: jsonb("payload").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, t => [uniqueIndex("member_journey_event_version").on(t.userId, t.version)]);
+export const memberJourneyChartsTable = pgTable("member_journey_charts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => memberJourneysTable.userId),
+  chartNo: integer("chart_no").notNull(),
+  label: text("label").notNull(),
+  content: text("content").notNull(),
+  issuedAt: timestamp("issued_at", { withTimezone: true }).notNull().defaultNow(),
+}, t => [uniqueIndex("member_journey_chart_unique").on(t.userId, t.chartNo)]);
+export const memberJourneyFollowupsTable = pgTable("member_journey_followups", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => memberJourneysTable.userId),
+  kind: text("kind").notNull(),
+  response: text("response").notNull(),
+  nextDate: timestamp("next_date", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const citiesTable = pgTable("cities", {
@@ -1443,6 +1494,9 @@ export const workoutLogsTable = pgTable("workout_logs", {
   durationMin: integer("duration_min").notNull(),
   calories: integer("calories").notNull().default(0),
   steps: integer("steps").notNull().default(0),
+  exerciseName: text("exercise_name"),
+  sets: integer("sets"),
+  reps: integer("reps"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

@@ -624,17 +624,17 @@ function ContactForm({ topic }: { topic: string }) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.name || !form.email || !form.message) {
+    if (form.name.trim().length < 2 || !form.email.trim() || !form.message.trim() || !/^[+0-9 ()-]{7,}$/.test(form.phone.trim())) {
       toast({
         title: "Add a few more details",
-        description: "Name, email and a short message help us route this faster.",
+        description: "Enter your full name, email, valid phone number and message.",
         variant: "destructive",
       });
       return;
     }
     setSubmitting(true);
     try {
-      await fetch("/api/leads", {
+      const response = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -642,16 +642,20 @@ function ContactForm({ topic }: { topic: string }) {
           kind: "general",
           name: form.name,
           email: form.email,
-          phone: form.phone || undefined,
+          phone: form.phone.trim(),
           message: `[${topic}] ${form.message}`,
           source: `info:${topic}`,
         }),
       });
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new Error(error?.error || "Could not save your message. Please try again.");
+      }
       setDone(true);
-    } catch {
+    } catch (error) {
       toast({
         title: "Couldn't send",
-        description: "Please email us directly at iconicfitnessindia@gmail.com.",
+        description: error instanceof Error ? error.message : "Please try again or email iconicfitnessindia@gmail.com.",
         variant: "destructive",
       });
     } finally {
@@ -698,7 +702,9 @@ function ContactForm({ topic }: { topic: string }) {
           />
         </div>
         <Input
-          placeholder="Phone (optional)"
+          placeholder="Phone (required)"
+          type="tel"
+          required
           value={form.phone}
           onChange={(e) => setForm({ ...form, phone: e.target.value })}
           className="h-11"

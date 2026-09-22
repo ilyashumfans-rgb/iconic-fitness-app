@@ -106,6 +106,7 @@ const mocks: Record<string, string> = {
     };
   `,
   "../lib/currentUser": `export const requireUser = (_req, _res, next) => next();`,
+  "../lib/memberJourneyBranchLink": `export const saveConfirmedJourneyBranch = async () => {};`,
   "../lib/trainerEnquiryLeads": `export const TRAINER_ENQUIRY_SOURCE = "test";`,
   "../lib/ptSessions": `export const listPtSessions = async () => [];`,
   "../lib/ptAssignments": `export const fetchPtAssignmentMap = async () => new Map();`,

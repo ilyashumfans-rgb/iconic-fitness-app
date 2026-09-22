@@ -2,20 +2,17 @@ import { useAuth } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
 import {
   getGetMyMembershipQueryKey,
-  getGetMyPtProgramQueryKey,
   getListLiveTrainersQueryKey,
   getListMyTrainerBookingsQueryKey,
   useGetMyMembership,
-  useGetMyPtProgram,
   useListGyms,
   useListLiveTrainers,
   useListMyTrainerBookings,
   type Gym,
-  type LiveTrainer,
 } from "@workspace/api-client-react";
-import { Redirect, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { Image, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
@@ -23,12 +20,12 @@ import { ModalHeader } from "@/components/ModalHeader";
 import { Screen } from "@/components/Screen";
 import { EmptyState, ErrorView, LoadingView } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
-import { resolveImageUrl } from "@/lib/images";
+import { LiveTrainerCard } from "@/components/LiveTrainerCard";
 
 export default function TrainersScreen() {
   const router = useRouter();
   const colors = useColors();
-  const { isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn } = useAuth();
   const gymsQuery = useListGyms({});
   const [pickedGymId, setPickedGymId] = useState<number | null>(null);
 
@@ -47,18 +44,9 @@ export default function TrainersScreen() {
   const isActiveMember =
     !!isSignedIn && membershipQuery.data?.status === "active";
   const gymId = locked ? homeGymId : pickedGymId;
-  // Members with an assigned PT program skip the roster entirely — their
-  // trainer is already fixed, so show their PT Details instead.
-  const ptProgramQuery = useGetMyPtProgram({
-    query: {
-      enabled: !!isSignedIn,
-      queryKey: getGetMyPtProgramQueryKey(),
-    },
-  });
   // Don't flash the all-branches picker (or the roster) while checks load.
   const membershipSettled =
-    (!isSignedIn || membershipQuery.isSuccess || membershipQuery.isError) &&
-    (!isSignedIn || ptProgramQuery.isSuccess || ptProgramQuery.isError);
+    isLoaded && (!isSignedIn || membershipQuery.isSuccess || membershipQuery.isError);
 
   // Once a member has sent their free kick-starter trial request, hide the
   // trial CTA (only that button) — one trial per member.
@@ -95,11 +83,10 @@ export default function TrainersScreen() {
       </Screen>
     );
   }
-
-  // Assigned PT members never see the roster — straight to their PT Details.
-  if (ptProgramQuery.data?.active === true) {
-    return <Redirect href="/pt-details" />;
+  if (isSignedIn && membershipQuery.isError) {
+    return <Screen><ModalHeader title="Personal Trainers" /><ErrorView onRetry={() => void membershipQuery.refetch()} /></Screen>;
   }
+
 
   // Step 1 — pick a branch (skipped for active members: home branch only).
   if (gymId === null) {
@@ -267,7 +254,7 @@ export default function TrainersScreen() {
                 Book your PT sessions
               </AppText>
               <AppText size={12} color="#fff" style={{ opacity: 0.8 }}>
-                See this branch's PT prices and pay online
+                Choose your trainer, then a PT package
               </AppText>
             </View>
             <Feather name="arrow-right" size={20} color="#fff" />
@@ -294,19 +281,11 @@ export default function TrainersScreen() {
               key={t.id}
               trainer={t}
               onPress={() =>
-                !isActiveMember
-                  ? router.push("/(tabs)/packages")
-                  : router.push({
-                  pathname: "/book-trainer",
+                router.push({
+                  pathname: "/live-trainer/[id]",
                   params: {
-                    trainerName: t.name,
-                    trainerId: t.id,
-                    trainerPhotoUrl: t.photoUrl ?? "",
+                    id: t.id,
                     gymId: String(gymId),
-                    gymName:
-                      selectedGym?.name ??
-                      membershipQuery.data?.branchName ??
-                      "",
                   },
                 })
               }
@@ -355,54 +334,3 @@ function BranchCard({ gym, onPress }: { gym: Gym; onPress: () => void }) {
   );
 }
 
-function LiveTrainerCard({
-  trainer,
-  onPress,
-}: {
-  trainer: LiveTrainer;
-  onPress: () => void;
-}) {
-  const colors = useColors();
-  const photo = resolveImageUrl(trainer.photoUrl ?? null);
-  const initials = trainer.name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0]!.toUpperCase())
-    .join("");
-
-  return (
-    <Pressable onPress={onPress}>
-      <Card style={{ padding: 0, overflow: "hidden" }}>
-        {photo ? (
-          <Image
-            source={{ uri: photo }}
-            style={{ width: "100%", aspectRatio: 4 / 3 }}
-          />
-        ) : (
-          <View
-            style={{
-              width: "100%",
-              aspectRatio: 4 / 3,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: colors.elevated,
-            }}
-          >
-            <AppText weight="700" size={48} color={colors.primary}>
-              {initials || "PT"}
-            </AppText>
-          </View>
-        )}
-        <View style={{ padding: 16, gap: 2 }}>
-          <AppText weight="700" size={17} numberOfLines={1}>
-            {trainer.name}
-          </AppText>
-          <AppText muted size={13}>
-            Personal Trainer
-          </AppText>
-        </View>
-      </Card>
-    </Pressable>
-  );
-}

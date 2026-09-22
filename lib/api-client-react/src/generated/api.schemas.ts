@@ -5,6 +5,486 @@
  * GYMCO customer API — multi-gym memberships, classes, bookings, check-ins, and fitness tracking.
  * OpenAPI spec version: 0.1.0
  */
+export interface ReviewInput {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  reviewerName: string;
+  /**
+     * @minLength 1
+     * @maxLength 150
+     */
+  branchName: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     * @nullable
+     */
+  trainerId?: string | null;
+  /**
+     * @minimum 1
+     * @maximum 2147483647
+     * @nullable
+     */
+  gymId?: number | null;
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  reviewText: string;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  /** Fictional sample, not a verified endorsement. Seeded samples must remain true. */
+  isSample: boolean;
+  isPublished: boolean;
+  /**
+     * @minimum -2147483648
+     * @maximum 2147483647
+     */
+  sortOrder: number;
+}
+
+export type AdminReviewUpdateInput = ReviewInput | {
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  reviewText: string;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  sortOrder: number;
+  isPublished: boolean;
+};
+
+export interface MemberTrainerReviewInput {
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  reviewText: string;
+}
+
+export type TrainerReviewModerationInputStatus = typeof TrainerReviewModerationInputStatus[keyof typeof TrainerReviewModerationInputStatus];
+
+
+export const TrainerReviewModerationInputStatus = {
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+
+export interface TrainerReviewModerationInput {
+  status: TrainerReviewModerationInputStatus;
+}
+
+export type TrainerProfileContentCertificatesItem = {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  title: string;
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  url: string;
+};
+
+export interface TrainerProfileContent {
+  /** @maxLength 2000 */
+  coverPhotoUrl: string;
+  /** @maxLength 2000 */
+  photoUrl: string;
+  /** @maxLength 5000 */
+  bio: string;
+  /** @maxItems 30 */
+  qualifications: string[];
+  /** @maxItems 20 */
+  specialties: string[];
+  /** @maxItems 20 */
+  interests: string[];
+  /** @maxItems 20 */
+  certificates: TrainerProfileContentCertificatesItem[];
+}
+
+/**
+ * @nullable
+ */
+export type OwnTrainerReviewResponseReview = {
+  id: number;
+  rating: number;
+  reviewText: string;
+  status: 'pending' | 'approved' | 'rejected';
+  isPublished: boolean;
+} | null;
+
+export interface OwnTrainerReviewResponse {
+  /** @nullable */
+  review: OwnTrainerReviewResponseReview;
+}
+
+export interface ReviewTrainerOption {
+  id: string;
+  name: string;
+  gymId: number;
+  branchName: string;
+}
+
+/**
+ * @nullable
+ */
+export type ReviewModerationStatus = typeof ReviewModerationStatus[keyof typeof ReviewModerationStatus] | null;
+
+
+export const ReviewModerationStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+
+export interface Review {
+  isMemberReview?: boolean;
+  /** @nullable */
+  moderationStatus?: ReviewModerationStatus;
+  id: number;
+  reviewerName: string;
+  branchName: string;
+  /** @nullable */
+  trainerId?: string | null;
+  /** @nullable */
+  gymId?: number | null;
+  reviewText: string;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  isSample: boolean;
+  isPublished: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type LiveTrainerProfile = ReviewTrainerOption & ({
+  profile?: TrainerProfileContent;
+  /** @nullable */
+  photoUrl: string | null;
+  reviews: Review[];
+  /** @nullable */
+  rating: number | null;
+  reviewCount: number;
+});
+
+export interface ReviewList {
+  /** @maxItems 500 */
+  reviews: Review[];
+}
+
+export interface ReviewError {
+  error: string;
+}
+
+export interface MemberJourneyHealthHistoryInput {
+  /** @minimum 0 */
+  version: number;
+  /**
+     * @minLength 1
+     * @maxLength 10000
+     */
+  injuries: string;
+  /**
+     * @minLength 1
+     * @maxLength 10000
+     */
+  conditions: string;
+  /**
+     * @minLength 1
+     * @maxLength 10000
+     */
+  medications: string;
+  /**
+     * @minLength 1
+     * @maxLength 10000
+     */
+  allergies: string;
+  /**
+     * @minLength 1
+     * @maxLength 10000
+     */
+  exerciseRestrictions: string;
+  /** @maxLength 10000 */
+  notes?: string;
+  consent: true;
+}
+
+export type MemberJourneyActionAction = typeof MemberJourneyActionAction[keyof typeof MemberJourneyActionAction];
+
+
+export const MemberJourneyActionAction = {
+  review_health: 'review_health',
+  assign_trainer: 'assign_trainer',
+  record_trial: 'record_trial',
+  pt_decision: 'pt_decision',
+  pt_followup: 'pt_followup',
+  assign_general_trainer: 'assign_general_trainer',
+  dietician_review: 'dietician_review',
+  issue_chart: 'issue_chart',
+  attendance_review: 'attendance_review',
+  attendance_followup: 'attendance_followup',
+} as const;
+
+export type MemberJourneyActionSessionNo = typeof MemberJourneyActionSessionNo[keyof typeof MemberJourneyActionSessionNo];
+
+
+export const MemberJourneyActionSessionNo = {
+  NUMBER_1: 1,
+  NUMBER_2: 2,
+} as const;
+
+export type MemberJourneyActionDecision = typeof MemberJourneyActionDecision[keyof typeof MemberJourneyActionDecision];
+
+
+export const MemberJourneyActionDecision = {
+  yes: 'yes',
+  no: 'no',
+  regular: 'regular',
+  irregular: 'irregular',
+} as const;
+
+/**
+ * Server validates required fields for each action and stage; irregular attendance requires response and future nextDate. record_trial writes the actual assigned PT program, not a journey-only completion flag.
+ */
+export interface MemberJourneyAction {
+  /** @minimum 0 */
+  version: number;
+  action: MemberJourneyActionAction;
+  /** @minimum 1 */
+  staffId?: number;
+  sessionNo?: MemberJourneyActionSessionNo;
+  /**
+     * @minLength 1
+     * @maxLength 10000
+     */
+  note?: string;
+  /**
+     * @minLength 1
+     * @maxLength 10000
+     */
+  response?: string;
+  /**
+     * @minLength 1
+     * @maxLength 10000
+     */
+  content?: string;
+  decision?: MemberJourneyActionDecision;
+  nextDate?: string;
+}
+
+export type MemberJourneyCurrentStage = typeof MemberJourneyCurrentStage[keyof typeof MemberJourneyCurrentStage];
+
+
+export const MemberJourneyCurrentStage = {
+  health_history: 'health_history',
+  bca_bmi_report: 'bca_bmi_report',
+  health_history_review: 'health_history_review',
+  assign_trainer: 'assign_trainer',
+  trial1: 'trial1',
+  rating_feedback1: 'rating_feedback1',
+  trial2: 'trial2',
+  rating_written_feedback2: 'rating_written_feedback2',
+  pt_decision: 'pt_decision',
+  pt_followup: 'pt_followup',
+  general_trainer: 'general_trainer',
+  dietician: 'dietician',
+  workout_chart1: 'workout_chart1',
+  workout_chart2: 'workout_chart2',
+  workout_chart3: 'workout_chart3',
+  attendance_review: 'attendance_review',
+  attendance_followup: 'attendance_followup',
+  regular_continue: 'regular_continue',
+} as const;
+
+/**
+ * @nullable
+ */
+export type MemberJourneyHealthHistory = {
+  injuries?: string;
+  conditions?: string;
+  medications?: string;
+  allergies?: string;
+  exerciseRestrictions?: string;
+  notes?: string;
+  consent?: boolean;
+  submittedAt?: string;
+} | null;
+
+/**
+ * @nullable
+ */
+export type MemberJourneyPtDecision = typeof MemberJourneyPtDecision[keyof typeof MemberJourneyPtDecision] | null;
+
+
+export const MemberJourneyPtDecision = {
+  yes: 'yes',
+  no: 'no',
+} as const;
+
+export type MemberJourneyChartsItem = {
+  id: number;
+  chartNo?: number;
+  label: string;
+  content?: string;
+  issuedAt: string;
+};
+
+export type MemberJourneyEventsItem = {
+  id: number;
+  action: string;
+  actor: string;
+  createdAt: string;
+};
+
+export type MemberJourneyFollowupsItem = {
+  id: number;
+  kind: string;
+  response?: string;
+  nextDate: string;
+  createdAt: string;
+};
+
+export type MemberJourneyAttendance = {
+  checkinsLast30Days: number;
+};
+
+export type MemberJourneyFacts = {
+  bmi: boolean;
+  trial1: boolean;
+  feedback1: boolean;
+  trial2: boolean;
+  feedback2: boolean;
+  paidPt: boolean;
+};
+
+export interface MemberJourney {
+  userId: number;
+  gymId: number;
+  memberName: string;
+  version: number;
+  currentStage: MemberJourneyCurrentStage;
+  nextAction: string;
+  /** @nullable */
+  assigneeId: number | null;
+  /** @nullable */
+  assigneeName?: string | null;
+  /** @nullable */
+  trialProgramId?: number | null;
+  overdue: boolean;
+  /** @nullable */
+  dueAt: string | null;
+  canManage: boolean;
+  canReviewHealth?: boolean;
+  completedStages?: string[];
+  /** @nullable */
+  planDay?: number | null;
+  cycleComplete?: boolean;
+  /** @nullable */
+  healthHistory?: MemberJourneyHealthHistory;
+  /** @nullable */
+  reviewedAt?: string | null;
+  /** @nullable */
+  reviewNote?: string | null;
+  /** @nullable */
+  trainerId: number | null;
+  /** @nullable */
+  generalTrainerId: number | null;
+  /** @nullable */
+  dieticianId: number | null;
+  /** @nullable */
+  ptDecision: MemberJourneyPtDecision;
+  charts: MemberJourneyChartsItem[];
+  events: MemberJourneyEventsItem[];
+  followups: MemberJourneyFollowupsItem[];
+  attendance: MemberJourneyAttendance;
+  facts: MemberJourneyFacts;
+}
+
+export interface AttendanceVisit {
+  id: number;
+  gymId: number;
+  gymName: string;
+  checkedInAt: string;
+  /** @nullable */
+  checkedOutAt: string | null;
+  /** @nullable */
+  durationMinutes: number | null;
+  method: string;
+}
+
+export type AttendanceHistorySummary = {
+  visits: number;
+  completedVisits: number;
+  totalMinutes: number;
+};
+
+export interface AttendanceHistory {
+  month: string;
+  visits: AttendanceVisit[];
+  activeVisit: AttendanceVisit | null;
+  summary: AttendanceHistorySummary;
+}
+
+export type AttendanceScanInputAction = typeof AttendanceScanInputAction[keyof typeof AttendanceScanInputAction];
+
+
+export const AttendanceScanInputAction = {
+  checkin: 'checkin',
+  checkout: 'checkout',
+} as const;
+
+export interface AttendanceScanInput {
+  /**
+     * @minLength 1
+     * @maxLength 512
+     */
+  code: string;
+  action: AttendanceScanInputAction;
+}
+
+export type AttendanceScanResultOutcome = typeof AttendanceScanResultOutcome[keyof typeof AttendanceScanResultOutcome];
+
+
+export const AttendanceScanResultOutcome = {
+  checked_in: 'checked_in',
+  already_checked_in: 'already_checked_in',
+  checked_out: 'checked_out',
+  already_checked_out: 'already_checked_out',
+} as const;
+
+export interface AttendanceScanResult {
+  visit: AttendanceVisit;
+  outcome: AttendanceScanResultOutcome;
+}
+
+export interface PartnerAttendanceQr {
+  gymId: number;
+  gymName: string;
+  address: string;
+  /** Raw signed token. Encode in iconic-app://check-in?code=<URLencoded token> for printing. POST only the raw token to attendance/scan. */
+  code: string;
+}
+
 export interface NotificationSounds {
   members: string | null;
   trainers: string | null;
@@ -740,7 +1220,12 @@ export interface TrainerPackage {
 export interface CreateTrainerBookingRequest {
   gymId: number;
   packageId: number;
-  trainerId?: string;
+  /**
+     * Stable YoActiv trainer ID from the active membership branch roster; revalidated at checkout.
+     * @minLength 1
+     */
+  trainerId: string;
+  /** Legacy compatibility only; ignored. The server snapshots the selected trainer's name. */
   trainerName?: string;
   /** @minLength 2 */
   name: string;
@@ -1062,6 +1547,17 @@ export interface CouponPreviewResponse {
   discountInr?: number;
   finalInr?: number;
   description?: string;
+}
+
+export interface AvailableCoupon {
+  code: string;
+  description: string;
+  discountInr: number;
+  finalInr: number;
+}
+
+export interface AvailableCouponsResponse {
+  coupons: AvailableCoupon[];
 }
 
 export interface CreatePackageBookingRequest {
@@ -1453,6 +1949,17 @@ export interface WorkoutEntry {
   durationMin: number;
   calories: number;
   steps: number;
+  exerciseName: string | null;
+  /**
+     * @minimum 1
+     * @maximum 100
+     */
+  sets: number | null;
+  /**
+     * @minimum 1
+     * @maximum 1000
+     */
+  reps: number | null;
   createdAt: string;
 }
 
@@ -1481,11 +1988,41 @@ export const WorkoutInputType = {
   other: 'other',
 } as const;
 
+/**
+ * Requires positive durationMin or a complete exerciseName/sets/reps trio. Partial strength details are rejected. On update, date is ignored and the original date is retained.
+ */
 export interface WorkoutInput {
   type: WorkoutInputType;
-  durationMin: number;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     */
+  durationMin?: number;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     */
   calories?: number;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     */
   steps?: number;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  exerciseName?: string | null;
+  /**
+     * @minimum 1
+     * @maximum 100
+     */
+  sets?: number | null;
+  /**
+     * @minimum 1
+     * @maximum 1000
+     */
+  reps?: number | null;
   date?: string;
 }
 
@@ -1550,6 +2087,136 @@ export interface CheckinInput {
   gymId: number;
   method?: CheckinInputMethod;
 }
+
+/**
+ * Invalid input, attempted seed relabelling or 500-review limit reached
+ */
+export type ReviewBadRequestResponse = ReviewError;
+
+/**
+ * Admin authentication required
+ */
+export type ReviewUnauthorizedResponse = ReviewError;
+
+/**
+ * Review not found
+ */
+export type ReviewNotFoundResponse = ReviewError;
+
+export type GetAdminLiveTrainerProfileParams = {
+/**
+ * @minimum 1
+ */
+gymId: number;
+};
+
+export type UpdateAdminLiveTrainerProfileParams = {
+/**
+ * @minimum 1
+ */
+gymId: number;
+};
+
+export type GetOwnTrainerReviewParams = {
+/**
+ * @minimum 1
+ */
+gymId: number;
+};
+
+export type SaveOwnTrainerReviewParams = {
+/**
+ * @minimum 1
+ */
+gymId: number;
+};
+
+export type ListReviewTrainerOptions200 = {
+  trainers: ReviewTrainerOption[];
+};
+
+export type GetLiveTrainerProfileParams = {
+/**
+ * @minimum 1
+ */
+gymId: number;
+};
+
+export type DeleteAdminReview200 = {
+  ok: boolean;
+};
+
+export type GetMyMemberJourney200 = {
+  journey: MemberJourney | null;
+  branchRequired: boolean;
+};
+
+export type SubmitMyMemberJourneyFeedbackBodyKind = typeof SubmitMyMemberJourneyFeedbackBodyKind[keyof typeof SubmitMyMemberJourneyFeedbackBodyKind];
+
+
+export const SubmitMyMemberJourneyFeedbackBodyKind = {
+  pt: 'pt',
+  attendance: 'attendance',
+} as const;
+
+export type SubmitMyMemberJourneyFeedbackBody = {
+  /** @minimum 0 */
+  version: number;
+  kind: SubmitMyMemberJourneyFeedbackBodyKind;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating?: number;
+  /**
+     * @minLength 1
+     * @maxLength 10000
+     */
+  response: string;
+};
+
+export type ListMemberJourneys200 = {
+  journeys: MemberJourney[];
+  canManage: boolean;
+};
+
+export type GetMemberJourneyOptions200MembersItem = {
+  id: number;
+  name: string;
+  gymId: number;
+};
+
+export type GetMemberJourneyOptions200AssigneesItem = {
+  id: number;
+  name: string;
+  gymId: number;
+  /** @nullable */
+  journeyRole?: string | null;
+};
+
+export type GetMemberJourneyOptions200GymsItem = {
+  id: number;
+  name: string;
+};
+
+export type GetMemberJourneyOptions200 = {
+  canManage: boolean;
+  members: GetMemberJourneyOptions200MembersItem[];
+  assignees: GetMemberJourneyOptions200AssigneesItem[];
+  gyms: GetMemberJourneyOptions200GymsItem[];
+};
+
+export type EnrollMemberJourneyBody = {
+  userId: number;
+  gymId: number;
+};
+
+export type GetMyAttendanceParams = {
+/**
+ * @pattern ^\d{4}-(0[1-9]|1[0-2])$
+ */
+month?: string;
+};
 
 export type ListStoreProductsParams = {
 category?: string;
@@ -1653,6 +2320,23 @@ export type CancelAssessment200 = {
 export type ListMembershipPackagesParams = {
 gymId: number;
 };
+
+export type GetAvailableCouponsParams = {
+kind: GetAvailableCouponsKind;
+/**
+ * Purchase list price (₹)
+ * @exclusiveMinimum 0
+ */
+amountInr: number;
+};
+
+export type GetAvailableCouponsKind = typeof GetAvailableCouponsKind[keyof typeof GetAvailableCouponsKind];
+
+
+export const GetAvailableCouponsKind = {
+  package: 'package',
+  pt: 'pt',
+} as const;
 
 export type GetPackageBookingParams = {
 /**

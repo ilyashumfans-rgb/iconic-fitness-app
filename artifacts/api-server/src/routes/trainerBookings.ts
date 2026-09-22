@@ -31,6 +31,9 @@ import { fetchPtAssignmentMap } from "../lib/ptAssignments";
 import { trainerPhotoMap } from "../lib/trainerPhotos";
 import { PT_TOTAL_SESSIONS, listPtSessions } from "../lib/ptSessions";
 import { requireUser } from "../lib/currentUser";
+import { activeMemberHomeGymId } from "../lib/activeMemberHomeGym";
+import { resolvePtTrainerRoster } from "../lib/ptTrainerResolver";
+import { PtCheckoutError, requirePtHomeGym, requirePtTrainerId, selectPtTrainer } from "../lib/ptTrainerPolicy";
 import {
   creditReferralRewardOnce,
   debitWallet,
@@ -272,13 +275,24 @@ router.post(
       return;
     }
     const body = parsed.data;
+    let selectedTrainer: { id: string; name: string };
+    try {
+      requirePtTrainerId(body.trainerId);
+      requirePtHomeGym(await activeMemberHomeGymId(req.userId!, true), body.gymId);
+      selectedTrainer = selectPtTrainer(body.trainerId, await resolvePtTrainerRoster(body.gymId));
+    } catch (error) {
+      if (!(error instanceof PtCheckoutError)) throw error;
+      res.status(error.status).json({ error: error.message });
+      return;
+    }
     if (!yoactivConfigured()) {
       res.status(503).json({ error: "Payments are temporarily unavailable" });
       return;
     }
-    const mobile = normalizeMobile(body.mobile);
+    const [account] = await db.select({ mobile: usersTable.mobile }).from(usersTable).where(eq(usersTable.id, req.userId!));
+    const mobile = normalizeMobile(account?.mobile);
     if (!mobile) {
-      res.status(400).json({ error: "Please enter a valid 10-digit mobile number" });
+      res.status(403).json({ error: "Sync your account membership mobile before purchasing PT." });
       return;
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(body.preferredDate)) {
@@ -395,8 +409,8 @@ router.post(
         gymId: gym.id,
         gymName: gym.name,
         branchId: target.branchId,
-        trainerId: body.trainerId ?? "",
-        trainerName: body.trainerName ?? "",
+        trainerId: selectedTrainer.id,
+        trainerName: selectedTrainer.name,
         memberName: body.name.trim(),
         mobile,
         packageName: pkg.name,
@@ -793,14 +807,38 @@ router.post(
     }
     const { sessionNo, rating } = body.data;
     const comment = body.data.comment ?? "";
-    const [row] = await db
-      .insert(ptTrialFeedbackTable)
-      .values({ userId: req.userId!, sessionNo, rating, comment })
-      .onConflictDoUpdate({
-        target: [ptTrialFeedbackTable.userId, ptTrialFeedbackTable.sessionNo],
-        set: { rating, comment },
-      })
-      .returning();
+    if (sessionNo === 2 && !comment.trim()) {
+      res.status(400).json({ error: "Written feedback is required for trial session 2" });
+      return;
+    }
+    const [completedTrial] = await db.select().from(ptProgramsTable).where(and(
+      eq(ptProgramsTable.userId, req.userId!),
+      eq(ptProgramsTable.refType, "enquiry"),
+      sessionNo === 1 ? sql`${ptProgramsTable.session1DoneAt} IS NOT NULL` : sql`${ptProgramsTable.session2DoneAt} IS NOT NULL`,
+    )).limit(1);
+    if (!completedTrial) {
+      res.status(400).json({ error: "Complete this trial session before submitting feedback" });
+      return;
+    }
+    const row = await db.transaction(async tx => {
+      const journey = await tx.execute(sql`SELECT version FROM member_journeys WHERE user_id=${req.userId!} FOR UPDATE`);
+      if (sessionNo === 2) {
+        const [first] = await tx.select().from(ptTrialFeedbackTable).where(and(eq(ptTrialFeedbackTable.userId, req.userId!), eq(ptTrialFeedbackTable.sessionNo, 1))).limit(1);
+        if (!first) return null;
+      }
+      const [saved] = await tx.insert(ptTrialFeedbackTable)
+        .values({ userId: req.userId!, sessionNo, rating, comment: comment.trim() })
+        .onConflictDoUpdate({ target: [ptTrialFeedbackTable.userId, ptTrialFeedbackTable.sessionNo], set: { rating, comment: comment.trim() } }).returning();
+      if (journey.rows.length) {
+        const updated = await tx.execute(sql`UPDATE member_journeys SET version=version+1 WHERE user_id=${req.userId!} RETURNING version`);
+        await tx.execute(sql`INSERT INTO member_journey_events(user_id,version,action,actor,payload) VALUES(${req.userId!},${updated.rows[0].version},'trial_feedback',${`member:${req.userId}`},${JSON.stringify({ sessionNo, rating, comment: comment.trim() })}::jsonb)`);
+      }
+      return saved;
+    });
+    if (!row) {
+      res.status(400).json({ error: "Submit session 1 feedback before session 2 feedback" });
+      return;
+    }
     res.json(
       SubmitPtTrialFeedbackResponse.parse({
         sessionNo: row!.sessionNo,

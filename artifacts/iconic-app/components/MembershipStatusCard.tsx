@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import type { MyMembership } from "@workspace/api-client-react";
 import { LinearGradient } from "expo-linear-gradient";
+import type { ReactNode } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -56,6 +57,9 @@ export function MembershipStatusCard({
   memberPhotoUrl,
   onManage,
   embedded = false,
+  compact = false,
+  greeting,
+  footer,
 }: {
   membership: MyMembership;
   memberName: string;
@@ -65,6 +69,10 @@ export function MembershipStatusCard({
   onManage: () => void;
   /** Remove the outer spacing when a parent already controls card spacing. */
   embedded?: boolean;
+  /** Denser Home presentation; the full membership screen stays unchanged. */
+  compact?: boolean;
+  greeting?: string;
+  footer?: ReactNode;
 }) {
   const colors = useColors();
   const PREMIUM = getPremiumColors(colors);
@@ -134,7 +142,21 @@ export function MembershipStatusCard({
           style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}
         />
 
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        {greeting ? (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: compact ? 6 : 16 }}>
+          <AppText weight="700" size={compact ? 17 : 20} style={{ flex: 1 }}>
+            {greeting}
+          </AppText>
+          {compact ? (
+            <AppText size={10} weight="700" color={needsRenewal ? alertColor : PREMIUM.gold}
+              style={{ textTransform: "capitalize", paddingHorizontal: 9, paddingVertical: 4,
+                borderRadius: 999, backgroundColor: PREMIUM.hairline }}>
+              {membership.status}
+            </AppText>
+          ) : null}
+          </View>
+        ) : null}
+        {!compact ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <Feather name="award" size={14} color={PREMIUM.gold} />
           <AppText
             size={11}
@@ -166,20 +188,21 @@ export function MembershipStatusCard({
               {membership.status}
             </AppText>
           </View>
-        </View>
+        </View> : null}
 
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
             gap: 10,
-            marginTop: 10,
+            marginTop: compact ? 2 : 10,
           }}
         >
           {/* Tappable avatar: Camera / Gallery chooser to change the photo */}
           <Pressable
             onPress={photo.busy ? undefined : photo.choosePhoto}
-            style={[styles.premiumAvatarRing, { borderColor: PREMIUM.gold }]}
+            style={[styles.premiumAvatarRing, { borderColor: PREMIUM.gold },
+              compact ? { width: 44, height: 44, borderRadius: 22 } : null]}
             hitSlop={6}
             accessibilityRole="button"
             accessibilityLabel="Change profile photo"
@@ -193,13 +216,14 @@ export function MembershipStatusCard({
                     membershipPhotoUrl ||
                     undefined,
                 }}
-                style={styles.premiumAvatar}
+                style={[styles.premiumAvatar, compact ? { width: 38, height: 38, borderRadius: 19 } : null]}
                 accessibilityLabel={`${memberName || "Member"}'s photo`}
               />
             ) : (
               <View
                 style={[
                   styles.premiumAvatar,
+                  compact ? { width: 38, height: 38, borderRadius: 19 } : null,
                   {
                     backgroundColor: PREMIUM.hairline,
                     alignItems: "center",
@@ -240,21 +264,21 @@ export function MembershipStatusCard({
           <View style={{ flex: 1 }}>
             <AppText
               weight="700"
-              size={16}
+              size={compact ? 14 : 16}
               color={PREMIUM.text}
               numberOfLines={1}
             >
               {memberName || "Iconic Member"}
             </AppText>
             <AppText
-              size={12}
+              size={compact ? 11 : 12}
               color={PREMIUM.faint}
               style={{ marginTop: 1 }}
               numberOfLines={1}
             >
               {membership.planName}
             </AppText>
-            {membership.branchName ? (
+            {(
               <View
                 style={{
                   flexDirection: "row",
@@ -265,14 +289,15 @@ export function MembershipStatusCard({
               >
                 <Feather name="map-pin" size={11} color={PREMIUM.faint} />
                 <AppText size={11} color={PREMIUM.faint} numberOfLines={1}>
-                  {membership.branchName}
+                  {membership.branchName ? `Branch: ${membership.branchName}` : "Branch not available"}
                 </AppText>
               </View>
-            ) : null}
+            )}
           </View>
         </View>
 
-        <View style={[styles.premiumDivider, { backgroundColor: PREMIUM.hairline }]} />
+        <View style={[styles.premiumDivider, { backgroundColor: PREMIUM.hairline },
+          compact ? { marginVertical: 8 } : null]} />
 
         <View style={{ flexDirection: "row" }}>
           <View style={{ flex: 1 }}>
@@ -368,6 +393,7 @@ export function MembershipStatusCard({
             </AppText>
           </>
         ) : null}
+        {footer}
       </LinearGradient>
     </View>
   );

@@ -53,7 +53,7 @@ export type PartnerDocument = {
   uploadedAt: string;
 };
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     ...options,
     credentials: "include",
@@ -239,4 +239,6 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "blog.manage": "Blog Management",
   "lead.manage": "Leads (CRM)",
   "pt.manage": "PT Training (mobile trainer workspace)",
+  "journey.view": "View member journeys",
+  "journey.manage": "Manage member journeys",
 };

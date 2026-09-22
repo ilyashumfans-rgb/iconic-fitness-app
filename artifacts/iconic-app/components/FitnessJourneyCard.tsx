@@ -45,6 +45,7 @@ export function FitnessJourneyCard({ journey }: { journey: FitnessJourney }) {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [saving, setSaving] = useState(false);
+  const [feedbackError, setFeedbackError] = useState("");
 
   // Query errors are not an empty history or permission to offer a trial.
   if (!feedbackQuery.isSuccess || feedbackQuery.isFetching || !journey.eligible) return null;
@@ -74,11 +75,12 @@ export function FitnessJourneyCard({ journey }: { journey: FitnessJourney }) {
   const openFeedback = (sessionNo: 1 | 2) => {
     setRating(0);
     setComment("");
+    setFeedbackError("");
     setFeedbackFor(sessionNo);
   };
 
   const saveFeedback = async () => {
-    if (!feedbackFor || rating < 1 || saving) return;
+    if (!feedbackFor || rating < 1 || saving || (feedbackFor === 2 && !comment.trim())) return;
     setSaving(true);
     try {
       await submitFeedback.mutateAsync({
@@ -88,9 +90,10 @@ export function FitnessJourneyCard({ journey }: { journey: FitnessJourney }) {
         queryKey: getListMyPtTrialFeedbackQueryKey(),
       });
       await queryClient.invalidateQueries({ queryKey: ["/api/memberships/journey"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/member-journey/mine"] });
       setFeedbackFor(null);
-    } catch {
-      // Keep the modal open so the member can retry.
+    } catch (error) {
+      setFeedbackError(error instanceof Error ? error.message : "Unable to save feedback. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -144,6 +147,9 @@ export function FitnessJourneyCard({ journey }: { journey: FitnessJourney }) {
         </AppText>
       </View>
 
+      <Pressable onPress={() => router.push("/fitness-journey")} style={{ paddingVertical: 12 }}>
+        <AppText color={colors.primary} weight="700">View my full fitness journey →</AppText>
+      </Pressable>
       {steps.map((step, i) => {
         const state = stepState(i);
         const isLast = i === steps.length - 1;
@@ -238,7 +244,7 @@ export function FitnessJourneyCard({ journey }: { journey: FitnessJourney }) {
             <TextInput
               value={comment}
               onChangeText={setComment}
-              placeholder="Anything you'd like to share? (optional)"
+              placeholder={feedbackFor === 2 ? "Written feedback is required" : "Anything you'd like to share? (optional)"}
               placeholderTextColor={colors.mutedForeground}
               multiline
               style={[
@@ -249,6 +255,7 @@ export function FitnessJourneyCard({ journey }: { journey: FitnessJourney }) {
                 },
               ]}
             />
+            {feedbackError ? <AppText color={colors.destructive}>{feedbackError}</AppText> : null}
             <View style={styles.modalActions}>
               <Pressable onPress={() => setFeedbackFor(null)} disabled={saving}>
                 {({ pressed }) => (
@@ -259,7 +266,7 @@ export function FitnessJourneyCard({ journey }: { journey: FitnessJourney }) {
                   </View>
                 )}
               </Pressable>
-              <Pressable onPress={saveFeedback} disabled={rating < 1 || saving}>
+              <Pressable onPress={saveFeedback} disabled={rating < 1 || saving || (feedbackFor === 2 && !comment.trim())}>
                 {({ pressed }) => (
                   <View
                     style={[

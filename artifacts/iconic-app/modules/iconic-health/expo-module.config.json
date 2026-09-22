@@ -1,0 +1,5 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": { "modules": ["IconicHealthModule"] },
+  "android": { "modules": ["expo.modules.iconichealth.IconicHealthModule"] }
+}

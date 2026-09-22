@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "b1f4ec2e-f0e8-49b2-83e1-bd139f764b5a"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.iconicfitness.app"
+    }
+  }
+}

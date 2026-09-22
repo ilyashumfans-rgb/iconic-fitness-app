@@ -7,7 +7,6 @@ import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { useColors } from "@/hooks/useColors";
-import { membershipsUrl } from "@/lib/links";
 
 const PERIOD_SUFFIX: Record<string, string> = {
   monthly: "/mo",
@@ -118,11 +117,9 @@ export function PlanCard({
           label="Get this plan"
           icon="arrow-right"
           onPress={() =>
-            // Stay inside the app — open the memberships page in the
-            // in-app browser instead of bouncing out to an external browser.
             router.push({
-              pathname: "/web",
-              params: { url: membershipsUrl, title: "Membership plans" },
+              pathname: "/book-package",
+              params: { planName: plan.name },
             })
           }
         />

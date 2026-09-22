@@ -16,16 +16,15 @@ import {
   AddMealBody,
   GetMealDayResponse,
   DeleteMealResponse,
-  AddWorkoutBody,
   GetWorkoutDayResponse,
   DeleteWorkoutResponse,
   GetTrackingSummaryResponse,
   GetProgressResponse,
   GetGoalsResponse,
   UpdateGoalsBody,
-  CreateCheckinBody,
 } from "@workspace/api-zod";
 import { requireUser } from "../lib/currentUser";
+import { workoutInputSchema } from "../lib/workoutValidation";
 
 const router: IRouter = Router();
 
@@ -138,6 +137,9 @@ async function buildWorkoutDay(userId: number, date: string) {
       durationMin: e.durationMin,
       calories: e.calories,
       steps: e.steps,
+      exerciseName: e.exerciseName,
+      sets: e.sets,
+      reps: e.reps,
       createdAt: e.createdAt,
     })),
   };
@@ -325,28 +327,44 @@ router.get("/tracking/workouts", requireUser, async (req, res): Promise<void> =>
 });
 
 router.post("/tracking/workouts", requireUser, async (req, res): Promise<void> => {
-  const parsed = AddWorkoutBody.safeParse(req.body);
+  const parsed = workoutInputSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { type, durationMin, calories, steps, date } = parsed.data;
-  if (durationMin < 0 || (steps ?? 0) < 0 || (calories ?? 0) < 0) {
-    res.status(400).json({ error: "Values must be non-negative" });
-    return;
-  }
+  const { date, ...values } = parsed.data;
   const day = resolveDate(date);
   await db.insert(workoutLogsTable).values({
     userId: req.userId!,
     loggedDate: day,
-    type,
-    durationMin,
-    calories: calories ?? 0,
-    steps: steps ?? 0,
+    ...values,
   });
   res
     .status(201)
     .json(GetWorkoutDayResponse.parse(await buildWorkoutDay(req.userId!, day)));
+});
+
+router.put("/tracking/workouts/:id", requireUser, async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    res.status(400).json({ error: "Invalid workout id" });
+    return;
+  }
+  const parsed = workoutInputSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  // Never write loggedDate or createdAt on edit, even if date is supplied.
+  const { date: _ignoredDate, ...values } = parsed.data;
+  const [updated] = await db.update(workoutLogsTable).set(values)
+    .where(and(eq(workoutLogsTable.id, id), eq(workoutLogsTable.userId, req.userId!)))
+    .returning({ loggedDate: workoutLogsTable.loggedDate });
+  if (!updated) {
+    res.status(404).json({ error: "Workout not found" });
+    return;
+  }
+  res.json(GetWorkoutDayResponse.parse(await buildWorkoutDay(req.userId!, updated.loggedDate)));
 });
 
 router.delete("/tracking/workouts/:id", requireUser, async (req, res): Promise<void> => {
@@ -355,9 +373,14 @@ router.delete("/tracking/workouts/:id", requireUser, async (req, res): Promise<v
     res.status(400).json({ error: "Invalid id" });
     return;
   }
-  await db
+  const [deleted] = await db
     .delete(workoutLogsTable)
-    .where(and(eq(workoutLogsTable.id, id), eq(workoutLogsTable.userId, req.userId!)));
+    .where(and(eq(workoutLogsTable.id, id), eq(workoutLogsTable.userId, req.userId!)))
+    .returning({ id: workoutLogsTable.id });
+  if (!deleted) {
+    res.status(404).json({ error: "Workout not found" });
+    return;
+  }
   res.json(DeleteWorkoutResponse.parse({ ok: true }));
 });
 
@@ -490,53 +513,8 @@ router.get("/checkins", requireUser, async (req, res): Promise<void> => {
   res.json(rows);
 });
 
-router.post("/checkins", requireUser, async (req, res): Promise<void> => {
-  const parsed = CreateCheckinBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
-    return;
-  }
-  const { gymId, method } = parsed.data;
-  const [gym] = await db.select().from(gymsTable).where(eq(gymsTable.id, gymId));
-  if (!gym) {
-    res.status(404).json({ error: "Gym not found" });
-    return;
-  }
-  const baseInr = gym.payoutPerVisitInr;
-  const taxPct = gym.payoutTaxPct;
-  const taxInr = Math.round((baseInr * taxPct) / 100);
-  const payoutInr = baseInr - taxInr;
-
-  await db
-    .insert(checkinsTable)
-    .values({
-      userId: req.userId!,
-      gymId,
-      method: method ?? "qr",
-      baseInr,
-      taxPct,
-      taxInr,
-      payoutInr,
-    })
-    .onConflictDoNothing();
-
-  // Return the check-in for today at this gym (whether just created or already present).
-  const [row] = await db
-    .select({
-      id: checkinsTable.id,
-      gymId: checkinsTable.gymId,
-      gymName: gymsTable.name,
-      gymCity: gymsTable.city,
-      checkedInAt: checkinsTable.checkedInAt,
-      method: checkinsTable.method,
-    })
-    .from(checkinsTable)
-    .innerJoin(gymsTable, eq(checkinsTable.gymId, gymsTable.id))
-    .where(and(eq(checkinsTable.userId, req.userId!), eq(checkinsTable.gymId, gymId)))
-    .orderBy(desc(checkinsTable.checkedInAt))
-    .limit(1);
-
-  res.status(201).json(row);
+router.post("/checkins", requireUser, async (_req, res): Promise<void> => {
+  res.status(409).json({ error: "A verified branch QR is required. Scan the branch attendance QR using /attendance/scan." });
 });
 
 export default router;

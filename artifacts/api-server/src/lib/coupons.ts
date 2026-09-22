@@ -22,6 +22,13 @@ export type CouponQuote = {
   description?: string;
 };
 
+export type AvailableCoupon = {
+  code: string;
+  description: string;
+  discountInr: number;
+  finalInr: number;
+};
+
 function istToday(): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Kolkata",
@@ -121,6 +128,71 @@ export async function quoteCoupon(opts: {
     discountInr: discount,
     description: c.description,
   };
+}
+
+type AvailableCouponCandidate = { code: string };
+
+/**
+ * Turn coupon candidates into the public picker response. Keeping this
+ * orchestration separate makes it explicit that listing coupons only reads
+ * and quotes them; it never reserves or redeems one.
+ */
+export async function collectAvailableCoupons(
+  candidates: readonly AvailableCouponCandidate[],
+  amountInr: number,
+  quote: (code: string) => Promise<CouponQuote>,
+): Promise<AvailableCoupon[]> {
+  const quoted = await Promise.all(
+    candidates.map(async ({ code }) => {
+      const result = await quote(code);
+      if (
+        !result.ok ||
+        !result.code ||
+        !Number.isFinite(result.discountInr) ||
+        (result.discountInr ?? 0) <= 0
+      )
+        return null;
+      const discountInr = result.discountInr as number;
+      return {
+        code: result.code,
+        description: result.description ?? "",
+        discountInr,
+        finalInr: amountInr - discountInr,
+      };
+    }),
+  );
+
+  return quoted
+    .filter((coupon): coupon is AvailableCoupon => coupon !== null)
+    .sort(
+      (a, b) =>
+        b.discountInr - a.discountInr ||
+        a.code.localeCompare(b.code, "en"),
+    );
+}
+
+export async function getAvailableCoupons(opts: {
+  amountInr: number;
+  kind: CouponKind;
+  userId?: number | null;
+  mobile?: string | null;
+}): Promise<AvailableCoupon[]> {
+  // Restrict the candidate set cheaply, but always run quoteCoupon so every
+  // checkout eligibility rule remains the single source of truth.
+  const candidates = await db
+    .select({ code: couponsTable.code })
+    .from(couponsTable)
+    .where(eq(couponsTable.isActive, true));
+
+  return collectAvailableCoupons(candidates, opts.amountInr, (code) =>
+    quoteCoupon({
+      code,
+      amountInr: opts.amountInr,
+      kind: opts.kind,
+      userId: opts.userId,
+      mobile: opts.mobile,
+    }),
+  );
 }
 
 /**

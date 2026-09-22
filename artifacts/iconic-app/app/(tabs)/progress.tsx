@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
+import { useAuth } from "@clerk/expo";
 import { View, StyleSheet, ScrollView, Pressable, Platform, Alert } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -8,6 +9,7 @@ import {
   useGetTrackingSummary,
   useAddWater,
   getGetTrackingSummaryQueryKey,
+  getGetProgressQueryKey,
 } from "@workspace/api-client-react";
 
 import { AppText } from "@/components/AppText";
@@ -27,6 +29,8 @@ type TabType = "Overview" | "Body" | "Workouts" | "Nutrition";
 const TABS: TabType[] = ["Overview", "Body", "Workouts", "Nutrition"];
 
 export default function ProgressScreen() {
+  const scrollRef = useRef<ScrollView>(null);
+  const { userId, isSignedIn } = useAuth();
   const colors = useColors();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -36,8 +40,12 @@ export default function ProgressScreen() {
   const [showMenu, setShowMenu] = useState(false);
 
   // Queries
-  const progressQuery = useGetProgress({ days: 30 }); // Need 30 days for month stats
-  const summaryQuery = useGetTrackingSummary({ date: istToday() });
+  const progressQuery = useGetProgress({ days: 30 }, {
+    query: { enabled: !!isSignedIn, queryKey: [...getGetProgressQueryKey({ days: 30 }), userId] },
+  }); // Need 30 days for month stats
+  const summaryQuery = useGetTrackingSummary({ date: istToday() }, {
+    query: { enabled: !!isSignedIn, queryKey: [...getGetTrackingSummaryQueryKey({ date: istToday() }), userId] },
+  });
   const { data: bodyData, loading: bodyLoading } = useBodyStats();
   const addWater = useAddWater();
 
@@ -95,7 +103,7 @@ export default function ProgressScreen() {
       case "Body":
         return <BodyTab />;
       case "Workouts":
-        return <WorkoutsTab />;
+        return <WorkoutsTab onEdit={() => scrollRef.current?.scrollTo({ y: 0, animated: true })} />;
       case "Nutrition":
         return <NutritionTab />;
     }
@@ -103,6 +111,7 @@ export default function ProgressScreen() {
 
   return (
     <Screen
+      ref={scrollRef}
       refreshing={progressQuery.isRefetching}
       onRefresh={() => {
         void progressQuery.refetch();

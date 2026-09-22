@@ -169,12 +169,17 @@ export default function MoreScreen() {
   const initials = profileName.split(/\s+/).map((w) => w[0] ?? "").join("").slice(0, 2).toUpperCase();
 
   const coreLinks: MoreLink[] = [
+    { title: "My fitness journey", icon: "activity", action: () => router.push("/fitness-journey"), hideGuest: true },
+    { title: "Connect watch", icon: "watch", action: () => router.push("/connect-watch") },
+    { title: "Attendance", icon: "calendar", action: () => router.push("/attendance") },
+    { title: "Scan gym QR", icon: "maximize", action: () => router.push("/check-in") },
     { title: "My Membership", icon: "award", action: () => router.push("/my-membership"), hideGuest: true },
     { title: "My Invoices", icon: "file-text", action: () => router.push("/invoices"), hideGuest: true },
     { title: "My Bookings", icon: "calendar", action: () => router.push("/classes?tab=mine") },
     { title: "My Progress", icon: "bar-chart-2", action: () => router.push("/progress") },
     { title: "45-Day Plan", icon: "calendar", action: () => router.push("/engagement-plan"), hideGuest: true },
     { title: "My Workout Plans", icon: "activity", action: () => router.push("/train") },
+    { title: "Workouts", icon: "edit-3", action: () => router.push("/workouts") },
     { title: "My Nutrition", icon: "heart", action: () => router.push("/diet") },
     { title: "Notifications", icon: "bell", action: () => router.push("/notifications") },
     { title: "Help & Support", icon: "help-circle", action: () => router.push("/faq") },

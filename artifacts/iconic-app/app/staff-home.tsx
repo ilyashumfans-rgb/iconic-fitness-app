@@ -41,6 +41,8 @@ const PERMISSION_LABELS: Record<string, string> = {
   "blog.manage": "Blogs",
   "ticket.manage": "Support tickets",
   "pt.manage": "Trainer workspace (PT)",
+  "journey.view": "View member journeys",
+  "journey.manage": "Manage member journeys",
 };
 
 export default function StaffHomeScreen() {
@@ -214,6 +216,9 @@ function StaffHomeContent() {
           )}
         </View>
 
+        {perms.some(p => p === "journey.view" || p === "journey.manage") ? (
+          <Button label="Member journeys" onPress={() => router.push("/staff-journey")} />
+        ) : null}
         {/* Trainer workspace (needs the PT permission) */}
         {perms.includes("pt.manage") ? (
         <View

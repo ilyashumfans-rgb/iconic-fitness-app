@@ -32,6 +32,7 @@ import { PendingMobileLink } from "@/components/PendingMobileLink";
 import { PendingUsernameLink } from "@/components/PendingUsernameLink";
 import { useColors } from "@/hooks/useColors";
 import { GuestProvider, useGuest } from "@/hooks/useGuest";
+import { WatchHealthProvider } from "@/hooks/useWatchHealth";
 import { AuthClientResetContext } from "@/hooks/useAuthClientReset";
 import { ThemeProvider, useTheme } from "@/hooks/useTheme";
 import { completeSsoWebCallback } from "@/lib/ssoRedirect";
@@ -171,6 +172,7 @@ function RootLayoutNav() {
         <Stack.Screen name="workout/generate" />
         <Stack.Screen name="meal-plan/[id]" />
         <Stack.Screen name="trainer/[id]" />
+        <Stack.Screen name="live-trainer/[id]" />
         <Stack.Screen name="community-post/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="community-coach/[id]" options={{ headerShown: false }} />
         <Stack.Screen
@@ -349,12 +351,8 @@ export default function RootLayout() {
     return () => clearTimeout(t);
   }, [fontsLoaded, fontError]);
 
-  // Fail-safe: never let the animated splash trap the user, even if the
-  // Reanimated completion callback doesn't fire (web/reduced-motion edge cases).
-  useEffect(() => {
-    const t = setTimeout(() => setSplashDone(true), 3000);
-    return () => clearTimeout(t);
-  }, []);
+  // AnimatedSplash owns its four-second dismissal timer from its actual mount.
+  // A root timer would end it early when loading the auth configuration is slow.
 
   // A build without a usable Clerk configuration must not hard-crash. EAS
   // builds obtain it from the API above because they do not inherit Replit
@@ -460,6 +458,7 @@ export default function RootLayout() {
                 <PendingMobileLink />
                 <PendingUsernameLink />
                 <GuestProvider>
+                  <WatchHealthProvider>
                   <MemberReminderInitializer />
                   <GestureHandlerRootView style={{ flex: 1 }}>
                     <RootLayoutNav />
@@ -467,6 +466,7 @@ export default function RootLayout() {
                       <AnimatedSplash onFinish={() => setSplashDone(true)} />
                     ) : null}
                   </GestureHandlerRootView>
+                  </WatchHealthProvider>
                 </GuestProvider>
               </PersistQueryClientProvider>
             </ErrorBoundary>

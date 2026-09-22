@@ -12,6 +12,7 @@ import {
   getListGymsQueryKey,
   getListMembershipsQueryKey,
   getListMyBookingsQueryKey,
+  getListReviewsQueryKey,
   useAddWater,
   useCreateBooking,
   useGetMe,
@@ -82,8 +83,10 @@ import { CoachFab } from "@/components/CoachFab";
 import { CommunityFeed } from "@/components/Community";
 import { NotificationBell } from "@/components/NotificationBell";
 import { MemberMobileVerify } from "@/components/MemberMobileVerify";
+import { HomeMembershipCard } from "@/components/HomeMembershipCard";
 import { PackageCard } from "@/components/PackageCard";
 import { Screen } from "@/components/Screen";
+import { ReviewSection } from "@/components/ReviewSection";
 import { YouTubeInline } from "@/components/YouTubeInline";
 import {
   CategoryCardSkeleton,
@@ -565,7 +568,7 @@ export default function HomeScreen() {
     {
       query: {
         enabled: !!isSignedIn && secondaryReady,
-        queryKey: getGetTrackingSummaryQueryKey({ date: istToday() }),
+        queryKey: [...getGetTrackingSummaryQueryKey({ date: istToday() }), userId],
       },
     },
   );
@@ -797,6 +800,7 @@ export default function HomeScreen() {
   const catCardW = screenW - 40;
 
   const refetchAll = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: getListReviewsQueryKey() });
     if (showDiscovery && secondaryReady) {
       void gymsQuery.refetch();
       void membershipsQuery.refetch();
@@ -810,6 +814,7 @@ export default function HomeScreen() {
       void bookingsQuery.refetch();
     }
   }, [
+    queryClient,
     gymsQuery,
     classesQuery,
     membershipsQuery,
@@ -1032,6 +1037,22 @@ export default function HomeScreen() {
         <FitnessJourneyCard key={userId} journey={journeyQuery.data} />
       ) : null}
 
+
+      {isSignedIn && myMembershipQuery.isSuccess && membership ? (
+        <View style={{ marginBottom: 16 }}>
+          <HomeMembershipCard
+            membership={membership}
+            memberName={meQuery.data?.name ?? ""}
+            memberPhotoUrl={resolveImageUrl(meQuery.data?.avatarUrl)}
+            onManage={() => router.push("/my-membership")}
+          />
+        </View>
+      ) : isSignedIn ? (
+        <View style={{ gap: 8, marginBottom: 16 }}>
+          <Button label="Scan to check in" icon="maximize" onPress={() => router.push("/check-in")} />
+          <Button label="Attendance" variant="secondary" onPress={() => router.push("/attendance")} />
+        </View>
+      ) : null}
 
       {/* Compact Today trackers stay visible on Home; members can choose which
           readings appear while keeping the pill, separators, and quick actions. */}
@@ -1625,6 +1646,8 @@ export default function HomeScreen() {
           </Card>
         </Pressable>
       ) : null}
+      {/* Public reviews remain the final Home content section. */}
+      {secondaryReady ? <ReviewSection /> : null}
     </Screen>
       {isSignedIn && secondaryReady ? <NotificationBell /> : null}
       {isSignedIn ? (

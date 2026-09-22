@@ -930,9 +930,7 @@ export default function BookPackageScreen() {
               >
                 Terms & Conditions
               </AppText>
-              , and Legal Waiver & Declaration of Iconic
-              Fitness. I understand that I participate in fitness activities at
-              my own risk.
+              {"."}
             </AppText>
           </Pressable>
         ) : null}

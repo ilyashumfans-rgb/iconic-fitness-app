@@ -5,6 +5,8 @@ import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { useColors } from "@/hooks/useColors";
 import { healthMetrics, healthStorageKey, useHealthDay } from "@/lib/manualHealth";
+import { useWatchHealth } from "@/hooks/useWatchHealth";
+import { watchMetricFields, healthSourceLabel } from "@/lib/watchHealth";
 
 /** Manual daily readings are device-local and isolated by account. */
 export function TodayTrackerEntry({
@@ -28,6 +30,9 @@ export function TodayTrackerEntry({
   const colors = useColors();
   const config = healthMetrics[metric];
   const day = useHealthDay();
+  const watch = useWatchHealth();
+  const field = watchMetricFields[metric];
+  const watchReading = watch.owner === owner && field ? watch.records.find(r => r.date === day)?.[field] ?? null : null;
   const storageKey = healthStorageKey(owner, day, metric);
   const [saved, setSaved] = useState<{ key: string; value: number } | null>(null);
   const [open, setOpen] = useState(false);
@@ -40,7 +45,7 @@ export function TodayTrackerEntry({
     setSaved(null);
     setOpen(false);
     AsyncStorage.getItem(storageKey).then(raw => {
-      const n = raw === null ? NaN : Number(raw);
+      const n = raw === null || !raw.trim() ? NaN : Number(raw);
       if (!cancelled && Number.isFinite(n) && n >= 0 && n <= config.max &&
         (!config.integer || Number.isInteger(n))) setSaved({ key: storageKey, value: n });
     }).catch(() => {
@@ -65,9 +70,10 @@ export function TodayTrackerEntry({
       setError("Could not save. Please try again.");
     } finally { setBusy(false); }
   };
-  const display = reading === null ? value : metric === "water"
-    ? `${Number((reading / 1000).toFixed(2))} L`
-    : `${reading.toLocaleString()}${metric === "steps" ? "" : ` ${config.unit}`}`;
+  const effective = reading ?? watchReading;
+  const display = effective === null ? (metric === "steps" ? "—" : value) : metric === "water"
+    ? `${Number((effective / 1000).toFixed(2))} L`
+    : `${Number(effective.toFixed(2)).toLocaleString()}${metric === "steps" ? "" : ` ${config.unit}`}`;
   const openEntry = () => {
     if (onMetricPress) {
       onMetricPress();
@@ -97,11 +103,12 @@ export function TodayTrackerEntry({
           <Feather name="chevron-right" size={12} color={colors.mutedForeground} />
         </View>
         {!quickAction ? (
-          <AppText size={16} weight="700" numberOfLines={1}>
+          <AppText size={16} weight="700" color={effective === null && metric === "steps" ? colors.mutedForeground : colors.foreground} numberOfLines={1}>
             {display}
           </AppText>
         ) : null}
       </Pressable>
+      {reading === null && watchReading !== null && watch.provider ? <AppText size={8} muted>{healthSourceLabel(watch.provider)}</AppText> : null}
       {quickAction ? (
         <Pressable
           accessibilityRole="button"

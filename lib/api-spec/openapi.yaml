@@ -29,6 +29,438 @@ tags:
   - name: community
     description: Member transformation stories. Photos remain private until an admin approves a consented submission.
 paths:
+  /admin/trainers/live/{trainerId}/profile:
+    parameters:
+      - {in: path, name: trainerId, required: true, schema: {type: string}}
+      - {in: query, name: gymId, required: true, schema: {type: integer, minimum: 1}}
+    get:
+      operationId: getAdminLiveTrainerProfile
+      tags: [trainers]
+      security: [{adminSession: []}]
+      responses:
+        "200":
+          description: Branch-specific live trainer profile
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/LiveTrainerProfile"}
+    put:
+      operationId: updateAdminLiveTrainerProfile
+      tags: [trainers]
+      security: [{adminSession: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/TrainerProfileContent"}
+      responses:
+        "200":
+          description: Saved trainer profile
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/LiveTrainerProfile"}
+  /trainers/live/{trainerId}/review:
+    parameters:
+      - {in: path, name: trainerId, required: true, schema: {type: string}}
+      - {in: query, name: gymId, required: true, schema: {type: integer, minimum: 1}}
+    get:
+      operationId: getOwnTrainerReview
+      tags: [reviews]
+      security: [{memberBearer: []}]
+      responses:
+        "200":
+          description: Only the signed-in member's own review
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/OwnTrainerReviewResponse"}
+    put:
+      operationId: saveOwnTrainerReview
+      tags: [reviews]
+      security: [{memberBearer: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/MemberTrainerReviewInput"}
+      responses:
+        "200":
+          description: Submitted for approval; editing withdraws the previous published version
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/OwnTrainerReviewResponse"}
+        "403": {description: Active membership at the trainer's branch required}
+  /admin/reviews/{id}/moderation:
+    post:
+      operationId: moderateTrainerReview
+      tags: [reviews]
+      security: [{adminSession: []}]
+      parameters:
+        - {in: path, name: id, required: true, schema: {type: integer, minimum: 1}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/TrainerReviewModerationInput"}
+      responses:
+        "200":
+          description: Moderated member review
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Review"}
+  /admin/reviews/trainers:
+    get:
+      operationId: listReviewTrainerOptions
+      tags: [reviews]
+      security: [{adminSession: []}]
+      responses:
+        "200":
+          description: Eligible branch-linked live PT trainers
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [trainers]
+                properties:
+                  trainers:
+                    type: array
+                    items: {$ref: "#/components/schemas/ReviewTrainerOption"}
+        "401": {$ref: "#/components/responses/ReviewUnauthorized"}
+        "502":
+          description: Trainer provider unavailable
+  /trainers/live/{trainerId}:
+    get:
+      operationId: getLiveTrainerProfile
+      tags: [trainers]
+      parameters:
+        - name: trainerId
+          in: path
+          required: true
+          schema: {type: string}
+        - name: gymId
+          in: query
+          required: true
+          schema: {type: integer, minimum: 1}
+      responses:
+        "200":
+          description: Branch-verified trainer profile; rating excludes sample reviews
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/LiveTrainerProfile"}
+        "400": {$ref: "#/components/responses/ReviewBadRequest"}
+        "404": {$ref: "#/components/responses/ReviewNotFound"}
+        "502":
+          description: Trainer provider unavailable
+  /reviews:
+    get:
+      operationId: listReviews
+      tags: [reviews]
+      summary: Published reviews ordered by sortOrder then id, with samples labelled and no aggregate rating
+      responses:
+        "200":
+          description: Published reviews
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ReviewList"}
+  /admin/reviews:
+    get:
+      operationId: listAdminReviews
+      tags: [reviews]
+      security: [{adminSession: []}]
+      responses:
+        "200":
+          description: All reviews including unpublished samples
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ReviewList"}
+        "401": {$ref: "#/components/responses/ReviewUnauthorized"}
+    post:
+      operationId: createAdminReview
+      tags: [reviews]
+      security: [{adminSession: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/ReviewInput"}
+      responses:
+        "201":
+          description: Review created
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Review"}
+        "400": {$ref: "#/components/responses/ReviewBadRequest"}
+        "401": {$ref: "#/components/responses/ReviewUnauthorized"}
+  /admin/reviews/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: integer, minimum: 1, maximum: 2147483647}
+    put:
+      operationId: updateAdminReview
+      tags: [reviews]
+      security: [{adminSession: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/AdminReviewUpdateInput"}
+      responses:
+        "200":
+          description: Updated review; seeded samples must remain labelled samples
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Review"}
+        "400": {$ref: "#/components/responses/ReviewBadRequest"}
+        "401": {$ref: "#/components/responses/ReviewUnauthorized"}
+        "404": {$ref: "#/components/responses/ReviewNotFound"}
+    delete:
+      operationId: deleteAdminReview
+      tags: [reviews]
+      security: [{adminSession: []}]
+      responses:
+        "200":
+          description: Deleted review
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok: {type: boolean}
+        "400": {$ref: "#/components/responses/ReviewBadRequest"}
+        "401": {$ref: "#/components/responses/ReviewUnauthorized"}
+        "404": {$ref: "#/components/responses/ReviewNotFound"}
+  /member-journey/mine:
+    get:
+      operationId: getMyMemberJourney
+      tags: [member-journey]
+      responses:
+        "200":
+          description: Current optional journey; existing members are not forced to onboard.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [journey, branchRequired]
+                properties:
+                  journey:
+                    anyOf:
+                      - $ref: "#/components/schemas/MemberJourney"
+                      - type: "null"
+                  branchRequired: {type: boolean}
+  /member-journey/mine/health-history:
+    put:
+      operationId: saveMyMemberJourneyHealthHistory
+      tags: [member-journey]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/MemberJourneyHealthHistoryInput"}
+      responses:
+        "200":
+          description: Updated journey
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/MemberJourney"}
+  /member-journey/mine/feedback:
+    post:
+      operationId: submitMyMemberJourneyFeedback
+      tags: [member-journey]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version, kind, response]
+              properties:
+                version: {type: integer, minimum: 0}
+                kind: {type: string, enum: [pt, attendance]}
+                rating: {type: integer, minimum: 1, maximum: 5}
+                response: {type: string, minLength: 1, maxLength: 10000}
+      responses:
+        "200":
+          description: Feedback saved; attendance response never changes classification.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/MemberJourney"}
+  /{portal}/member-journey:
+    parameters:
+      - {$ref: "#/components/parameters/JourneyPortal"}
+    get:
+      operationId: listMemberJourneys
+      tags: [member-journey]
+      responses:
+        "200":
+          description: Scope-filtered journey overview.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [journeys, canManage]
+                properties:
+                  journeys:
+                    type: array
+                    items: {$ref: "#/components/schemas/MemberJourney"}
+                  canManage: {type: boolean}
+  /{portal}/member-journey/options:
+    parameters:
+      - {$ref: "#/components/parameters/JourneyPortal"}
+    get:
+      operationId: getMemberJourneyOptions
+      tags: [member-journey]
+      responses:
+        "200":
+          description: Trusted branch membership candidates and active authorized staff.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [members, assignees, gyms, canManage]
+                properties:
+                  canManage: {type: boolean}
+                  members:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, name, gymId]
+                      properties:
+                        id: {type: integer}
+                        name: {type: string}
+                        gymId: {type: integer}
+                  assignees:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, name, gymId]
+                      properties:
+                        id: {type: integer}
+                        name: {type: string}
+                        gymId: {type: integer}
+                        journeyRole: {type: [string, "null"]}
+                  gyms:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, name]
+                      properties:
+                        id: {type: integer}
+                        name: {type: string}
+  /{portal}/member-journey/enroll:
+    parameters:
+      - {$ref: "#/components/parameters/JourneyPortal"}
+    post:
+      operationId: enrollMemberJourney
+      tags: [member-journey]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, gymId]
+              properties:
+                userId: {type: integer}
+                gymId: {type: integer}
+      responses:
+        "200":
+          description: Enrolled journey; trusted branch association is mandatory.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/MemberJourney"}
+  /{portal}/member-journey/{userId}:
+    parameters:
+      - {$ref: "#/components/parameters/JourneyPortal"}
+      - {$ref: "#/components/parameters/JourneyUserId"}
+    get:
+      operationId: getMemberJourney
+      tags: [member-journey]
+      responses:
+        "200":
+          description: Scoped detail; sensitive content omitted for read-only roles.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/MemberJourney"}
+  /{portal}/member-journey/{userId}/actions:
+    parameters:
+      - {$ref: "#/components/parameters/JourneyPortal"}
+      - {$ref: "#/components/parameters/JourneyUserId"}
+    post:
+      operationId: actOnMemberJourney
+      tags: [member-journey]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/MemberJourneyAction"}
+      responses:
+        "200":
+          description: Versioned, audited action applied.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/MemberJourney"}
+  /attendance/mine:
+    get:
+      operationId: getMyAttendance
+      tags: [attendance]
+      parameters:
+        - in: query
+          name: month
+          schema: { type: string, pattern: '^\d{4}-(0[1-9]|1[0-2])$' }
+      responses:
+        "200":
+          description: Attendance in the selected IST month
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AttendanceHistory" }
+  /attendance/scan:
+    post:
+      operationId: scanAttendance
+      tags: [attendance]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AttendanceScanInput" }
+      responses:
+        "200":
+          description: Idempotent QR attendance result
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AttendanceScanResult" }
+  /partner/gyms/{gymId}/attendance-qr:
+    get:
+      operationId: getPartnerAttendanceQr
+      tags: [partner]
+      parameters:
+        - in: path
+          name: gymId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Printable branch QR payload
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PartnerAttendanceQr" }
+  /admin/partners/{partnerId}/gyms/{gymId}/attendance-qr:
+    get:
+      operationId: getAdminPartnerAttendanceQr
+      tags: [partner]
+      security: [{adminSession: []}]
+      parameters:
+        - {in: path, name: partnerId, required: true, schema: {type: integer, minimum: 1}}
+        - {in: path, name: gymId, required: true, schema: {type: integer, minimum: 1}}
+      responses:
+        "200":
+          description: Printable member check-in/check-out QR for an owned, verified branch
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/PartnerAttendanceQr"}
+        "401": {description: Admin authentication required}
+        "403": {description: Branch verification or attendance mapping missing}
+        "404": {description: Branch is not assigned to the selected partner}
   /ai/chat:
     post:
       operationId: aiChat
@@ -956,6 +1388,29 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/CouponPreviewResponse" }
+  /coupons/available:
+    get:
+      operationId: getAvailableCoupons
+      tags: [memberships]
+      summary: List coupons currently eligible for a purchase
+      parameters:
+        - in: query
+          name: kind
+          required: true
+          schema: { type: string, enum: [package, pt] }
+        - in: query
+          name: amountInr
+          required: true
+          schema: { type: number, exclusiveMinimum: 0 }
+          description: "Purchase list price (₹)"
+      responses:
+        "200":
+          description: Eligible coupons ordered by savings, then code
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AvailableCouponsResponse" }
+        "400":
+          description: Invalid query
   /package-bookings:
     post:
       operationId: createPackageBooking
@@ -1291,6 +1746,30 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/WorkoutDay" }
   /tracking/workouts/{id}:
+    put:
+      operationId: updateWorkout
+      tags: [tracking]
+      summary: Replace an owned workout entry while preserving its original date
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WorkoutInput" }
+      responses:
+        "200":
+          description: Updated day (original entry date)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkoutDay" }
+        "400":
+          description: Invalid workout
+        "404":
+          description: Workout not found for this member
     delete:
       operationId: deleteWorkout
       tags: [tracking]
@@ -1490,7 +1969,333 @@ paths:
               schema: { $ref: "#/components/schemas/CommunityPostCreated" }
 
 components:
+  securitySchemes:
+    memberBearer:
+      type: http
+      scheme: bearer
+    adminSession:
+      type: apiKey
+      in: cookie
+      name: connect.sid
+  responses:
+    ReviewBadRequest:
+      description: Invalid input, attempted seed relabelling or 500-review limit reached
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ReviewError"}
+    ReviewUnauthorized:
+      description: Admin authentication required
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ReviewError"}
+    ReviewNotFound:
+      description: Review not found
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/ReviewError"}
+  parameters:
+    JourneyPortal:
+      in: path
+      name: portal
+      required: true
+      schema: {type: string, enum: [admin, staff, partner, agency]}
+    JourneyUserId:
+      in: path
+      name: userId
+      required: true
+      schema: {type: integer, minimum: 1}
   schemas:
+    AdminReviewUpdateInput:
+      anyOf:
+        - {$ref: "#/components/schemas/ReviewInput"}
+        - type: object
+          additionalProperties: false
+          required: [reviewText, rating, sortOrder, isPublished]
+          properties:
+            reviewText: {type: string, minLength: 1, maxLength: 2000}
+            rating: {type: integer, minimum: 1, maximum: 5}
+            sortOrder: {type: integer}
+            isPublished: {type: boolean}
+    MemberTrainerReviewInput:
+      type: object
+      additionalProperties: false
+      required: [rating, reviewText]
+      properties:
+        rating: {type: integer, minimum: 1, maximum: 5}
+        reviewText: {type: string, minLength: 1, maxLength: 2000}
+    TrainerReviewModerationInput:
+      type: object
+      required: [status]
+      properties:
+        status: {type: string, enum: [approved, rejected]}
+    TrainerProfileContent:
+      type: object
+      additionalProperties: false
+      required: [coverPhotoUrl, photoUrl, bio, qualifications, specialties, interests, certificates]
+      properties:
+        coverPhotoUrl: {type: string, maxLength: 2000}
+        photoUrl: {type: string, maxLength: 2000}
+        bio: {type: string, maxLength: 5000}
+        qualifications: {type: array, maxItems: 30, items: {type: string, maxLength: 200}}
+        specialties: {type: array, maxItems: 20, items: {type: string, maxLength: 100}}
+        interests: {type: array, maxItems: 20, items: {type: string, maxLength: 100}}
+        certificates:
+          type: array
+          maxItems: 20
+          items:
+            type: object
+            required: [title, url]
+            properties:
+              title: {type: string, minLength: 1, maxLength: 200}
+              url: {type: string, minLength: 1, maxLength: 2000}
+    OwnTrainerReviewResponse:
+      type: object
+      required: [review]
+      properties:
+        review:
+          type: [object, "null"]
+          required: [id, rating, reviewText, status, isPublished]
+          properties:
+            id: {type: integer}
+            rating: {type: integer}
+            reviewText: {type: string}
+            status: {type: string, enum: [pending, approved, rejected]}
+            isPublished: {type: boolean}
+    ReviewTrainerOption:
+      type: object
+      required: [id, name, gymId, branchName]
+      properties:
+        id: {type: string}
+        name: {type: string}
+        gymId: {type: integer}
+        branchName: {type: string}
+    LiveTrainerProfile:
+      allOf:
+        - {$ref: "#/components/schemas/ReviewTrainerOption"}
+        - type: object
+          required: [photoUrl, reviews, rating, reviewCount]
+          properties:
+            profile: {$ref: "#/components/schemas/TrainerProfileContent"}
+            photoUrl: {type: [string, "null"]}
+            reviews:
+              type: array
+              items: {$ref: "#/components/schemas/Review"}
+            rating: {type: [number, "null"]}
+            reviewCount: {type: integer}
+    ReviewInput:
+      type: object
+      additionalProperties: false
+      required: [reviewerName, branchName, reviewText, rating, isSample, isPublished, sortOrder]
+      properties:
+        reviewerName: {type: string, minLength: 1, maxLength: 100}
+        branchName: {type: string, minLength: 1, maxLength: 150}
+        trainerId: {type: [string, "null"], minLength: 1, maxLength: 100}
+        gymId: {type: [integer, "null"], minimum: 1, maximum: 2147483647}
+        reviewText: {type: string, minLength: 1, maxLength: 2000}
+        rating: {type: integer, minimum: 1, maximum: 5}
+        isSample:
+          type: boolean
+          description: Fictional sample, not a verified endorsement. Seeded samples must remain true.
+        isPublished: {type: boolean}
+        sortOrder: {type: integer, minimum: -2147483648, maximum: 2147483647}
+    Review:
+      type: object
+      required: [id, reviewerName, branchName, reviewText, rating, isSample, isPublished, sortOrder, createdAt, updatedAt]
+      properties:
+        isMemberReview: {type: boolean}
+        moderationStatus: {type: [string, "null"], enum: [pending, approved, rejected, null]}
+        id: {type: integer}
+        reviewerName: {type: string}
+        branchName: {type: string}
+        trainerId: {type: [string, "null"]}
+        gymId: {type: [integer, "null"]}
+        reviewText: {type: string}
+        rating: {type: integer, minimum: 1, maximum: 5}
+        isSample: {type: boolean}
+        isPublished: {type: boolean}
+        sortOrder: {type: integer}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+    ReviewList:
+      type: object
+      required: [reviews]
+      properties:
+        reviews:
+          type: array
+          maxItems: 500
+          items: {$ref: "#/components/schemas/Review"}
+    ReviewError:
+      type: object
+      required: [error]
+      properties:
+        error: {type: string}
+    MemberJourneyHealthHistoryInput:
+      type: object
+      required: [version, injuries, conditions, medications, allergies, exerciseRestrictions, consent]
+      additionalProperties: false
+      properties:
+        version: {type: integer, minimum: 0}
+        injuries: {type: string, minLength: 1, maxLength: 10000}
+        conditions: {type: string, minLength: 1, maxLength: 10000}
+        medications: {type: string, minLength: 1, maxLength: 10000}
+        allergies: {type: string, minLength: 1, maxLength: 10000}
+        exerciseRestrictions: {type: string, minLength: 1, maxLength: 10000}
+        notes: {type: string, maxLength: 10000}
+        consent: {type: boolean, enum: [true]}
+    MemberJourneyAction:
+      type: object
+      description: Server validates required fields for each action and stage; irregular attendance requires response and future nextDate. record_trial writes the actual assigned PT program, not a journey-only completion flag.
+      required: [version, action]
+      properties:
+        version: {type: integer, minimum: 0}
+        action:
+          type: string
+          enum: [review_health, assign_trainer, record_trial, pt_decision, pt_followup, assign_general_trainer, dietician_review, issue_chart, attendance_review, attendance_followup]
+        staffId: {type: integer, minimum: 1}
+        sessionNo: {type: integer, enum: [1, 2]}
+        note: {type: string, minLength: 1, maxLength: 10000}
+        response: {type: string, minLength: 1, maxLength: 10000}
+        content: {type: string, minLength: 1, maxLength: 10000}
+        decision: {type: string, enum: [yes, no, regular, irregular]}
+        nextDate: {type: string, format: date-time}
+    MemberJourney:
+      type: object
+      required: [userId, gymId, memberName, version, currentStage, nextAction, assigneeId, overdue, dueAt, canManage, trainerId, generalTrainerId, dieticianId, ptDecision, charts, events, followups, attendance, facts]
+      properties:
+        userId: {type: integer}
+        gymId: {type: integer}
+        memberName: {type: string}
+        version: {type: integer}
+        currentStage:
+          type: string
+          enum: [health_history, bca_bmi_report, health_history_review, assign_trainer, trial1, rating_feedback1, trial2, rating_written_feedback2, pt_decision, pt_followup, general_trainer, dietician, workout_chart1, workout_chart2, workout_chart3, attendance_review, attendance_followup, regular_continue]
+        nextAction: {type: string}
+        assigneeId: {type: [integer, "null"]}
+        assigneeName: {type: [string, "null"]}
+        trialProgramId: {type: [integer, "null"]}
+        overdue: {type: boolean}
+        dueAt: {type: [string, "null"]}
+        canManage: {type: boolean}
+        canReviewHealth: {type: boolean}
+        completedStages:
+          type: array
+          items: {type: string}
+        planDay: {type: [integer, "null"]}
+        cycleComplete: {type: boolean}
+        healthHistory:
+          type: [object, "null"]
+          properties:
+            injuries: {type: string}
+            conditions: {type: string}
+            medications: {type: string}
+            allergies: {type: string}
+            exerciseRestrictions: {type: string}
+            notes: {type: string}
+            consent: {type: boolean}
+            submittedAt: {type: string}
+        reviewedAt: {type: [string, "null"]}
+        reviewNote: {type: [string, "null"]}
+        trainerId: {type: [integer, "null"]}
+        generalTrainerId: {type: [integer, "null"]}
+        dieticianId: {type: [integer, "null"]}
+        ptDecision: {type: [string, "null"], enum: ["yes", "no", null]}
+        charts:
+          type: array
+          items:
+            type: object
+            required: [id, label, issuedAt]
+            properties:
+              id: {type: integer}
+              chartNo: {type: integer}
+              label: {type: string}
+              content: {type: string}
+              issuedAt: {type: string}
+        events:
+          type: array
+          items:
+            type: object
+            required: [id, action, actor, createdAt]
+            properties:
+              id: {type: integer}
+              action: {type: string}
+              actor: {type: string}
+              createdAt: {type: string}
+        followups:
+          type: array
+          items:
+            type: object
+            required: [id, kind, nextDate, createdAt]
+            properties:
+              id: {type: integer}
+              kind: {type: string}
+              response: {type: string}
+              nextDate: {type: string}
+              createdAt: {type: string}
+        attendance:
+          type: object
+          required: [checkinsLast30Days]
+          properties:
+            checkinsLast30Days: {type: integer}
+        facts:
+          type: object
+          required: [bmi, trial1, feedback1, trial2, feedback2, paidPt]
+          properties:
+            bmi: {type: boolean}
+            trial1: {type: boolean}
+            feedback1: {type: boolean}
+            trial2: {type: boolean}
+            feedback2: {type: boolean}
+            paidPt: {type: boolean}
+    AttendanceVisit:
+      type: object
+      required: [id, gymId, gymName, checkedInAt, checkedOutAt, durationMinutes, method]
+      properties:
+        id: { type: integer }
+        gymId: { type: integer }
+        gymName: { type: string }
+        checkedInAt: { type: string }
+        checkedOutAt: { type: [string, "null"] }
+        durationMinutes: { type: [integer, "null"] }
+        method: { type: string }
+    AttendanceHistory:
+      type: object
+      required: [month, visits, activeVisit, summary]
+      properties:
+        month: { type: string }
+        visits:
+          type: array
+          items: { $ref: "#/components/schemas/AttendanceVisit" }
+        activeVisit:
+          anyOf:
+            - { $ref: "#/components/schemas/AttendanceVisit" }
+            - { type: "null" }
+        summary:
+          type: object
+          required: [visits, completedVisits, totalMinutes]
+          properties:
+            visits: { type: integer }
+            completedVisits: { type: integer }
+            totalMinutes: { type: integer }
+    AttendanceScanInput:
+      type: object
+      required: [code, action]
+      properties:
+        code: { type: string, minLength: 1, maxLength: 512 }
+        action: { type: string, enum: [checkin, checkout] }
+    AttendanceScanResult:
+      type: object
+      required: [visit, outcome]
+      properties:
+        visit: { $ref: "#/components/schemas/AttendanceVisit" }
+        outcome: { type: string, enum: [checked_in, already_checked_in, checked_out, already_checked_out] }
+    PartnerAttendanceQr:
+      type: object
+      required: [gymId, gymName, address, code]
+      properties:
+        gymId: { type: integer }
+        gymName: { type: string }
+        address: { type: string }
+        code: { type: string, description: "Raw signed token. Encode in iconic-app://check-in?code=<URLencoded token> for printing. POST only the raw token to attendance/scan." }
     NotificationSounds:
       type: object
       required: [members, trainers]
@@ -2041,12 +2846,12 @@ components:
         imageUrl: { type: string, description: "Admin-set display image URL (empty when unset)" }
     CreateTrainerBookingRequest:
       type: object
-      required: [gymId, packageId, name, mobile, preferredDate]
+      required: [gymId, packageId, trainerId, name, mobile, preferredDate]
       properties:
         gymId: { type: integer }
         packageId: { type: integer }
-        trainerId: { type: string }
-        trainerName: { type: string }
+        trainerId: { type: string, minLength: 1, description: "Stable YoActiv trainer ID from the active membership branch roster; revalidated at checkout." }
+        trainerName: { type: string, description: "Legacy compatibility only; ignored. The server snapshots the selected trainer's name." }
         name: { type: string, minLength: 2 }
         mobile: { type: string, minLength: 10 }
         preferredDate: { type: string, description: "ISO date (YYYY-MM-DD)" }
@@ -2253,6 +3058,21 @@ components:
         discountInr: { type: integer }
         finalInr: { type: integer }
         description: { type: string }
+    AvailableCoupon:
+      type: object
+      required: [code, description, discountInr, finalInr]
+      properties:
+        code: { type: string }
+        description: { type: string }
+        discountInr: { type: integer }
+        finalInr: { type: integer }
+    AvailableCouponsResponse:
+      type: object
+      required: [coupons]
+      properties:
+        coupons:
+          type: array
+          items: { $ref: "#/components/schemas/AvailableCoupon" }
     CreatePackageBookingRequest:
       type: object
       required: [gymId, packageId, name, mobile, startDate]
@@ -2589,13 +3409,16 @@ components:
 
     WorkoutEntry:
       type: object
-      required: [id, type, durationMin, calories, steps, createdAt]
+      required: [id, type, durationMin, calories, steps, exerciseName, sets, reps, createdAt]
       properties:
         id: { type: integer }
         type: { type: string, enum: [run, walk, strength, cycling, yoga, hiit, swim, sports, other] }
         durationMin: { type: integer }
         calories: { type: integer }
         steps: { type: integer }
+        exerciseName: { type: string, nullable: true }
+        sets: { type: integer, nullable: true, minimum: 1, maximum: 100 }
+        reps: { type: integer, nullable: true, minimum: 1, maximum: 1000 }
         createdAt: { type: string, format: date-time }
     WorkoutDay:
       type: object
@@ -2612,12 +3435,16 @@ components:
           items: { $ref: "#/components/schemas/WorkoutEntry" }
     WorkoutInput:
       type: object
-      required: [type, durationMin]
+      description: Requires positive durationMin or a complete exerciseName/sets/reps trio. Partial strength details are rejected. On update, date is ignored and the original date is retained.
+      required: [type]
       properties:
         type: { type: string, enum: [run, walk, strength, cycling, yoga, hiit, swim, sports, other] }
-        durationMin: { type: integer }
-        calories: { type: integer }
-        steps: { type: integer }
+        durationMin: { type: integer, minimum: 0, maximum: 2147483647, default: 0 }
+        calories: { type: integer, minimum: 0, maximum: 2147483647, default: 0 }
+        steps: { type: integer, minimum: 0, maximum: 2147483647, default: 0 }
+        exerciseName: { type: string, nullable: true, minLength: 1, maxLength: 200 }
+        sets: { type: integer, nullable: true, minimum: 1, maximum: 100 }
+        reps: { type: integer, nullable: true, minimum: 1, maximum: 1000 }
         date: { type: string }
 
     DailySummary:

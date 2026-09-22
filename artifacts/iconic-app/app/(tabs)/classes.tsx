@@ -5,7 +5,6 @@ import {
   getGetMyMembershipQueryKey,
   getListMyBookingsQueryKey,
   useCreateBooking,
-  useCreateCheckin,
   useGetMyMembership,
   useListClasses,
   useListMyBookings,
@@ -44,16 +43,18 @@ export default function ClassesScreen() {
   const [category, setCategory] = useState("All");
   const queryClient = useQueryClient();
 
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, userId } = useAuth();
   const classesQuery = useListClasses(
     category === "All" ? {} : { category: category.toLowerCase() },
   );
-  const bookingsQuery = useListMyBookings({ status: "upcoming" });
+  const bookingsQuery = useListMyBookings({ status: "upcoming" }, {
+    query: { enabled: !!isSignedIn, queryKey: [...getListMyBookingsQueryKey({ status: "upcoming" }), userId] },
+  });
 
   // Active members only see classes at their home branch; everyone else
   // (guests, no plan, expired) browses every branch.
   const membershipQuery = useGetMyMembership({
-    query: { enabled: !!isSignedIn, queryKey: getGetMyMembershipQueryKey() },
+    query: { enabled: !!isSignedIn, queryKey: [...getGetMyMembershipQueryKey(), userId] },
   });
   const homeGymId =
     membershipQuery.data?.status === "active"
@@ -68,7 +69,6 @@ export default function ClassesScreen() {
     return homeGymId !== null ? all.filter((s) => s.gymId === homeGymId) : all;
   }, [classesQuery.data, homeGymId]);
   const createBooking = useCreateBooking();
-  const createCheckin = useCreateCheckin();
   const [busyId, setBusyId] = useState<number | null>(null);
 
   const bookedClassIds = useMemo(
@@ -99,20 +99,10 @@ export default function ClassesScreen() {
   );
 
   const onCheckIn = useCallback(
-    async (booking: Booking) => {
-      setBusyId(booking.id);
-      try {
-        await createCheckin.mutateAsync({
-          data: { gymId: booking.gymId, method: "manual" },
-        });
-        Alert.alert("Checked in", `Welcome to ${booking.gymName}!`);
-      } catch {
-        Alert.alert("Check-in failed", "Please try again.");
-      } finally {
-        setBusyId(null);
-      }
+    (_booking: Booking) => {
+      router.push(isSignedIn ? "/check-in" : memberAuthHref("/check-in"));
     },
-    [createCheckin],
+    [isSignedIn, router],
   );
 
   return (
@@ -120,7 +110,7 @@ export default function ClassesScreen() {
       refreshing={classesQuery.isRefetching || bookingsQuery.isRefetching}
       onRefresh={() => {
         void classesQuery.refetch();
-        void bookingsQuery.refetch();
+        if (isSignedIn) void bookingsQuery.refetch();
       }}
       contentContainerStyle={{ paddingTop: 8 }}
     >
@@ -258,8 +248,8 @@ export default function ClassesScreen() {
                   </AppText>
                   <View style={{ marginTop: 14 }}>
                     <Button
-                      label="Check in"
-                      icon="check-circle"
+                      label="Scan gym QR"
+                      icon="maximize"
                       onPress={() => onCheckIn(b)}
                       loading={busyId === b.id}
                     />

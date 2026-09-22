@@ -13,6 +13,7 @@ import {
   Copy,
   FileText,
   ExternalLink,
+  Printer,
 } from "lucide-react";
 
 export default function AdminPartners() {
@@ -461,7 +462,18 @@ export default function AdminPartners() {
                 key={p.id}
                 className="border-b border-slate-800/60 hover:bg-slate-800/30"
               >
-                <td className="px-5 py-3 font-medium text-white">{p.name}</td>
+                <td className="px-5 py-3 font-medium text-white">
+                  {p.name}
+                  <button
+                    type="button"
+                    data-testid={`print-attendance-qr-${p.id}`}
+                    onClick={() => navigate(`/admin/partners/${p.id}/attendance-qr`)}
+                    title="Print the branch QR for member check-in and check-out"
+                    className="mt-2 flex items-center gap-1.5 whitespace-nowrap rounded border border-lime-500/30 bg-lime-500/10 px-2 py-1 text-xs font-semibold text-lime-700 hover:bg-lime-500/20"
+                  >
+                    <Printer className="h-3.5 w-3.5" /> Print QR
+                  </button>
+                </td>
                 <td className="px-5 py-3 text-slate-300">{p.email}</td>
                 <td className="px-5 py-3 text-slate-400">{p.phone}</td>
                 <td className="px-5 py-3 text-slate-400">{p.city}</td>

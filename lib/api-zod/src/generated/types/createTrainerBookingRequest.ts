@@ -9,7 +9,12 @@
 export interface CreateTrainerBookingRequest {
   gymId: number;
   packageId: number;
-  trainerId?: string;
+  /**
+     * Stable YoActiv trainer ID from the active membership branch roster; revalidated at checkout.
+     * @minLength 1
+     */
+  trainerId: string;
+  /** Legacy compatibility only; ignored. The server snapshots the selected trainer's name. */
   trainerName?: string;
   /** @minLength 2 */
   name: string;

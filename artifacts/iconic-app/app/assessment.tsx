@@ -53,7 +53,7 @@ export default function AssessmentScreen() {
   const colors = useColors();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn, userId } = useAuth();
 
   const [date, setDate] = useState(istToday());
   const [time, setTime] = useState("07:00");
@@ -63,7 +63,7 @@ export default function AssessmentScreen() {
   const query = useGetMyAssessment({
     query: {
       enabled: isLoaded && !!isSignedIn,
-      queryKey: getGetMyAssessmentQueryKey(),
+      queryKey: [...getGetMyAssessmentQueryKey(), userId],
     },
   });
 
@@ -145,8 +145,8 @@ export default function AssessmentScreen() {
           <>
             <EmptyState
               icon="lock"
-              title="Unlocks after trial acceptance"
-              message="Book your kick-starter PT trial first — once a trainer accepts your request, you can schedule your assessment here."
+              title="Assessment not yet available"
+              message="Complete your health history in My fitness journey. Your club confirms assessment access; members on the kick-starter trial can also unlock booking when a trainer accepts their request."
             />
             <View style={{ paddingHorizontal: 16 }}>
               <Button label="View Trainers" onPress={() => router.push("/trainers")} />

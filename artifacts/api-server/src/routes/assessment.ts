@@ -98,7 +98,8 @@ async function trialAccepted(
     .where(sql`${ptProgramsTable.userId} = ${userId} OR ${phoneMatch}`)
     .orderBy(desc(ptProgramsTable.acceptedAt))
     .limit(1);
-  return { eligible: !!program, program: program ?? null };
+  const journey = await db.execute(sql`SELECT 1 FROM member_journeys WHERE user_id=${userId} AND health_history IS NOT NULL`);
+  return { eligible: !!program || journey.rows.length > 0, program: program ?? null };
 }
 
 /**
@@ -234,14 +235,16 @@ router.post(
         .returning();
       row = updated!;
     } else {
+      const journeyBranch = await db.execute(sql`SELECT j.gym_id,g.name FROM member_journeys j JOIN gyms g ON g.id=j.gym_id WHERE j.user_id=${userId}`);
+      const branch = journeyBranch.rows[0];
       const [created] = await db
         .insert(assessmentBookingsTable)
         .values({
           userId,
           memberName: user?.name ?? "",
           memberPhone: normalizeMobile(user?.mobile ?? "") ?? "",
-          gymId: program?.gymId ?? null,
-          gymName: program?.gymName ?? "",
+          gymId: program?.gymId ?? (branch?.gym_id as number | undefined) ?? null,
+          gymName: program?.gymName || (branch?.name as string | undefined) || "",
           slotDate,
           slotTime,
         })

@@ -147,7 +147,7 @@ export type AgencyAccount = {
   createdAt: string;
 };
 
-async function request<T>(
+export async function request<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {

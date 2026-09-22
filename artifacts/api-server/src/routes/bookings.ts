@@ -17,39 +17,9 @@ import {
 } from "@workspace/api-zod";
 import { requireUser } from "../lib/currentUser";
 import { CLASS_VISIBLE_BEFORE_MS } from "../lib/classVisibility";
-import {
-  fetchYoactivMemberByMobile,
-  pickPrimaryMembership,
-  yoactivConfigured,
-} from "../lib/yoactiv";
-import { usersTable } from "@workspace/db";
+import { activeMemberHomeGymId } from "../lib/activeMemberHomeGym";
 
 const router: IRouter = Router();
-
-/**
- * Home gym of an ACTIVE member (mapped from their YoActiv plan branch), or
- * null when the viewer has no active plan / no mapping / lookup fails.
- * Fail-open on errors so a YoActiv outage never blocks class bookings.
- */
-async function activeMemberHomeGymId(userId: number): Promise<number | null> {
-  if (!yoactivConfigured()) return null;
-  try {
-    const [user] = await db
-      .select({ mobile: usersTable.mobile })
-      .from(usersTable)
-      .where(eq(usersTable.id, userId));
-    const profile = await fetchYoactivMemberByMobile(user?.mobile);
-    const primary = profile ? pickPrimaryMembership(profile) : null;
-    if (!primary || primary.status !== "active") return null;
-    const [gym] = await db
-      .select({ id: gymsTable.id })
-      .from(gymsTable)
-      .where(eq(gymsTable.yoactivBranchId, primary.branchId));
-    return gym?.id ?? null;
-  } catch {
-    return null;
-  }
-}
 
 async function toBookingDto(b: typeof bookingsTable.$inferSelect) {
   const [c] = await db

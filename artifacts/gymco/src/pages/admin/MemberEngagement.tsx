@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { adminApi, type AdminAssessmentRow } from "@/lib/adminApi";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Activity, HeartPulse, Phone, UserPlus } from "lucide-react";
+import { MemberJourneyWorkspace } from "@/components/MemberJourneyWorkspace";
 
 type Row = Awaited<ReturnType<typeof adminApi.engagement.overview>>[number];
 
@@ -14,6 +15,11 @@ const BAND_STYLES: Record<Row["scoreBand"], string> = {
 };
 
 export default function MemberEngagement() {
+  return <AdminLayout title="Member Engagement"><MemberEngagementContent /></AdminLayout>;
+}
+
+function MemberEngagementContent() {
+  const [tab, setTab] = useState(() => new URLSearchParams(window.location.search).get("tab") || "journey");
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [phone, setPhone] = useState("");
@@ -27,6 +33,8 @@ export default function MemberEngagement() {
     setLoading(true);
     try {
       setRows(await adminApi.engagement.overview());
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Unable to load member engagement. Please retry.");
     } finally {
       setLoading(false);
     }
@@ -134,7 +142,11 @@ export default function MemberEngagement() {
   );
 
   return (
-    <AdminLayout title="Member Engagement">
+    <>
+      <nav className="mb-5 flex flex-wrap gap-2" aria-label="Member engagement views">
+        {["journey", "overview", "assessments"].map(value => <button key={value} data-testid={`button-engagement-${value}`} onClick={() => setTab(value)} className={`rounded-lg border px-4 py-2 text-sm font-semibold ${tab === value ? "bg-lime-100 border-lime-400" : "bg-white border-slate-200"}`}>{value === "journey" ? "Member Journey" : value === "overview" ? "Overview" : "Assessments"}</button>)}
+      </nav>
+      {tab === "journey" ? <MemberJourneyWorkspace portal="admin" /> : tab === "assessments" ? <AssessmentsPanel /> : <>
       <div className="space-y-4">
         <AssessmentsPanel />
         <div className="bg-white border border-lime-200 rounded-2xl p-5 shadow-sm">
@@ -217,7 +229,8 @@ export default function MemberEngagement() {
           )}
         </div>
       </div>
-    </AdminLayout>
+      </>}
+    </>
   );
 }
 
@@ -249,6 +262,8 @@ function AssessmentsPanel() {
       const data = await adminApi.assessments.roster();
       setUpcoming(data.upcoming);
       setRecent(data.recent);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Unable to load assessments. Please retry.");
     } finally {
       setLoading(false);
     }

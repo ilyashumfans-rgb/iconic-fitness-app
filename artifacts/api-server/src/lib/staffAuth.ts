@@ -11,6 +11,8 @@ export const STAFF_PERMISSIONS = [
   "blog.manage",
   "lead.manage",
   "pt.manage",
+  "journey.view",
+  "journey.manage",
 ] as const;
 
 export type StaffPermission = (typeof STAFF_PERMISSIONS)[number];
@@ -38,7 +40,7 @@ function clearStaffSession(req: Request): void {
 export async function loadStaffOrUnauthorized(
   req: Request,
   res: Response,
-): Promise<{ id: number; email: string; name: string; permissions: string[] } | null> {
+): Promise<{ id: number; email: string; name: string; permissions: string[]; journeyGymIds: number[]; journeyRole: string | null } | null> {
   const id = req.session.staffId;
   if (!id) {
     res.status(401).json({ error: "Unauthorized" });
@@ -51,6 +53,8 @@ export async function loadStaffOrUnauthorized(
       name: staffTable.name,
       isActive: staffTable.isActive,
       permissions: staffTable.permissions,
+      journeyGymIds: staffTable.journeyGymIds,
+      journeyRole: staffTable.journeyRole,
     })
     .from(staffTable)
     .where(eq(staffTable.id, id));
@@ -71,6 +75,8 @@ export async function loadStaffOrUnauthorized(
     email: row.email,
     name: row.name,
     permissions: row.permissions ?? [],
+    journeyGymIds: row.journeyGymIds,
+    journeyRole: row.journeyRole,
   };
 }
 

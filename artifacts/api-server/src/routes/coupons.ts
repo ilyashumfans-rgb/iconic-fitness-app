@@ -3,7 +3,12 @@ import { asc, eq, sql } from "drizzle-orm";
 import { db, couponsTable, couponRedemptionsTable, usersTable } from "@workspace/db";
 import { requireAdmin } from "../lib/adminAuth";
 import { optionalUser } from "../lib/currentUser";
-import { normalizeCouponCode, quoteCoupon } from "../lib/coupons";
+import {
+  getAvailableCoupons,
+  normalizeCouponCode,
+  quoteCoupon,
+  type CouponKind,
+} from "../lib/coupons";
 
 const router: IRouter = Router();
 
@@ -47,6 +52,47 @@ router.post(
       finalInr: amountInr - (quote.discountInr ?? 0),
       description: quote.description ?? "",
     });
+  },
+);
+
+// Public picker for coupons that pass the exact same checks as preview.
+router.get(
+  "/coupons/available",
+  optionalUser,
+  async (req: Request, res: Response): Promise<void> => {
+    const rawAmount = req.query.amountInr;
+    const rawKind = req.query.kind;
+    const parsedAmount =
+      typeof rawAmount === "string" ? Number(rawAmount) : Number.NaN;
+    const amountInr = Math.round(parsedAmount);
+    if (
+      !Number.isFinite(parsedAmount) ||
+      !Number.isFinite(amountInr) ||
+      amountInr <= 0 ||
+      (rawKind !== "package" && rawKind !== "pt")
+    ) {
+      res.status(400).json({ error: "Invalid coupon query" });
+      return;
+    }
+
+    // Never accept a phone in a GET URL. Resolve the signed-in identity once
+    // for the whole candidate set; guests can still apply through POST preview.
+    let mobile: string | null = null;
+    if (req.userId) {
+      const [u] = await db
+        .select({ mobile: usersTable.mobile })
+        .from(usersTable)
+        .where(eq(usersTable.id, req.userId));
+      mobile = u?.mobile ?? null;
+    }
+
+    const coupons = await getAvailableCoupons({
+      amountInr,
+      kind: rawKind as CouponKind,
+      userId: req.userId ?? null,
+      mobile,
+    });
+    res.json({ coupons });
   },
 );
 

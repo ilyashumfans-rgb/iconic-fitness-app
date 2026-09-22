@@ -1,4 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
+import { journeyStaffFields } from "../lib/journeyStaffFields";
 import { and, asc, desc, eq, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import {
   db,
@@ -2521,6 +2522,8 @@ router.get(
         gymId: staffTable.gymId,
         gymName: gymsTable.name,
         yoactivStaffId: staffTable.yoactivStaffId,
+        journeyGymIds: staffTable.journeyGymIds,
+        journeyRole: staffTable.journeyRole,
         isActive: staffTable.isActive,
         permissions: staffTable.permissions,
         createdAt: staffTable.createdAt,
@@ -2641,11 +2644,19 @@ router.post(
         return;
       }
     }
+    let journeyFields: Awaited<ReturnType<typeof journeyStaffFields>>;
+    try {
+      journeyFields = await journeyStaffFields(req.body ?? {}, perms);
+    } catch (e) {
+      res.status(400).json({ error: e instanceof Error ? e.message : "Invalid journey access" });
+      return;
+    }
     const passwordHash = await hashPassword(password);
     try {
       const [created] = await db
         .insert(staffTable)
         .values({
+          ...journeyFields,
           name,
           email: email.toLowerCase().trim(),
           username: cleanUsername,
@@ -2662,6 +2673,8 @@ router.post(
           username: staffTable.username,
           gymId: staffTable.gymId,
           yoactivStaffId: staffTable.yoactivStaffId,
+          journeyGymIds: staffTable.journeyGymIds,
+          journeyRole: staffTable.journeyRole,
           isActive: staffTable.isActive,
           permissions: staffTable.permissions,
           createdAt: staffTable.createdAt,
@@ -2691,6 +2704,7 @@ router.patch(
         permissions: staffTable.permissions,
         gymId: staffTable.gymId,
         yoactivStaffId: staffTable.yoactivStaffId,
+        journeyRole: staffTable.journeyRole,
       })
       .from(staffTable)
       .where(eq(staffTable.id, id));
@@ -2744,6 +2758,12 @@ router.patch(
       permissions !== undefined
         ? sanitizePermissions(permissions)
         : current.permissions;
+    try {
+      Object.assign(patch, await journeyStaffFields(req.body ?? {}, finalPermissions, current));
+    } catch (e) {
+      res.status(400).json({ error: e instanceof Error ? e.message : "Invalid journey access" });
+      return;
+    }
     const finalGymId =
       gymId !== undefined
         ? gymId === null
@@ -2800,6 +2820,8 @@ router.patch(
           username: staffTable.username,
           gymId: staffTable.gymId,
           yoactivStaffId: staffTable.yoactivStaffId,
+          journeyGymIds: staffTable.journeyGymIds,
+          journeyRole: staffTable.journeyRole,
           isActive: staffTable.isActive,
           permissions: staffTable.permissions,
           createdAt: staffTable.createdAt,

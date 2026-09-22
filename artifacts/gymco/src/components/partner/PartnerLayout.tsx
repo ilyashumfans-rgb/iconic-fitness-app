@@ -18,6 +18,7 @@ import {
   CalendarClock,
   ClipboardList,
   Inbox,
+  QrCode,
 } from "lucide-react";
 import { partnerApi, type Partner } from "@/lib/partnerApi";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -33,10 +34,12 @@ type Item = {
 };
 
 const NAV: Item[] = [
+  { label: "Member Journey", href: "/partner/member-journey", icon: <Users className="h-4 w-4" />, perm: "journey.view" },
   { label: "Dashboard", href: "/partner", icon: <LayoutDashboard className="h-4 w-4" /> },
   { label: "My Gyms", href: "/partner/gyms", icon: <Building2 className="h-4 w-4" />, perm: "gyms" },
   { label: "Bookings", href: "/partner/bookings", icon: <Calendar className="h-4 w-4" />, perm: "bookings" },
   { label: "Gym Members", href: "/partner/members", icon: <Users className="h-4 w-4" />, perm: "bookings" },
+  { label: "Attendance QR", href: "/partner/attendance-qr", icon: <QrCode className="h-4 w-4" />, perm: "checkins" },
   { label: "Classes", href: "/partner/classes", icon: <Dumbbell className="h-4 w-4" />, perm: "classes" },
   { label: "Trainers", href: "/partner/trainers", icon: <UserCog className="h-4 w-4" />, perm: "classes" },
   { label: "Timetable", href: "/partner/schedule", icon: <CalendarClock className="h-4 w-4" />, perm: "classes" },
@@ -109,6 +112,8 @@ export function PartnerLayout({
       </div>
     );
   }
+
+  if (!partner) return null;
 
   return (
     <div className="theme-portal min-h-screen bg-lime-50/40 text-slate-900 lg:flex">

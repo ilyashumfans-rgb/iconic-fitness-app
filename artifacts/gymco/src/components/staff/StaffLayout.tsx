@@ -27,6 +27,7 @@ type NavItem = {
 };
 
 const NAV: NavItem[] = [
+  { label: "Member Journey", href: "/staff/member-journey", icon: <UsersIcon className="h-4 w-4" />, perm: "journey.view" },
   {
     label: "Partner Onboarding",
     href: "/staff/partner-onboarding",

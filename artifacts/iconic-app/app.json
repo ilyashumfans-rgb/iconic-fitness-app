@@ -4,19 +4,25 @@
     "slug": "iconic-fitness",
     "version": "1.0.1",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/app-icon.png",
     "scheme": "iconic-app",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "./assets/images/anniversary-splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0A0C08"
+      "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.iconicfitness.app",
       "usesAppleSignIn": true,
+      "entitlements": {
+        "com.apple.developer.healthkit": true
+      },
+      "infoPlist": {
+        "NSHealthShareUsageDescription": "Iconic Fitness reads the health data you choose to share, including steps, activity, distance, sleep, heart rate and weight, to show your daily progress. Imported health records stay on this phone."
+      },
       "config": {
         "usesNonExemptEncryption": false
       }
@@ -29,12 +35,12 @@
         "android.permission.READ_EXTERNAL_STORAGE"
       ],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon-safe.png",
+        "foregroundImage": "./assets/images/app-icon.png",
         "backgroundColor": "#000000"
       }
     },
     "web": {
-      "favicon": "./assets/images/icon.png"
+      "favicon": "./assets/images/app-icon.png"
     },
     "plugins": [
       [
@@ -46,6 +52,14 @@
       "expo-font",
       "expo-web-browser",
       "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Iconic Fitness uses your camera to scan your gym attendance QR code.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
       [
         "expo-location",
         {

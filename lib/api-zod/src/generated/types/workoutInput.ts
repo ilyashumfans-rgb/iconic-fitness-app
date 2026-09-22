@@ -7,10 +7,40 @@
  */
 import type { WorkoutInputType } from './workoutInputType';
 
+/**
+ * Requires positive durationMin or a complete exerciseName/sets/reps trio. Partial strength details are rejected. On update, date is ignored and the original date is retained.
+ */
 export interface WorkoutInput {
   type: WorkoutInputType;
-  durationMin: number;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     */
+  durationMin?: number;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     */
   calories?: number;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     */
   steps?: number;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  exerciseName?: string | null;
+  /**
+     * @minimum 1
+     * @maximum 100
+     */
+  sets?: number | null;
+  /**
+     * @minimum 1
+     * @maximum 1000
+     */
+  reps?: number | null;
   date?: string;
 }

@@ -8,6 +8,1206 @@
 import * as zod from 'zod';
 
 
+
+
+
+export const GetAdminLiveTrainerProfileQueryParams = zod.object({
+  "gymId": zod.number().min(1)
+})
+
+export const getAdminLiveTrainerProfileResponseTwoProfileCoverPhotoUrlMax = 2000;
+
+export const getAdminLiveTrainerProfileResponseTwoProfilePhotoUrlMax = 2000;
+
+export const getAdminLiveTrainerProfileResponseTwoProfileBioMax = 5000;
+
+export const getAdminLiveTrainerProfileResponseTwoProfileQualificationsItemMax = 200;
+
+export const getAdminLiveTrainerProfileResponseTwoProfileQualificationsMax = 30;
+
+export const getAdminLiveTrainerProfileResponseTwoProfileSpecialtiesItemMax = 100;
+
+export const getAdminLiveTrainerProfileResponseTwoProfileSpecialtiesMax = 20;
+
+export const getAdminLiveTrainerProfileResponseTwoProfileInterestsItemMax = 100;
+
+export const getAdminLiveTrainerProfileResponseTwoProfileInterestsMax = 20;
+
+export const getAdminLiveTrainerProfileResponseTwoProfileCertificatesItemTitleMax = 200;
+
+export const getAdminLiveTrainerProfileResponseTwoProfileCertificatesItemUrlMax = 2000;
+
+export const getAdminLiveTrainerProfileResponseTwoProfileCertificatesMax = 20;
+
+export const getAdminLiveTrainerProfileResponseTwoReviewsItemRatingMax = 5;
+
+
+
+export const GetAdminLiveTrainerProfileResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "gymId": zod.number(),
+  "branchName": zod.string()
+}).and(zod.object({
+  "profile": zod.object({
+  "coverPhotoUrl": zod.string().max(getAdminLiveTrainerProfileResponseTwoProfileCoverPhotoUrlMax),
+  "photoUrl": zod.string().max(getAdminLiveTrainerProfileResponseTwoProfilePhotoUrlMax),
+  "bio": zod.string().max(getAdminLiveTrainerProfileResponseTwoProfileBioMax),
+  "qualifications": zod.array(zod.string().max(getAdminLiveTrainerProfileResponseTwoProfileQualificationsItemMax)).max(getAdminLiveTrainerProfileResponseTwoProfileQualificationsMax),
+  "specialties": zod.array(zod.string().max(getAdminLiveTrainerProfileResponseTwoProfileSpecialtiesItemMax)).max(getAdminLiveTrainerProfileResponseTwoProfileSpecialtiesMax),
+  "interests": zod.array(zod.string().max(getAdminLiveTrainerProfileResponseTwoProfileInterestsItemMax)).max(getAdminLiveTrainerProfileResponseTwoProfileInterestsMax),
+  "certificates": zod.array(zod.object({
+  "title": zod.string().min(1).max(getAdminLiveTrainerProfileResponseTwoProfileCertificatesItemTitleMax),
+  "url": zod.string().min(1).max(getAdminLiveTrainerProfileResponseTwoProfileCertificatesItemUrlMax)
+})).max(getAdminLiveTrainerProfileResponseTwoProfileCertificatesMax)
+}).optional(),
+  "photoUrl": zod.string().nullable(),
+  "reviews": zod.array(zod.object({
+  "isMemberReview": zod.boolean().optional(),
+  "moderationStatus": zod.union([zod.literal('pending'),zod.literal('approved'),zod.literal('rejected'),zod.literal(null)]).nullish(),
+  "id": zod.number(),
+  "reviewerName": zod.string(),
+  "branchName": zod.string(),
+  "trainerId": zod.string().nullish(),
+  "gymId": zod.number().nullish(),
+  "reviewText": zod.string(),
+  "rating": zod.number().min(1).max(getAdminLiveTrainerProfileResponseTwoReviewsItemRatingMax),
+  "isSample": zod.boolean(),
+  "isPublished": zod.boolean(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.date(),
+  "updatedAt": zod.date()
+})),
+  "rating": zod.number().nullable(),
+  "reviewCount": zod.number()
+}))
+
+
+
+
+
+export const UpdateAdminLiveTrainerProfileQueryParams = zod.object({
+  "gymId": zod.number().min(1)
+})
+
+export const updateAdminLiveTrainerProfileBodyCoverPhotoUrlMax = 2000;
+
+export const updateAdminLiveTrainerProfileBodyPhotoUrlMax = 2000;
+
+export const updateAdminLiveTrainerProfileBodyBioMax = 5000;
+
+export const updateAdminLiveTrainerProfileBodyQualificationsItemMax = 200;
+
+export const updateAdminLiveTrainerProfileBodyQualificationsMax = 30;
+
+export const updateAdminLiveTrainerProfileBodySpecialtiesItemMax = 100;
+
+export const updateAdminLiveTrainerProfileBodySpecialtiesMax = 20;
+
+export const updateAdminLiveTrainerProfileBodyInterestsItemMax = 100;
+
+export const updateAdminLiveTrainerProfileBodyInterestsMax = 20;
+
+export const updateAdminLiveTrainerProfileBodyCertificatesItemTitleMax = 200;
+
+export const updateAdminLiveTrainerProfileBodyCertificatesItemUrlMax = 2000;
+
+export const updateAdminLiveTrainerProfileBodyCertificatesMax = 20;
+
+
+
+export const UpdateAdminLiveTrainerProfileBody = zod.object({
+  "coverPhotoUrl": zod.string().max(updateAdminLiveTrainerProfileBodyCoverPhotoUrlMax),
+  "photoUrl": zod.string().max(updateAdminLiveTrainerProfileBodyPhotoUrlMax),
+  "bio": zod.string().max(updateAdminLiveTrainerProfileBodyBioMax),
+  "qualifications": zod.array(zod.string().max(updateAdminLiveTrainerProfileBodyQualificationsItemMax)).max(updateAdminLiveTrainerProfileBodyQualificationsMax),
+  "specialties": zod.array(zod.string().max(updateAdminLiveTrainerProfileBodySpecialtiesItemMax)).max(updateAdminLiveTrainerProfileBodySpecialtiesMax),
+  "interests": zod.array(zod.string().max(updateAdminLiveTrainerProfileBodyInterestsItemMax)).max(updateAdminLiveTrainerProfileBodyInterestsMax),
+  "certificates": zod.array(zod.object({
+  "title": zod.string().min(1).max(updateAdminLiveTrainerProfileBodyCertificatesItemTitleMax),
+  "url": zod.string().min(1).max(updateAdminLiveTrainerProfileBodyCertificatesItemUrlMax)
+})).max(updateAdminLiveTrainerProfileBodyCertificatesMax)
+})
+
+export const updateAdminLiveTrainerProfileResponseTwoProfileCoverPhotoUrlMax = 2000;
+
+export const updateAdminLiveTrainerProfileResponseTwoProfilePhotoUrlMax = 2000;
+
+export const updateAdminLiveTrainerProfileResponseTwoProfileBioMax = 5000;
+
+export const updateAdminLiveTrainerProfileResponseTwoProfileQualificationsItemMax = 200;
+
+export const updateAdminLiveTrainerProfileResponseTwoProfileQualificationsMax = 30;
+
+export const updateAdminLiveTrainerProfileResponseTwoProfileSpecialtiesItemMax = 100;
+
+export const updateAdminLiveTrainerProfileResponseTwoProfileSpecialtiesMax = 20;
+
+export const updateAdminLiveTrainerProfileResponseTwoProfileInterestsItemMax = 100;
+
+export const updateAdminLiveTrainerProfileResponseTwoProfileInterestsMax = 20;
+
+export const updateAdminLiveTrainerProfileResponseTwoProfileCertificatesItemTitleMax = 200;
+
+export const updateAdminLiveTrainerProfileResponseTwoProfileCertificatesItemUrlMax = 2000;
+
+export const updateAdminLiveTrainerProfileResponseTwoProfileCertificatesMax = 20;
+
+export const updateAdminLiveTrainerProfileResponseTwoReviewsItemRatingMax = 5;
+
+
+
+export const UpdateAdminLiveTrainerProfileResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "gymId": zod.number(),
+  "branchName": zod.string()
+}).and(zod.object({
+  "profile": zod.object({
+  "coverPhotoUrl": zod.string().max(updateAdminLiveTrainerProfileResponseTwoProfileCoverPhotoUrlMax),
+  "photoUrl": zod.string().max(updateAdminLiveTrainerProfileResponseTwoProfilePhotoUrlMax),
+  "bio": zod.string().max(updateAdminLiveTrainerProfileResponseTwoProfileBioMax),
+  "qualifications": zod.array(zod.string().max(updateAdminLiveTrainerProfileResponseTwoProfileQualificationsItemMax)).max(updateAdminLiveTrainerProfileResponseTwoProfileQualificationsMax),
+  "specialties": zod.array(zod.string().max(updateAdminLiveTrainerProfileResponseTwoProfileSpecialtiesItemMax)).max(updateAdminLiveTrainerProfileResponseTwoProfileSpecialtiesMax),
+  "interests": zod.array(zod.string().max(updateAdminLiveTrainerProfileResponseTwoProfileInterestsItemMax)).max(updateAdminLiveTrainerProfileResponseTwoProfileInterestsMax),
+  "certificates": zod.array(zod.object({
+  "title": zod.string().min(1).max(updateAdminLiveTrainerProfileResponseTwoProfileCertificatesItemTitleMax),
+  "url": zod.string().min(1).max(updateAdminLiveTrainerProfileResponseTwoProfileCertificatesItemUrlMax)
+})).max(updateAdminLiveTrainerProfileResponseTwoProfileCertificatesMax)
+}).optional(),
+  "photoUrl": zod.string().nullable(),
+  "reviews": zod.array(zod.object({
+  "isMemberReview": zod.boolean().optional(),
+  "moderationStatus": zod.union([zod.literal('pending'),zod.literal('approved'),zod.literal('rejected'),zod.literal(null)]).nullish(),
+  "id": zod.number(),
+  "reviewerName": zod.string(),
+  "branchName": zod.string(),
+  "trainerId": zod.string().nullish(),
+  "gymId": zod.number().nullish(),
+  "reviewText": zod.string(),
+  "rating": zod.number().min(1).max(updateAdminLiveTrainerProfileResponseTwoReviewsItemRatingMax),
+  "isSample": zod.boolean(),
+  "isPublished": zod.boolean(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.date(),
+  "updatedAt": zod.date()
+})),
+  "rating": zod.number().nullable(),
+  "reviewCount": zod.number()
+}))
+
+
+
+
+
+export const GetOwnTrainerReviewQueryParams = zod.object({
+  "gymId": zod.number().min(1)
+})
+
+export const GetOwnTrainerReviewResponse = zod.object({
+  "review": zod.object({
+  "id": zod.number(),
+  "rating": zod.number(),
+  "reviewText": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected']),
+  "isPublished": zod.boolean()
+}).nullable()
+})
+
+
+
+
+
+export const SaveOwnTrainerReviewQueryParams = zod.object({
+  "gymId": zod.number().min(1)
+})
+
+export const saveOwnTrainerReviewBodyRatingMax = 5;
+
+export const saveOwnTrainerReviewBodyReviewTextMax = 2000;
+
+
+
+export const SaveOwnTrainerReviewBody = zod.object({
+  "rating": zod.number().min(1).max(saveOwnTrainerReviewBodyRatingMax),
+  "reviewText": zod.string().min(1).max(saveOwnTrainerReviewBodyReviewTextMax)
+})
+
+export const SaveOwnTrainerReviewResponse = zod.object({
+  "review": zod.object({
+  "id": zod.number(),
+  "rating": zod.number(),
+  "reviewText": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected']),
+  "isPublished": zod.boolean()
+}).nullable()
+})
+
+
+
+
+
+export const ModerateTrainerReviewParams = zod.object({
+  "id": zod.coerce.number().min(1)
+})
+
+export const ModerateTrainerReviewBody = zod.object({
+  "status": zod.enum(['approved', 'rejected'])
+})
+
+export const moderateTrainerReviewResponseRatingMax = 5;
+
+
+
+export const ModerateTrainerReviewResponse = zod.object({
+  "isMemberReview": zod.boolean().optional(),
+  "moderationStatus": zod.union([zod.literal('pending'),zod.literal('approved'),zod.literal('rejected'),zod.literal(null)]).nullish(),
+  "id": zod.number(),
+  "reviewerName": zod.string(),
+  "branchName": zod.string(),
+  "trainerId": zod.string().nullish(),
+  "gymId": zod.number().nullish(),
+  "reviewText": zod.string(),
+  "rating": zod.number().min(1).max(moderateTrainerReviewResponseRatingMax),
+  "isSample": zod.boolean(),
+  "isPublished": zod.boolean(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+export const ListReviewTrainerOptionsResponse = zod.object({
+  "trainers": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "gymId": zod.number(),
+  "branchName": zod.string()
+}))
+})
+
+
+
+
+
+export const GetLiveTrainerProfileQueryParams = zod.object({
+  "gymId": zod.number().min(1)
+})
+
+export const getLiveTrainerProfileResponseTwoProfileCoverPhotoUrlMax = 2000;
+
+export const getLiveTrainerProfileResponseTwoProfilePhotoUrlMax = 2000;
+
+export const getLiveTrainerProfileResponseTwoProfileBioMax = 5000;
+
+export const getLiveTrainerProfileResponseTwoProfileQualificationsItemMax = 200;
+
+export const getLiveTrainerProfileResponseTwoProfileQualificationsMax = 30;
+
+export const getLiveTrainerProfileResponseTwoProfileSpecialtiesItemMax = 100;
+
+export const getLiveTrainerProfileResponseTwoProfileSpecialtiesMax = 20;
+
+export const getLiveTrainerProfileResponseTwoProfileInterestsItemMax = 100;
+
+export const getLiveTrainerProfileResponseTwoProfileInterestsMax = 20;
+
+export const getLiveTrainerProfileResponseTwoProfileCertificatesItemTitleMax = 200;
+
+export const getLiveTrainerProfileResponseTwoProfileCertificatesItemUrlMax = 2000;
+
+export const getLiveTrainerProfileResponseTwoProfileCertificatesMax = 20;
+
+export const getLiveTrainerProfileResponseTwoReviewsItemRatingMax = 5;
+
+
+
+export const GetLiveTrainerProfileResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "gymId": zod.number(),
+  "branchName": zod.string()
+}).and(zod.object({
+  "profile": zod.object({
+  "coverPhotoUrl": zod.string().max(getLiveTrainerProfileResponseTwoProfileCoverPhotoUrlMax),
+  "photoUrl": zod.string().max(getLiveTrainerProfileResponseTwoProfilePhotoUrlMax),
+  "bio": zod.string().max(getLiveTrainerProfileResponseTwoProfileBioMax),
+  "qualifications": zod.array(zod.string().max(getLiveTrainerProfileResponseTwoProfileQualificationsItemMax)).max(getLiveTrainerProfileResponseTwoProfileQualificationsMax),
+  "specialties": zod.array(zod.string().max(getLiveTrainerProfileResponseTwoProfileSpecialtiesItemMax)).max(getLiveTrainerProfileResponseTwoProfileSpecialtiesMax),
+  "interests": zod.array(zod.string().max(getLiveTrainerProfileResponseTwoProfileInterestsItemMax)).max(getLiveTrainerProfileResponseTwoProfileInterestsMax),
+  "certificates": zod.array(zod.object({
+  "title": zod.string().min(1).max(getLiveTrainerProfileResponseTwoProfileCertificatesItemTitleMax),
+  "url": zod.string().min(1).max(getLiveTrainerProfileResponseTwoProfileCertificatesItemUrlMax)
+})).max(getLiveTrainerProfileResponseTwoProfileCertificatesMax)
+}).optional(),
+  "photoUrl": zod.string().nullable(),
+  "reviews": zod.array(zod.object({
+  "isMemberReview": zod.boolean().optional(),
+  "moderationStatus": zod.union([zod.literal('pending'),zod.literal('approved'),zod.literal('rejected'),zod.literal(null)]).nullish(),
+  "id": zod.number(),
+  "reviewerName": zod.string(),
+  "branchName": zod.string(),
+  "trainerId": zod.string().nullish(),
+  "gymId": zod.number().nullish(),
+  "reviewText": zod.string(),
+  "rating": zod.number().min(1).max(getLiveTrainerProfileResponseTwoReviewsItemRatingMax),
+  "isSample": zod.boolean(),
+  "isPublished": zod.boolean(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.date(),
+  "updatedAt": zod.date()
+})),
+  "rating": zod.number().nullable(),
+  "reviewCount": zod.number()
+}))
+
+
+/**
+ * @summary Published reviews ordered by sortOrder then id, with samples labelled and no aggregate rating
+ */
+export const listReviewsResponseReviewsItemRatingMax = 5;
+
+export const listReviewsResponseReviewsMax = 500;
+
+
+
+export const ListReviewsResponse = zod.object({
+  "reviews": zod.array(zod.object({
+  "isMemberReview": zod.boolean().optional(),
+  "moderationStatus": zod.union([zod.literal('pending'),zod.literal('approved'),zod.literal('rejected'),zod.literal(null)]).nullish(),
+  "id": zod.number(),
+  "reviewerName": zod.string(),
+  "branchName": zod.string(),
+  "trainerId": zod.string().nullish(),
+  "gymId": zod.number().nullish(),
+  "reviewText": zod.string(),
+  "rating": zod.number().min(1).max(listReviewsResponseReviewsItemRatingMax),
+  "isSample": zod.boolean(),
+  "isPublished": zod.boolean(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})).max(listReviewsResponseReviewsMax)
+})
+
+
+export const listAdminReviewsResponseReviewsItemRatingMax = 5;
+
+export const listAdminReviewsResponseReviewsMax = 500;
+
+
+
+export const ListAdminReviewsResponse = zod.object({
+  "reviews": zod.array(zod.object({
+  "isMemberReview": zod.boolean().optional(),
+  "moderationStatus": zod.union([zod.literal('pending'),zod.literal('approved'),zod.literal('rejected'),zod.literal(null)]).nullish(),
+  "id": zod.number(),
+  "reviewerName": zod.string(),
+  "branchName": zod.string(),
+  "trainerId": zod.string().nullish(),
+  "gymId": zod.number().nullish(),
+  "reviewText": zod.string(),
+  "rating": zod.number().min(1).max(listAdminReviewsResponseReviewsItemRatingMax),
+  "isSample": zod.boolean(),
+  "isPublished": zod.boolean(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})).max(listAdminReviewsResponseReviewsMax)
+})
+
+
+export const createAdminReviewBodyReviewerNameMax = 100;
+
+export const createAdminReviewBodyBranchNameMax = 150;
+
+export const createAdminReviewBodyTrainerIdMax = 100;
+
+export const createAdminReviewBodyGymIdMax = 2147483647;
+
+export const createAdminReviewBodyReviewTextMax = 2000;
+
+export const createAdminReviewBodyRatingMax = 5;
+
+export const createAdminReviewBodySortOrderMin = -2147483648;
+export const createAdminReviewBodySortOrderMax = 2147483647;
+
+
+
+export const CreateAdminReviewBody = zod.object({
+  "reviewerName": zod.string().min(1).max(createAdminReviewBodyReviewerNameMax),
+  "branchName": zod.string().min(1).max(createAdminReviewBodyBranchNameMax),
+  "trainerId": zod.string().min(1).max(createAdminReviewBodyTrainerIdMax).nullish(),
+  "gymId": zod.number().min(1).max(createAdminReviewBodyGymIdMax).nullish(),
+  "reviewText": zod.string().min(1).max(createAdminReviewBodyReviewTextMax),
+  "rating": zod.number().min(1).max(createAdminReviewBodyRatingMax),
+  "isSample": zod.boolean().describe('Fictional sample, not a verified endorsement. Seeded samples must remain true.'),
+  "isPublished": zod.boolean(),
+  "sortOrder": zod.number().min(createAdminReviewBodySortOrderMin).max(createAdminReviewBodySortOrderMax)
+})
+
+
+export const updateAdminReviewPathIdMax = 2147483647;
+
+
+
+export const UpdateAdminReviewParams = zod.object({
+  "id": zod.coerce.number().min(1).max(updateAdminReviewPathIdMax)
+})
+
+export const updateAdminReviewBodyOneReviewerNameMax = 100;
+
+export const updateAdminReviewBodyOneBranchNameMax = 150;
+
+export const updateAdminReviewBodyOneTrainerIdMax = 100;
+
+export const updateAdminReviewBodyOneGymIdMax = 2147483647;
+
+export const updateAdminReviewBodyOneReviewTextMax = 2000;
+
+export const updateAdminReviewBodyOneRatingMax = 5;
+
+export const updateAdminReviewBodyOneSortOrderMin = -2147483648;
+export const updateAdminReviewBodyOneSortOrderMax = 2147483647;
+
+export const updateAdminReviewBodyTwoReviewTextMax = 2000;
+
+export const updateAdminReviewBodyTwoRatingMax = 5;
+
+
+
+export const UpdateAdminReviewBody = zod.union([zod.object({
+  "reviewerName": zod.string().min(1).max(updateAdminReviewBodyOneReviewerNameMax),
+  "branchName": zod.string().min(1).max(updateAdminReviewBodyOneBranchNameMax),
+  "trainerId": zod.string().min(1).max(updateAdminReviewBodyOneTrainerIdMax).nullish(),
+  "gymId": zod.number().min(1).max(updateAdminReviewBodyOneGymIdMax).nullish(),
+  "reviewText": zod.string().min(1).max(updateAdminReviewBodyOneReviewTextMax),
+  "rating": zod.number().min(1).max(updateAdminReviewBodyOneRatingMax),
+  "isSample": zod.boolean().describe('Fictional sample, not a verified endorsement. Seeded samples must remain true.'),
+  "isPublished": zod.boolean(),
+  "sortOrder": zod.number().min(updateAdminReviewBodyOneSortOrderMin).max(updateAdminReviewBodyOneSortOrderMax)
+}),zod.object({
+  "reviewText": zod.string().min(1).max(updateAdminReviewBodyTwoReviewTextMax),
+  "rating": zod.number().min(1).max(updateAdminReviewBodyTwoRatingMax),
+  "sortOrder": zod.number(),
+  "isPublished": zod.boolean()
+})])
+
+export const updateAdminReviewResponseRatingMax = 5;
+
+
+
+export const UpdateAdminReviewResponse = zod.object({
+  "isMemberReview": zod.boolean().optional(),
+  "moderationStatus": zod.union([zod.literal('pending'),zod.literal('approved'),zod.literal('rejected'),zod.literal(null)]).nullish(),
+  "id": zod.number(),
+  "reviewerName": zod.string(),
+  "branchName": zod.string(),
+  "trainerId": zod.string().nullish(),
+  "gymId": zod.number().nullish(),
+  "reviewText": zod.string(),
+  "rating": zod.number().min(1).max(updateAdminReviewResponseRatingMax),
+  "isSample": zod.boolean(),
+  "isPublished": zod.boolean(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+export const deleteAdminReviewPathIdMax = 2147483647;
+
+
+
+export const DeleteAdminReviewParams = zod.object({
+  "id": zod.coerce.number().min(1).max(deleteAdminReviewPathIdMax)
+})
+
+export const DeleteAdminReviewResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+export const GetMyMemberJourneyResponse = zod.object({
+  "journey": zod.union([zod.object({
+  "userId": zod.number(),
+  "gymId": zod.number(),
+  "memberName": zod.string(),
+  "version": zod.number(),
+  "currentStage": zod.enum(['health_history', 'bca_bmi_report', 'health_history_review', 'assign_trainer', 'trial1', 'rating_feedback1', 'trial2', 'rating_written_feedback2', 'pt_decision', 'pt_followup', 'general_trainer', 'dietician', 'workout_chart1', 'workout_chart2', 'workout_chart3', 'attendance_review', 'attendance_followup', 'regular_continue']),
+  "nextAction": zod.string(),
+  "assigneeId": zod.number().nullable(),
+  "assigneeName": zod.string().nullish(),
+  "trialProgramId": zod.number().nullish(),
+  "overdue": zod.boolean(),
+  "dueAt": zod.string().nullable(),
+  "canManage": zod.boolean(),
+  "canReviewHealth": zod.boolean().optional(),
+  "completedStages": zod.array(zod.string()).optional(),
+  "planDay": zod.number().nullish(),
+  "cycleComplete": zod.boolean().optional(),
+  "healthHistory": zod.object({
+  "injuries": zod.string().optional(),
+  "conditions": zod.string().optional(),
+  "medications": zod.string().optional(),
+  "allergies": zod.string().optional(),
+  "exerciseRestrictions": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "consent": zod.boolean().optional(),
+  "submittedAt": zod.string().optional()
+}).nullish(),
+  "reviewedAt": zod.string().nullish(),
+  "reviewNote": zod.string().nullish(),
+  "trainerId": zod.number().nullable(),
+  "generalTrainerId": zod.number().nullable(),
+  "dieticianId": zod.number().nullable(),
+  "ptDecision": zod.union([zod.literal('yes'),zod.literal('no'),zod.literal(null)]).nullable(),
+  "charts": zod.array(zod.object({
+  "id": zod.number(),
+  "chartNo": zod.number().optional(),
+  "label": zod.string(),
+  "content": zod.string().optional(),
+  "issuedAt": zod.string()
+})),
+  "events": zod.array(zod.object({
+  "id": zod.number(),
+  "action": zod.string(),
+  "actor": zod.string(),
+  "createdAt": zod.string()
+})),
+  "followups": zod.array(zod.object({
+  "id": zod.number(),
+  "kind": zod.string(),
+  "response": zod.string().optional(),
+  "nextDate": zod.string(),
+  "createdAt": zod.string()
+})),
+  "attendance": zod.object({
+  "checkinsLast30Days": zod.number()
+}),
+  "facts": zod.object({
+  "bmi": zod.boolean(),
+  "trial1": zod.boolean(),
+  "feedback1": zod.boolean(),
+  "trial2": zod.boolean(),
+  "feedback2": zod.boolean(),
+  "paidPt": zod.boolean()
+})
+}),zod.null()]),
+  "branchRequired": zod.boolean()
+})
+
+
+export const saveMyMemberJourneyHealthHistoryBodyVersionMin = 0;
+
+export const saveMyMemberJourneyHealthHistoryBodyInjuriesMax = 10000;
+
+export const saveMyMemberJourneyHealthHistoryBodyConditionsMax = 10000;
+
+export const saveMyMemberJourneyHealthHistoryBodyMedicationsMax = 10000;
+
+export const saveMyMemberJourneyHealthHistoryBodyAllergiesMax = 10000;
+
+export const saveMyMemberJourneyHealthHistoryBodyExerciseRestrictionsMax = 10000;
+
+export const saveMyMemberJourneyHealthHistoryBodyNotesMax = 10000;
+
+
+
+export const SaveMyMemberJourneyHealthHistoryBody = zod.object({
+  "version": zod.number().min(saveMyMemberJourneyHealthHistoryBodyVersionMin),
+  "injuries": zod.string().min(1).max(saveMyMemberJourneyHealthHistoryBodyInjuriesMax),
+  "conditions": zod.string().min(1).max(saveMyMemberJourneyHealthHistoryBodyConditionsMax),
+  "medications": zod.string().min(1).max(saveMyMemberJourneyHealthHistoryBodyMedicationsMax),
+  "allergies": zod.string().min(1).max(saveMyMemberJourneyHealthHistoryBodyAllergiesMax),
+  "exerciseRestrictions": zod.string().min(1).max(saveMyMemberJourneyHealthHistoryBodyExerciseRestrictionsMax),
+  "notes": zod.string().max(saveMyMemberJourneyHealthHistoryBodyNotesMax).optional(),
+  "consent": zod.literal(true)
+})
+
+export const SaveMyMemberJourneyHealthHistoryResponse = zod.object({
+  "userId": zod.number(),
+  "gymId": zod.number(),
+  "memberName": zod.string(),
+  "version": zod.number(),
+  "currentStage": zod.enum(['health_history', 'bca_bmi_report', 'health_history_review', 'assign_trainer', 'trial1', 'rating_feedback1', 'trial2', 'rating_written_feedback2', 'pt_decision', 'pt_followup', 'general_trainer', 'dietician', 'workout_chart1', 'workout_chart2', 'workout_chart3', 'attendance_review', 'attendance_followup', 'regular_continue']),
+  "nextAction": zod.string(),
+  "assigneeId": zod.number().nullable(),
+  "assigneeName": zod.string().nullish(),
+  "trialProgramId": zod.number().nullish(),
+  "overdue": zod.boolean(),
+  "dueAt": zod.string().nullable(),
+  "canManage": zod.boolean(),
+  "canReviewHealth": zod.boolean().optional(),
+  "completedStages": zod.array(zod.string()).optional(),
+  "planDay": zod.number().nullish(),
+  "cycleComplete": zod.boolean().optional(),
+  "healthHistory": zod.object({
+  "injuries": zod.string().optional(),
+  "conditions": zod.string().optional(),
+  "medications": zod.string().optional(),
+  "allergies": zod.string().optional(),
+  "exerciseRestrictions": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "consent": zod.boolean().optional(),
+  "submittedAt": zod.string().optional()
+}).nullish(),
+  "reviewedAt": zod.string().nullish(),
+  "reviewNote": zod.string().nullish(),
+  "trainerId": zod.number().nullable(),
+  "generalTrainerId": zod.number().nullable(),
+  "dieticianId": zod.number().nullable(),
+  "ptDecision": zod.union([zod.literal('yes'),zod.literal('no'),zod.literal(null)]).nullable(),
+  "charts": zod.array(zod.object({
+  "id": zod.number(),
+  "chartNo": zod.number().optional(),
+  "label": zod.string(),
+  "content": zod.string().optional(),
+  "issuedAt": zod.string()
+})),
+  "events": zod.array(zod.object({
+  "id": zod.number(),
+  "action": zod.string(),
+  "actor": zod.string(),
+  "createdAt": zod.string()
+})),
+  "followups": zod.array(zod.object({
+  "id": zod.number(),
+  "kind": zod.string(),
+  "response": zod.string().optional(),
+  "nextDate": zod.string(),
+  "createdAt": zod.string()
+})),
+  "attendance": zod.object({
+  "checkinsLast30Days": zod.number()
+}),
+  "facts": zod.object({
+  "bmi": zod.boolean(),
+  "trial1": zod.boolean(),
+  "feedback1": zod.boolean(),
+  "trial2": zod.boolean(),
+  "feedback2": zod.boolean(),
+  "paidPt": zod.boolean()
+})
+})
+
+
+export const submitMyMemberJourneyFeedbackBodyVersionMin = 0;
+
+export const submitMyMemberJourneyFeedbackBodyRatingMax = 5;
+
+export const submitMyMemberJourneyFeedbackBodyResponseMax = 10000;
+
+
+
+export const SubmitMyMemberJourneyFeedbackBody = zod.object({
+  "version": zod.number().min(submitMyMemberJourneyFeedbackBodyVersionMin),
+  "kind": zod.enum(['pt', 'attendance']),
+  "rating": zod.number().min(1).max(submitMyMemberJourneyFeedbackBodyRatingMax).optional(),
+  "response": zod.string().min(1).max(submitMyMemberJourneyFeedbackBodyResponseMax)
+})
+
+export const SubmitMyMemberJourneyFeedbackResponse = zod.object({
+  "userId": zod.number(),
+  "gymId": zod.number(),
+  "memberName": zod.string(),
+  "version": zod.number(),
+  "currentStage": zod.enum(['health_history', 'bca_bmi_report', 'health_history_review', 'assign_trainer', 'trial1', 'rating_feedback1', 'trial2', 'rating_written_feedback2', 'pt_decision', 'pt_followup', 'general_trainer', 'dietician', 'workout_chart1', 'workout_chart2', 'workout_chart3', 'attendance_review', 'attendance_followup', 'regular_continue']),
+  "nextAction": zod.string(),
+  "assigneeId": zod.number().nullable(),
+  "assigneeName": zod.string().nullish(),
+  "trialProgramId": zod.number().nullish(),
+  "overdue": zod.boolean(),
+  "dueAt": zod.string().nullable(),
+  "canManage": zod.boolean(),
+  "canReviewHealth": zod.boolean().optional(),
+  "completedStages": zod.array(zod.string()).optional(),
+  "planDay": zod.number().nullish(),
+  "cycleComplete": zod.boolean().optional(),
+  "healthHistory": zod.object({
+  "injuries": zod.string().optional(),
+  "conditions": zod.string().optional(),
+  "medications": zod.string().optional(),
+  "allergies": zod.string().optional(),
+  "exerciseRestrictions": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "consent": zod.boolean().optional(),
+  "submittedAt": zod.string().optional()
+}).nullish(),
+  "reviewedAt": zod.string().nullish(),
+  "reviewNote": zod.string().nullish(),
+  "trainerId": zod.number().nullable(),
+  "generalTrainerId": zod.number().nullable(),
+  "dieticianId": zod.number().nullable(),
+  "ptDecision": zod.union([zod.literal('yes'),zod.literal('no'),zod.literal(null)]).nullable(),
+  "charts": zod.array(zod.object({
+  "id": zod.number(),
+  "chartNo": zod.number().optional(),
+  "label": zod.string(),
+  "content": zod.string().optional(),
+  "issuedAt": zod.string()
+})),
+  "events": zod.array(zod.object({
+  "id": zod.number(),
+  "action": zod.string(),
+  "actor": zod.string(),
+  "createdAt": zod.string()
+})),
+  "followups": zod.array(zod.object({
+  "id": zod.number(),
+  "kind": zod.string(),
+  "response": zod.string().optional(),
+  "nextDate": zod.string(),
+  "createdAt": zod.string()
+})),
+  "attendance": zod.object({
+  "checkinsLast30Days": zod.number()
+}),
+  "facts": zod.object({
+  "bmi": zod.boolean(),
+  "trial1": zod.boolean(),
+  "feedback1": zod.boolean(),
+  "trial2": zod.boolean(),
+  "feedback2": zod.boolean(),
+  "paidPt": zod.boolean()
+})
+})
+
+
+export const ListMemberJourneysParams = zod.object({
+  "portal": zod.enum(['admin', 'staff', 'partner', 'agency'])
+})
+
+export const ListMemberJourneysResponse = zod.object({
+  "journeys": zod.array(zod.object({
+  "userId": zod.number(),
+  "gymId": zod.number(),
+  "memberName": zod.string(),
+  "version": zod.number(),
+  "currentStage": zod.enum(['health_history', 'bca_bmi_report', 'health_history_review', 'assign_trainer', 'trial1', 'rating_feedback1', 'trial2', 'rating_written_feedback2', 'pt_decision', 'pt_followup', 'general_trainer', 'dietician', 'workout_chart1', 'workout_chart2', 'workout_chart3', 'attendance_review', 'attendance_followup', 'regular_continue']),
+  "nextAction": zod.string(),
+  "assigneeId": zod.number().nullable(),
+  "assigneeName": zod.string().nullish(),
+  "trialProgramId": zod.number().nullish(),
+  "overdue": zod.boolean(),
+  "dueAt": zod.string().nullable(),
+  "canManage": zod.boolean(),
+  "canReviewHealth": zod.boolean().optional(),
+  "completedStages": zod.array(zod.string()).optional(),
+  "planDay": zod.number().nullish(),
+  "cycleComplete": zod.boolean().optional(),
+  "healthHistory": zod.object({
+  "injuries": zod.string().optional(),
+  "conditions": zod.string().optional(),
+  "medications": zod.string().optional(),
+  "allergies": zod.string().optional(),
+  "exerciseRestrictions": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "consent": zod.boolean().optional(),
+  "submittedAt": zod.string().optional()
+}).nullish(),
+  "reviewedAt": zod.string().nullish(),
+  "reviewNote": zod.string().nullish(),
+  "trainerId": zod.number().nullable(),
+  "generalTrainerId": zod.number().nullable(),
+  "dieticianId": zod.number().nullable(),
+  "ptDecision": zod.union([zod.literal('yes'),zod.literal('no'),zod.literal(null)]).nullable(),
+  "charts": zod.array(zod.object({
+  "id": zod.number(),
+  "chartNo": zod.number().optional(),
+  "label": zod.string(),
+  "content": zod.string().optional(),
+  "issuedAt": zod.string()
+})),
+  "events": zod.array(zod.object({
+  "id": zod.number(),
+  "action": zod.string(),
+  "actor": zod.string(),
+  "createdAt": zod.string()
+})),
+  "followups": zod.array(zod.object({
+  "id": zod.number(),
+  "kind": zod.string(),
+  "response": zod.string().optional(),
+  "nextDate": zod.string(),
+  "createdAt": zod.string()
+})),
+  "attendance": zod.object({
+  "checkinsLast30Days": zod.number()
+}),
+  "facts": zod.object({
+  "bmi": zod.boolean(),
+  "trial1": zod.boolean(),
+  "feedback1": zod.boolean(),
+  "trial2": zod.boolean(),
+  "feedback2": zod.boolean(),
+  "paidPt": zod.boolean()
+})
+})),
+  "canManage": zod.boolean()
+})
+
+
+export const GetMemberJourneyOptionsParams = zod.object({
+  "portal": zod.enum(['admin', 'staff', 'partner', 'agency'])
+})
+
+export const GetMemberJourneyOptionsResponse = zod.object({
+  "canManage": zod.boolean(),
+  "members": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "gymId": zod.number()
+})),
+  "assignees": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "gymId": zod.number(),
+  "journeyRole": zod.string().nullish()
+})),
+  "gyms": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string()
+}))
+})
+
+
+export const EnrollMemberJourneyParams = zod.object({
+  "portal": zod.enum(['admin', 'staff', 'partner', 'agency'])
+})
+
+export const EnrollMemberJourneyBody = zod.object({
+  "userId": zod.number(),
+  "gymId": zod.number()
+})
+
+export const EnrollMemberJourneyResponse = zod.object({
+  "userId": zod.number(),
+  "gymId": zod.number(),
+  "memberName": zod.string(),
+  "version": zod.number(),
+  "currentStage": zod.enum(['health_history', 'bca_bmi_report', 'health_history_review', 'assign_trainer', 'trial1', 'rating_feedback1', 'trial2', 'rating_written_feedback2', 'pt_decision', 'pt_followup', 'general_trainer', 'dietician', 'workout_chart1', 'workout_chart2', 'workout_chart3', 'attendance_review', 'attendance_followup', 'regular_continue']),
+  "nextAction": zod.string(),
+  "assigneeId": zod.number().nullable(),
+  "assigneeName": zod.string().nullish(),
+  "trialProgramId": zod.number().nullish(),
+  "overdue": zod.boolean(),
+  "dueAt": zod.string().nullable(),
+  "canManage": zod.boolean(),
+  "canReviewHealth": zod.boolean().optional(),
+  "completedStages": zod.array(zod.string()).optional(),
+  "planDay": zod.number().nullish(),
+  "cycleComplete": zod.boolean().optional(),
+  "healthHistory": zod.object({
+  "injuries": zod.string().optional(),
+  "conditions": zod.string().optional(),
+  "medications": zod.string().optional(),
+  "allergies": zod.string().optional(),
+  "exerciseRestrictions": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "consent": zod.boolean().optional(),
+  "submittedAt": zod.string().optional()
+}).nullish(),
+  "reviewedAt": zod.string().nullish(),
+  "reviewNote": zod.string().nullish(),
+  "trainerId": zod.number().nullable(),
+  "generalTrainerId": zod.number().nullable(),
+  "dieticianId": zod.number().nullable(),
+  "ptDecision": zod.union([zod.literal('yes'),zod.literal('no'),zod.literal(null)]).nullable(),
+  "charts": zod.array(zod.object({
+  "id": zod.number(),
+  "chartNo": zod.number().optional(),
+  "label": zod.string(),
+  "content": zod.string().optional(),
+  "issuedAt": zod.string()
+})),
+  "events": zod.array(zod.object({
+  "id": zod.number(),
+  "action": zod.string(),
+  "actor": zod.string(),
+  "createdAt": zod.string()
+})),
+  "followups": zod.array(zod.object({
+  "id": zod.number(),
+  "kind": zod.string(),
+  "response": zod.string().optional(),
+  "nextDate": zod.string(),
+  "createdAt": zod.string()
+})),
+  "attendance": zod.object({
+  "checkinsLast30Days": zod.number()
+}),
+  "facts": zod.object({
+  "bmi": zod.boolean(),
+  "trial1": zod.boolean(),
+  "feedback1": zod.boolean(),
+  "trial2": zod.boolean(),
+  "feedback2": zod.boolean(),
+  "paidPt": zod.boolean()
+})
+})
+
+
+
+
+
+export const GetMemberJourneyParams = zod.object({
+  "portal": zod.enum(['admin', 'staff', 'partner', 'agency']),
+  "userId": zod.coerce.number().min(1)
+})
+
+export const GetMemberJourneyResponse = zod.object({
+  "userId": zod.number(),
+  "gymId": zod.number(),
+  "memberName": zod.string(),
+  "version": zod.number(),
+  "currentStage": zod.enum(['health_history', 'bca_bmi_report', 'health_history_review', 'assign_trainer', 'trial1', 'rating_feedback1', 'trial2', 'rating_written_feedback2', 'pt_decision', 'pt_followup', 'general_trainer', 'dietician', 'workout_chart1', 'workout_chart2', 'workout_chart3', 'attendance_review', 'attendance_followup', 'regular_continue']),
+  "nextAction": zod.string(),
+  "assigneeId": zod.number().nullable(),
+  "assigneeName": zod.string().nullish(),
+  "trialProgramId": zod.number().nullish(),
+  "overdue": zod.boolean(),
+  "dueAt": zod.string().nullable(),
+  "canManage": zod.boolean(),
+  "canReviewHealth": zod.boolean().optional(),
+  "completedStages": zod.array(zod.string()).optional(),
+  "planDay": zod.number().nullish(),
+  "cycleComplete": zod.boolean().optional(),
+  "healthHistory": zod.object({
+  "injuries": zod.string().optional(),
+  "conditions": zod.string().optional(),
+  "medications": zod.string().optional(),
+  "allergies": zod.string().optional(),
+  "exerciseRestrictions": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "consent": zod.boolean().optional(),
+  "submittedAt": zod.string().optional()
+}).nullish(),
+  "reviewedAt": zod.string().nullish(),
+  "reviewNote": zod.string().nullish(),
+  "trainerId": zod.number().nullable(),
+  "generalTrainerId": zod.number().nullable(),
+  "dieticianId": zod.number().nullable(),
+  "ptDecision": zod.union([zod.literal('yes'),zod.literal('no'),zod.literal(null)]).nullable(),
+  "charts": zod.array(zod.object({
+  "id": zod.number(),
+  "chartNo": zod.number().optional(),
+  "label": zod.string(),
+  "content": zod.string().optional(),
+  "issuedAt": zod.string()
+})),
+  "events": zod.array(zod.object({
+  "id": zod.number(),
+  "action": zod.string(),
+  "actor": zod.string(),
+  "createdAt": zod.string()
+})),
+  "followups": zod.array(zod.object({
+  "id": zod.number(),
+  "kind": zod.string(),
+  "response": zod.string().optional(),
+  "nextDate": zod.string(),
+  "createdAt": zod.string()
+})),
+  "attendance": zod.object({
+  "checkinsLast30Days": zod.number()
+}),
+  "facts": zod.object({
+  "bmi": zod.boolean(),
+  "trial1": zod.boolean(),
+  "feedback1": zod.boolean(),
+  "trial2": zod.boolean(),
+  "feedback2": zod.boolean(),
+  "paidPt": zod.boolean()
+})
+})
+
+
+
+
+
+export const ActOnMemberJourneyParams = zod.object({
+  "portal": zod.enum(['admin', 'staff', 'partner', 'agency']),
+  "userId": zod.coerce.number().min(1)
+})
+
+export const actOnMemberJourneyBodyVersionMin = 0;
+
+
+export const actOnMemberJourneyBodyNoteMax = 10000;
+
+export const actOnMemberJourneyBodyResponseMax = 10000;
+
+export const actOnMemberJourneyBodyContentMax = 10000;
+
+
+
+export const ActOnMemberJourneyBody = zod.object({
+  "version": zod.number().min(actOnMemberJourneyBodyVersionMin),
+  "action": zod.enum(['review_health', 'assign_trainer', 'record_trial', 'pt_decision', 'pt_followup', 'assign_general_trainer', 'dietician_review', 'issue_chart', 'attendance_review', 'attendance_followup']),
+  "staffId": zod.number().min(1).optional(),
+  "sessionNo": zod.union([zod.literal(1),zod.literal(2)]).optional(),
+  "note": zod.string().min(1).max(actOnMemberJourneyBodyNoteMax).optional(),
+  "response": zod.string().min(1).max(actOnMemberJourneyBodyResponseMax).optional(),
+  "content": zod.string().min(1).max(actOnMemberJourneyBodyContentMax).optional(),
+  "decision": zod.enum(['yes', 'no', 'regular', 'irregular']).optional(),
+  "nextDate": zod.coerce.date().optional()
+}).describe('Server validates required fields for each action and stage; irregular attendance requires response and future nextDate. record_trial writes the actual assigned PT program, not a journey-only completion flag.')
+
+export const ActOnMemberJourneyResponse = zod.object({
+  "userId": zod.number(),
+  "gymId": zod.number(),
+  "memberName": zod.string(),
+  "version": zod.number(),
+  "currentStage": zod.enum(['health_history', 'bca_bmi_report', 'health_history_review', 'assign_trainer', 'trial1', 'rating_feedback1', 'trial2', 'rating_written_feedback2', 'pt_decision', 'pt_followup', 'general_trainer', 'dietician', 'workout_chart1', 'workout_chart2', 'workout_chart3', 'attendance_review', 'attendance_followup', 'regular_continue']),
+  "nextAction": zod.string(),
+  "assigneeId": zod.number().nullable(),
+  "assigneeName": zod.string().nullish(),
+  "trialProgramId": zod.number().nullish(),
+  "overdue": zod.boolean(),
+  "dueAt": zod.string().nullable(),
+  "canManage": zod.boolean(),
+  "canReviewHealth": zod.boolean().optional(),
+  "completedStages": zod.array(zod.string()).optional(),
+  "planDay": zod.number().nullish(),
+  "cycleComplete": zod.boolean().optional(),
+  "healthHistory": zod.object({
+  "injuries": zod.string().optional(),
+  "conditions": zod.string().optional(),
+  "medications": zod.string().optional(),
+  "allergies": zod.string().optional(),
+  "exerciseRestrictions": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "consent": zod.boolean().optional(),
+  "submittedAt": zod.string().optional()
+}).nullish(),
+  "reviewedAt": zod.string().nullish(),
+  "reviewNote": zod.string().nullish(),
+  "trainerId": zod.number().nullable(),
+  "generalTrainerId": zod.number().nullable(),
+  "dieticianId": zod.number().nullable(),
+  "ptDecision": zod.union([zod.literal('yes'),zod.literal('no'),zod.literal(null)]).nullable(),
+  "charts": zod.array(zod.object({
+  "id": zod.number(),
+  "chartNo": zod.number().optional(),
+  "label": zod.string(),
+  "content": zod.string().optional(),
+  "issuedAt": zod.string()
+})),
+  "events": zod.array(zod.object({
+  "id": zod.number(),
+  "action": zod.string(),
+  "actor": zod.string(),
+  "createdAt": zod.string()
+})),
+  "followups": zod.array(zod.object({
+  "id": zod.number(),
+  "kind": zod.string(),
+  "response": zod.string().optional(),
+  "nextDate": zod.string(),
+  "createdAt": zod.string()
+})),
+  "attendance": zod.object({
+  "checkinsLast30Days": zod.number()
+}),
+  "facts": zod.object({
+  "bmi": zod.boolean(),
+  "trial1": zod.boolean(),
+  "feedback1": zod.boolean(),
+  "trial2": zod.boolean(),
+  "feedback2": zod.boolean(),
+  "paidPt": zod.boolean()
+})
+})
+
+
+export const getMyAttendanceQueryMonthRegExp = new RegExp('^\\d{4}-(0[1-9]|1[0-2])$');
+
+
+export const GetMyAttendanceQueryParams = zod.object({
+  "month": zod.coerce.string().regex(getMyAttendanceQueryMonthRegExp).optional()
+})
+
+export const GetMyAttendanceResponse = zod.object({
+  "month": zod.string(),
+  "visits": zod.array(zod.object({
+  "id": zod.number(),
+  "gymId": zod.number(),
+  "gymName": zod.string(),
+  "checkedInAt": zod.string(),
+  "checkedOutAt": zod.string().nullable(),
+  "durationMinutes": zod.number().nullable(),
+  "method": zod.string()
+})),
+  "activeVisit": zod.union([zod.object({
+  "id": zod.number(),
+  "gymId": zod.number(),
+  "gymName": zod.string(),
+  "checkedInAt": zod.string(),
+  "checkedOutAt": zod.string().nullable(),
+  "durationMinutes": zod.number().nullable(),
+  "method": zod.string()
+}),zod.null()]),
+  "summary": zod.object({
+  "visits": zod.number(),
+  "completedVisits": zod.number(),
+  "totalMinutes": zod.number()
+})
+})
+
+
+export const scanAttendanceBodyCodeMax = 512;
+
+
+
+export const ScanAttendanceBody = zod.object({
+  "code": zod.string().min(1).max(scanAttendanceBodyCodeMax),
+  "action": zod.enum(['checkin', 'checkout'])
+})
+
+export const ScanAttendanceResponse = zod.object({
+  "visit": zod.object({
+  "id": zod.number(),
+  "gymId": zod.number(),
+  "gymName": zod.string(),
+  "checkedInAt": zod.string(),
+  "checkedOutAt": zod.string().nullable(),
+  "durationMinutes": zod.number().nullable(),
+  "method": zod.string()
+}),
+  "outcome": zod.enum(['checked_in', 'already_checked_in', 'checked_out', 'already_checked_out'])
+})
+
+
+export const GetPartnerAttendanceQrParams = zod.object({
+  "gymId": zod.coerce.number()
+})
+
+export const GetPartnerAttendanceQrResponse = zod.object({
+  "gymId": zod.number(),
+  "gymName": zod.string(),
+  "address": zod.string(),
+  "code": zod.string().describe('Raw signed token. Encode in iconic-app:\/\/check-in?code=<URLencoded token> for printing. POST only the raw token to attendance\/scan.')
+})
+
+
+
+
+
+
+export const GetAdminPartnerAttendanceQrParams = zod.object({
+  "partnerId": zod.coerce.number().min(1),
+  "gymId": zod.coerce.number().min(1)
+})
+
+export const GetAdminPartnerAttendanceQrResponse = zod.object({
+  "gymId": zod.number(),
+  "gymName": zod.string(),
+  "address": zod.string(),
+  "code": zod.string().describe('Raw signed token. Encode in iconic-app:\/\/check-in?code=<URLencoded token> for printing. POST only the raw token to attendance\/scan.')
+})
+
+
 /**
  * @summary Chat with the Iconic Fitness AI assistant
  */
@@ -990,6 +2190,7 @@ export const ListTrainerPackagesResponse = zod.array(ListTrainerPackagesResponse
 /**
  * @summary Start a paid trainer-session booking; returns the hosted payment link
  */
+
 export const createTrainerBookingBodyNameMin = 2;
 
 export const createTrainerBookingBodyMobileMin = 10;
@@ -1001,8 +2202,8 @@ export const createTrainerBookingBodyRedeemPointsMin = 0;
 export const CreateTrainerBookingBody = zod.object({
   "gymId": zod.number(),
   "packageId": zod.number(),
-  "trainerId": zod.string().optional(),
-  "trainerName": zod.string().optional(),
+  "trainerId": zod.string().min(1).describe('Stable YoActiv trainer ID from the active membership branch roster; revalidated at checkout.'),
+  "trainerName": zod.string().optional().describe('Legacy compatibility only; ignored. The server snapshots the selected trainer\'s name.'),
   "name": zod.string().min(createTrainerBookingBodyNameMin),
   "mobile": zod.string().min(createTrainerBookingBodyMobileMin),
   "preferredDate": zod.string().describe('ISO date (YYYY-MM-DD)'),
@@ -1350,6 +2551,28 @@ export const PreviewCouponResponse = zod.object({
   "discountInr": zod.number().optional(),
   "finalInr": zod.number().optional(),
   "description": zod.string().optional()
+})
+
+
+/**
+ * @summary List coupons currently eligible for a purchase
+ */
+export const getAvailableCouponsQueryAmountInrExclusiveMin = 0;
+
+
+
+export const GetAvailableCouponsQueryParams = zod.object({
+  "kind": zod.enum(['package', 'pt']),
+  "amountInr": zod.coerce.number().gt(getAvailableCouponsQueryAmountInrExclusiveMin).describe('Purchase list price (₹)')
+})
+
+export const GetAvailableCouponsResponse = zod.object({
+  "coupons": zod.array(zod.object({
+  "code": zod.string(),
+  "description": zod.string(),
+  "discountInr": zod.number(),
+  "finalInr": zod.number()
+}))
 })
 
 
@@ -1773,6 +2996,12 @@ export const GetWorkoutDayQueryParams = zod.object({
   "date": zod.coerce.string().optional()
 })
 
+export const getWorkoutDayResponseEntriesItemSetsMax = 100;
+
+export const getWorkoutDayResponseEntriesItemRepsMax = 1000;
+
+
+
 export const GetWorkoutDayResponse = zod.object({
   "date": zod.string(),
   "totalCalories": zod.number(),
@@ -1786,6 +3015,9 @@ export const GetWorkoutDayResponse = zod.object({
   "durationMin": zod.number(),
   "calories": zod.number(),
   "steps": zod.number(),
+  "exerciseName": zod.string().nullable(),
+  "sets": zod.number().min(1).max(getWorkoutDayResponseEntriesItemSetsMax).nullable(),
+  "reps": zod.number().min(1).max(getWorkoutDayResponseEntriesItemRepsMax).nullable(),
   "createdAt": zod.coerce.date()
 }))
 })
@@ -1794,12 +3026,103 @@ export const GetWorkoutDayResponse = zod.object({
 /**
  * @summary Log a workout / activity
  */
+export const addWorkoutBodyDurationMinDefault = 0;
+export const addWorkoutBodyDurationMinMin = 0;
+export const addWorkoutBodyDurationMinMax = 2147483647;
+
+export const addWorkoutBodyCaloriesDefault = 0;
+export const addWorkoutBodyCaloriesMin = 0;
+export const addWorkoutBodyCaloriesMax = 2147483647;
+
+export const addWorkoutBodyStepsDefault = 0;
+export const addWorkoutBodyStepsMin = 0;
+export const addWorkoutBodyStepsMax = 2147483647;
+
+export const addWorkoutBodyExerciseNameMax = 200;
+
+export const addWorkoutBodySetsMax = 100;
+
+export const addWorkoutBodyRepsMax = 1000;
+
+
+
 export const AddWorkoutBody = zod.object({
   "type": zod.enum(['run', 'walk', 'strength', 'cycling', 'yoga', 'hiit', 'swim', 'sports', 'other']),
-  "durationMin": zod.number(),
-  "calories": zod.number().optional(),
-  "steps": zod.number().optional(),
+  "durationMin": zod.number().min(addWorkoutBodyDurationMinMin).max(addWorkoutBodyDurationMinMax).default(addWorkoutBodyDurationMinDefault),
+  "calories": zod.number().min(addWorkoutBodyCaloriesMin).max(addWorkoutBodyCaloriesMax).default(addWorkoutBodyCaloriesDefault),
+  "steps": zod.number().min(addWorkoutBodyStepsMin).max(addWorkoutBodyStepsMax).default(addWorkoutBodyStepsDefault),
+  "exerciseName": zod.string().min(1).max(addWorkoutBodyExerciseNameMax).nullish(),
+  "sets": zod.number().min(1).max(addWorkoutBodySetsMax).nullish(),
+  "reps": zod.number().min(1).max(addWorkoutBodyRepsMax).nullish(),
   "date": zod.string().optional()
+}).describe('Requires positive durationMin or a complete exerciseName\/sets\/reps trio. Partial strength details are rejected. On update, date is ignored and the original date is retained.')
+
+
+/**
+ * @summary Replace an owned workout entry while preserving its original date
+ */
+
+
+
+export const UpdateWorkoutParams = zod.object({
+  "id": zod.coerce.number().min(1)
+})
+
+export const updateWorkoutBodyDurationMinDefault = 0;
+export const updateWorkoutBodyDurationMinMin = 0;
+export const updateWorkoutBodyDurationMinMax = 2147483647;
+
+export const updateWorkoutBodyCaloriesDefault = 0;
+export const updateWorkoutBodyCaloriesMin = 0;
+export const updateWorkoutBodyCaloriesMax = 2147483647;
+
+export const updateWorkoutBodyStepsDefault = 0;
+export const updateWorkoutBodyStepsMin = 0;
+export const updateWorkoutBodyStepsMax = 2147483647;
+
+export const updateWorkoutBodyExerciseNameMax = 200;
+
+export const updateWorkoutBodySetsMax = 100;
+
+export const updateWorkoutBodyRepsMax = 1000;
+
+
+
+export const UpdateWorkoutBody = zod.object({
+  "type": zod.enum(['run', 'walk', 'strength', 'cycling', 'yoga', 'hiit', 'swim', 'sports', 'other']),
+  "durationMin": zod.number().min(updateWorkoutBodyDurationMinMin).max(updateWorkoutBodyDurationMinMax).default(updateWorkoutBodyDurationMinDefault),
+  "calories": zod.number().min(updateWorkoutBodyCaloriesMin).max(updateWorkoutBodyCaloriesMax).default(updateWorkoutBodyCaloriesDefault),
+  "steps": zod.number().min(updateWorkoutBodyStepsMin).max(updateWorkoutBodyStepsMax).default(updateWorkoutBodyStepsDefault),
+  "exerciseName": zod.string().min(1).max(updateWorkoutBodyExerciseNameMax).nullish(),
+  "sets": zod.number().min(1).max(updateWorkoutBodySetsMax).nullish(),
+  "reps": zod.number().min(1).max(updateWorkoutBodyRepsMax).nullish(),
+  "date": zod.string().optional()
+}).describe('Requires positive durationMin or a complete exerciseName\/sets\/reps trio. Partial strength details are rejected. On update, date is ignored and the original date is retained.')
+
+export const updateWorkoutResponseEntriesItemSetsMax = 100;
+
+export const updateWorkoutResponseEntriesItemRepsMax = 1000;
+
+
+
+export const UpdateWorkoutResponse = zod.object({
+  "date": zod.string(),
+  "totalCalories": zod.number(),
+  "totalMinutes": zod.number(),
+  "totalSteps": zod.number(),
+  "stepGoal": zod.number(),
+  "count": zod.number(),
+  "entries": zod.array(zod.object({
+  "id": zod.number(),
+  "type": zod.enum(['run', 'walk', 'strength', 'cycling', 'yoga', 'hiit', 'swim', 'sports', 'other']),
+  "durationMin": zod.number(),
+  "calories": zod.number(),
+  "steps": zod.number(),
+  "exerciseName": zod.string().nullable(),
+  "sets": zod.number().min(1).max(updateWorkoutResponseEntriesItemSetsMax).nullable(),
+  "reps": zod.number().min(1).max(updateWorkoutResponseEntriesItemRepsMax).nullable(),
+  "createdAt": zod.coerce.date()
+}))
 })
 
 

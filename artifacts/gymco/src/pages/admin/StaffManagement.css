@@ -1,0 +1,29 @@
+/* Page-local light-theme contrast; do not change other admin screens. */
+#staff-management,
+#staff-management * {
+  color: #000 !important;
+}
+
+#staff-management input::placeholder,
+#staff-management textarea::placeholder {
+  color: #000 !important;
+  opacity: 1;
+}
+
+#staff-management [class*="bg-slate-"] {
+  background-color: #f1f5f9 !important;
+}
+
+#staff-management [class*="opacity-"] {
+  opacity: 1 !important;
+}
+
+#staff-management button:disabled,
+#staff-management input:disabled,
+#staff-management select:disabled {
+  color: #000 !important;
+  background-color: #e2e8f0 !important;
+  border-style: dashed;
+  cursor: not-allowed;
+  opacity: 1 !important;
+}

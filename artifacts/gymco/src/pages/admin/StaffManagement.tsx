@@ -3,6 +3,7 @@ import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
 import { adminApi } from "@/lib/adminApi";
 import { PERMISSION_LABELS } from "@/lib/staffApi";
 import { Dumbbell, KeyRound, Trash2, UserPlus } from "lucide-react";
+import "./StaffManagement.css";
 
 type Staff = {
   id: number;
@@ -14,8 +15,17 @@ type Staff = {
   yoactivStaffId: string | null;
   isActive: boolean;
   permissions: string[];
+  journeyRole: JourneyRole;
+  journeyGymIds: number[];
   createdAt: string;
 };
+
+type JourneyRole =
+  | "club_manager"
+  | "trainer"
+  | "member_coordinator"
+  | "dietician"
+  | "corporate";
 
 type StaffBranch = {
   gymId: number;
@@ -23,6 +33,12 @@ type StaffBranch = {
   gymArea: string;
   yoactivBranchId: number | null;
   label: string;
+};
+
+type JourneyGym = {
+  id: number;
+  name: string;
+  area?: string | null;
 };
 
 const ALL_PERMS = [
@@ -38,6 +54,167 @@ const ALL_PERMS = [
 
 const inputCls =
   "w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-lime-500/60";
+
+const JOURNEY_ROLE_LABELS: Record<JourneyRole, string> = {
+  club_manager: "Club manager",
+  trainer: "Trainer",
+  member_coordinator: "Member coordinator",
+  dietician: "Dietician",
+  corporate: "Corporate (read only)",
+};
+
+function withJourneyPreset(
+  permissions: string[],
+  role: JourneyRole,
+): string[] {
+  const withoutJourney = permissions.filter(
+    (permission) =>
+      permission !== "journey.view" && permission !== "journey.manage",
+  );
+  return role === "corporate"
+    ? [...withoutJourney, "journey.view"]
+    : [...withoutJourney, "journey.view", "journey.manage"];
+}
+
+function JourneyAccessFields({
+  role,
+  gymIds,
+  permissions,
+  gyms,
+  onRoleChange,
+  onGymIdsChange,
+  onPermissionsChange,
+}: {
+  role: JourneyRole;
+  gymIds: number[];
+  permissions: string[];
+  gyms: JourneyGym[];
+  onRoleChange: (role: JourneyRole) => void;
+  onGymIdsChange: (gymIds: number[]) => void;
+  onPermissionsChange: (permissions: string[]) => void;
+}) {
+  const hasView = permissions.includes("journey.view");
+  const hasManage = permissions.includes("journey.manage");
+  const hasJourneyGrant = hasView || hasManage;
+  const setCapability = (
+    capability: "journey.view" | "journey.manage",
+    on: boolean,
+  ) => {
+    const next = permissions.filter((permission) => permission !== capability);
+    onPermissionsChange(on ? [...next, capability] : next);
+  };
+  const toggleGym = (gymId: number) =>
+    onGymIdsChange(
+      gymIds.includes(gymId)
+        ? gymIds.filter((id) => id !== gymId)
+        : [...gymIds, gymId],
+    );
+
+  return (
+    <div className="rounded-xl border border-slate-700 bg-slate-800/40 p-4 space-y-4">
+      <div>
+        <div className="text-sm font-semibold text-white">Member journey access</div>
+        <div className="text-[11px] text-slate-400 mt-1">
+          Choose a role preset, then adjust view and management access
+          independently. Access is limited to the selected branches.
+        </div>
+      </div>
+      <div>
+        <label className="text-xs uppercase tracking-wide text-slate-400 block mb-1.5">
+          Journey role
+        </label>
+        <select
+          className={inputCls}
+          value={role}
+          onChange={(event) => onRoleChange(event.target.value as JourneyRole)}
+        >
+          {Object.entries(JOURNEY_ROLE_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <div className="text-[11px] text-slate-500 mt-1">
+          Club managers, member coordinators, and dieticians work across
+          selected branches. Trainers work with assigned members in their
+          selected branches.
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <label className="flex items-center gap-3 px-3 py-2 rounded-xl border bg-slate-800 border-slate-700">
+          <input
+            type="checkbox"
+            checked={hasView}
+            onChange={(event) =>
+              setCapability("journey.view", event.target.checked)
+            }
+            className="rounded border-slate-600 bg-slate-900 text-lime-500 focus:ring-lime-500/60"
+          />
+          <span className="text-sm font-medium text-slate-100">
+            {PERMISSION_LABELS["journey.view"]}
+          </span>
+        </label>
+        <label
+          className={`flex items-center gap-3 px-3 py-2 rounded-xl border bg-slate-800 border-slate-700 ${
+            role === "corporate" ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+        >
+          <input
+            type="checkbox"
+            checked={role === "corporate" ? false : hasManage}
+            disabled={role === "corporate"}
+            onChange={(event) =>
+              setCapability("journey.manage", event.target.checked)
+            }
+            className="rounded border-slate-600 bg-slate-900 text-lime-500 focus:ring-lime-500/60"
+          />
+          <span className="text-sm font-medium text-slate-100">
+            {PERMISSION_LABELS["journey.manage"]}
+          </span>
+        </label>
+      </div>
+      {role === "corporate" && (
+        <div className="text-[11px] text-sky-300">
+          Corporate access is read only. Management cannot be selected.
+        </div>
+      )}
+      <div>
+        <div className="text-xs uppercase tracking-wide text-slate-400 mb-2">
+          Journey branches
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+          {gyms.map((gym) => (
+            <label
+              key={gym.id}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-700 bg-slate-800 text-sm text-slate-100"
+            >
+              <input
+                type="checkbox"
+                checked={gymIds.includes(gym.id)}
+                onChange={() => toggleGym(gym.id)}
+                className="rounded border-slate-600 bg-slate-900 text-lime-500 focus:ring-lime-500/60"
+              />
+              <span>
+                {gym.name}
+                {gym.area ? ` (${gym.area})` : ""}
+              </span>
+            </label>
+          ))}
+        </div>
+        {gymIds.length === 0 && (
+          <div className="text-xs text-amber-300 mt-2">
+            No branches selected — this staff member will have no member journey access.
+          </div>
+        )}
+        {!hasJourneyGrant && (
+          <div className="text-[11px] text-slate-500 mt-2">
+            No journey capability is granted. Other staff permissions are unchanged.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function PermissionCheckboxes({
   value,
@@ -91,10 +268,12 @@ function CreateStaffForm({
   onCreated,
   prefill,
   branches,
+  journeyGyms,
 }: {
   onCreated: () => void;
   prefill: StaffPrefill | null;
   branches: StaffBranch[];
+  journeyGyms: JourneyGym[];
 }) {
   const [f, setF] = useState({
     name: "",
@@ -104,6 +283,8 @@ function CreateStaffForm({
     gymId: "",
     yoactivStaffId: "",
     permissions: [] as string[],
+    journeyRole: "trainer" as JourneyRole,
+    journeyGymIds: [] as number[],
   });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -148,7 +329,14 @@ function CreateStaffForm({
         password: f.password,
         gymId: f.gymId ? Number(f.gymId) : null,
         yoactivStaffId: f.yoactivStaffId || null,
-        permissions: f.permissions,
+        permissions:
+          f.journeyRole === "corporate"
+            ? f.permissions.filter(
+                (permission) => permission !== "journey.manage",
+              )
+            : f.permissions,
+        journeyRole: f.journeyRole,
+        journeyGymIds: f.journeyGymIds,
         isActive: true,
       });
       setOk(true);
@@ -170,6 +358,8 @@ function CreateStaffForm({
         gymId: "",
         yoactivStaffId: "",
         permissions: [],
+        journeyRole: "trainer",
+        journeyGymIds: [],
       });
       onCreated();
       setTimeout(() => setOk(false), 1500);
@@ -279,6 +469,26 @@ function CreateStaffForm({
             Members → View Active.
           </div>
         </div>
+        <JourneyAccessFields
+          role={f.journeyRole}
+          gymIds={f.journeyGymIds}
+          permissions={f.permissions}
+          gyms={journeyGyms}
+          onRoleChange={(journeyRole) =>
+            setF({
+              ...f,
+              journeyRole,
+              permissions:
+                journeyRole === "corporate"
+                  ? withJourneyPreset(f.permissions, journeyRole).filter(
+                      (permission) => permission !== "journey.manage",
+                    )
+                  : withJourneyPreset(f.permissions, journeyRole),
+            })
+          }
+          onGymIdsChange={(journeyGymIds) => setF({ ...f, journeyGymIds })}
+          onPermissionsChange={(permissions) => setF({ ...f, permissions })}
+        />
         {err && (
           <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg p-3">
             {err}
@@ -383,10 +593,16 @@ type RoleFilter = "all" | "trainer" | "staff";
  */
 function YoactivTrainersPanel({
   staffRows,
+  branches,
+  branchFilter,
+  onBranchChange,
   onCreateLogin,
   onLinkLogin,
 }: {
   staffRows: Staff[];
+  branches: YoactivBranch[];
+  branchFilter: string;
+  onBranchChange: (branch: string) => void;
   onCreateLogin: (
     name: string,
     email: string | null,
@@ -399,32 +615,29 @@ function YoactivTrainersPanel({
     yoactivStaffId: string,
   ) => Promise<void>;
 }) {
-  const [branches, setBranches] = useState<YoactivBranch[]>([]);
-  const [branchId, setBranchId] = useState<number | null>(null);
-  const [roster, setRoster] = useState<YoactivRosterMember[]>([]);
+  const branchId = branches.find(b => String(b.branchId) === branchFilter)?.branchId ?? null;
+  const [rosterResult, setRosterResult] = useState<{ branchId: number; rows: YoactivRosterMember[] } | null>(null);
+  const roster = rosterResult?.branchId === branchId ? rosterResult.rows : [];
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    adminApi.yoactiv
-      .branches()
-      .then((rows: YoactivBranch[]) => {
-        setBranches(rows);
-        if (rows.length > 0) setBranchId(rows[0].branchId);
-      })
-      .catch(() => setErr("Couldn't load YoActiv branches"));
-  }, []);
-
-  useEffect(() => {
-    if (branchId == null) return;
-    setLoading(true);
+    let cancelled = false;
     setErr(null);
+    if (branchId == null) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
     adminApi.yoactiv
       .staff(branchId)
-      .then((rows) => setRoster(rows as YoactivRosterMember[]))
-      .catch(() => setErr("Couldn't load the staff roster"))
-      .finally(() => setLoading(false));
+      .then((rows) => {
+        if (!cancelled) setRosterResult({ branchId, rows: rows as YoactivRosterMember[] });
+      })
+      .catch(() => { if (!cancelled) setErr("Couldn't load the staff roster"); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [branchId]);
 
   const counts = {
@@ -463,15 +676,19 @@ function YoactivTrainersPanel({
         </div>
         {branches.length > 1 && (
           <select
+            aria-label="YoActiv branch"
             className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-lime-500/60"
-            value={branchId ?? ""}
-            onChange={(e) => setBranchId(Number(e.target.value))}
+            value={branchFilter}
+            onChange={(e) => onBranchChange(e.target.value)}
           >
+            {!branchFilter && <option value="">Select a branch</option>}
+            <option value="all">All branches</option>
             {branches.map((b) => (
               <option key={b.branchId} value={b.branchId}>
                 {b.gymLabel ?? b.branchName ?? `Branch ${b.branchId}`}
               </option>
             ))}
+            <option value="unassigned">No branch assigned</option>
           </select>
         )}
       </div>
@@ -493,7 +710,11 @@ function YoactivTrainersPanel({
       {err && (
         <div className="px-5 py-3 text-sm text-red-400">{err}</div>
       )}
-      {loading ? (
+      {branchId == null ? (
+        <div className="px-5 py-8 text-center text-sm">
+          Select a specific branch to view its YoActiv staff roster.
+        </div>
+      ) : loading ? (
         <div className="px-5 py-8 text-center text-sm text-slate-500">
           Loading staff roster…
         </div>
@@ -631,10 +852,12 @@ function EditStaffRow({
   row,
   onChanged,
   branches,
+  journeyGyms,
 }: {
   row: Staff;
   onChanged: () => void;
   branches: StaffBranch[];
+  journeyGyms: JourneyGym[];
 }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(row.name);
@@ -642,6 +865,12 @@ function EditStaffRow({
   const [gymId, setGymId] = useState(row.gymId ? String(row.gymId) : "");
   const [editErr, setEditErr] = useState<string | null>(null);
   const [perms, setPerms] = useState<string[]>(row.permissions ?? []);
+  const [journeyRole, setJourneyRole] = useState<JourneyRole>(
+    row.journeyRole ?? "trainer",
+  );
+  const [journeyGymIds, setJourneyGymIds] = useState<number[]>(
+    row.journeyGymIds ?? [],
+  );
   const [isActive, setIsActive] = useState(row.isActive);
   const [resetting, setResetting] = useState(false);
   const [newPwd, setNewPwd] = useState("");
@@ -660,7 +889,12 @@ function EditStaffRow({
         name,
         username: username.trim() || null,
         gymId: gymId ? Number(gymId) : null,
-        permissions: perms,
+        permissions:
+          journeyRole === "corporate"
+            ? perms.filter((permission) => permission !== "journey.manage")
+            : perms,
+        journeyRole,
+        journeyGymIds,
         isActive,
       });
       setEditing(false);
@@ -772,7 +1006,27 @@ function EditStaffRow({
       </td>
       <td className="px-5 py-4">
         {editing ? (
-          <PermissionCheckboxes value={perms} onChange={setPerms} />
+          <div className="space-y-3 min-w-[340px]">
+            <PermissionCheckboxes value={perms} onChange={setPerms} />
+            <JourneyAccessFields
+              role={journeyRole}
+              gymIds={journeyGymIds}
+              permissions={perms}
+              gyms={journeyGyms}
+              onRoleChange={(nextRole) => {
+                setJourneyRole(nextRole);
+                setPerms(
+                  nextRole === "corporate"
+                    ? withJourneyPreset(perms, nextRole).filter(
+                        (permission) => permission !== "journey.manage",
+                      )
+                    : withJourneyPreset(perms, nextRole),
+                );
+              }}
+              onGymIdsChange={setJourneyGymIds}
+              onPermissionsChange={setPerms}
+            />
+          </div>
         ) : row.permissions.length === 0 ? (
           <span className="text-xs text-slate-500">No permissions</span>
         ) : (
@@ -841,6 +1095,8 @@ function EditStaffRow({
                   setUsername(row.username ?? "");
                   setGymId(row.gymId ? String(row.gymId) : "");
                   setPerms(row.permissions ?? []);
+                  setJourneyRole(row.journeyRole ?? "trainer");
+                  setJourneyGymIds(row.journeyGymIds ?? []);
                   setIsActive(row.isActive);
                   setEditErr(null);
                   setEditing(false);
@@ -990,11 +1246,13 @@ function EditStaffRow({
 export default function AdminStaffManagement() {
   const [rows, setRows] = useState<Staff[]>([]);
   const [branches, setBranches] = useState<StaffBranch[]>([]);
+  const [journeyGyms, setJourneyGyms] = useState<JourneyGym[]>([]);
   const [yoactivBranches, setYoactivBranches] = useState<YoactivBranch[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [prefill, setPrefill] = useState<StaffPrefill | null>(null);
-  const [branchFilter, setBranchFilter] = useState("all");
+  const [branchFilter, setBranchFilter] = useState("");
+  const [branchError, setBranchError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<
     "active" | "inactive" | "all"
   >("active");
@@ -1019,14 +1277,22 @@ export default function AdminStaffManagement() {
       .branches()
       .then((data) => setBranches(data as StaffBranch[]))
       .catch(() => setBranches([]));
+    adminApi.gyms
+      .list()
+      .then((data) => setJourneyGyms(data as JourneyGym[]))
+      .catch(() => setJourneyGyms([]));
     adminApi.yoactiv
       .branches()
-      .then((data) => setYoactivBranches(data as YoactivBranch[]))
-      .catch(() => setYoactivBranches([]));
+      .then((data) => {
+        const mappedBranches = data as YoactivBranch[];
+        setYoactivBranches(mappedBranches);
+        setBranchFilter(current => current || (mappedBranches[0] ? String(mappedBranches[0].branchId) : "unassigned"));
+      })
+      .catch(() => setBranchError("Couldn't load branches. Refresh the page to try again."));
   }, []);
 
-  const filteredRows = rows.filter((row) => {
-    const branchMatches =
+  const branchRows = rows.filter((row) => {
+    return (
       branchFilter === "all"
         ? true
         : branchFilter === "unassigned"
@@ -1034,27 +1300,35 @@ export default function AdminStaffManagement() {
           : row.gymId ===
             (yoactivBranches.find(
               (branch) => branch.branchId === Number(branchFilter),
-            )?.gymId ?? -1);
-    const statusMatches =
+            )?.gymId ?? -1)
+    );
+  });
+  const filteredRows = branchRows.filter((row) => {
+    return (
       statusFilter === "all"
         ? true
         : statusFilter === "active"
           ? row.isActive
-          : !row.isActive;
-    return branchMatches && statusMatches;
+          : !row.isActive
+    );
   });
 
   return (
     <AdminLayout title="Staff Management">
-      <div className="space-y-6">
+      <div id="staff-management" className="space-y-6">
+        {branchError && <p role="alert">{branchError}</p>}
         <CreateStaffForm
           onCreated={load}
           prefill={prefill}
           branches={branches}
+          journeyGyms={journeyGyms}
         />
 
         <YoactivTrainersPanel
           staffRows={rows}
+          branches={yoactivBranches}
+          branchFilter={branchFilter}
+          onBranchChange={setBranchFilter}
           onCreateLogin={(name, email, gymId, yoactivStaffId) =>
             setPrefill((p) => ({
               name,
@@ -1091,21 +1365,24 @@ export default function AdminStaffManagement() {
             </h2>
             <div className="flex flex-wrap items-center gap-2">
               <select
+                aria-label="Staff members branch"
                 className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-sm text-black"
                 value={branchFilter}
                 onChange={(e) => setBranchFilter(e.target.value)}
               >
+                {!branchFilter && <option value="">Select a branch</option>}
                 <option value="all">All branches</option>
                 {yoactivBranches.map((b) => (
                   <option key={b.branchId} value={b.branchId}>
-                    {b.branchName ??
-                      b.gymLabel ??
+                    {b.gymLabel ??
+                      b.branchName ??
                       `Branch ${b.branchId}`}
                   </option>
                 ))}
                 <option value="unassigned">No branch assigned</option>
               </select>
               <select
+                aria-label="Staff members status"
                 className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-sm text-black"
                 value={statusFilter}
                 onChange={(e) =>
@@ -1119,7 +1396,7 @@ export default function AdminStaffManagement() {
                 <option value="all">Active and inactive</option>
               </select>
               <span className="text-xs text-slate-500">
-                {filteredRows.length} shown / {rows.length} total
+                {filteredRows.length} shown / {branchRows.length} in selected branch scope
               </span>
             </div>
           </div>
@@ -1149,7 +1426,7 @@ export default function AdminStaffManagement() {
                 ) : filteredRows.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="px-5 py-8 text-center text-slate-500">
-                      No staff members yet. Create one above.
+                      No staff members match the selected branch and status.
                     </td>
                   </tr>
                 ) : (
@@ -1159,6 +1436,7 @@ export default function AdminStaffManagement() {
                       row={r}
                       onChanged={load}
                       branches={branches}
+                      journeyGyms={journeyGyms}
                     />
                   ))
                 )}

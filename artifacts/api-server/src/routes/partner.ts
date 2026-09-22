@@ -770,7 +770,9 @@ router.use(async (req: Request, res: Response, next): Promise<void> => {
     next();
     return;
   }
-  const matched = STAFF_PERMISSION_PREFIXES.find(([prefix]) =>
+  const matched = /^\/partner\/gyms\/\d+\/attendance-qr\/?$/.test(req.path)
+    ? ["/partner/gyms", "checkins"]
+    : STAFF_PERMISSION_PREFIXES.find(([prefix]) =>
     matchesPrefix(req.path, prefix),
   );
   if (!matched) {

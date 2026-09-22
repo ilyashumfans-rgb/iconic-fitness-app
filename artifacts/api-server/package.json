@@ -31,7 +31,8 @@
     "http-proxy-middleware": "^4.0.0",
     "pino": "^9.14.0",
     "pino-http": "^10.5.0",
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.3",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",
@@ -42,6 +43,7 @@
     "@types/express": "^5.0.6",
     "@types/express-session": "^1.19.0",
     "@types/node": "catalog:",
+    "@types/pg": "^8.20.0",
     "esbuild": "0.27.3",
     "esbuild-plugin-pino": "^2.3.3",
     "pg": "^8.20.0",

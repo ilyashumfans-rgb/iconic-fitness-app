@@ -14,6 +14,7 @@ import {
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
 import { prepareForUpload } from "@/components/FileUpload";
 import { adminApi, type HomeSlide } from "@/lib/adminApi";
+import { SlideDestinationPicker } from "@/components/admin/SlideDestinationPicker";
 
 type Audience = "all" | "members" | "customers";
 
@@ -342,18 +343,17 @@ function SlideEditor({
             value={draft.subtitle}
             onChange={(e) => set({ subtitle: e.target.value })}
           />
-          <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-2">
             <input
               className={input}
               placeholder="Button label (optional)"
               value={draft.ctaLabel}
               onChange={(e) => set({ ctaLabel: e.target.value })}
             />
-            <input
+            <SlideDestinationPicker
               className={input}
-              placeholder="Button link (optional)"
               value={draft.ctaUrl}
-              onChange={(e) => set({ ctaUrl: e.target.value })}
+              onChange={(ctaUrl) => set({ ctaUrl })}
             />
           </div>
           <div>

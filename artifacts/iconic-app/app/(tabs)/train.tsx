@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
+import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Screen } from "@/components/Screen";
 import { SectionHeader, Segmented } from "@/components/ui-bits";
@@ -220,6 +221,8 @@ function WorkoutsTab() {
   const router = useRouter();
   return (
     <>
+      <Button label="Add workout" icon="plus" onPress={() => router.push("/workouts")} />
+      <View style={{ height: 16 }} />
       {/* Generator CTA */}
       <Pressable onPress={() => router.push("/workout/generate")}>
         <Card style={styles.genCard} tone="elevated">

@@ -66,6 +66,16 @@ export default defineConfig({
         },
         useDates: true,
         useBigInt: true,
+        // Mixed path + query parameters otherwise export two different
+        // GetLiveTrainerProfileParams symbols from the Zod barrel.
+        // The route explicitly validates its path and branch query.
+        operations: {
+          getLiveTrainerProfile: { zod: { generate: { param: false } } },
+          getAdminLiveTrainerProfile: { zod: { generate: { param: false } } },
+          updateAdminLiveTrainerProfile: { zod: { generate: { param: false } } },
+          getOwnTrainerReview: { zod: { generate: { param: false } } },
+          saveOwnTrainerReview: { zod: { generate: { param: false } } },
+        },
       },
     },
   },

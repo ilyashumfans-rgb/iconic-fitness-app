@@ -4,3 +4,4 @@ export * from "./generated/types";
 // schema in api.ts, the TS query-param type in types/). Server code imports the
 // Zod schema, so re-export that one explicitly to resolve the ambiguity.
 export { GetPackageBookingParams, ApplyReferralCodeBody, StoreCheckoutResponse, SetNotificationSoundBody } from "./generated/api";
+export { EnrollMemberJourneyBody, SubmitMyMemberJourneyFeedbackBody } from "./generated/api";

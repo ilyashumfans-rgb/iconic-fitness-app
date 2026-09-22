@@ -539,9 +539,13 @@ const trainersCacheByBranch = new Map<
  */
 export async function fetchYoactivTrainers(
   branchId?: number,
+  options?: { strict?: boolean },
 ): Promise<YoactivTrainer[]> {
   const configs = await yoactivKeyConfigs();
-  if (configs.length === 0) return [];
+  if (configs.length === 0) {
+    if (options?.strict) throw new Error("YoActiv trainer directory is not configured");
+    return [];
+  }
   const scoped =
     branchId !== undefined
       ? configs
@@ -550,8 +554,12 @@ export async function fetchYoactivTrainers(
       : configs;
   // A branch id that no key covers (bad mapping) yields an empty roster —
   // never show another branch's trainers as if they were this branch's.
-  if (branchId !== undefined && scoped.length === 0) return [];
+  if (branchId !== undefined && scoped.length === 0) {
+    if (options?.strict) throw new Error("No YoActiv key covers this branch");
+    return [];
+  }
   const effective = scoped.length > 0 ? scoped : configs;
+  if (options?.strict) return withDeadline(fetchTrainersAcrossKeys(effective, true), TRAINERS_BUDGET_MS);
   const cacheKey = branchId !== undefined ? `b:${branchId}` : "all";
 
   const cached = trainersCacheByBranch.get(cacheKey);
@@ -581,6 +589,7 @@ export async function fetchYoactivTrainers(
 
 async function fetchTrainersAcrossKeys(
   configs: KeyConfig[],
+  strict = false,
 ): Promise<YoactivTrainer[]> {
   const perBranch = configs.flatMap((config) =>
     config.branchIds.map(async (branchId) => {
@@ -591,8 +600,10 @@ async function fetchTrainersAcrossKeys(
           branchId,
           { PT: 1 },
         );
+        if (strict && !Array.isArray(res.Data?.PTStaffs)) throw new Error("Invalid trainer directory response");
         return res.Data?.PTStaffs ?? [];
-      } catch {
+      } catch (error) {
+        if (strict) throw error;
         return [] as StaffRow[];
       }
     }),
@@ -607,7 +618,7 @@ async function fetchTrainersAcrossKeys(
     // Dedupe: the same trainer can appear under multiple branches. Mobile is
     // the stable identity when present; fall back to the staff id.
     const mobile = normalizeMobile(typeof row.Mobile === "string" ? row.Mobile : null);
-    const dedupeKey = mobile ?? `id:${id}`;
+    const dedupeKey = strict ? `id:${id}` : mobile ?? `id:${id}`;
     if (seen.has(dedupeKey)) continue;
     seen.add(dedupeKey);
     trainers.push({ id, name });

@@ -48,6 +48,7 @@ export type PartnerStaff = {
 export const PARTNER_STAFF_PERMISSIONS = [
   "gyms",
   "bookings",
+  "checkins",
   "classes",
   "products",
 ] as const;
@@ -55,6 +56,7 @@ export const PARTNER_STAFF_PERMISSIONS = [
 export const PARTNER_STAFF_PERMISSION_LABELS: Record<string, string> = {
   gyms: "My Gyms",
   bookings: "Bookings",
+  checkins: "Attendance QR",
   classes: "Classes",
   products: "Products",
 };
@@ -244,7 +246,7 @@ export type PartnerAttendee = {
   userAvatar: string;
 };
 
-async function request<T>(
+export async function request<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
@@ -327,6 +329,13 @@ export const partnerApi = {
   earnings: () => request<PartnerEarnings>("/partner/earnings"),
   gyms: {
     list: () => request<PartnerGym[]>("/partner/gyms"),
+    attendanceQr: (id: number) =>
+      request<{
+        gymId: number;
+        gymName: string;
+        address: string;
+        code: string;
+      }>(`/partner/gyms/${id}/attendance-qr`),
     update: (id: number, body: Partial<PartnerGym>) =>
       request<PartnerGym>(`/partner/gyms/${id}`, {
         method: "PATCH",
