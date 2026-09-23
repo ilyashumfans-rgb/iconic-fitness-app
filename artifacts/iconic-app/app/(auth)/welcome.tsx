@@ -411,7 +411,7 @@ function WelcomeContent() {
       >
         <Image
           source={require("@/assets/images/login-original-artwork.jpg")}
-          style={{ width: "100%", height: artworkHeight, marginBottom: 12 }}
+          style={{ width: "100%", height: artworkHeight, marginTop: "auto", marginBottom: 12 }}
           resizeMode="contain"
           accessible
           accessibilityLabel="Iconic Fitness. The Fitness Company. A stronger, healthier, happier you."
@@ -588,7 +588,7 @@ const styles = StyleSheet.create({
   content: { flexGrow: 1, width: "100%", maxWidth: 480, alignSelf: "center" },
   bottom: { 
     marginHorizontal: 24,
-    marginTop: "auto", 
+    marginTop: 0,
     gap: 9
   },
   errorText: {
