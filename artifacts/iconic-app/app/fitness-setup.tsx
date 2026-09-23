@@ -7,6 +7,7 @@ import {
   useGetFitnessSetup,
   useGetMe,
   useSaveFitnessSetupStep,
+  useUpdateMe,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
@@ -39,6 +40,7 @@ function errorMessage(err: unknown) {
   return (
     (err as { data?: { error?: string } })?.data?.error ??
     (err as { body?: { error?: string } })?.body?.error ??
+    (err instanceof Error ? err.message : undefined) ??
     "Please check your details and try again."
   );
 }
@@ -57,12 +59,14 @@ export default function FitnessSetupScreen() {
   });
   const existingProfileQuery = useGetMe({
     query: {
-      enabled: member && setupQuery.data?.exists === false,
+      enabled: member,
       queryKey: [...getGetMeQueryKey(), userId ?? "anonymous"],
     },
   });
   const save = useSaveFitnessSetupStep();
   const complete = useCompleteFitnessSetup();
+  const updateProfile = useUpdateMe();
+  const [profileName, setProfileName] = useState<string | null>(null);
 
   const [step, setStep] = useState(1);
   const [unitSystem, setUnitSystem] = useState<"metric" | "imperial">("metric");
@@ -137,22 +141,24 @@ export default function FitnessSetupScreen() {
 
   if (!isLoaded) return null;
   if (!member) return <Redirect href={memberAuthHref("/fitness-setup")} />;
-  if (setupQuery.isPending || !ready) {
+  if (setupQuery.isError || existingProfileQuery.isError) {
+    return (
+      <Screen scroll={false} contentContainerStyle={styles.center}>
+        <AppText weight="700">Couldn&apos;t load your setup</AppText>
+        <Button label="Try again" onPress={() => {
+          void setupQuery.refetch();
+          void existingProfileQuery.refetch();
+        }} full={false} />
+      </Screen>
+    );
+  }
+  if (setupQuery.isPending || existingProfileQuery.isPending || !ready) {
     return (
       <Screen scroll={false} contentContainerStyle={styles.center}>
         <AppText muted>Loading your private setup…</AppText>
       </Screen>
     );
   }
-  if (setupQuery.isError) {
-    return (
-      <Screen scroll={false} contentContainerStyle={styles.center}>
-        <AppText weight="700">Couldn&apos;t load your setup</AppText>
-        <Button label="Try again" onPress={() => void setupQuery.refetch()} full={false} />
-      </Screen>
-    );
-  }
-
   const metricHeight = Number(height);
   const metricWeight = Number(weight);
   const bodySave: FitnessSetupStepSave = {
@@ -187,6 +193,12 @@ export default function FitnessSetupScreen() {
 
   const saveStep = async (next: "forward" | "back" | "complete") => {
     try {
+      if (step === 1 && setupQuery.data.requiredForOnboarding) {
+        const fullName = (profileName ?? existingProfileQuery.data?.name ?? "").trim();
+        if (fullName.length < 2) throw new Error("Enter your full name to continue.");
+        await updateProfile.mutateAsync({ data: { name: fullName } });
+        await queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
+      }
       await save.mutateAsync({ data: dataForStep() });
       await queryClient.invalidateQueries({ queryKey });
       if (next === "back") {
@@ -249,6 +261,12 @@ export default function FitnessSetupScreen() {
       <Card style={styles.card}>
         {step === 1 ? (
           <View style={styles.gap}>
+            {setupQuery.data.requiredForOnboarding ? (
+              <>
+                <Field label="Full name" accessibilityLabel="Full name" value={profileName ?? existingProfileQuery.data?.name ?? ""} onChangeText={setProfileName} autoComplete="name" autoCapitalize="words" />
+                <Field label="Registered mobile" accessibilityLabel="Registered mobile number" value={existingProfileQuery.data?.mobile ?? ""} editable={false} hint="Your verified mobile is already registered. No email or password is needed for this fitness profile." />
+              </>
+            ) : null}
             <Segmented options={[{ value: "metric", label: "Metric" }, { value: "imperial", label: "Imperial" }]} value={unitSystem} onChange={(value) => {
               if (value !== unitSystem && height) setHeight(String(Math.round((value === "metric" ? Number(height) * 2.54 : Number(height) / 2.54) * 10) / 10));
               if (value !== unitSystem && weight) setWeight(String(Math.round((value === "metric" ? Number(weight) / 2.20462 : Number(weight) * 2.20462) * 10) / 10));
@@ -287,7 +305,7 @@ export default function FitnessSetupScreen() {
       <View style={styles.actions}>
         {step > 1 ? <Button label="Back" variant="secondary" onPress={() => void saveStep("back")} /> : null}
         {step > 1 ? <Button label="Skip optional details" variant="ghost" onPress={() => void skipOptional()} /> : null}
-        <Button label={step === 4 ? "Finish setup" : "Save and continue"} loading={save.isPending || complete.isPending} onPress={() => void saveStep(step === 4 ? "complete" : "forward")} />
+        <Button label={step === 4 ? "Finish setup" : "Save and continue"} loading={save.isPending || complete.isPending || updateProfile.isPending} disabled={save.isPending || complete.isPending || updateProfile.isPending} onPress={() => void saveStep(step === 4 ? "complete" : "forward")} />
       </View>
       <AppText muted size={12} style={styles.privacy}>Private to you in the app. We don&apos;t share this with staff or trainers automatically.</AppText>
     </Screen>

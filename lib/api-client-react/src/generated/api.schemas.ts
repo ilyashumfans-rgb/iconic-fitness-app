@@ -5,6 +5,60 @@
  * GYMCO customer API — multi-gym memberships, classes, bookings, check-ins, and fitness tracking.
  * OpenAPI spec version: 0.1.0
  */
+export interface WhatsappOtpRequest {
+  /**
+     * @minLength 10
+     * @maxLength 20
+     */
+  mobile: string;
+}
+
+export type WhatsappOtpChallengeExpiresInSeconds = typeof WhatsappOtpChallengeExpiresInSeconds[keyof typeof WhatsappOtpChallengeExpiresInSeconds];
+
+
+export const WhatsappOtpChallengeExpiresInSeconds = {
+  NUMBER_600: 600,
+} as const;
+
+export type WhatsappOtpChallengeResendAfterSeconds = typeof WhatsappOtpChallengeResendAfterSeconds[keyof typeof WhatsappOtpChallengeResendAfterSeconds];
+
+
+export const WhatsappOtpChallengeResendAfterSeconds = {
+  NUMBER_60: 60,
+} as const;
+
+export interface WhatsappOtpChallenge {
+  challengeId: string;
+  expiresInSeconds: WhatsappOtpChallengeExpiresInSeconds;
+  resendAfterSeconds: WhatsappOtpChallengeResendAfterSeconds;
+}
+
+export interface WhatsappOtpVerification {
+  challengeId: string;
+  /** @pattern ^[0-9]{6}$ */
+  code: string;
+}
+
+export type WhatsappOtpResult = {
+  ticket: string;
+  isNewUser: false;
+} | {
+  continuationToken: string;
+  isNewUser: true;
+  requiresEmailVerification: true;
+  /** Present when matching legacy profile candidates exist and the caller must authenticate the intended account before completion. */
+  requiresAccountSignIn?: true;
+};
+
+export interface WhatsappOtpCompletion {
+  /** @pattern ^[a-f0-9]{64}$ */
+  continuationToken: string;
+}
+
+export interface WhatsappOtpCompleted {
+  isNewUser: boolean;
+}
+
 export interface ReviewInput {
   /**
      * @minLength 1

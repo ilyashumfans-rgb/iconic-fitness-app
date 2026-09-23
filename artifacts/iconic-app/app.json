@@ -21,7 +21,8 @@
         "com.apple.developer.healthkit": true
       },
       "infoPlist": {
-        "NSHealthShareUsageDescription": "Iconic Fitness reads the health data you choose to share, including steps, activity, distance, sleep, heart rate and weight, to show your daily progress. Imported health records stay on this phone."
+        "NSHealthShareUsageDescription": "Iconic Fitness reads the health data you choose to share, including steps, activity, distance, sleep, heart rate and weight, to show your daily progress. Imported health records stay on this phone.",
+        "NSHealthUpdateUsageDescription": "Iconic Fitness connects to Apple Health to display your fitness progress. This version only reads the health records you authorize and does not add or change data in Apple Health."
       },
       "config": {
         "usesNonExemptEncryption": false

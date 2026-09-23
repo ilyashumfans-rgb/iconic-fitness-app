@@ -3,6 +3,7 @@ import { logger } from "./lib/logger";
 import { ensureSessionTable } from "./lib/adminAuth";
 import { ensureStoreColumns } from "./routes/store";
 import { ensureCommunityTables } from "./routes/community";
+import { ensureWhatsappOtpTables } from "./lib/whatsappOtpSchema";
 
 const rawPort = process.env["PORT"];
 
@@ -20,6 +21,7 @@ if (Number.isNaN(port) || port <= 0) {
 
 async function main(): Promise<void> {
   await ensureSessionTable();
+  await ensureWhatsappOtpTables();
   // Additive store columns (payment + GST/shipping) must exist before any
   // route selects from products/product_orders — run before listen so a
   // freshly published database self-migrates ahead of the first request.

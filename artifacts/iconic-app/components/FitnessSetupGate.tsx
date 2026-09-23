@@ -10,6 +10,7 @@ import type { ReactNode } from "react";
 import { AppText } from "@/components/AppText";
 import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/hooks/useGuest";
+import { usePendingWhatsappSignup } from "@/lib/pendingWhatsappSignup";
 
 /**
  * Keeps only freshly provisioned member sessions behind the short setup flow.
@@ -20,10 +21,11 @@ export function FitnessSetupGate({ children }: { children: ReactNode }) {
   const colors = useColors();
   const { isLoaded, isSignedIn, userId } = useAuth();
   const { isGuest } = useGuest();
+  const pendingWhatsapp = usePendingWhatsappSignup();
   const segments = useSegments();
   const isSetupRoute = segments[0] === "fitness-setup";
   const isMemberHome = segments[0] === "(tabs)";
-  const isMember = isLoaded && !!isSignedIn && !isGuest && !!userId;
+  const isMember = isLoaded && !!isSignedIn && !isGuest && !!userId && !pendingWhatsapp;
   const setupQuery = useGetFitnessSetup({
     query: {
       enabled: isMember,
@@ -37,6 +39,7 @@ export function FitnessSetupGate({ children }: { children: ReactNode }) {
   // member session, wait for this private decision before rendering Home.
   // Staff and auth routes have their own auth/session flows. The member home
   // is the shared private entry point, so only it waits on this decision.
+  if (pendingWhatsapp) return <Redirect href="/whatsapp-setup" />;
   if (!isMember || isSetupRoute || !isMemberHome) return <>{children}</>;
   if (setupQuery.isPending) {
     return (

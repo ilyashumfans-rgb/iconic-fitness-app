@@ -1,10 +1,11 @@
 import { Router, type IRouter } from "express";
-import { and, eq, gte } from "drizzle-orm";
-import { db, usersTable, bookingsTable, classSessionsTable, gymsTable, uploadedImagesTable } from "@workspace/db";
+import { and, eq, gte, sql } from "drizzle-orm";
+import { db, usersTable, bookingsTable, classSessionsTable, gymsTable, uploadedImagesTable, whatsappPhoneLinksTable } from "@workspace/db";
 import { GetMeResponse, UpdateMeBody, UpdateMeResponse } from "@workspace/api-zod";
 import { requireUser } from "../lib/currentUser";
 import { computeHealthMetrics } from "../lib/healthMetrics";
 import { sendMemberWelcome } from "../lib/messaging";
+import { isNewOtpPhoneAssignment, normalizeOtpPhone, OtpError } from "../lib/whatsappOtp";
 import {
   MEMBER_USERNAME_RULE,
   normalizeMemberUsername,
@@ -102,6 +103,13 @@ router.patch("/me", requireUser, async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+  if (parsed.data.mobile !== undefined) {
+    const [link] = await db.select().from(whatsappPhoneLinksTable).where(eq(whatsappPhoneLinksTable.userId, req.userId!));
+    if (link && normalizeOtpPhone(parsed.data.mobile) !== link.phone) {
+      res.status(409).json({ error: "Your verified WhatsApp number cannot be changed here. Please contact your gym." });
+      return;
+    }
+  }
   const hasUsername = Object.prototype.hasOwnProperty.call(
     parsed.data,
     "username",
@@ -140,11 +148,51 @@ router.patch("/me", requireUser, async (req, res): Promise<void> => {
     .where(eq(usersTable.id, req.userId!));
 
   try {
-    await db
-      .update(usersTable)
-      .set(hasUsername ? { ...parsed.data, username } : parsed.data)
-      .where(eq(usersTable.id, req.userId!));
+    await db.transaction(async (tx) => {
+      const requestedPhone = parsed.data.mobile === undefined ? null : normalizeOtpPhone(parsed.data.mobile);
+      // Match the OTP service's global lock order: phone advisory lock always
+      // precedes a users row lock, preventing cross-flow deadlocks.
+      if (requestedPhone) {
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${"whatsapp:phone:" + requestedPhone}, 0))`);
+      }
+      const [lockedUser] = await tx.select({ id: usersTable.id, mobile: usersTable.mobile })
+        .from(usersTable).where(eq(usersTable.id, req.userId!)).for("update");
+      if (parsed.data.mobile !== undefined) {
+        const phone = requestedPhone;
+        const [link] = await tx.select().from(whatsappPhoneLinksTable).where(eq(whatsappPhoneLinksTable.userId, req.userId!));
+        if (link && phone !== link.phone) {
+          throw new OtpError(409, "Your verified WhatsApp number cannot be changed here. Please contact your gym.");
+        }
+        if (phone) {
+          const [claimed] = await tx.select({ userId: whatsappPhoneLinksTable.userId })
+            .from(whatsappPhoneLinksTable)
+            .where(eq(whatsappPhoneLinksTable.phone, phone));
+          if (claimed && claimed.userId !== req.userId!) {
+            throw new OtpError(409, "That WhatsApp number is already linked to another account.");
+          }
+          // Legacy duplicates do not make an already-verified member unable to
+          // save unrelated profile edits. Only guard a newly assigned number.
+          if (isNewOtpPhoneAssignment(lockedUser?.mobile ?? "", parsed.data.mobile)) {
+            const duplicates = await tx.execute<{ id: number }>(sql`
+              SELECT id FROM users
+              WHERE id <> ${req.userId!} AND CASE
+                WHEN regexp_replace(mobile, '[^0-9]', '', 'g') ~ '^[6-9][0-9]{9}$'
+                  THEN '91' || regexp_replace(mobile, '[^0-9]', '', 'g')
+                WHEN regexp_replace(mobile, '[^0-9]', '', 'g') ~ '^91[6-9][0-9]{9}$'
+                  THEN regexp_replace(mobile, '[^0-9]', '', 'g') END = ${phone}
+              LIMIT 1`);
+            if (duplicates.rows.length) {
+              throw new OtpError(409, "That mobile number is already assigned to another member.");
+            }
+          }
+        }
+      }
+      await tx.update(usersTable)
+        .set(hasUsername ? { ...parsed.data, username } : parsed.data)
+        .where(eq(usersTable.id, req.userId!));
+    });
   } catch (err: unknown) {
+    if (err instanceof OtpError) { res.status(err.status).json({ error: err.message }); return; }
     const dbCode =
       (err as { code?: string })?.code ??
       (err as { cause?: { code?: string } })?.cause?.code;

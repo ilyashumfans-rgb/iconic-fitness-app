@@ -29,6 +29,84 @@ tags:
   - name: community
     description: Member transformation stories. Photos remain private until an admin approves a consented submission.
 paths:
+  /auth/whatsapp/request:
+    post:
+      operationId: requestWhatsappOtp
+      tags: [memberships]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WhatsappOtpRequest'
+      responses:
+        '200':
+          description: WhatsApp delivery accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WhatsappOtpChallenge'
+        '400':
+          description: Invalid mobile
+        '429':
+          description: Send limit reached
+        '409':
+          description: A newer code superseded this delivery
+        '502':
+          description: WhatsApp provider could not accept delivery
+        '503':
+          description: Authentication unavailable
+  /auth/whatsapp/verify:
+    post:
+      operationId: verifyWhatsappOtp
+      tags: [memberships]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WhatsappOtpVerification'
+      responses:
+        '200':
+          description: Existing-member ticket or verified-phone continuation. Legacy duplicate profiles require authenticated account proof.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WhatsappOtpResult'
+        '400':
+          description: Invalid request
+        '401':
+          description: Invalid, expired, exhausted or previously used code
+        '409':
+          description: Privileged identities must use email/password, or the member cannot be safely resolved
+        '503':
+          description: Authentication unavailable
+  /auth/whatsapp/complete:
+    post:
+      operationId: completeWhatsappOtp
+      tags: [memberships]
+      description: Requires an authenticated Clerk session with verified email. For legacy duplicates, the email must prove the selected candidate account. Complete before fetching member profile. Continuation is single-use and expires after ten minutes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WhatsappOtpCompletion'
+      responses:
+        '200':
+          description: Verified phone securely linked and member onboarding ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WhatsappOtpCompleted'
+        '400':
+          description: Invalid request
+        '401':
+          description: Verified email session or valid continuation required
+        '409':
+          description: Account or phone conflict
+        '503':
+          description: Authentication unavailable
   /admin/trainers/live/{trainerId}/profile:
     parameters:
       - {in: path, name: trainerId, required: true, schema: {type: string}}
@@ -2005,6 +2083,51 @@ components:
       required: true
       schema: {type: integer, minimum: 1}
   schemas:
+    WhatsappOtpRequest:
+      type: object
+      required: [mobile]
+      properties:
+        mobile: { type: string, minLength: 10, maxLength: 20 }
+    WhatsappOtpChallenge:
+      type: object
+      required: [challengeId, expiresInSeconds, resendAfterSeconds]
+      properties:
+        challengeId: { type: string, format: uuid }
+        expiresInSeconds: { type: integer, enum: [600] }
+        resendAfterSeconds: { type: integer, enum: [60] }
+    WhatsappOtpVerification:
+      type: object
+      required: [challengeId, code]
+      properties:
+        challengeId: { type: string, format: uuid }
+        code: { type: string, pattern: '^[0-9]{6}$' }
+    WhatsappOtpResult:
+      oneOf:
+        - type: object
+          required: [ticket, isNewUser]
+          properties:
+            ticket: { type: string }
+            isNewUser: { type: boolean, enum: [false] }
+        - type: object
+          required: [continuationToken, isNewUser, requiresEmailVerification]
+          properties:
+            continuationToken: { type: string }
+            isNewUser: { type: boolean, enum: [true] }
+            requiresEmailVerification: { type: boolean, enum: [true] }
+            requiresAccountSignIn:
+              type: boolean
+              enum: [true]
+              description: Present when matching legacy profile candidates exist and the caller must authenticate the intended account before completion.
+    WhatsappOtpCompletion:
+      type: object
+      required: [continuationToken]
+      properties:
+        continuationToken: { type: string, pattern: '^[a-f0-9]{64}$' }
+    WhatsappOtpCompleted:
+      type: object
+      required: [isNewUser]
+      properties:
+        isNewUser: { type: boolean }
     AdminReviewUpdateInput:
       anyOf:
         - {$ref: "#/components/schemas/ReviewInput"}

@@ -8,6 +8,56 @@
 import * as zod from 'zod';
 
 
+export const requestWhatsappOtpBodyMobileMin = 10;
+export const requestWhatsappOtpBodyMobileMax = 20;
+
+
+
+export const RequestWhatsappOtpBody = zod.object({
+  "mobile": zod.string().min(requestWhatsappOtpBodyMobileMin).max(requestWhatsappOtpBodyMobileMax)
+})
+
+export const RequestWhatsappOtpResponse = zod.object({
+  "challengeId": zod.string().uuid(),
+  "expiresInSeconds": zod.literal(600),
+  "resendAfterSeconds": zod.literal(60)
+})
+
+
+export const verifyWhatsappOtpBodyCodeRegExp = new RegExp('^[0-9]{6}$');
+
+
+export const VerifyWhatsappOtpBody = zod.object({
+  "challengeId": zod.string().uuid(),
+  "code": zod.string().regex(verifyWhatsappOtpBodyCodeRegExp)
+})
+
+export const VerifyWhatsappOtpResponse = zod.union([zod.object({
+  "ticket": zod.string(),
+  "isNewUser": zod.literal(false)
+}),zod.object({
+  "continuationToken": zod.string(),
+  "isNewUser": zod.literal(true),
+  "requiresEmailVerification": zod.literal(true),
+  "requiresAccountSignIn": zod.literal(true).optional().describe('Present when matching legacy profile candidates exist and the caller must authenticate the intended account before completion.')
+})])
+
+
+/**
+ * Requires an authenticated Clerk session with verified email. For legacy duplicates, the email must prove the selected candidate account. Complete before fetching member profile. Continuation is single-use and expires after ten minutes.
+ */
+export const completeWhatsappOtpBodyContinuationTokenRegExp = new RegExp('^[a-f0-9]{64}$');
+
+
+export const CompleteWhatsappOtpBody = zod.object({
+  "continuationToken": zod.string().regex(completeWhatsappOtpBodyContinuationTokenRegExp)
+})
+
+export const CompleteWhatsappOtpResponse = zod.object({
+  "isNewUser": zod.boolean()
+})
+
+
 
 
 

@@ -36,6 +36,7 @@ import { WatchHealthProvider } from "@/hooks/useWatchHealth";
 import { AuthClientResetContext } from "@/hooks/useAuthClientReset";
 import { ThemeProvider, useTheme } from "@/hooks/useTheme";
 import { completeSsoWebCallback } from "@/lib/ssoRedirect";
+import { usePendingWhatsappSignup } from "@/lib/pendingWhatsappSignup";
 
 SplashScreen.preventAutoHideAsync();
 // The SSO popup returns to /sso-callback on web. This layout is loaded before
@@ -163,6 +164,7 @@ function RootLayoutNav() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="sso-callback" />
         <Stack.Screen name="fitness-setup" />
+        <Stack.Screen name="whatsapp-setup" options={{ gestureEnabled: false }} />
         <Stack.Screen
           name="community"
           options={{ presentation: "modal", headerShown: false }}
@@ -242,6 +244,19 @@ function RootLayoutNav() {
           options={{ presentation: "modal", headerShown: false }}
         />
       </Stack>
+    </>
+  );
+}
+
+// Do not let background provisioning win the race against verified-phone linking.
+function AccountInitializers() {
+  const pendingWhatsapp = usePendingWhatsappSignup();
+  if (pendingWhatsapp) return null;
+  return (
+    <>
+      <AutomaticMembershipSync />
+      <PendingMobileLink />
+      <PendingUsernameLink />
     </>
   );
 }
@@ -447,6 +462,9 @@ export default function RootLayout() {
                   maxAge: 24 * 60 * 60 * 1000,
                   buster: "v2",
                   dehydrateOptions: {
+                    // Auth mutations contain one-time codes and continuation
+                    // tokens. Never persist paused mutation variables.
+                    shouldDehydrateMutation: () => false,
                     shouldDehydrateQuery: (query) =>
                       query.state.status === "success" &&
                       isPublicPersistableQuery(query),
@@ -454,9 +472,7 @@ export default function RootLayout() {
                 }}
               >
                 <ApiAuthBridge />
-                <AutomaticMembershipSync />
-                <PendingMobileLink />
-                <PendingUsernameLink />
+                <AccountInitializers />
                 <GuestProvider>
                   <WatchHealthProvider>
                   <MemberReminderInitializer />

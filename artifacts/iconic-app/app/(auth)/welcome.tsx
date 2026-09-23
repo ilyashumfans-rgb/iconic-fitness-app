@@ -427,7 +427,7 @@ function WelcomeContent() {
           {/* Email Login */}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Continue with email"
+            accessibilityLabel="Login with OTP"
             testID="welcome-continue-email"
             onPress={() => setEmailAuthOpen(true)}
             style={({ pressed }) => [
@@ -439,7 +439,7 @@ function WelcomeContent() {
               <Feather name="mail" size={20} color="#0A0C08" />
             </View>
             <AppText weight="700" size={16} color="#0A0C08" style={styles.optionTextCenter}>
-              Continue with Email
+              Login with OTP
             </AppText>
             <View style={styles.iconBox}>
               <Feather name="arrow-right" size={20} color="#0A0C08" />

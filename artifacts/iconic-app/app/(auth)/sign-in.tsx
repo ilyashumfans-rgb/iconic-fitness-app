@@ -6,7 +6,6 @@ import * as AuthSession from "expo-auth-session";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   Link,
-  Redirect,
   useFocusEffect,
   useLocalSearchParams,
   useRouter,
@@ -29,11 +28,12 @@ import { AppText } from "@/components/AppText";
 import { AppleSsoButton } from "@/components/AppleSsoButton";
 import { Button } from "@/components/Button";
 import { Field } from "@/components/Field";
+import { WhatsappOtpForm } from "@/components/WhatsappOtpForm";
 import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/hooks/useGuest";
 import { ThemeContext } from "@/hooks/useTheme";
 import { openExternal, websiteUrl } from "@/lib/links";
-import { memberAuthHref } from "@/lib/memberAuth";
+import { memberAuthDestination } from "@/lib/memberAuth";
 
 // The login is a permanently dark, cinematic brand screen — force the dark
 // palette for this subtree so it never washes out in system light mode.
@@ -45,13 +45,10 @@ const FORCE_DARK = {
 };
 
 export default function SignInScreen() {
-  const params = useLocalSearchParams<{ returnTo?: string | string[] }>();
-  return <Redirect href={memberAuthHref(params.returnTo)} />;
+  return <LegacySignInScreen />;
 }
 
-// Kept as a legacy email form for old bundles that may still reference this
-// module. New member entry points always use the branded welcome screen, whose
-// Continue with Email action owns the active email/password/verification flow.
+// Full-screen alternative to the branded welcome screen's shared auth popup.
 function LegacySignInScreen() {
   return (
     <ThemeContext.Provider value={FORCE_DARK}>
@@ -68,6 +65,9 @@ function SignInContent() {
   const { startSSOFlow } = useSSO();
   const { startAppleAuthenticationFlow } = useSignInWithApple();
   const { enterGuest, exitGuest } = useGuest();
+  const params = useLocalSearchParams<{ returnTo?: string | string[] }>();
+  const [whatsapp, setWhatsapp] = useState(true);
+  const [whatsappBusy, setWhatsappBusy] = useState(false);
 
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -559,8 +559,42 @@ function SignInContent() {
               WELCOME BACK
             </AppText>
 
-            {/* Mobile pre-verify box hidden by owner request — members can
-                still link their number later from inside the app. */}
+            {whatsapp ? (
+              <>
+                <WhatsappOtpForm
+                  onBusyChange={setWhatsappBusy}
+                  onComplete={(isNewUser) => router.replace(
+                    (isNewUser ? "/whatsapp-setup" : memberAuthDestination(params.returnTo)) as never,
+                  )}
+                />
+                <Pressable
+                  onPress={() => {
+                    setWhatsapp(false);
+                    void switchMode("password");
+                  }}
+                  disabled={whatsappBusy || pwBusy || fetchStatus === "fetching"}
+                  hitSlop={8}
+                  style={styles.modeSwitch}
+                >
+                  <AppText weight="600" size={13} color={colors.primary}>
+                    Log in with username &amp; password
+                  </AppText>
+                </Pressable>
+                <View style={styles.footer}>
+                  <AppText muted size={14}>
+                    New here?{" "}
+                  </AppText>
+                  <Link href="/(auth)/welcome" asChild>
+                    <Pressable hitSlop={8}>
+                      <AppText weight="700" size={14} color={colors.primary}>
+                        Create account
+                      </AppText>
+                    </Pressable>
+                  </Link>
+                </View>
+              </>
+            ) : (
+            <>
 
             {mode === "otp" ? (
               <>
@@ -774,6 +808,18 @@ function SignInContent() {
               </AppText>
             </Pressable>
 
+            </>
+            )}
+            <Button
+              label={whatsapp ? "Use email or password instead" : "Login with OTP"}
+              variant="ghost"
+              disabled={whatsappBusy || pwBusy || fetchStatus === "fetching"}
+              onPress={() => {
+                setWhatsapp(!whatsapp);
+                setError(null);
+              }}
+            />
+
             <View style={styles.divider}>
               <View style={[styles.line, { backgroundColor: colors.border }]} />
               <AppText size={11} weight="600" muted style={styles.dividerText}>
@@ -788,7 +834,7 @@ function SignInContent() {
               variant="secondary"
               icon="chrome"
               loading={ssoLoading === "google"}
-              disabled={ssoLoading !== null}
+              disabled={ssoLoading !== null || whatsappBusy}
               size="lg"
             />
 
@@ -796,24 +842,26 @@ function SignInContent() {
               <AppleSsoButton
                 onPress={onApple}
                 loading={ssoLoading === "apple"}
-                disabled={ssoLoading !== null}
+                disabled={ssoLoading !== null || whatsappBusy}
                 tone="dark"
               />
             ) : null}
 
             {/* Footer */}
-            <View style={styles.footer}>
-              <AppText muted size={14}>
-                New here?{" "}
-              </AppText>
-              <Link href="/(auth)/welcome" asChild>
-                <Pressable hitSlop={8}>
-                  <AppText weight="700" size={14} color={colors.primary}>
-                    Create account
-                  </AppText>
-                </Pressable>
-              </Link>
-            </View>
+            {!whatsapp ? (
+              <View style={styles.footer}>
+                <AppText muted size={14}>
+                  New here?{" "}
+                </AppText>
+                <Link href="/(auth)/welcome" asChild>
+                  <Pressable hitSlop={8}>
+                    <AppText weight="700" size={14} color={colors.primary}>
+                      Create account
+                    </AppText>
+                  </Pressable>
+                </Link>
+              </View>
+            ) : null}
 
             <Pressable
               onPress={onContinueWithoutLogin}

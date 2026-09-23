@@ -153,6 +153,12 @@ import type {
   Wallet,
   WaterDay,
   WaterInput,
+  WhatsappOtpChallenge,
+  WhatsappOtpCompleted,
+  WhatsappOtpCompletion,
+  WhatsappOtpRequest,
+  WhatsappOtpResult,
+  WhatsappOtpVerification,
   WorkoutDay,
   WorkoutInput
 } from './api.schemas';
@@ -168,6 +174,204 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
+
+export const getRequestWhatsappOtpUrl = () => {
+
+
+
+
+  return `/api/auth/whatsapp/request`
+}
+
+export const requestWhatsappOtp = async (whatsappOtpRequest: WhatsappOtpRequest, options?: RequestInit): Promise<WhatsappOtpChallenge> => {
+
+  return customFetch<WhatsappOtpChallenge>(getRequestWhatsappOtpUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      whatsappOtpRequest,)
+  }
+);}
+
+
+
+
+export const getRequestWhatsappOtpMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestWhatsappOtp>>, TError,{data: BodyType<WhatsappOtpRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof requestWhatsappOtp>>, TError,{data: BodyType<WhatsappOtpRequest>}, TContext> => {
+
+const mutationKey = ['requestWhatsappOtp'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof requestWhatsappOtp>>, {data: BodyType<WhatsappOtpRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  requestWhatsappOtp(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RequestWhatsappOtpMutationResult = NonNullable<Awaited<ReturnType<typeof requestWhatsappOtp>>>
+    export type RequestWhatsappOtpMutationBody = BodyType<WhatsappOtpRequest>
+    export type RequestWhatsappOtpMutationError = ErrorType<void>
+
+    export const useRequestWhatsappOtp = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestWhatsappOtp>>, TError,{data: BodyType<WhatsappOtpRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof requestWhatsappOtp>>,
+        TError,
+        {data: BodyType<WhatsappOtpRequest>},
+        TContext
+      > => {
+      return useMutation(getRequestWhatsappOtpMutationOptions(options));
+    }
+
+export const getVerifyWhatsappOtpUrl = () => {
+
+
+
+
+  return `/api/auth/whatsapp/verify`
+}
+
+export const verifyWhatsappOtp = async (whatsappOtpVerification: WhatsappOtpVerification, options?: RequestInit): Promise<WhatsappOtpResult> => {
+
+  return customFetch<WhatsappOtpResult>(getVerifyWhatsappOtpUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      whatsappOtpVerification,)
+  }
+);}
+
+
+
+
+export const getVerifyWhatsappOtpMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyWhatsappOtp>>, TError,{data: BodyType<WhatsappOtpVerification>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof verifyWhatsappOtp>>, TError,{data: BodyType<WhatsappOtpVerification>}, TContext> => {
+
+const mutationKey = ['verifyWhatsappOtp'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof verifyWhatsappOtp>>, {data: BodyType<WhatsappOtpVerification>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  verifyWhatsappOtp(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type VerifyWhatsappOtpMutationResult = NonNullable<Awaited<ReturnType<typeof verifyWhatsappOtp>>>
+    export type VerifyWhatsappOtpMutationBody = BodyType<WhatsappOtpVerification>
+    export type VerifyWhatsappOtpMutationError = ErrorType<void>
+
+    export const useVerifyWhatsappOtp = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyWhatsappOtp>>, TError,{data: BodyType<WhatsappOtpVerification>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof verifyWhatsappOtp>>,
+        TError,
+        {data: BodyType<WhatsappOtpVerification>},
+        TContext
+      > => {
+      return useMutation(getVerifyWhatsappOtpMutationOptions(options));
+    }
+
+export const getCompleteWhatsappOtpUrl = () => {
+
+
+
+
+  return `/api/auth/whatsapp/complete`
+}
+
+/**
+ * Requires an authenticated Clerk session with verified email. For legacy duplicates, the email must prove the selected candidate account. Complete before fetching member profile. Continuation is single-use and expires after ten minutes.
+ */
+export const completeWhatsappOtp = async (whatsappOtpCompletion: WhatsappOtpCompletion, options?: RequestInit): Promise<WhatsappOtpCompleted> => {
+
+  return customFetch<WhatsappOtpCompleted>(getCompleteWhatsappOtpUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      whatsappOtpCompletion,)
+  }
+);}
+
+
+
+
+export const getCompleteWhatsappOtpMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeWhatsappOtp>>, TError,{data: BodyType<WhatsappOtpCompletion>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof completeWhatsappOtp>>, TError,{data: BodyType<WhatsappOtpCompletion>}, TContext> => {
+
+const mutationKey = ['completeWhatsappOtp'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof completeWhatsappOtp>>, {data: BodyType<WhatsappOtpCompletion>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  completeWhatsappOtp(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CompleteWhatsappOtpMutationResult = NonNullable<Awaited<ReturnType<typeof completeWhatsappOtp>>>
+    export type CompleteWhatsappOtpMutationBody = BodyType<WhatsappOtpCompletion>
+    export type CompleteWhatsappOtpMutationError = ErrorType<void>
+
+    export const useCompleteWhatsappOtp = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeWhatsappOtp>>, TError,{data: BodyType<WhatsappOtpCompletion>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof completeWhatsappOtp>>,
+        TError,
+        {data: BodyType<WhatsappOtpCompletion>},
+        TContext
+      > => {
+      return useMutation(getCompleteWhatsappOtpMutationOptions(options));
+    }
 
 export const getGetAdminLiveTrainerProfileUrl = (trainerId: string,
     params: GetAdminLiveTrainerProfileParams,) => {

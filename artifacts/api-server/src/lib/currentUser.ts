@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction, RequestHandler } from "express";
 import { getAuth, clerkClient } from "@clerk/express";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db, fitnessSetupTable, usersTable } from "@workspace/db";
 import { grantSignupBonus } from "./signupBonus";
 import { ensureFitnessSetupTable } from "./fitnessSetup";
@@ -49,6 +49,7 @@ async function jitProvision(clerkUserId: string): Promise<number> {
   // for a legacy user found above or a concurrent conflict winner.
   await ensureFitnessSetupTable();
   const insertedId = await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${"member:" + clerkUserId}, 0))`);
     const inserted = await tx
       .insert(usersTable)
       .values({

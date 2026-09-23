@@ -9,6 +9,7 @@ import { useRouter } from "expo-router";
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
 import { Field } from "@/components/Field";
+import { WhatsappOtpForm } from "@/components/WhatsappOtpForm";
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { useGuest } from "@/hooks/useGuest";
 import { setPendingUsername } from "@/lib/pendingUsername";
@@ -67,6 +68,8 @@ export function AuthPopup({ onClose, returnTo }: Props) {
   }, [onClose, signIn, signUp]);
 
   const [view, setView] = useState<"login" | "signup">("login");
+  const [whatsapp, setWhatsapp] = useState(true);
+  const [whatsappBusy, setWhatsappBusy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -92,6 +95,7 @@ export function AuthPopup({ onClose, returnTo }: Props) {
   const [signupCode, setSignupCode] = useState("");
 
   const loading =
+    whatsappBusy ||
     busy ||
     signInFetchStatus === "fetching" ||
     signUpFetchStatus === "fetching";
@@ -648,7 +652,49 @@ export function AuthPopup({ onClose, returnTo }: Props) {
             keyboardDismissMode="interactive"
             showsVerticalScrollIndicator={false}
           >
-            {view === "login" ? (
+            {whatsapp ? (
+              <>
+                <WhatsappOtpForm
+                  onBusyChange={setWhatsappBusy}
+                  onComplete={(isNewUser) => {
+                    authCompletedRef.current = true;
+                    close();
+                    router.replace((isNewUser ? "/whatsapp-setup" : memberDestination) as never);
+                  }}
+                />
+                <Pressable
+                  onPress={() => {
+                    setWhatsapp(false);
+                    setView("login");
+                    void switchLoginMode("password");
+                  }}
+                  disabled={loading}
+                  hitSlop={8}
+                  style={styles.linkButton}
+                >
+                  <AppText weight="600" size={13} color={colors.primary}>
+                    Log in with username &amp; password
+                  </AppText>
+                </Pressable>
+                <View style={styles.footer}>
+                  <AppText size={14} color={colors.mutedForeground}>
+                    New here?{" "}
+                  </AppText>
+                  <Pressable
+                    onPress={() => {
+                      setWhatsapp(false);
+                      void openSignup();
+                    }}
+                    disabled={loading}
+                    hitSlop={8}
+                  >
+                    <AppText weight="700" size={14} color={colors.primary}>
+                      Create account
+                    </AppText>
+                  </Pressable>
+                </View>
+              </>
+            ) : view === "login" ? (
               <LoginContent
                 colors={colors}
                 email={email}
@@ -708,6 +754,15 @@ export function AuthPopup({ onClose, returnTo }: Props) {
                 openLogin={openLogin}
               />
             )}
+            <Button
+              label={whatsapp ? "Use email or password instead" : "Login with OTP"}
+              variant="ghost"
+              disabled={loading}
+              onPress={() => {
+                setWhatsapp(!whatsapp);
+                setError(null);
+              }}
+            />
             <View nativeID="clerk-captcha" />
           </KeyboardAwareScrollViewCompat>
         </View>

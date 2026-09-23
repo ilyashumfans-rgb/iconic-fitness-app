@@ -42,10 +42,12 @@ import messagingRouter from "./messaging";
 import settingsRouter from "./settings";
 import webhooksRouter from "./webhooks";
 import communityRouter from "./community";
+import whatsappOtpRouter from "./whatsappOtp";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(whatsappOtpRouter);
 router.use(memberJourneyRouter);
 router.use(profileRouter);
 router.use(fitnessSetupRouter);
