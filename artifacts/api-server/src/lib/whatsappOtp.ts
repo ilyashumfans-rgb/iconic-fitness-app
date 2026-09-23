@@ -6,7 +6,7 @@ export class OtpError extends Error {
 }
 const invalid = () => new OtpError(401, "Code is invalid or expired. Please request a new code.");
 const conflict = () => new OtpError(409, "Unable to sign in with this number. Please contact your gym.");
-const privilegedConflict = () => new OtpError(409, "Staff and admin accounts must sign in with email and password.");
+const disabledIdentity = () => new OtpError(403, "This account is disabled. Please contact your gym.");
 
 export function normalizeOtpPhone(value: string): string | null {
   if (!/^[+\d ()-]+$/.test(value)) return null;
@@ -59,7 +59,7 @@ export type OtpIdentity = {
   emails: string[];
   name: string;
   avatarUrl: string;
-  privileged: boolean;
+  disabled: boolean;
 };
 export type OtpDependencies = {
   pool: Pool;
@@ -107,20 +107,8 @@ export class WhatsappOtpService {
     const result = await tx.query<PhoneLink>("SELECT phone,user_id,clerk_user_id FROM whatsapp_phone_links WHERE phone=$1 FOR UPDATE", [phone]);
     return result.rows[0];
   }
-  private async assertCustomerIdentity(tx: PoolClient, identity: OtpIdentity, localEmail?: string) {
-    if (identity.privileged) throw privilegedConflict();
-    const emails = [...new Set([...identity.emails, identity.email, localEmail]
-      .filter((email): email is string => !!email)
-      .map((email) => email.toLowerCase()))];
-    const blocked = await tx.query(`SELECT 1 FROM admins WHERE lower(email)=ANY($1::text[])
-      UNION ALL SELECT 1 FROM staff WHERE lower(email)=ANY($1::text[])
-      UNION ALL SELECT 1 FROM partner_staff WHERE lower(email)=ANY($1::text[])
-      UNION ALL SELECT 1 FROM partners WHERE lower(email)=ANY($1::text[]) LIMIT 1`, [emails]);
-    if (blocked.rowCount) throw privilegedConflict();
-  }
-  private async assertUnclaimedPhone(tx: PoolClient, phone: string) {
-    const blocked = await tx.query(`SELECT 1 FROM partners WHERE ${normalizedSql("phone")}=$1 LIMIT 1`, [phone]);
-    if (blocked.rowCount) throw privilegedConflict();
+  private assertEnabledIdentity(identity: OtpIdentity) {
+    if (identity.disabled) throw disabledIdentity();
   }
   private async link(tx: PoolClient, phone: string, member: Member, clerkId: string) {
     const links = await tx.query("SELECT * FROM whatsapp_phone_links WHERE phone=$1 OR user_id=$2 OR clerk_user_id=$3 FOR UPDATE", [phone, member.id, clerkId]);
@@ -199,7 +187,7 @@ export class WhatsappOtpService {
         if (!member || member.clerk_user_id !== canonical.clerk_user_id) throw conflict();
         const identity = await this.deps.identity(canonical.clerk_user_id);
         if (identity.id !== canonical.clerk_user_id) throw conflict();
-        await this.assertCustomerIdentity(tx, identity, member.email);
+        this.assertEnabledIdentity(identity);
         const ticket = await this.deps.ticket(identity.id);
         return { ticket, isNewUser: false as const };
       }
@@ -207,13 +195,13 @@ export class WhatsappOtpService {
         const member = members[0]!;
         if (member.clerk_user_id) {
           const identity = await this.deps.identity(member.clerk_user_id);
-          await this.assertCustomerIdentity(tx, identity, member.email);
+          if (identity.id !== member.clerk_user_id) throw conflict();
+          this.assertEnabledIdentity(identity);
           await this.link(tx, phone, member, identity.id);
           const ticket = await this.deps.ticket(identity.id);
           return { ticket, isNewUser: false as const };
         }
       }
-      if (!members.length) await this.assertUnclaimedPhone(tx, phone);
       const continuationToken = randomBytes(32).toString("hex");
       await tx.query(`INSERT INTO whatsapp_otp_continuations(token_hash,phone,created_at,expires_at)
         SELECT $1,$2,created_at,clock_timestamp()+interval '10 minutes' FROM whatsapp_otp_challenges WHERE id=$3`, [this.hash("continuation", continuationToken), phone, id]);
@@ -227,8 +215,9 @@ export class WhatsappOtpService {
   }
   async complete(token: string, clerkId: string) {
     const identity = await this.deps.identity(clerkId);
+    if (identity.id !== clerkId) throw conflict();
     if (!identity.email) throw new OtpError(401, "Verify your email before completing sign-up.");
-    if (identity.privileged) throw privilegedConflict();
+    this.assertEnabledIdentity(identity);
     return this.tx(async (tx) => {
       const hash = this.hash("continuation", token);
       const lookup = await tx.query("SELECT phone FROM whatsapp_otp_continuations WHERE token_hash=$1", [hash]);
@@ -243,7 +232,7 @@ export class WhatsappOtpService {
       // The caller proves both phone possession and their authenticated,
       // verified-email account. Explicit UI confirmation permits recovery of
       // an interrupted signup or linking an existing account with no mobile.
-      // Differing mobiles and privileged identities still fail closed.
+      // Differing mobiles and disabled identities still fail closed.
       const members = await this.candidates(tx, phone);
       const canonical = await this.canonical(tx, phone);
       if (canonical && canonical.clerk_user_id !== clerkId) throw conflict();
@@ -258,7 +247,6 @@ export class WhatsappOtpService {
         else if (exact.length === 0 && emailMatches.length === 1) member = emailMatches[0];
         else throw conflict();
         if (existing.rows[0] && existing.rows[0].id !== member!.id) throw conflict();
-        await this.assertCustomerIdentity(tx, identity, member.email);
         if (member.clerk_user_id == null) {
           const claimed = await tx.query<Member>(`UPDATE users SET clerk_user_id=$1 WHERE id=$2 AND clerk_user_id IS NULL
             RETURNING id,clerk_user_id,mobile,email`, [clerkId, member.id]);
@@ -266,9 +254,7 @@ export class WhatsappOtpService {
           member = claimed.rows[0];
         }
       } else {
-        await this.assertUnclaimedPhone(tx, phone);
         member = existing.rows[0];
-        await this.assertCustomerIdentity(tx, identity, member?.email);
       }
       if (member && member.mobile.trim() && normalizeOtpPhone(member.mobile) !== phone) throw conflict();
       if (!member) {

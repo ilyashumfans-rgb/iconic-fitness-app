@@ -92,6 +92,7 @@ import {
   removeTrainerPhoto,
 } from "../lib/trainerPhotos";
 import { DEFAULT_PRODUCT_CATEGORIES } from "../lib/productCategories.js";
+import { checkPrivilegedSsoPasswordGate } from "../lib/privilegedSsoPasswordGate";
 
 const loadAdminRole = async (id: number): Promise<string | undefined> => {
   const [row] = await db
@@ -164,6 +165,21 @@ router.post(
     const clerkUserId = auth?.userId;
     if (!clerkUserId) {
       res.status(401).json({ error: "Sign in with Google first" });
+      return;
+    }
+    const passwordGate =
+      await checkPrivilegedSsoPasswordGate(clerkUserId);
+    if (!passwordGate.allowed) {
+      if (passwordGate.cause) {
+        req.log?.error(
+          { err: passwordGate.cause },
+          "WhatsApp password gate lookup failed in admin google-login",
+        );
+      }
+      res.status(passwordGate.status).json({
+        error: passwordGate.error,
+        code: passwordGate.code,
+      });
       return;
     }
     let email = "";

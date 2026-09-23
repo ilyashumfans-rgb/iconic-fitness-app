@@ -12,6 +12,7 @@ import {
   leadsTable,
 } from "@workspace/db";
 import { hashPassword, verifyPassword } from "../lib/adminAuth";
+import { checkPrivilegedSsoPasswordGate } from "../lib/privilegedSsoPasswordGate";
 import {
   STAFF_PERMISSIONS,
   loadStaffOrUnauthorized,
@@ -89,6 +90,21 @@ router.post(
     const clerkUserId = auth?.userId;
     if (!clerkUserId) {
       res.status(401).json({ error: "Complete social sign-in first" });
+      return;
+    }
+    const passwordGate =
+      await checkPrivilegedSsoPasswordGate(clerkUserId);
+    if (!passwordGate.allowed) {
+      if (passwordGate.cause) {
+        req.log?.error(
+          { err: passwordGate.cause },
+          "WhatsApp password gate lookup failed in staff sso-login",
+        );
+      }
+      res.status(passwordGate.status).json({
+        error: passwordGate.error,
+        code: passwordGate.code,
+      });
       return;
     }
     let email = "";

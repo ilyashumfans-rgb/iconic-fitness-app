@@ -17,17 +17,13 @@ function service() {
     identity: async (id) => {
       const user = await clerkClient.users.getUser(id);
       const primary = user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId && e.verification?.status === "verified");
-      const metadata = [user.publicMetadata, user.privateMetadata];
       return {
         id: user.id, createdAt: user.createdAt,
         email: primary?.emailAddress.toLowerCase() ?? null,
         emails: user.emailAddresses.map((e) => e.emailAddress.toLowerCase()),
         name: [user.firstName, user.lastName].filter(Boolean).join(" ") || "Member",
         avatarUrl: user.imageUrl ?? "",
-        privileged: user.banned || user.locked || metadata.some((m) =>
-          Object.entries(m).some(([key, value]) =>
-            (/^(role|roles|isAdmin|isStaff|isPartner|is_admin|is_staff|is_partner)$/i.test(key) &&
-              value != null && value !== false && value !== "member" && value !== "customer"))),
+        disabled: user.banned || user.locked,
       };
     },
     ticket: async (id) => (await clerkClient.signInTokens.createSignInToken({ userId: id, expiresInSeconds: 300 })).token,
