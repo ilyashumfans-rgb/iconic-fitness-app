@@ -238,6 +238,69 @@ paths:
           content:
             application/json:
               schema: {$ref: "#/components/schemas/ReviewList"}
+  /gyms/{id}/reviews:
+    parameters:
+      - {in: path, name: id, required: true, schema: {type: integer, minimum: 1}}
+    get:
+      operationId: listGymReviews
+      tags: [reviews]
+      responses:
+        "200":
+          description: Approved published branch reviews; aggregates exclude samples
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/GymReviewList"}
+        "404": {$ref: "#/components/responses/ReviewNotFound"}
+  /gyms/{id}/reviews/mine:
+    parameters:
+      - {in: path, name: id, required: true, schema: {type: integer, minimum: 1}}
+    get:
+      operationId: getOwnGymReview
+      tags: [reviews]
+      security: [{memberBearer: []}]
+      responses:
+        "200":
+          description: Signed-in member's branch review, including pending reviews
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/OwnGymReviewResponse"}
+    put:
+      operationId: saveOwnGymReview
+      tags: [reviews]
+      security: [{memberBearer: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/MemberGymReviewInput"}
+      responses:
+        "200":
+          description: Saved pending unpublished review
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/OwnGymReviewResponse"}
+        "403": {description: Active home-branch membership required}
+    delete:
+      operationId: deleteOwnGymReview
+      tags: [reviews]
+      security: [{memberBearer: []}]
+      responses:
+        "204": {description: Own branch review deleted}
+        "404": {$ref: "#/components/responses/ReviewNotFound"}
+  /admin/reviews/branches:
+    get:
+      operationId: listReviewBranches
+      tags: [reviews]
+      security: [{adminSession: []}]
+      responses:
+        "200":
+          description: Verified branches for the review editor
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: "#/components/schemas/ReviewBranchOption"}
+        "401": {$ref: "#/components/responses/ReviewUnauthorized"}
   /admin/reviews:
     get:
       operationId: listAdminReviews
@@ -2146,6 +2209,27 @@ components:
       properties:
         rating: {type: integer, minimum: 1, maximum: 5}
         reviewText: {type: string, minLength: 1, maxLength: 2000}
+    MemberGymReviewInput:
+      type: object
+      additionalProperties: false
+      required: [rating, text]
+      properties:
+        rating: {type: integer, minimum: 1, maximum: 5}
+        text: {type: string, minLength: 1, maxLength: 2000}
+    OwnGymReviewResponse:
+      type: object
+      required: [review]
+      properties:
+        review:
+          anyOf:
+            - {$ref: "#/components/schemas/PublicGymReview"}
+            - {type: "null"}
+    ReviewBranchOption:
+      type: object
+      required: [id, name]
+      properties:
+        id: {type: integer}
+        name: {type: string}
     TrainerReviewModerationInput:
       type: object
       required: [status]
@@ -2208,10 +2292,10 @@ components:
     ReviewInput:
       type: object
       additionalProperties: false
-      required: [reviewerName, branchName, reviewText, rating, isSample, isPublished, sortOrder]
+      required: [reviewerName, reviewText, rating, isSample, isPublished, sortOrder]
       properties:
         reviewerName: {type: string, minLength: 1, maxLength: 100}
-        branchName: {type: string, minLength: 1, maxLength: 150}
+        branchName: {type: string, maxLength: 150, description: Derived from gymId when selecting a branch; required for legacy unlinked reviews}
         trainerId: {type: [string, "null"], minLength: 1, maxLength: 100}
         gymId: {type: [integer, "null"], minimum: 1, maximum: 2147483647}
         reviewText: {type: string, minLength: 1, maxLength: 2000}
@@ -2247,6 +2331,24 @@ components:
           type: array
           maxItems: 500
           items: {$ref: "#/components/schemas/Review"}
+    PublicGymReview:
+      allOf:
+        - {$ref: "#/components/schemas/Review"}
+        - type: object
+          required: [text, isMemberReview, moderationStatus]
+          properties:
+            text: {type: string, description: Alias for the existing reviewText field}
+            isMemberReview: {type: boolean}
+            moderationStatus: {type: [string, "null"], enum: [pending, approved, rejected, null]}
+    GymReviewList:
+      type: object
+      required: [reviews, averageRating, reviewCount]
+      properties:
+        reviews:
+          type: array
+          items: {$ref: "#/components/schemas/PublicGymReview"}
+        averageRating: {type: [number, "null"]}
+        reviewCount: {type: integer}
     ReviewError:
       type: object
       required: [error]

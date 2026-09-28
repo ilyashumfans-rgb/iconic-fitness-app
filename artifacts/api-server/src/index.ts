@@ -5,6 +5,9 @@ import { ensureStoreColumns } from "./routes/store";
 import { ensureCommunityTables } from "./routes/community";
 import { ensureWhatsappOtpTables } from "./lib/whatsappOtpSchema";
 import { ensureComplaintsSchema } from "./lib/complaintsSchema";
+import { pool } from "@workspace/db";
+import { ensureSchemaAdditions } from "./lib/schemaAdditions";
+import { checkSchemaCompatibility } from "./lib/schemaCompatibility";
 
 const rawPort = process.env["PORT"];
 
@@ -36,12 +39,19 @@ async function main(): Promise<void> {
     await ensureStoreColumns();
   } catch (err) {
     logger.error({ err }, "Could not ensure store columns");
+    throw err;
   }
   try {
     await ensureCommunityTables();
   } catch (err) {
     logger.error({ err }, "Could not ensure community tables");
     throw err;
+  }
+
+  await ensureSchemaAdditions(pool);
+  const schemaIssues = await checkSchemaCompatibility(pool);
+  if (schemaIssues.length) {
+    throw new Error(`Database schema incompatible; refusing API traffic:\n${schemaIssues.join("\n")}`);
   }
 
   app.listen(port, (err) => {

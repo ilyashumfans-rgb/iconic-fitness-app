@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useUser } from "@clerk/react";
 import { useParams, Link } from "wouter";
 import {
   useGetGym,
@@ -10,6 +13,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Form } from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import * as LucideIcons from "lucide-react";
 import {
   MapPin,
@@ -83,6 +89,168 @@ function AmenityIcon({ name, className }: { name: string; className?: string }) 
   } catch {
     return <Dot className={className} />;
   }
+}
+
+type BranchReview = {
+  id: number;
+  reviewerName: string;
+  branchName: string;
+  reviewText: string;
+  rating: number;
+  isSample: boolean;
+  isMemberReview: boolean;
+  createdAt: string;
+  moderationStatus?: "pending" | "approved" | "rejected" | null;
+};
+type ReviewForm = { rating: number; text: string };
+type ReviewList = { reviews: BranchReview[]; averageRating: number | null; reviewCount: number };
+
+async function reviewRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const res = await fetch(`/api${path}`, {
+    ...options,
+    credentials: "include",
+    headers: { "Content-Type": "application/json", ...options.headers },
+  });
+  if (!res.ok) {
+    let detail = `Request failed (${res.status})`;
+    try {
+      const body = await res.json();
+      if (typeof body.error === "string") detail = body.error;
+      else if (typeof body.message === "string") detail = body.message;
+    } catch { /* Keep HTTP status if the server did not return JSON. */ }
+    throw new Error(detail);
+  }
+  if (res.status === 204) return undefined as T;
+  return res.json() as Promise<T>;
+}
+
+function BranchRatingBadge({ gymId }: { gymId: number }) {
+  const { data } = useQuery({
+    queryKey: ["gym-reviews", gymId],
+    queryFn: ({ signal }) => reviewRequest<ReviewList>(`/gyms/${gymId}/reviews`, { signal }),
+    staleTime: 30_000,
+  });
+  return <span data-testid="text-gym-real-rating" className="inline-flex items-center">
+    {data?.averageRating != null ? <><Star className="h-3 w-3 mr-1 text-yellow-400 fill-current" />{data.averageRating.toFixed(1)} ({data.reviewCount})</> : "No ratings yet"}
+  </span>;
+}
+
+function BranchReviews({ gymId }: { gymId: number }) {
+  const client = useQueryClient();
+  let signedIn = false;
+  let authLoaded = false;
+  let userId: string | null = null;
+  try {
+    const auth = useUser();
+    signedIn = !!auth.isSignedIn;
+    authLoaded = auth.isLoaded;
+    userId = auth.isLoaded && auth.isSignedIn ? auth.user?.id ?? null : null;
+  } catch { authLoaded = true; /* Clerk is not configured; render guest controls. */ }
+  const reviews = useQuery({
+    queryKey: ["gym-reviews", gymId],
+    queryFn: ({ signal }) => reviewRequest<ReviewList>(`/gyms/${gymId}/reviews`, { signal }),
+    staleTime: 30_000,
+  });
+  const mine = useQuery({
+    queryKey: ["gym-reviews-mine", gymId, userId],
+    queryFn: ({ signal }) => reviewRequest<{ review: BranchReview | null }>(`/gyms/${gymId}/reviews/mine`, { signal }),
+    enabled: authLoaded && signedIn && !!userId,
+    retry: false,
+    staleTime: 30_000,
+    gcTime: 0,
+  });
+  const form = useForm<ReviewForm>({ defaultValues: { rating: 5, text: "" } });
+  const [saving, setSaving] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const ownReview = mine.data?.review;
+  useEffect(() => {
+    form.reset({ rating: 5, text: "" });
+    setActionError(null);
+    setConfirmRemove(false);
+  }, [form.reset, gymId, userId, authLoaded]);
+  useEffect(() => {
+    form.reset({ rating: ownReview?.rating ?? 5, text: ownReview?.reviewText ?? "" });
+  }, [form.reset, ownReview]);
+  const refresh = async () => {
+    await Promise.all([
+      client.invalidateQueries({ queryKey: ["gym-reviews", gymId] }),
+      client.invalidateQueries({ queryKey: ["gym-reviews-mine", gymId, userId] }),
+    ]);
+  };
+  const save = async (values: ReviewForm) => {
+    setActionError(null);
+    setSaving(true);
+    try {
+      await reviewRequest(`/gyms/${gymId}/reviews/mine`, {
+        method: "PUT",
+        body: JSON.stringify({ rating: values.rating, text: values.text.trim() }),
+      });
+      await refresh();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Could not submit review.");
+    } finally { setSaving(false); }
+  };
+  const remove = async () => {
+    setActionError(null);
+    setSaving(true);
+    try {
+      await reviewRequest(`/gyms/${gymId}/reviews/mine`, { method: "DELETE" });
+      setConfirmRemove(false);
+      await refresh();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Could not remove review.");
+    } finally { setSaving(false); }
+  };
+
+  return <section aria-labelledby="branch-reviews-heading" className="space-y-5">
+    <div>
+      <h2 id="branch-reviews-heading" className="text-xl font-bold">Branch reviews</h2>
+      {reviews.data && <p data-testid="text-branch-rating" className="mt-1 text-sm text-muted-foreground">
+        {reviews.data.averageRating === null ? "No genuine ratings yet" : <><Star aria-hidden className="inline h-4 w-4 fill-amber-500 text-amber-500" /> {reviews.data.averageRating.toFixed(1)} / 5 · {reviews.data.reviewCount} genuine {reviews.data.reviewCount === 1 ? "rating" : "ratings"}</>}
+        {" "}· Illustrative samples are not counted.
+      </p>}
+    </div>
+    {reviews.isLoading ? <p role="status">Loading reviews…</p>
+      : reviews.isError ? <p role="alert" className="text-sm text-red-600">Could not load reviews. <Button data-testid="button-retry-branch-reviews" variant="link" onClick={() => void reviews.refetch()}>Retry</Button></p>
+      : reviews.data?.reviews.length ? <div className="grid gap-3">
+        {reviews.data.reviews.map((review) => <Card key={review.id} data-testid={`card-branch-review-${review.id}`} className="border-border bg-card">
+          <CardContent className="p-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <strong>{review.reviewerName}</strong>
+              {review.isSample && <Badge variant="secondary">Illustrative sample · not customer feedback</Badge>}
+              <span className="text-xs text-muted-foreground">{review.branchName}</span>
+            </div>
+            <div aria-label={`${review.rating} out of 5 stars`} className="flex gap-0.5 my-2 text-amber-500">{[1, 2, 3, 4, 5].map((star) => <Star key={star} aria-hidden className={`h-4 w-4 ${star <= review.rating ? "fill-current" : ""}`} />)}</div>
+            <p className="whitespace-pre-wrap break-words text-sm">{review.reviewText}</p>
+            <time className="mt-2 block text-xs text-muted-foreground" dateTime={review.createdAt}>{new Date(review.createdAt).toLocaleDateString()}</time>
+          </CardContent>
+        </Card>)}
+      </div> : <p className="text-sm text-muted-foreground">No published reviews yet.</p>}
+    {!authLoaded ? <p role="status">Checking sign-in…</p> : !signedIn ?
+      <p className="text-sm text-muted-foreground">Have feedback about this branch? <Link data-testid="link-review-sign-in" href="/sign-in" className="font-semibold text-primary underline">Sign in to write a review</Link>.</p>
+      : <>
+        <Card className="border-border bg-card"><CardContent className="p-5">
+          <h3 className="font-bold">{ownReview ? "Your branch review" : "Write a branch review"}</h3>
+          <p className="mt-1 mb-4 text-sm text-muted-foreground">Only active members whose home branch is this gym can submit a review. Submissions are reviewed before appearing publicly.</p>
+          {mine.isLoading ? <p role="status">Loading your review…</p> : mine.isError ?
+            <p role="alert" data-testid="error-my-branch-review" className="text-sm text-red-600">{mine.error instanceof Error ? mine.error.message : "Could not load your review."} <Button data-testid="button-retry-my-branch-review" variant="link" onClick={() => void mine.refetch()}>Retry</Button></p>
+            : <>
+              {ownReview && <p data-testid="status-my-branch-review" className="mb-4 text-sm font-medium">Status: {ownReview.moderationStatus === "approved" ? "Approved" : ownReview.moderationStatus === "rejected" ? "Rejected — edit and resubmit for review" : "Pending approval"}</p>}
+              <Form {...form}><form onSubmit={form.handleSubmit((values) => void save(values))} className="space-y-3">
+                <div><Label htmlFor="branch-review-rating">Rating</Label><select id="branch-review-rating" data-testid="select-branch-review-rating" className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm" {...form.register("rating", { valueAsNumber: true, required: true, min: 1, max: 5 })}>{[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} {n === 1 ? "star" : "stars"}</option>)}</select></div>
+                <div><Label htmlFor="branch-review-text">Your experience</Label><Textarea id="branch-review-text" data-testid="input-branch-review-text" maxLength={2000} rows={4} {...form.register("text", { required: "Please write your review.", validate: (value) => !!value.trim() || "Please write your review." })} />{form.formState.errors.text && <p role="alert" className="text-sm text-red-600">{form.formState.errors.text.message}</p>}</div>
+                {actionError && <p role="alert" data-testid="error-branch-review-action" className="text-sm text-red-600">{actionError}</p>}
+                <div className="flex flex-wrap gap-2">
+                  <Button data-testid="button-submit-branch-review" type="submit" disabled={saving}>{saving ? "Saving…" : ownReview ? "Resubmit review" : "Submit for approval"}</Button>
+                  {ownReview && !confirmRemove && <Button data-testid="button-remove-branch-review" type="button" variant="outline" disabled={saving} onClick={() => setConfirmRemove(true)}>Remove review</Button>}
+                </div>
+                {confirmRemove && <div className="flex items-center gap-2"><span className="text-sm">Remove your review?</span><Button data-testid="button-confirm-remove-branch-review" type="button" variant="destructive" disabled={saving} onClick={() => void remove()}>Yes, remove</Button><Button data-testid="button-cancel-remove-branch-review" type="button" variant="outline" onClick={() => setConfirmRemove(false)}>Cancel</Button></div>}
+              </form></Form>
+            </>}
+        </CardContent></Card>
+      </>}
+  </section>;
 }
 
 export default function GymDetail() {
@@ -237,12 +405,11 @@ export default function GymDetail() {
                   Elite
                 </Badge>
               )}
-              <Badge
+               <Badge
                 variant="secondary"
                 className="bg-secondary text-foreground border-none font-bold"
               >
-                <Star className="h-3 w-3 mr-1 text-yellow-400 fill-current" />
-                {gym.rating}
+                 {id > 0 && <BranchRatingBadge gymId={id} />}
               </Badge>
               {gym.openNow && (
                 <Badge
@@ -541,6 +708,7 @@ export default function GymDetail() {
           )}
 
           {/* Enroll CTA */}
+           <BranchReviews gymId={id} />
           <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-secondary/40 p-8 md:p-10 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.18)]">
             <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
             <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-[hsl(84_60%_55%/0.22)] blur-3xl" />

@@ -22,7 +22,9 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/AppText";
+import { BranchReviews } from "@/components/BranchReviews";
 import { Card } from "@/components/Card";
+import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { Screen, WEB_NOTCH_TOP } from "@/components/Screen";
 import { ErrorView, LoadingView } from "@/components/ui-bits";
 import { YouTubeInline } from "@/components/YouTubeInline";
@@ -123,7 +125,7 @@ export default function GymDetailScreen() {
   return (
     <Screen>
       <Stack.Screen options={{ title: gym.name }} />
-      <ScrollView
+      <KeyboardAwareScrollViewCompat
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
@@ -207,18 +209,6 @@ export default function GymDetailScreen() {
           {/* Quick stats */}
           <Card>
             <View style={styles.statsRow}>
-              <View style={styles.stat}>
-                <View style={styles.metaRow}>
-                  <Feather name="star" size={14} color={colors.primary} />
-                  <AppText weight="700" size={16}>
-                    {gym.rating.toFixed(1)}
-                  </AppText>
-                </View>
-                <AppText muted size={11}>
-                  {gym.reviewsCount} reviews
-                </AppText>
-              </View>
-              <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
               <View style={styles.stat}>
                 <AppText
                   weight="700"
@@ -311,6 +301,8 @@ export default function GymDetailScreen() {
             </Card>
           ) : null}
 
+          <BranchReviews gymId={gym.id} />
+
           {/* Address + directions */}
           <Card>
             <AppText weight="700" size={16} style={{ marginBottom: 6 }}>
@@ -374,7 +366,7 @@ export default function GymDetailScreen() {
             </Card>
           ) : null}
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollViewCompat>
     </Screen>
   );
 }

@@ -441,6 +441,139 @@ export const ListReviewsResponse = zod.object({
 })
 
 
+
+
+
+export const ListGymReviewsParams = zod.object({
+  "id": zod.coerce.number().min(1)
+})
+
+export const listGymReviewsResponseReviewsItemOneRatingMax = 5;
+
+
+
+export const ListGymReviewsResponse = zod.object({
+  "reviews": zod.array(zod.object({
+  "isMemberReview": zod.boolean().optional(),
+  "moderationStatus": zod.union([zod.literal('pending'),zod.literal('approved'),zod.literal('rejected'),zod.literal(null)]).nullish(),
+  "id": zod.number(),
+  "reviewerName": zod.string(),
+  "branchName": zod.string(),
+  "trainerId": zod.string().nullish(),
+  "gymId": zod.number().nullish(),
+  "reviewText": zod.string(),
+  "rating": zod.number().min(1).max(listGymReviewsResponseReviewsItemOneRatingMax),
+  "isSample": zod.boolean(),
+  "isPublished": zod.boolean(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}).and(zod.object({
+  "text": zod.string().describe('Alias for the existing reviewText field'),
+  "isMemberReview": zod.boolean(),
+  "moderationStatus": zod.union([zod.literal('pending'),zod.literal('approved'),zod.literal('rejected'),zod.literal(null)]).nullable()
+}))),
+  "averageRating": zod.number().nullable(),
+  "reviewCount": zod.number()
+})
+
+
+
+
+
+export const GetOwnGymReviewParams = zod.object({
+  "id": zod.coerce.number().min(1)
+})
+
+export const getOwnGymReviewResponseReviewOneOneRatingMax = 5;
+
+
+
+export const GetOwnGymReviewResponse = zod.object({
+  "review": zod.union([zod.object({
+  "isMemberReview": zod.boolean().optional(),
+  "moderationStatus": zod.union([zod.literal('pending'),zod.literal('approved'),zod.literal('rejected'),zod.literal(null)]).nullish(),
+  "id": zod.number(),
+  "reviewerName": zod.string(),
+  "branchName": zod.string(),
+  "trainerId": zod.string().nullish(),
+  "gymId": zod.number().nullish(),
+  "reviewText": zod.string(),
+  "rating": zod.number().min(1).max(getOwnGymReviewResponseReviewOneOneRatingMax),
+  "isSample": zod.boolean(),
+  "isPublished": zod.boolean(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}).and(zod.object({
+  "text": zod.string().describe('Alias for the existing reviewText field'),
+  "isMemberReview": zod.boolean(),
+  "moderationStatus": zod.union([zod.literal('pending'),zod.literal('approved'),zod.literal('rejected'),zod.literal(null)]).nullable()
+})),zod.null()])
+})
+
+
+
+
+
+export const SaveOwnGymReviewParams = zod.object({
+  "id": zod.coerce.number().min(1)
+})
+
+export const saveOwnGymReviewBodyRatingMax = 5;
+
+export const saveOwnGymReviewBodyTextMax = 2000;
+
+
+
+export const SaveOwnGymReviewBody = zod.object({
+  "rating": zod.number().min(1).max(saveOwnGymReviewBodyRatingMax),
+  "text": zod.string().min(1).max(saveOwnGymReviewBodyTextMax)
+})
+
+export const saveOwnGymReviewResponseReviewOneOneRatingMax = 5;
+
+
+
+export const SaveOwnGymReviewResponse = zod.object({
+  "review": zod.union([zod.object({
+  "isMemberReview": zod.boolean().optional(),
+  "moderationStatus": zod.union([zod.literal('pending'),zod.literal('approved'),zod.literal('rejected'),zod.literal(null)]).nullish(),
+  "id": zod.number(),
+  "reviewerName": zod.string(),
+  "branchName": zod.string(),
+  "trainerId": zod.string().nullish(),
+  "gymId": zod.number().nullish(),
+  "reviewText": zod.string(),
+  "rating": zod.number().min(1).max(saveOwnGymReviewResponseReviewOneOneRatingMax),
+  "isSample": zod.boolean(),
+  "isPublished": zod.boolean(),
+  "sortOrder": zod.number(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}).and(zod.object({
+  "text": zod.string().describe('Alias for the existing reviewText field'),
+  "isMemberReview": zod.boolean(),
+  "moderationStatus": zod.union([zod.literal('pending'),zod.literal('approved'),zod.literal('rejected'),zod.literal(null)]).nullable()
+})),zod.null()])
+})
+
+
+
+
+
+export const DeleteOwnGymReviewParams = zod.object({
+  "id": zod.coerce.number().min(1)
+})
+
+
+export const ListReviewBranchesResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string()
+})
+export const ListReviewBranchesResponse = zod.array(ListReviewBranchesResponseItem)
+
+
 export const listAdminReviewsResponseReviewsItemRatingMax = 5;
 
 export const listAdminReviewsResponseReviewsMax = 500;
@@ -486,7 +619,7 @@ export const createAdminReviewBodySortOrderMax = 2147483647;
 
 export const CreateAdminReviewBody = zod.object({
   "reviewerName": zod.string().min(1).max(createAdminReviewBodyReviewerNameMax),
-  "branchName": zod.string().min(1).max(createAdminReviewBodyBranchNameMax),
+  "branchName": zod.string().max(createAdminReviewBodyBranchNameMax).optional().describe('Derived from gymId when selecting a branch; required for legacy unlinked reviews'),
   "trainerId": zod.string().min(1).max(createAdminReviewBodyTrainerIdMax).nullish(),
   "gymId": zod.number().min(1).max(createAdminReviewBodyGymIdMax).nullish(),
   "reviewText": zod.string().min(1).max(createAdminReviewBodyReviewTextMax),
@@ -528,7 +661,7 @@ export const updateAdminReviewBodyTwoRatingMax = 5;
 
 export const UpdateAdminReviewBody = zod.union([zod.object({
   "reviewerName": zod.string().min(1).max(updateAdminReviewBodyOneReviewerNameMax),
-  "branchName": zod.string().min(1).max(updateAdminReviewBodyOneBranchNameMax),
+  "branchName": zod.string().max(updateAdminReviewBodyOneBranchNameMax).optional().describe('Derived from gymId when selecting a branch; required for legacy unlinked reviews'),
   "trainerId": zod.string().min(1).max(updateAdminReviewBodyOneTrainerIdMax).nullish(),
   "gymId": zod.number().min(1).max(updateAdminReviewBodyOneGymIdMax).nullish(),
   "reviewText": zod.string().min(1).max(updateAdminReviewBodyOneReviewTextMax),

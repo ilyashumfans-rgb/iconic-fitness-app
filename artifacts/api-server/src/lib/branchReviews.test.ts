@@ -60,13 +60,15 @@ test("seed is additive, repeatable, preserves edits and deletion marker; hidden 
   }), (err) => err === rollback);
 });
 
-test("trainer assignment requires paired stable ID and branch, with old clients supported", () => {
+test("trainer assignment requires a branch; branch-only and legacy reviews are supported", () => {
   const { seedKey, ...input } = sampleReviews[0];
   assert.ok(reviewInput.safeParse(input).success);
   assert.ok(reviewInput.safeParse({ ...input, trainerId: null, gymId: null }).success);
   assert.ok(reviewInput.safeParse({ ...input, trainerId: "53938", gymId: 27 }).success);
+  assert.ok(reviewInput.safeParse({ ...input, gymId: 27, branchName: undefined }).success);
+  assert.ok(reviewInput.safeParse({ ...input, trainerId: null, gymId: 27 }).success);
   for (const patch of [
-    { trainerId: "53938" }, { gymId: 27 }, { trainerId: null, gymId: 27 },
+    { trainerId: "53938" },
     { trainerId: "53938", gymId: null }, { trainerId: "", gymId: 27 },
     { trainerId: "53938", gymId: -1 },
   ]) assert.equal(reviewInput.safeParse({ ...input, ...patch }).success, false);

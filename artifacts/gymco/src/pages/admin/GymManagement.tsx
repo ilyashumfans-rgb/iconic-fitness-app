@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "wouter";
 import { AdminLayout, AdminCard } from "@/components/admin/AdminLayout";
 import { adminApi, type YoactivBranchOption } from "@/lib/adminApi";
 import { locationsApi, type City, type Area } from "@/lib/locationsApi";
@@ -668,6 +669,7 @@ export default function AdminGymManagement() {
                   </div>
                 </td>
                 <td className="px-5 py-3 text-right whitespace-nowrap">
+                  <Link data-testid={`link-gym-reviews-${g.id}`} href={`/admin/reviews?gymId=${g.id}`} className="text-xs px-2 py-1 rounded bg-slate-800 text-lime-300 hover:bg-slate-700 mr-2">Reviews</Link>
                   <button
                     onClick={() => {
                       setEditing(g);

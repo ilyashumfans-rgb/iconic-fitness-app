@@ -4,7 +4,7 @@ import { db, appSettingsTable, branchReviewsTable } from "@workspace/db";
 
 export const reviewInput = z.object({
   reviewerName: z.string().trim().min(1).max(100),
-  branchName: z.string().trim().min(1).max(150),
+  branchName: z.string().trim().max(150).default(""),
   trainerId: z.string().trim().min(1).max(100).nullable().optional(),
   gymId: z.number().int().positive().max(2147483647).nullable().optional(),
   reviewText: z.string().trim().min(1).max(2000),
@@ -13,10 +13,10 @@ export const reviewInput = z.object({
   isPublished: z.boolean(),
   sortOrder: z.number().int().min(-2147483648).max(2147483647),
 }).strict().refine(value =>
-  (value.trainerId === undefined && value.gymId === undefined) ||
-  (value.trainerId === null && value.gymId === null) ||
-  (typeof value.trainerId === "string" && typeof value.gymId === "number"),
-{ message: "Select a trainer and its branch together", path: ["trainerId"] });
+  !value.trainerId || (typeof value.gymId === "number"),
+ { message: "Select a branch for the trainer", path: ["gymId"] })
+  .refine(value => !!value.gymId || !!value.branchName,
+    { message: "Enter a branch name or select a branch", path: ["branchName"] });
 
 export function trainerReviewSummary(reviews: { rating: number; isSample: boolean }[]) {
   const genuine = reviews.filter(review => !review.isSample);

@@ -21,7 +21,8 @@ export const branchReviewsTable = pgTable("branch_reviews", {
 }, (table) => [
   check("branch_reviews_rating_check", sql`${table.rating} BETWEEN 1 AND 5`),
   check("branch_reviews_sample_check", sql`${table.seedKey} IS NULL OR ${table.isSample} = true`),
-  check("branch_reviews_trainer_pair_check", sql`(${table.trainerId} IS NULL AND ${table.gymId} IS NULL) OR (${table.trainerId} IS NOT NULL AND ${table.gymId} IS NOT NULL AND ${table.gymId} > 0)`),
+  check("branch_reviews_trainer_pair_check", sql`(${table.trainerId} IS NULL AND ${table.gymId} IS NULL) OR (${table.gymId} IS NOT NULL AND ${table.gymId} > 0)`),
   uniqueIndex("branch_reviews_member_trainer_unique").on(table.authorUserId, table.trainerId, table.gymId),
-  check("branch_reviews_member_moderation_check", sql`(${table.authorUserId} IS NULL AND ${table.moderationStatus} IS NULL) OR (${table.authorUserId} IS NOT NULL AND ${table.trainerId} IS NOT NULL AND ${table.moderationStatus} IS NOT NULL AND ${table.moderationStatus} IN ('pending','approved','rejected') AND ${table.isSample} = false AND (${table.isPublished} = false OR ${table.moderationStatus} = 'approved'))`),
+  uniqueIndex("branch_reviews_member_gym_unique").on(table.authorUserId, table.gymId).where(sql`${table.authorUserId} IS NOT NULL AND ${table.trainerId} IS NULL AND ${table.gymId} IS NOT NULL`),
+  check("branch_reviews_member_moderation_check", sql`(${table.authorUserId} IS NULL AND ${table.moderationStatus} IS NULL) OR (${table.authorUserId} IS NOT NULL AND ${table.gymId} IS NOT NULL AND ${table.moderationStatus} IS NOT NULL AND ${table.moderationStatus} IN ('pending','approved','rejected') AND ${table.isSample} = false AND (${table.isPublished} = false OR ${table.moderationStatus} = 'approved'))`),
 ]);

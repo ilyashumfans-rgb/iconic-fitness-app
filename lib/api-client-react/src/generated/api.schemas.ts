@@ -66,10 +66,10 @@ export interface ReviewInput {
      */
   reviewerName: string;
   /**
-     * @minLength 1
+     * Derived from gymId when selecting a branch; required for legacy unlinked reviews
      * @maxLength 150
      */
-  branchName: string;
+  branchName?: string;
   /**
      * @minLength 1
      * @maxLength 100
@@ -128,6 +128,84 @@ export interface MemberTrainerReviewInput {
      * @maxLength 2000
      */
   reviewText: string;
+}
+
+export interface MemberGymReviewInput {
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  text: string;
+}
+
+/**
+ * @nullable
+ */
+export type ReviewModerationStatus = typeof ReviewModerationStatus[keyof typeof ReviewModerationStatus] | null;
+
+
+export const ReviewModerationStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+
+export interface Review {
+  isMemberReview?: boolean;
+  /** @nullable */
+  moderationStatus?: ReviewModerationStatus;
+  id: number;
+  reviewerName: string;
+  branchName: string;
+  /** @nullable */
+  trainerId?: string | null;
+  /** @nullable */
+  gymId?: number | null;
+  reviewText: string;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  isSample: boolean;
+  isPublished: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * @nullable
+ */
+export type PublicGymReviewModerationStatus = typeof PublicGymReviewModerationStatus[keyof typeof PublicGymReviewModerationStatus] | null;
+
+
+export const PublicGymReviewModerationStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+
+export type PublicGymReview = Review & {
+  /** Alias for the existing reviewText field */
+  text: string;
+  isMemberReview: boolean;
+  /** @nullable */
+  moderationStatus: PublicGymReviewModerationStatus;
+};
+
+export interface OwnGymReviewResponse {
+  review: PublicGymReview | null;
+}
+
+export interface ReviewBranchOption {
+  id: number;
+  name: string;
 }
 
 export type TrainerReviewModerationInputStatus = typeof TrainerReviewModerationInputStatus[keyof typeof TrainerReviewModerationInputStatus];
@@ -195,42 +273,6 @@ export interface ReviewTrainerOption {
   branchName: string;
 }
 
-/**
- * @nullable
- */
-export type ReviewModerationStatus = typeof ReviewModerationStatus[keyof typeof ReviewModerationStatus] | null;
-
-
-export const ReviewModerationStatus = {
-  pending: 'pending',
-  approved: 'approved',
-  rejected: 'rejected',
-} as const;
-
-export interface Review {
-  isMemberReview?: boolean;
-  /** @nullable */
-  moderationStatus?: ReviewModerationStatus;
-  id: number;
-  reviewerName: string;
-  branchName: string;
-  /** @nullable */
-  trainerId?: string | null;
-  /** @nullable */
-  gymId?: number | null;
-  reviewText: string;
-  /**
-     * @minimum 1
-     * @maximum 5
-     */
-  rating: number;
-  isSample: boolean;
-  isPublished: boolean;
-  sortOrder: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export type LiveTrainerProfile = ReviewTrainerOption & ({
   profile?: TrainerProfileContent;
   /** @nullable */
@@ -244,6 +286,13 @@ export type LiveTrainerProfile = ReviewTrainerOption & ({
 export interface ReviewList {
   /** @maxItems 500 */
   reviews: Review[];
+}
+
+export interface GymReviewList {
+  reviews: PublicGymReview[];
+  /** @nullable */
+  averageRating: number | null;
+  reviewCount: number;
 }
 
 export interface ReviewError {

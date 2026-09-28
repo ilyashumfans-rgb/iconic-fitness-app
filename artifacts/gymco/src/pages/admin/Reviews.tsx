@@ -31,6 +31,7 @@ type Review = ReviewInput & {
   moderationStatus: ModerationStatus;
 };
 type TrainerOption = { id: string; name: string; gymId: number; branchName: string };
+type BranchOption = { id: number; name: string };
 const EMPTY: ReviewInput = { reviewerName: "", branchName: "", reviewText: "", rating: 5, isSample: true, isPublished: true, sortOrder: 0, trainerId: null, gymId: null };
 const GENERAL_REVIEW = "__general__";
 const message = (error: unknown) => error instanceof Error ? error.message : "Unable to save changes. Please try again.";
@@ -58,6 +59,16 @@ function ReviewsContent() {
     retry: false,
     refetchInterval: 60_000,
   });
+  const branches = useQuery({
+    queryKey: ["/api/admin/reviews/branches"],
+    queryFn: ({ signal }) => request<BranchOption[]>("/admin/reviews/branches", { signal }),
+    staleTime: 0,
+    retry: false,
+  });
+  const [branchFilter, setBranchFilter] = useState(() => {
+    const gymId = new URLSearchParams(window.location.search).get("gymId");
+    return gymId && /^\d+$/.test(gymId) ? gymId : "";
+  });
   const [editor, setEditor] = useState<{ review: Review | null } | null>(null);
   const [deleting, setDeleting] = useState<Review | null>(null);
   const [confirmEdit, setConfirmEdit] = useState<ReviewInput | null>(null);
@@ -76,7 +87,7 @@ function ReviewsContent() {
       reviewerName: review.reviewerName, branchName: review.branchName, reviewText: review.reviewText,
       rating: review.rating, sortOrder: review.sortOrder, isSample: review.isSample, isPublished: review.isPublished,
       trainerId: review.trainerId, gymId: review.gymId,
-    } : EMPTY);
+    } : { ...EMPTY, gymId: branchFilter ? Number(branchFilter) : null, branchName: branches.data?.find((branch) => String(branch.id) === branchFilter)?.name ?? "" });
     setFormError(null);
     setEditor({ review });
   };
@@ -152,11 +163,14 @@ function ReviewsContent() {
     finally { setSaving(false); }
   };
   const rows = [...(reviews.data?.reviews ?? [])].sort((a, b) => a.sortOrder - b.sortOrder || a.id - b.id);
+  const visibleRows = branchFilter ? rows.filter((review) => review.gymId === Number(branchFilter)) : rows;
   const trainers = trainerOptions.data?.trainers ?? [];
+  const branchList = branches.data ?? [];
   const selectedTrainerId = form.watch("trainerId");
   const selectedGymId = form.watch("gymId");
   const selectedTrainerKey = selectedTrainerId ? `${selectedGymId}:${selectedTrainerId}` : GENERAL_REVIEW;
   const selectedTrainer = selectedTrainerId ? trainers.find((trainer) => trainer.id === selectedTrainerId && trainer.gymId === selectedGymId) : undefined;
+  const selectedBranch = branchList.find((branch) => branch.id === selectedGymId);
   const trainerLabel = (review: Review) => {
     if (!review.trainerId) return "General / branch review";
     const trainer = trainers.find((option) => option.id === review.trainerId && option.gymId === review.gymId);
@@ -171,7 +185,6 @@ function ReviewsContent() {
   const selectTrainer = (trainerId: string) => {
     if (trainerId === GENERAL_REVIEW) {
       form.setValue("trainerId", null, { shouldDirty: true, shouldValidate: true });
-      form.setValue("gymId", null, { shouldDirty: true, shouldValidate: true });
       return;
     }
     const trainer = trainers.find((option) => `${option.gymId}:${option.id}` === trainerId);
@@ -179,6 +192,12 @@ function ReviewsContent() {
     form.setValue("trainerId", trainer.id, { shouldDirty: true, shouldValidate: true });
     form.setValue("gymId", trainer.gymId, { shouldDirty: true, shouldValidate: true });
     form.setValue("branchName", trainer.branchName, { shouldDirty: true, shouldValidate: true });
+  };
+  const selectBranch = (gymId: string) => {
+    const branch = branchList.find((option) => String(option.id) === gymId);
+    form.setValue("trainerId", null, { shouldDirty: true });
+    form.setValue("gymId", branch?.id ?? null, { shouldDirty: true });
+    if (branch) form.setValue("branchName", branch.name, { shouldDirty: true, shouldValidate: true });
   };
 
   return <div className="space-y-5">
@@ -193,10 +212,19 @@ function ReviewsContent() {
     </AdminCard>
     {error && !deleting && <p role="alert" data-testid="error-review-action" className="text-sm text-red-600">{error}</p>}
     <AdminCard className="p-5">
+      <Label htmlFor="review-branch-filter">Filter by branch</Label>
+      <select id="review-branch-filter" data-testid="select-review-branch-filter" className="mt-2 flex h-10 w-full max-w-sm rounded-md border border-input bg-background px-3 text-sm" value={branchFilter} onChange={(event) => setBranchFilter(event.target.value)}>
+        <option value="">All branches and trainer reviews</option>
+        {branchFilter && !branchList.some((branch) => String(branch.id) === branchFilter) && <option value={branchFilter}>Branch #{branchFilter}</option>}
+        {branchList.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
+      </select>
+      {branches.isError && <p role="alert" className="mt-2 text-sm text-red-600">Could not load branches. <Button data-testid="button-retry-review-branches" variant="link" onClick={() => void branches.refetch()}>Retry</Button></p>}
+    </AdminCard>
+    <AdminCard className="p-5">
       {reviews.isLoading ? <div role="status" data-testid="status-reviews-loading" className="flex items-center justify-center gap-2 py-10"><Loader2 className="h-5 w-5 animate-spin" />Loading reviews…</div>
         : reviews.isError ? <div role="alert" data-testid="error-reviews-loading" className="space-y-3 py-6 text-center"><p>{message(reviews.error)}</p><Button data-testid="button-retry-reviews" variant="outline" onClick={() => void reviews.refetch()}>Retry</Button></div>
-        : rows.length === 0 ? <p data-testid="text-reviews-empty" className="py-10 text-center text-muted-foreground">No reviews yet. Add a clearly labeled sample or genuine feedback shared with permission.</p>
-        : <div className="divide-y">{rows.map((review) => <article key={review.id} data-testid={`review-${review.id}`} className="flex flex-col gap-4 py-5 first:pt-0 last:pb-0 xl:flex-row">
+        : visibleRows.length === 0 ? <p data-testid="text-reviews-empty" className="py-10 text-center text-muted-foreground">{branchFilter ? "No reviews for this branch yet." : "No reviews yet. Add a clearly labeled sample or genuine feedback shared with permission."}</p>
+        : <div className="divide-y">{visibleRows.map((review) => <article key={review.id} data-testid={`review-${review.id}`} className="flex flex-col gap-4 py-5 first:pt-0 last:pb-0 xl:flex-row">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="font-semibold break-words">{review.reviewerName}</h3>
@@ -250,17 +278,27 @@ function ReviewsContent() {
                 {trainerOptions.isError && <p role="alert" className="mt-1 text-sm text-red-600">Trainer choices could not be refreshed. The current assignment will be kept unless you choose General / branch review.</p>}
               </div>
               <div>
+                <Label htmlFor="review-branch">Branch assignment</Label>
+                <select id="review-branch" data-testid="select-review-branch" className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={selectedGymId ?? ""} disabled={saving || !!editor?.review?.isMemberReview} onChange={(event) => selectBranch(event.target.value)}>
+                  <option value="">Unassigned / legacy review</option>
+                  {selectedGymId && !selectedBranch && <option value={selectedGymId}>Branch #{selectedGymId} (unavailable)</option>}
+                  {branchList.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
+                </select>
+                {branches.isError && <p role="alert" className="mt-1 text-sm text-red-600">Branch choices could not be loaded. Retry from the filter above before assigning a branch.</p>}
+                {selectedTrainerId && <p className="mt-1 text-xs text-muted-foreground">Selecting a different branch clears the trainer assignment.</p>}
+              </div>
+              <div>
                 <Label htmlFor="review-branchName">Branch name</Label>
                 <Input
                   id="review-branchName"
                   data-testid="input-review-branchName"
                   maxLength={150}
-                  readOnly={!!selectedTrainerId}
+                  readOnly={!!selectedGymId}
                   disabled={!!editor?.review?.isMemberReview}
-                  aria-describedby={selectedTrainerId ? "review-branch-help" : undefined}
+                  aria-describedby={selectedGymId ? "review-branch-help" : undefined}
                   {...form.register("branchName", { required: "Required", validate: (v) => !!v.trim() || "Required" })}
                 />
-                {selectedTrainerId && <p id="review-branch-help" className="mt-1 text-xs text-muted-foreground">The branch is set by the selected trainer.</p>}
+                 {selectedGymId && <p id="review-branch-help" className="mt-1 text-xs text-muted-foreground">The branch name is set by the selected branch.</p>}
                 {form.formState.errors.branchName && <p role="alert" className="text-sm text-red-600">{form.formState.errors.branchName.message}</p>}
               </div>
               <div><Label htmlFor="review-text">Review quote</Label><Textarea id="review-text" data-testid="input-review-text" rows={4} maxLength={2000} {...form.register("reviewText", { required: "Review text is required", validate: (v) => !!v.trim() || "Review text is required" })} />{form.formState.errors.reviewText && <p role="alert" className="text-sm text-red-600">{form.formState.errors.reviewText.message}</p>}</div>

@@ -13,10 +13,10 @@ export interface ReviewInput {
      */
   reviewerName: string;
   /**
-     * @minLength 1
+     * Derived from gymId when selecting a branch; required for legacy unlinked reviews
      * @maxLength 150
      */
-  branchName: string;
+  branchName?: string;
   /**
      * @minLength 1
      * @maxLength 100

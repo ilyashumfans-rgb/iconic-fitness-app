@@ -80,6 +80,7 @@ import type {
   GoalsUpdate,
   Gym,
   GymDetail,
+  GymReviewList,
   HealthStatus,
   HomeSlide,
   ListClassesParams,
@@ -100,6 +101,7 @@ import type {
   LookupMembership429,
   MealDay,
   MealInput,
+  MemberGymReviewInput,
   MemberJourney,
   MemberJourneyAction,
   MemberJourneyHealthHistoryInput,
@@ -116,6 +118,7 @@ import type {
   Notification,
   NotificationSounds,
   OkResponse,
+  OwnGymReviewResponse,
   OwnTrainerReviewResponse,
   PackageBooking,
   PackageBookingCreated,
@@ -127,6 +130,7 @@ import type {
   ReferralInfo,
   Review,
   ReviewBadRequestResponse,
+  ReviewBranchOption,
   ReviewInput,
   ReviewList,
   ReviewNotFoundResponse,
@@ -966,6 +970,349 @@ export function useListReviews<TData = Awaited<ReturnType<typeof listReviews>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getListReviewsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListGymReviewsUrl = (id: number,) => {
+
+
+
+
+  return `/api/gyms/${id}/reviews`
+}
+
+export const listGymReviews = async (id: number, options?: RequestInit): Promise<GymReviewList> => {
+
+  return customFetch<GymReviewList>(getListGymReviewsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListGymReviewsQueryKey = (id: number,) => {
+    return [
+    `/api/gyms/${id}/reviews`
+    ] as const;
+    }
+
+
+export const getListGymReviewsQueryOptions = <TData = Awaited<ReturnType<typeof listGymReviews>>, TError = ErrorType<ReviewNotFoundResponse>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listGymReviews>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListGymReviewsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listGymReviews>>> = ({ signal }) => listGymReviews(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listGymReviews>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListGymReviewsQueryResult = NonNullable<Awaited<ReturnType<typeof listGymReviews>>>
+export type ListGymReviewsQueryError = ErrorType<ReviewNotFoundResponse>
+
+
+
+export function useListGymReviews<TData = Awaited<ReturnType<typeof listGymReviews>>, TError = ErrorType<ReviewNotFoundResponse>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listGymReviews>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListGymReviewsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetOwnGymReviewUrl = (id: number,) => {
+
+
+
+
+  return `/api/gyms/${id}/reviews/mine`
+}
+
+export const getOwnGymReview = async (id: number, options?: RequestInit): Promise<OwnGymReviewResponse> => {
+
+  return customFetch<OwnGymReviewResponse>(getGetOwnGymReviewUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetOwnGymReviewQueryKey = (id: number,) => {
+    return [
+    `/api/gyms/${id}/reviews/mine`
+    ] as const;
+    }
+
+
+export const getGetOwnGymReviewQueryOptions = <TData = Awaited<ReturnType<typeof getOwnGymReview>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOwnGymReview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetOwnGymReviewQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOwnGymReview>>> = ({ signal }) => getOwnGymReview(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOwnGymReview>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetOwnGymReviewQueryResult = NonNullable<Awaited<ReturnType<typeof getOwnGymReview>>>
+export type GetOwnGymReviewQueryError = ErrorType<unknown>
+
+
+
+export function useGetOwnGymReview<TData = Awaited<ReturnType<typeof getOwnGymReview>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOwnGymReview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetOwnGymReviewQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSaveOwnGymReviewUrl = (id: number,) => {
+
+
+
+
+  return `/api/gyms/${id}/reviews/mine`
+}
+
+export const saveOwnGymReview = async (id: number,
+    memberGymReviewInput: MemberGymReviewInput, options?: RequestInit): Promise<OwnGymReviewResponse> => {
+
+  return customFetch<OwnGymReviewResponse>(getSaveOwnGymReviewUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      memberGymReviewInput,)
+  }
+);}
+
+
+
+
+export const getSaveOwnGymReviewMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveOwnGymReview>>, TError,{id: number;data: BodyType<MemberGymReviewInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveOwnGymReview>>, TError,{id: number;data: BodyType<MemberGymReviewInput>}, TContext> => {
+
+const mutationKey = ['saveOwnGymReview'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveOwnGymReview>>, {id: number;data: BodyType<MemberGymReviewInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  saveOwnGymReview(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveOwnGymReviewMutationResult = NonNullable<Awaited<ReturnType<typeof saveOwnGymReview>>>
+    export type SaveOwnGymReviewMutationBody = BodyType<MemberGymReviewInput>
+    export type SaveOwnGymReviewMutationError = ErrorType<void>
+
+    export const useSaveOwnGymReview = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveOwnGymReview>>, TError,{id: number;data: BodyType<MemberGymReviewInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveOwnGymReview>>,
+        TError,
+        {id: number;data: BodyType<MemberGymReviewInput>},
+        TContext
+      > => {
+      return useMutation(getSaveOwnGymReviewMutationOptions(options));
+    }
+
+export const getDeleteOwnGymReviewUrl = (id: number,) => {
+
+
+
+
+  return `/api/gyms/${id}/reviews/mine`
+}
+
+export const deleteOwnGymReview = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteOwnGymReviewUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteOwnGymReviewMutationOptions = <TError = ErrorType<ReviewNotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteOwnGymReview>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteOwnGymReview>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteOwnGymReview'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteOwnGymReview>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteOwnGymReview(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteOwnGymReviewMutationResult = NonNullable<Awaited<ReturnType<typeof deleteOwnGymReview>>>
+
+    export type DeleteOwnGymReviewMutationError = ErrorType<ReviewNotFoundResponse>
+
+    export const useDeleteOwnGymReview = <TError = ErrorType<ReviewNotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteOwnGymReview>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteOwnGymReview>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteOwnGymReviewMutationOptions(options));
+    }
+
+export const getListReviewBranchesUrl = () => {
+
+
+
+
+  return `/api/admin/reviews/branches`
+}
+
+export const listReviewBranches = async ( options?: RequestInit): Promise<ReviewBranchOption[]> => {
+
+  return customFetch<ReviewBranchOption[]>(getListReviewBranchesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListReviewBranchesQueryKey = () => {
+    return [
+    `/api/admin/reviews/branches`
+    ] as const;
+    }
+
+
+export const getListReviewBranchesQueryOptions = <TData = Awaited<ReturnType<typeof listReviewBranches>>, TError = ErrorType<ReviewUnauthorizedResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listReviewBranches>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListReviewBranchesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listReviewBranches>>> = ({ signal }) => listReviewBranches({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listReviewBranches>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListReviewBranchesQueryResult = NonNullable<Awaited<ReturnType<typeof listReviewBranches>>>
+export type ListReviewBranchesQueryError = ErrorType<ReviewUnauthorizedResponse>
+
+
+
+export function useListReviewBranches<TData = Awaited<ReturnType<typeof listReviewBranches>>, TError = ErrorType<ReviewUnauthorizedResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listReviewBranches>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListReviewBranchesQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

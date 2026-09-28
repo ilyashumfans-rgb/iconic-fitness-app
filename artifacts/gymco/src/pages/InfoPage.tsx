@@ -366,7 +366,7 @@ const CONTENT: Record<string, InfoContent> = {
     eyebrow: "Legal",
     title: "Privacy policy",
     icon: Shield,
-    subtitle: "Last updated · August 2026",
+    subtitle: "Last updated · 28 September 2026",
     sections: [
       {
         heading: "Who we are",
@@ -396,6 +396,29 @@ const CONTENT: Record<string, InfoContent> = {
           "Detect and prevent fraud and unauthorized access.",
           "Improve our app features and fix bugs using anonymized usage data.",
           "Respond to your support queries.",
+        ],
+      },
+      {
+        heading: "Health data — Health Connect and Apple Health",
+        body: [
+          "Connecting health data is optional. When you choose to connect and grant permission, Iconic Fitness reads the categories you authorize from Health Connect on Android or Apple Health on iPhone. These records may originate from your phone, a connected watch, or another app that shares data with your device's health service. This connection does not pair a watch directly over Bluetooth.",
+          "Steps — we read daily step totals to show your daily movement and activity history. The current app uses step counts, not step-cadence measurements.",
+          "Active calories burned — we read active-energy totals to show estimated energy used through activity in your fitness reports.",
+          "Distance — we read distance totals to show how far you have moved each day in your activity reports.",
+          "Heart rate — we read heart-rate records to display a daily average in beats per minute. This is not a resting-heart-rate measurement, continuous monitoring service, or medical diagnosis.",
+          "Sleep — we read recorded asleep stages from sleep sessions to display daily sleep duration and help you understand your rest patterns.",
+          "Weight — we read the latest available weight measurement for each day to display your weight history and fitness progress.",
+          "Access is read-only: Iconic Fitness does not add, change, or delete records in Health Connect or Apple Health. Reads occur when you connect, select Sync now, or return to the app while connected. Automatic foreground reads are limited to approximately once every five minutes and refresh when the India calendar date changes; no background health syncing is promised.",
+          "Imported health records are stored locally on your device, separately for each signed-in account. This integration does not upload them to Iconic Fitness servers or provide a cloud backup. We do not send these imported records to gym staff, advertising services, data brokers, or AI services. Separately submitted fitness assessments and other account information are distinct from these device-health imports.",
+        ],
+      },
+      {
+        heading: "Health-data retention, deletion and permission controls",
+        body: [
+          "Each successful sync requests approximately the latest 30 calendar days and replaces the previously imported local health snapshot. Provider permissions may limit the history available. The stored snapshot is retained on the device until a later successful sync replaces it or you clear it; it does not automatically expire after 30 days if you stop using the app.",
+          "To delete this account's imported records in Iconic Fitness, open Connect watch and select Disconnect & clear imported data. This stops automatic reads, clears the locally imported snapshot and resets the app's connection consent. If deletion fails, the app displays an error and asks you to retry. Signing out alone is not a request to erase local health history.",
+          "You can deny individual categories or revoke access in Android Health Connect settings, or in Apple Health's app-access settings on iPhone. Revoking permission prevents further authorized reads but does not by itself erase previously imported records; use Disconnect & clear imported data as well.",
+          "Deleting imported data in Iconic Fitness does not delete the original records held by Health Connect, Apple Health, or the watch/provider app. Manage those records in the respective service. Local imported health data is separate from the server-side account and transaction retention described below.",
         ],
       },
       {
