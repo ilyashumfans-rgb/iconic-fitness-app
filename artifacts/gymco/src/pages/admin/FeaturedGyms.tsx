@@ -40,7 +40,7 @@ export default function AdminFeaturedGyms() {
                 }`}
               >
                 <Star
-                  className={`h-4 w-4 ${g.featured ? "fill-white" : ""}`}
+                  className={`h-4 w-4 text-[#FABB05] ${g.featured ? "fill-[#FABB05]" : ""}`}
                 />
                 {g.featured ? "Featured" : "Mark Featured"}
               </button>

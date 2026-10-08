@@ -29,4 +29,6 @@ export interface CreateTrainerBookingRequest {
      * @minimum 0
      */
   redeemPoints?: number;
+  /** Renew the caller's existing local PT plan; the server sets the start date to the day after the current plan ends */
+  renewal?: boolean;
 }

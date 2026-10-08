@@ -1,3 +1,6 @@
+import { settlePayment } from "../lib/networkCoach";
+import { autoPostHtml, publicOrigin } from "../lib/networkPayHandoff";
+import { networkCoachLandingHtml } from "./networkCoach";
 import { randomBytes } from "node:crypto";
 import {
   Router,
@@ -36,10 +39,7 @@ const router: IRouter = Router();
 
 /** Absolute public base URL for payment redirect landings. */
 function publicBaseUrl(req: Request): string {
-  const domains = (process.env.REPLIT_DOMAINS ?? "").split(",");
-  const domain =
-    domains[0]?.trim() || process.env.REPLIT_DEV_DOMAIN?.trim() || req.get("host");
-  return `https://${domain}`;
+  return publicOrigin(req);
 }
 
 // Additive, idempotent DDL so the published database gets the online-payment
@@ -488,18 +488,7 @@ router.get(
         );
       return;
     }
-    const inputs = Object.entries(form.fields)
-      .map(
-        ([k, v]) =>
-          `<input type="hidden" name="${k}" value="${v.replace(/"/g, "&quot;")}">`,
-      )
-      .join("");
-    res.status(200).send(
-      `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Redirecting to payment…</title></head>
-<body style="margin:0;font-family:system-ui,sans-serif;background:#0A0C08;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center" onload="document.forms[0].submit()">
-<div><p style="color:#aaa">Taking you to the secure payment page…</p>
-<form method="POST" action="${form.action}">${inputs}<button type="submit" style="margin-top:12px;padding:12px 24px;border-radius:999px;border:0;background:#C7F000;color:#0A0C08;font-weight:700">Continue to payment</button></form></div></body></html>`,
-    );
+    res.status(200).type("html").send(autoPostHtml(form.action, form.fields));
   },
 );
 
@@ -537,6 +526,14 @@ async function handleStoreReturn(req: Request, res: Response): Promise<void> {
     );
     res.status(409).send("Payment verification failed");
     return;
+  }
+  if (matches.length === 0) {
+    // Same Airpay return URL serves Iconic Network Coach bookings (distinct 20-digit refs).
+    const settled = await settlePayment(result);
+    if (settled.handled) {
+      res.status(settled.outcome === "rejected" ? 400 : 200).send(networkCoachLandingHtml(settled.outcome));
+      return;
+    }
   }
   const fullToken = matches[0]?.token ?? null;
   if (!fullToken) {

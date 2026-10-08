@@ -22,7 +22,7 @@ export default function TabsLayout() {
 
   // Fail-safe: if Clerk can't finish loading (slow/blocked network on a real
   // device), don't trap the user on a spinner forever — fall through to sign-in,
-  // where "Continue without login" is always available.
+  // where the user can retry authentication.
   const [authTimedOut, setAuthTimedOut] = useState(false);
   useEffect(() => {
     if (isLoaded) return;
@@ -30,7 +30,7 @@ export default function TabsLayout() {
     return () => clearTimeout(t);
   }, [isLoaded]);
 
-  const hasAccess = isGuest || (isLoaded && isSignedIn);
+  const hasAccess = isLoaded && isSignedIn;
   if (!hasAccess) {
     if (!isLoaded && !authTimedOut) {
       return (

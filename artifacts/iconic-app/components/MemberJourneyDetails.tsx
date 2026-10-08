@@ -1,8 +1,9 @@
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { AppText } from "@/components/AppText";
 import { useColors } from "@/hooks/useColors";
 import type { MemberJourney } from "@workspace/api-client-react";
+import { journeyActivity, isJourneyStageKey } from "@/lib/journeyActivity";
 
 export const journeyStages: Record<string, string> = {
   health_history: "Health history",
@@ -28,7 +29,8 @@ export const journeyStages: Record<string, string> = {
 // Structural view model also supports staff's deliberately redacted response.
 export type JourneyView = MemberJourney & { completedStages?: string[] };
 
-export function MemberJourneyDetails({ journey: j }: { journey: JourneyView }) {
+/** onOpenActivity is opt-in: member screens pass it; staff views omit it, so rows stay non-navigable. */
+export function MemberJourneyDetails({ journey: j, onOpenActivity }: { journey: JourneyView; onOpenActivity?: (href: string) => void }) {
   const colors = useColors();
   const paid = j.facts.paidPt || j.ptDecision === "yes";
   // Never infer completion from stage order: legacy paid PT can skip intake.
@@ -53,30 +55,38 @@ export function MemberJourneyDetails({ journey: j }: { journey: JourneyView }) {
           style={{ height: 6, borderRadius: 3, backgroundColor: colors.border, overflow: "hidden" }}>
           <View style={{ height: 6, width: `${relevant.length ? finished / relevant.length * 100 : 0}%`, backgroundColor: colors.primary }} />
         </View>
-        <AppText size={12} muted>Each activity gets its own tick when its completion is recorded. Health history, BCA and staff review are separate steps.</AppText>
+        <AppText size={12} muted>Each activity gets its own tick only when your club's records confirm it.{onOpenActivity ? " Tap any activity to open it." : ""}</AppText>
       </View>
-      {stages.map(({ key, label, done, alternative }) => {
+      {stages.map(({ key, label, done, alternative }, index) => {
+        const stepLabel = `Step ${index + 1} · ${label}`;
         const current = key === j.currentStage;
         const recurring = ["pt_followup", "attendance_followup", "regular_continue"].includes(key);
         const status = done
           ? recurring ? "Completed · ongoing follow-ups continue" : "Completed"
           : alternative ? "Not on your selected path"
           : current ? "Next activity" : "Pending";
-        return <View key={key} testID={`journey-checklist-${key}`}
-          accessible accessibilityLabel={`${label}: ${status}`}
-          style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: 14,
-            borderWidth: 1, borderColor: done || current ? colors.primary : colors.border,
-            backgroundColor: done ? `${colors.primary}12` : colors.card }}>
+        const activity = isJourneyStageKey(key) ? journeyActivity(key, { currentStage: j.currentStage, completedStages: j.completedStages, ptDecision: j.ptDecision, paidPt: j.facts.paidPt, dueAt: j.dueAt }) : null;
+        const open = onOpenActivity && activity ? () => onOpenActivity(activity.href) : undefined;
+        const body = <>
           <View style={{ width: 28, height: 28, borderRadius: 8, borderWidth: done ? 0 : 2,
             borderColor: current ? colors.primary : colors.border, backgroundColor: done ? colors.primary : "transparent",
             alignItems: "center", justifyContent: "center" }}>
             {done ? <Feather name="check" size={20} color="#111" /> : null}
           </View>
           <View style={{ flex: 1, gap: 4 }}>
-            <AppText weight={done || current ? "700" : "500"} size={14} color={alternative && !done ? colors.mutedForeground : colors.foreground}>{label}</AppText>
+            <AppText weight={done || current ? "700" : "500"} size={14} color={alternative && !done ? colors.mutedForeground : colors.foreground}>{stepLabel}</AppText>
             <AppText size={11} color={done || current ? colors.primary : colors.mutedForeground}>{status}</AppText>
+            {open && activity ? <AppText size={11} muted>{activity.mode === "staff" ? "Club step · " : ""}{activity.cta}</AppText> : null}
           </View>
-        </View>;
+          {open ? <Feather name="chevron-right" size={18} color={colors.mutedForeground} /> : null}
+        </>;
+        const style = { flexDirection: "row" as const, alignItems: "center" as const, gap: 12, padding: 14, borderRadius: 14,
+          borderWidth: 1, borderColor: done || current ? colors.primary : colors.border,
+          backgroundColor: done ? `${colors.primary}12` : colors.card };
+        return open ? <Pressable key={key} testID={`journey-checklist-${key}`} accessibilityRole="button"
+          accessibilityLabel={`${stepLabel}: ${status}. ${activity?.cta ?? ""}`} onPress={open}
+          style={({ pressed }) => [style, pressed ? { opacity: 0.75 } : null]}>{body}</Pressable>
+          : <View key={key} testID={`journey-checklist-${key}`} accessible accessibilityLabel={`${stepLabel}: ${status}`} style={style}>{body}</View>;
       })}
       <AppText weight="700">Workout charts</AppText>
       {j.charts.length ? j.charts.map(chart => <View key={chart.id} style={{ padding: 14, borderRadius: 12, backgroundColor: colors.card, gap: 8 }}>

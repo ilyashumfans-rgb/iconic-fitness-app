@@ -11,7 +11,7 @@ export default function AuthLayout() {
   if (pendingWhatsapp) return <Redirect href="/whatsapp-setup" />;
   // Only bounce to the app once we KNOW the user is signed in. While Clerk is
   // still loading (or never loads on a slow/offline device) we keep showing the
-  // auth stack so "Continue without login" stays reachable — never a blank gate.
+  // auth stack so authentication can be retried — never a blank gate.
   // SSO activates the Clerk session asynchronously. Redirect to the same
   // validated destination carried by welcome rather than always to tabs, so an
   // auth-layout re-render cannot win the hand-off race and discard returnTo.

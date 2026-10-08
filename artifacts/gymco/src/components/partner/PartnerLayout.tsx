@@ -19,6 +19,7 @@ import {
   ClipboardList,
   Inbox,
   QrCode,
+  Receipt,
 } from "lucide-react";
 import { partnerApi, type Partner } from "@/lib/partnerApi";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -47,6 +48,7 @@ const NAV: Item[] = [
   { label: "Leads", href: "/partner/leads", icon: <Inbox className="h-4 w-4" />, perm: "bookings" },
   { label: "PT Bookings", href: "/partner/trainer-bookings", icon: <UserCog className="h-4 w-4" />, perm: "classes" },
   { label: "Package Purchases", href: "/partner/package-bookings", icon: <ClipboardList className="h-4 w-4" />, perm: "bookings" },
+  { label: "Billing · Online coaching", href: "/partner/online-billing", icon: <Receipt className="h-4 w-4" />, perm: "bookings" },
   { label: "Products", href: "/partner/products", icon: <Package className="h-4 w-4" />, perm: "products" },
   { label: "Tickets", href: "/partner/tickets", icon: <LifeBuoy className="h-4 w-4" /> },
   { label: "Complaints", href: "/partner/complaints", icon: <Inbox className="h-4 w-4" />, perm: "bookings" },

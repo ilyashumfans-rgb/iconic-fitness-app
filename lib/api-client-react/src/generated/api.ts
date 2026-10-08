@@ -20,6 +20,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AdminNetworkCoachSlot,
+  AdminNetworkCoachSlotInput,
   AdminReviewUpdateInput,
   AiChatInput,
   AiChatOutput,
@@ -42,6 +44,9 @@ import type {
   CheckinInput,
   ClassSession,
   ClassSessionDetail,
+  CoachCategory,
+  CoachCategoryInput,
+  CoachCategoryReorder,
   CommunityCoach,
   CommunityPost,
   CommunityPostCreated,
@@ -52,24 +57,29 @@ import type {
   ComplaintFollowUpRequest,
   CouponPreviewRequest,
   CouponPreviewResponse,
+  CreateAdminNetworkCoachSlots201,
   CreateCommunityPostRequest,
   CreateMembershipRenewal409,
   CreatePackageBookingRequest,
   CreateTrainerBookingRequest,
   DailySummary,
   DashboardSummary,
+  DeleteAdminNetworkCoachPlan200,
   DeleteAdminReview200,
   EnrollMemberJourneyBody,
   FitnessJourney,
   FitnessSetup,
   FitnessSetupStepSave,
   GetAdminLiveTrainerProfileParams,
+  GetAdminTrainerCategoriesParams,
   GetAvailableCouponsParams,
   GetLiveTrainerProfileParams,
   GetMealDayParams,
   GetMemberJourneyOptions200,
   GetMyAttendanceParams,
   GetMyMemberJourney200,
+  GetNetworkCoachOverviewParams,
+  GetNetworkCoachReminder200,
   GetOwnTrainerReviewParams,
   GetPackageBookingParams,
   GetProgressParams,
@@ -84,6 +94,8 @@ import type {
   HealthStatus,
   HomeSlide,
   ListClassesParams,
+  ListCoachCategoriesParams,
+  ListCoachCategoryTrainersParams,
   ListCommunityPostsParams,
   ListCommunityTrainersParams,
   ListGymsParams,
@@ -92,6 +104,8 @@ import type {
   ListMembershipPackagesParams,
   ListMyBookingsParams,
   ListMyCommunityPostsParams,
+  ListNetworkCoachPlansParams,
+  ListNetworkCoachSlotsParams,
   ListReviewTrainerOptions200,
   ListStoreProductsParams,
   ListTrainerPackagesParams,
@@ -110,14 +124,39 @@ import type {
   MembershipLookupResult,
   MembershipPayment,
   MembershipPlan,
+  MembershipRenewalRequest,
+  MembershipRenewalStatus,
   MobileSyncRequest,
   MyAssessment,
   MyEngagement,
   MyEngagementPlan,
   MyMembership,
+  NetworkCoachAdminSettings,
+  NetworkCoachBooking,
+  NetworkCoachBookingInput,
+  NetworkCoachCallToken,
+  NetworkCoachCapabilityInput,
+  NetworkCoachCategoryCapability,
+  NetworkCoachMemberPlan,
+  NetworkCoachOk,
+  NetworkCoachOverview,
+  NetworkCoachPlan,
+  NetworkCoachPlanInput,
+  NetworkCoachPlanList,
+  NetworkCoachPlanPurchase,
+  NetworkCoachPlanPurchaseInput,
+  NetworkCoachPlanReservation,
+  NetworkCoachPrices,
+  NetworkCoachPricesInput,
+  NetworkCoachRefundInput,
+  NetworkCoachReminderInput,
+  NetworkCoachReservation,
+  NetworkCoachReviewInput,
+  NetworkCoachSlotList,
   Notification,
   NotificationSounds,
   OkResponse,
+  OnlineBill,
   OwnGymReviewResponse,
   OwnTrainerReviewResponse,
   PackageBooking,
@@ -127,6 +166,8 @@ import type {
   ProgressReport,
   PtProgram,
   PtTrialFeedback,
+  PushTokenRequest,
+  PushTokenResult,
   ReferralInfo,
   Review,
   ReviewBadRequestResponse,
@@ -136,6 +177,7 @@ import type {
   ReviewNotFoundResponse,
   ReviewUnauthorizedResponse,
   SaveOwnTrainerReviewParams,
+  SetNetworkCoachReminder200,
   SetNotificationSoundBody,
   StoreCategory,
   StoreCheckoutRequest,
@@ -148,10 +190,12 @@ import type {
   Trainer,
   TrainerBooking,
   TrainerBookingCreated,
+  TrainerCategoryAssignment,
   TrainerPackage,
   TrainerProfileContent,
   TrainerReviewModerationInput,
   UpdateAdminLiveTrainerProfileParams,
+  UpdateAdminTrainerCategoriesParams,
   UserProfile,
   UserProfileUpdate,
   Wallet,
@@ -176,6 +220,219 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+
+
+export const getListAdminOnlineBillingUrl = () => {
+
+
+
+
+  return `/api/admin/online-billing`
+}
+
+export const listAdminOnlineBilling = async ( options?: RequestInit): Promise<OnlineBill[]> => {
+
+  return customFetch<OnlineBill[]>(getListAdminOnlineBillingUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdminOnlineBillingQueryKey = () => {
+    return [
+    `/api/admin/online-billing`
+    ] as const;
+    }
+
+
+export const getListAdminOnlineBillingQueryOptions = <TData = Awaited<ReturnType<typeof listAdminOnlineBilling>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminOnlineBilling>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdminOnlineBillingQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminOnlineBilling>>> = ({ signal }) => listAdminOnlineBilling({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminOnlineBilling>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAdminOnlineBillingQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminOnlineBilling>>>
+export type ListAdminOnlineBillingQueryError = ErrorType<unknown>
+
+
+
+export function useListAdminOnlineBilling<TData = Awaited<ReturnType<typeof listAdminOnlineBilling>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminOnlineBilling>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAdminOnlineBillingQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListPartnerOnlineBillingUrl = () => {
+
+
+
+
+  return `/api/partner/online-billing`
+}
+
+export const listPartnerOnlineBilling = async ( options?: RequestInit): Promise<OnlineBill[]> => {
+
+  return customFetch<OnlineBill[]>(getListPartnerOnlineBillingUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPartnerOnlineBillingQueryKey = () => {
+    return [
+    `/api/partner/online-billing`
+    ] as const;
+    }
+
+
+export const getListPartnerOnlineBillingQueryOptions = <TData = Awaited<ReturnType<typeof listPartnerOnlineBilling>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPartnerOnlineBilling>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPartnerOnlineBillingQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPartnerOnlineBilling>>> = ({ signal }) => listPartnerOnlineBilling({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPartnerOnlineBilling>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListPartnerOnlineBillingQueryResult = NonNullable<Awaited<ReturnType<typeof listPartnerOnlineBilling>>>
+export type ListPartnerOnlineBillingQueryError = ErrorType<unknown>
+
+
+
+export function useListPartnerOnlineBilling<TData = Awaited<ReturnType<typeof listPartnerOnlineBilling>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPartnerOnlineBilling>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListPartnerOnlineBillingQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListMyOnlineBillingUrl = () => {
+
+
+
+
+  return `/api/network-coach/billing`
+}
+
+export const listMyOnlineBilling = async ( options?: RequestInit): Promise<OnlineBill[]> => {
+
+  return customFetch<OnlineBill[]>(getListMyOnlineBillingUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyOnlineBillingQueryKey = () => {
+    return [
+    `/api/network-coach/billing`
+    ] as const;
+    }
+
+
+export const getListMyOnlineBillingQueryOptions = <TData = Awaited<ReturnType<typeof listMyOnlineBilling>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyOnlineBilling>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyOnlineBillingQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyOnlineBilling>>> = ({ signal }) => listMyOnlineBilling({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyOnlineBilling>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMyOnlineBillingQueryResult = NonNullable<Awaited<ReturnType<typeof listMyOnlineBilling>>>
+export type ListMyOnlineBillingQueryError = ErrorType<unknown>
+
+
+
+export function useListMyOnlineBilling<TData = Awaited<ReturnType<typeof listMyOnlineBilling>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyOnlineBilling>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMyOnlineBillingQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
 
 
 
@@ -375,6 +632,668 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getCompleteWhatsappOtpMutationOptions(options));
+    }
+
+export const getListCoachCategoriesUrl = (params: ListCoachCategoriesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/coach-categories?${stringifiedParams}` : `/api/coach-categories`
+}
+
+/**
+ * @summary Published coach categories with branch-scoped assigned coach counts
+ */
+export const listCoachCategories = async (params: ListCoachCategoriesParams, options?: RequestInit): Promise<CoachCategory[]> => {
+
+  return customFetch<CoachCategory[]>(getListCoachCategoriesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCoachCategoriesQueryKey = (params?: ListCoachCategoriesParams,) => {
+    return [
+    `/api/coach-categories`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListCoachCategoriesQueryOptions = <TData = Awaited<ReturnType<typeof listCoachCategories>>, TError = ErrorType<unknown>>(params: ListCoachCategoriesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCoachCategories>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCoachCategoriesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCoachCategories>>> = ({ signal }) => listCoachCategories(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCoachCategories>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCoachCategoriesQueryResult = NonNullable<Awaited<ReturnType<typeof listCoachCategories>>>
+export type ListCoachCategoriesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Published coach categories with branch-scoped assigned coach counts
+ */
+
+export function useListCoachCategories<TData = Awaited<ReturnType<typeof listCoachCategories>>, TError = ErrorType<unknown>>(
+ params: ListCoachCategoriesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCoachCategories>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCoachCategoriesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListCoachCategoryTrainersUrl = (categoryId: string,
+    params: ListCoachCategoryTrainersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/coach-categories/${categoryId}/trainers?${stringifiedParams}` : `/api/coach-categories/${categoryId}/trainers`
+}
+
+/**
+ * @summary Eligible coaches at this branch assigned to this published category
+ */
+export const listCoachCategoryTrainers = async (categoryId: string,
+    params: ListCoachCategoryTrainersParams, options?: RequestInit): Promise<LiveTrainer[]> => {
+
+  return customFetch<LiveTrainer[]>(getListCoachCategoryTrainersUrl(categoryId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCoachCategoryTrainersQueryKey = (categoryId: string,
+    params?: ListCoachCategoryTrainersParams,) => {
+    return [
+    `/api/coach-categories/${categoryId}/trainers`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListCoachCategoryTrainersQueryOptions = <TData = Awaited<ReturnType<typeof listCoachCategoryTrainers>>, TError = ErrorType<unknown>>(categoryId: string,
+    params: ListCoachCategoryTrainersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCoachCategoryTrainers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCoachCategoryTrainersQueryKey(categoryId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCoachCategoryTrainers>>> = ({ signal }) => listCoachCategoryTrainers(categoryId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(categoryId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCoachCategoryTrainers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCoachCategoryTrainersQueryResult = NonNullable<Awaited<ReturnType<typeof listCoachCategoryTrainers>>>
+export type ListCoachCategoryTrainersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Eligible coaches at this branch assigned to this published category
+ */
+
+export function useListCoachCategoryTrainers<TData = Awaited<ReturnType<typeof listCoachCategoryTrainers>>, TError = ErrorType<unknown>>(
+ categoryId: string,
+    params: ListCoachCategoryTrainersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCoachCategoryTrainers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCoachCategoryTrainersQueryOptions(categoryId,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListAdminCoachCategoriesUrl = () => {
+
+
+
+
+  return `/api/admin/coach-categories`
+}
+
+export const listAdminCoachCategories = async ( options?: RequestInit): Promise<CoachCategory[]> => {
+
+  return customFetch<CoachCategory[]>(getListAdminCoachCategoriesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdminCoachCategoriesQueryKey = () => {
+    return [
+    `/api/admin/coach-categories`
+    ] as const;
+    }
+
+
+export const getListAdminCoachCategoriesQueryOptions = <TData = Awaited<ReturnType<typeof listAdminCoachCategories>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminCoachCategories>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdminCoachCategoriesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminCoachCategories>>> = ({ signal }) => listAdminCoachCategories({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminCoachCategories>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAdminCoachCategoriesQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminCoachCategories>>>
+export type ListAdminCoachCategoriesQueryError = ErrorType<unknown>
+
+
+
+export function useListAdminCoachCategories<TData = Awaited<ReturnType<typeof listAdminCoachCategories>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminCoachCategories>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAdminCoachCategoriesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateAdminCoachCategoryUrl = () => {
+
+
+
+
+  return `/api/admin/coach-categories`
+}
+
+export const createAdminCoachCategory = async (coachCategoryInput: CoachCategoryInput, options?: RequestInit): Promise<CoachCategory> => {
+
+  return customFetch<CoachCategory>(getCreateAdminCoachCategoryUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      coachCategoryInput,)
+  }
+);}
+
+
+
+
+export const getCreateAdminCoachCategoryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdminCoachCategory>>, TError,{data: BodyType<CoachCategoryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAdminCoachCategory>>, TError,{data: BodyType<CoachCategoryInput>}, TContext> => {
+
+const mutationKey = ['createAdminCoachCategory'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAdminCoachCategory>>, {data: BodyType<CoachCategoryInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createAdminCoachCategory(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAdminCoachCategoryMutationResult = NonNullable<Awaited<ReturnType<typeof createAdminCoachCategory>>>
+    export type CreateAdminCoachCategoryMutationBody = BodyType<CoachCategoryInput>
+    export type CreateAdminCoachCategoryMutationError = ErrorType<unknown>
+
+    export const useCreateAdminCoachCategory = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdminCoachCategory>>, TError,{data: BodyType<CoachCategoryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createAdminCoachCategory>>,
+        TError,
+        {data: BodyType<CoachCategoryInput>},
+        TContext
+      > => {
+      return useMutation(getCreateAdminCoachCategoryMutationOptions(options));
+    }
+
+export const getReorderAdminCoachCategoriesUrl = () => {
+
+
+
+
+  return `/api/admin/coach-categories/reorder`
+}
+
+export const reorderAdminCoachCategories = async (coachCategoryReorder: CoachCategoryReorder, options?: RequestInit): Promise<CoachCategory[]> => {
+
+  return customFetch<CoachCategory[]>(getReorderAdminCoachCategoriesUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      coachCategoryReorder,)
+  }
+);}
+
+
+
+
+export const getReorderAdminCoachCategoriesMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reorderAdminCoachCategories>>, TError,{data: BodyType<CoachCategoryReorder>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reorderAdminCoachCategories>>, TError,{data: BodyType<CoachCategoryReorder>}, TContext> => {
+
+const mutationKey = ['reorderAdminCoachCategories'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reorderAdminCoachCategories>>, {data: BodyType<CoachCategoryReorder>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  reorderAdminCoachCategories(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReorderAdminCoachCategoriesMutationResult = NonNullable<Awaited<ReturnType<typeof reorderAdminCoachCategories>>>
+    export type ReorderAdminCoachCategoriesMutationBody = BodyType<CoachCategoryReorder>
+    export type ReorderAdminCoachCategoriesMutationError = ErrorType<unknown>
+
+    export const useReorderAdminCoachCategories = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reorderAdminCoachCategories>>, TError,{data: BodyType<CoachCategoryReorder>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reorderAdminCoachCategories>>,
+        TError,
+        {data: BodyType<CoachCategoryReorder>},
+        TContext
+      > => {
+      return useMutation(getReorderAdminCoachCategoriesMutationOptions(options));
+    }
+
+export const getUpdateAdminCoachCategoryUrl = (categoryId: string,) => {
+
+
+
+
+  return `/api/admin/coach-categories/${categoryId}`
+}
+
+export const updateAdminCoachCategory = async (categoryId: string,
+    coachCategoryInput: CoachCategoryInput, options?: RequestInit): Promise<CoachCategory> => {
+
+  return customFetch<CoachCategory>(getUpdateAdminCoachCategoryUrl(categoryId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      coachCategoryInput,)
+  }
+);}
+
+
+
+
+export const getUpdateAdminCoachCategoryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminCoachCategory>>, TError,{categoryId: string;data: BodyType<CoachCategoryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAdminCoachCategory>>, TError,{categoryId: string;data: BodyType<CoachCategoryInput>}, TContext> => {
+
+const mutationKey = ['updateAdminCoachCategory'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAdminCoachCategory>>, {categoryId: string;data: BodyType<CoachCategoryInput>}> = (props) => {
+          const {categoryId,data} = props ?? {};
+
+          return  updateAdminCoachCategory(categoryId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAdminCoachCategoryMutationResult = NonNullable<Awaited<ReturnType<typeof updateAdminCoachCategory>>>
+    export type UpdateAdminCoachCategoryMutationBody = BodyType<CoachCategoryInput>
+    export type UpdateAdminCoachCategoryMutationError = ErrorType<unknown>
+
+    export const useUpdateAdminCoachCategory = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminCoachCategory>>, TError,{categoryId: string;data: BodyType<CoachCategoryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateAdminCoachCategory>>,
+        TError,
+        {categoryId: string;data: BodyType<CoachCategoryInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateAdminCoachCategoryMutationOptions(options));
+    }
+
+export const getDeleteAdminCoachCategoryUrl = (categoryId: string,) => {
+
+
+
+
+  return `/api/admin/coach-categories/${categoryId}`
+}
+
+export const deleteAdminCoachCategory = async (categoryId: string, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteAdminCoachCategoryUrl(categoryId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteAdminCoachCategoryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminCoachCategory>>, TError,{categoryId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAdminCoachCategory>>, TError,{categoryId: string}, TContext> => {
+
+const mutationKey = ['deleteAdminCoachCategory'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAdminCoachCategory>>, {categoryId: string}> = (props) => {
+          const {categoryId} = props ?? {};
+
+          return  deleteAdminCoachCategory(categoryId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAdminCoachCategoryMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAdminCoachCategory>>>
+
+    export type DeleteAdminCoachCategoryMutationError = ErrorType<unknown>
+
+    export const useDeleteAdminCoachCategory = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminCoachCategory>>, TError,{categoryId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAdminCoachCategory>>,
+        TError,
+        {categoryId: string},
+        TContext
+      > => {
+      return useMutation(getDeleteAdminCoachCategoryMutationOptions(options));
+    }
+
+export const getGetAdminTrainerCategoriesUrl = (trainerId: string,
+    params: GetAdminTrainerCategoriesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/trainers/live/${trainerId}/categories?${stringifiedParams}` : `/api/admin/trainers/live/${trainerId}/categories`
+}
+
+export const getAdminTrainerCategories = async (trainerId: string,
+    params: GetAdminTrainerCategoriesParams, options?: RequestInit): Promise<TrainerCategoryAssignment> => {
+
+  return customFetch<TrainerCategoryAssignment>(getGetAdminTrainerCategoriesUrl(trainerId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAdminTrainerCategoriesQueryKey = (trainerId: string,
+    params?: GetAdminTrainerCategoriesParams,) => {
+    return [
+    `/api/admin/trainers/live/${trainerId}/categories`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetAdminTrainerCategoriesQueryOptions = <TData = Awaited<ReturnType<typeof getAdminTrainerCategories>>, TError = ErrorType<unknown>>(trainerId: string,
+    params: GetAdminTrainerCategoriesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminTrainerCategories>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminTrainerCategoriesQueryKey(trainerId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminTrainerCategories>>> = ({ signal }) => getAdminTrainerCategories(trainerId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(trainerId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminTrainerCategories>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAdminTrainerCategoriesQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminTrainerCategories>>>
+export type GetAdminTrainerCategoriesQueryError = ErrorType<unknown>
+
+
+
+export function useGetAdminTrainerCategories<TData = Awaited<ReturnType<typeof getAdminTrainerCategories>>, TError = ErrorType<unknown>>(
+ trainerId: string,
+    params: GetAdminTrainerCategoriesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminTrainerCategories>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAdminTrainerCategoriesQueryOptions(trainerId,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateAdminTrainerCategoriesUrl = (trainerId: string,
+    params: UpdateAdminTrainerCategoriesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/trainers/live/${trainerId}/categories?${stringifiedParams}` : `/api/admin/trainers/live/${trainerId}/categories`
+}
+
+export const updateAdminTrainerCategories = async (trainerId: string,
+    trainerCategoryAssignment: TrainerCategoryAssignment,
+    params: UpdateAdminTrainerCategoriesParams, options?: RequestInit): Promise<TrainerCategoryAssignment> => {
+
+  return customFetch<TrainerCategoryAssignment>(getUpdateAdminTrainerCategoriesUrl(trainerId,params),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      trainerCategoryAssignment,)
+  }
+);}
+
+
+
+
+export const getUpdateAdminTrainerCategoriesMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminTrainerCategories>>, TError,{trainerId: string;data: BodyType<TrainerCategoryAssignment>;params: UpdateAdminTrainerCategoriesParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAdminTrainerCategories>>, TError,{trainerId: string;data: BodyType<TrainerCategoryAssignment>;params: UpdateAdminTrainerCategoriesParams}, TContext> => {
+
+const mutationKey = ['updateAdminTrainerCategories'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAdminTrainerCategories>>, {trainerId: string;data: BodyType<TrainerCategoryAssignment>;params: UpdateAdminTrainerCategoriesParams}> = (props) => {
+          const {trainerId,data,params} = props ?? {};
+
+          return  updateAdminTrainerCategories(trainerId,data,params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAdminTrainerCategoriesMutationResult = NonNullable<Awaited<ReturnType<typeof updateAdminTrainerCategories>>>
+    export type UpdateAdminTrainerCategoriesMutationBody = BodyType<TrainerCategoryAssignment>
+    export type UpdateAdminTrainerCategoriesMutationError = ErrorType<unknown>
+
+    export const useUpdateAdminTrainerCategories = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminTrainerCategories>>, TError,{trainerId: string;data: BodyType<TrainerCategoryAssignment>;params: UpdateAdminTrainerCategoriesParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateAdminTrainerCategories>>,
+        TError,
+        {trainerId: string;data: BodyType<TrainerCategoryAssignment>;params: UpdateAdminTrainerCategoriesParams},
+        TContext
+      > => {
+      return useMutation(getUpdateAdminTrainerCategoriesMutationOptions(options));
     }
 
 export const getGetAdminLiveTrainerProfileUrl = (trainerId: string,
@@ -4641,16 +5560,17 @@ export const getCreateMembershipRenewalUrl = () => {
 }
 
 /**
- * @summary Start an online renewal payment for the member's current YoActiv plan
+ * @summary Start an online renewal or upgrade payment for the member's current YoActiv plan (starts the day after current expiry, full listed price)
  */
-export const createMembershipRenewal = async ( options?: RequestInit): Promise<PackageBookingCreated> => {
+export const createMembershipRenewal = async (membershipRenewalRequest?: MembershipRenewalRequest, options?: RequestInit): Promise<PackageBookingCreated> => {
 
   return customFetch<PackageBookingCreated>(getCreateMembershipRenewalUrl(),
   {
     ...options,
-    method: 'POST'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      membershipRenewalRequest,)
   }
 );}
 
@@ -4658,8 +5578,8 @@ export const createMembershipRenewal = async ( options?: RequestInit): Promise<P
 
 
 export const getCreateMembershipRenewalMutationOptions = <TError = ErrorType<CreateMembershipRenewal409>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMembershipRenewal>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createMembershipRenewal>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMembershipRenewal>>, TError,{data?: BodyType<MembershipRenewalRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createMembershipRenewal>>, TError,{data?: BodyType<MembershipRenewalRequest>}, TContext> => {
 
 const mutationKey = ['createMembershipRenewal'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -4671,10 +5591,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMembershipRenewal>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMembershipRenewal>>, {data?: BodyType<MembershipRenewalRequest>}> = (props) => {
+          const {data} = props ?? {};
 
-
-          return  createMembershipRenewal(requestOptions)
+          return  createMembershipRenewal(data,requestOptions)
         }
 
 
@@ -4685,21 +5605,240 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type CreateMembershipRenewalMutationResult = NonNullable<Awaited<ReturnType<typeof createMembershipRenewal>>>
-
+    export type CreateMembershipRenewalMutationBody = BodyType<MembershipRenewalRequest> | undefined
     export type CreateMembershipRenewalMutationError = ErrorType<CreateMembershipRenewal409>
 
     /**
- * @summary Start an online renewal payment for the member's current YoActiv plan
+ * @summary Start an online renewal or upgrade payment for the member's current YoActiv plan (starts the day after current expiry, full listed price)
  */
 export const useCreateMembershipRenewal = <TError = ErrorType<CreateMembershipRenewal409>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMembershipRenewal>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMembershipRenewal>>, TError,{data?: BodyType<MembershipRenewalRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof createMembershipRenewal>>,
         TError,
-        void,
+        {data?: BodyType<MembershipRenewalRequest>},
         TContext
       > => {
       return useMutation(getCreateMembershipRenewalMutationOptions(options));
+    }
+
+export const getGetMyRenewalStatusUrl = () => {
+
+
+
+
+  return `/api/memberships/mine/renewal`
+}
+
+/**
+ * @summary Renewal/upgrade eligibility, paid renewal evidence, and PT renewal context for the caller
+ */
+export const getMyRenewalStatus = async ( options?: RequestInit): Promise<MembershipRenewalStatus> => {
+
+  return customFetch<MembershipRenewalStatus>(getGetMyRenewalStatusUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyRenewalStatusQueryKey = () => {
+    return [
+    `/api/memberships/mine/renewal`
+    ] as const;
+    }
+
+
+export const getGetMyRenewalStatusQueryOptions = <TData = Awaited<ReturnType<typeof getMyRenewalStatus>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyRenewalStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyRenewalStatusQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyRenewalStatus>>> = ({ signal }) => getMyRenewalStatus({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyRenewalStatus>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMyRenewalStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getMyRenewalStatus>>>
+export type GetMyRenewalStatusQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Renewal/upgrade eligibility, paid renewal evidence, and PT renewal context for the caller
+ */
+
+export function useGetMyRenewalStatus<TData = Awaited<ReturnType<typeof getMyRenewalStatus>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyRenewalStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMyRenewalStatusQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getRegisterPushTokenUrl = () => {
+
+
+
+
+  return `/api/me/push-tokens`
+}
+
+/**
+ * @summary Register this device's Expo push token for the signed-in member (moves it from any previous account)
+ */
+export const registerPushToken = async (pushTokenRequest: PushTokenRequest, options?: RequestInit): Promise<PushTokenResult> => {
+
+  return customFetch<PushTokenResult>(getRegisterPushTokenUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      pushTokenRequest,)
+  }
+);}
+
+
+
+
+export const getRegisterPushTokenMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerPushToken>>, TError,{data: BodyType<PushTokenRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registerPushToken>>, TError,{data: BodyType<PushTokenRequest>}, TContext> => {
+
+const mutationKey = ['registerPushToken'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registerPushToken>>, {data: BodyType<PushTokenRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  registerPushToken(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegisterPushTokenMutationResult = NonNullable<Awaited<ReturnType<typeof registerPushToken>>>
+    export type RegisterPushTokenMutationBody = BodyType<PushTokenRequest>
+    export type RegisterPushTokenMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Register this device's Expo push token for the signed-in member (moves it from any previous account)
+ */
+export const useRegisterPushToken = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerPushToken>>, TError,{data: BodyType<PushTokenRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof registerPushToken>>,
+        TError,
+        {data: BodyType<PushTokenRequest>},
+        TContext
+      > => {
+      return useMutation(getRegisterPushTokenMutationOptions(options));
+    }
+
+export const getRemovePushTokenUrl = () => {
+
+
+
+
+  return `/api/me/push-tokens/remove`
+}
+
+/**
+ * @summary Remove this device's push token (sign-out / shared phone); possession of the token is required
+ */
+export const removePushToken = async (pushTokenRequest: PushTokenRequest, options?: RequestInit): Promise<PushTokenResult> => {
+
+  return customFetch<PushTokenResult>(getRemovePushTokenUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      pushTokenRequest,)
+  }
+);}
+
+
+
+
+export const getRemovePushTokenMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removePushToken>>, TError,{data: BodyType<PushTokenRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removePushToken>>, TError,{data: BodyType<PushTokenRequest>}, TContext> => {
+
+const mutationKey = ['removePushToken'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removePushToken>>, {data: BodyType<PushTokenRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  removePushToken(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemovePushTokenMutationResult = NonNullable<Awaited<ReturnType<typeof removePushToken>>>
+    export type RemovePushTokenMutationBody = BodyType<PushTokenRequest>
+    export type RemovePushTokenMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove this device's push token (sign-out / shared phone); possession of the token is required
+ */
+export const useRemovePushToken = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removePushToken>>, TError,{data: BodyType<PushTokenRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removePushToken>>,
+        TError,
+        {data: BodyType<PushTokenRequest>},
+        TContext
+      > => {
+      return useMutation(getRemovePushTokenMutationOptions(options));
     }
 
 export const getListMyMembershipPaymentsUrl = () => {
@@ -9491,5 +10630,1798 @@ export const useWithdrawCommunityPost = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getWithdrawCommunityPostMutationOptions(options));
+    }
+
+export const getGetNetworkCoachOverviewUrl = (params?: GetNetworkCoachOverviewParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/network-coach/overview?${stringifiedParams}` : `/api/network-coach/overview`
+}
+
+/**
+ * @summary Iconic Network Coach roster across all branches (optional branch filter)
+ */
+export const getNetworkCoachOverview = async (params?: GetNetworkCoachOverviewParams, options?: RequestInit): Promise<NetworkCoachOverview> => {
+
+  return customFetch<NetworkCoachOverview>(getGetNetworkCoachOverviewUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetNetworkCoachOverviewQueryKey = (params?: GetNetworkCoachOverviewParams,) => {
+    return [
+    `/api/network-coach/overview`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetNetworkCoachOverviewQueryOptions = <TData = Awaited<ReturnType<typeof getNetworkCoachOverview>>, TError = ErrorType<unknown>>(params?: GetNetworkCoachOverviewParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getNetworkCoachOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetNetworkCoachOverviewQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getNetworkCoachOverview>>> = ({ signal }) => getNetworkCoachOverview(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNetworkCoachOverview>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetNetworkCoachOverviewQueryResult = NonNullable<Awaited<ReturnType<typeof getNetworkCoachOverview>>>
+export type GetNetworkCoachOverviewQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Iconic Network Coach roster across all branches (optional branch filter)
+ */
+
+export function useGetNetworkCoachOverview<TData = Awaited<ReturnType<typeof getNetworkCoachOverview>>, TError = ErrorType<unknown>>(
+ params?: GetNetworkCoachOverviewParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getNetworkCoachOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetNetworkCoachOverviewQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListNetworkCoachSlotsUrl = (trainerId: string,
+    params: ListNetworkCoachSlotsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/network-coach/trainers/${trainerId}/slots?${stringifiedParams}` : `/api/network-coach/trainers/${trainerId}/slots`
+}
+
+export const listNetworkCoachSlots = async (trainerId: string,
+    params: ListNetworkCoachSlotsParams, options?: RequestInit): Promise<NetworkCoachSlotList> => {
+
+  return customFetch<NetworkCoachSlotList>(getListNetworkCoachSlotsUrl(trainerId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListNetworkCoachSlotsQueryKey = (trainerId: string,
+    params?: ListNetworkCoachSlotsParams,) => {
+    return [
+    `/api/network-coach/trainers/${trainerId}/slots`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListNetworkCoachSlotsQueryOptions = <TData = Awaited<ReturnType<typeof listNetworkCoachSlots>>, TError = ErrorType<unknown>>(trainerId: string,
+    params: ListNetworkCoachSlotsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listNetworkCoachSlots>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListNetworkCoachSlotsQueryKey(trainerId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listNetworkCoachSlots>>> = ({ signal }) => listNetworkCoachSlots(trainerId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(trainerId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listNetworkCoachSlots>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListNetworkCoachSlotsQueryResult = NonNullable<Awaited<ReturnType<typeof listNetworkCoachSlots>>>
+export type ListNetworkCoachSlotsQueryError = ErrorType<unknown>
+
+
+
+export function useListNetworkCoachSlots<TData = Awaited<ReturnType<typeof listNetworkCoachSlots>>, TError = ErrorType<unknown>>(
+ trainerId: string,
+    params: ListNetworkCoachSlotsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listNetworkCoachSlots>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListNetworkCoachSlotsQueryOptions(trainerId,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListNetworkCoachPlansUrl = (trainerId: string,
+    params: ListNetworkCoachPlansParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/network-coach/trainers/${trainerId}/plans?${stringifiedParams}` : `/api/network-coach/trainers/${trainerId}/plans`
+}
+
+export const listNetworkCoachPlans = async (trainerId: string,
+    params: ListNetworkCoachPlansParams, options?: RequestInit): Promise<NetworkCoachPlanList> => {
+
+  return customFetch<NetworkCoachPlanList>(getListNetworkCoachPlansUrl(trainerId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListNetworkCoachPlansQueryKey = (trainerId: string,
+    params?: ListNetworkCoachPlansParams,) => {
+    return [
+    `/api/network-coach/trainers/${trainerId}/plans`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListNetworkCoachPlansQueryOptions = <TData = Awaited<ReturnType<typeof listNetworkCoachPlans>>, TError = ErrorType<unknown>>(trainerId: string,
+    params: ListNetworkCoachPlansParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listNetworkCoachPlans>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListNetworkCoachPlansQueryKey(trainerId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listNetworkCoachPlans>>> = ({ signal }) => listNetworkCoachPlans(trainerId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(trainerId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listNetworkCoachPlans>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListNetworkCoachPlansQueryResult = NonNullable<Awaited<ReturnType<typeof listNetworkCoachPlans>>>
+export type ListNetworkCoachPlansQueryError = ErrorType<unknown>
+
+
+
+export function useListNetworkCoachPlans<TData = Awaited<ReturnType<typeof listNetworkCoachPlans>>, TError = ErrorType<unknown>>(
+ trainerId: string,
+    params: ListNetworkCoachPlansParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listNetworkCoachPlans>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListNetworkCoachPlansQueryOptions(trainerId,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getPurchaseNetworkCoachPlanUrl = () => {
+
+
+
+
+  return `/api/network-coach/plans/purchase`
+}
+
+export const purchaseNetworkCoachPlan = async (networkCoachPlanPurchaseInput: NetworkCoachPlanPurchaseInput, options?: RequestInit): Promise<NetworkCoachPlanReservation> => {
+
+  return customFetch<NetworkCoachPlanReservation>(getPurchaseNetworkCoachPlanUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      networkCoachPlanPurchaseInput,)
+  }
+);}
+
+
+
+
+export const getPurchaseNetworkCoachPlanMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purchaseNetworkCoachPlan>>, TError,{data: BodyType<NetworkCoachPlanPurchaseInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof purchaseNetworkCoachPlan>>, TError,{data: BodyType<NetworkCoachPlanPurchaseInput>}, TContext> => {
+
+const mutationKey = ['purchaseNetworkCoachPlan'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof purchaseNetworkCoachPlan>>, {data: BodyType<NetworkCoachPlanPurchaseInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  purchaseNetworkCoachPlan(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PurchaseNetworkCoachPlanMutationResult = NonNullable<Awaited<ReturnType<typeof purchaseNetworkCoachPlan>>>
+    export type PurchaseNetworkCoachPlanMutationBody = BodyType<NetworkCoachPlanPurchaseInput>
+    export type PurchaseNetworkCoachPlanMutationError = ErrorType<unknown>
+
+    export const usePurchaseNetworkCoachPlan = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purchaseNetworkCoachPlan>>, TError,{data: BodyType<NetworkCoachPlanPurchaseInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof purchaseNetworkCoachPlan>>,
+        TError,
+        {data: BodyType<NetworkCoachPlanPurchaseInput>},
+        TContext
+      > => {
+      return useMutation(getPurchaseNetworkCoachPlanMutationOptions(options));
+    }
+
+export const getListMyNetworkCoachPlansUrl = () => {
+
+
+
+
+  return `/api/network-coach/plans`
+}
+
+export const listMyNetworkCoachPlans = async ( options?: RequestInit): Promise<NetworkCoachMemberPlan[]> => {
+
+  return customFetch<NetworkCoachMemberPlan[]>(getListMyNetworkCoachPlansUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyNetworkCoachPlansQueryKey = () => {
+    return [
+    `/api/network-coach/plans`
+    ] as const;
+    }
+
+
+export const getListMyNetworkCoachPlansQueryOptions = <TData = Awaited<ReturnType<typeof listMyNetworkCoachPlans>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyNetworkCoachPlans>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyNetworkCoachPlansQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyNetworkCoachPlans>>> = ({ signal }) => listMyNetworkCoachPlans({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyNetworkCoachPlans>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMyNetworkCoachPlansQueryResult = NonNullable<Awaited<ReturnType<typeof listMyNetworkCoachPlans>>>
+export type ListMyNetworkCoachPlansQueryError = ErrorType<unknown>
+
+
+
+export function useListMyNetworkCoachPlans<TData = Awaited<ReturnType<typeof listMyNetworkCoachPlans>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyNetworkCoachPlans>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMyNetworkCoachPlansQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetNetworkCoachReminderUrl = (role: 'member' | 'trainer',
+    id: number,) => {
+
+
+
+
+  return `/api/network-coach/reminders/${role}/${id}`
+}
+
+export const getNetworkCoachReminder = async (role: 'member' | 'trainer',
+    id: number, options?: RequestInit): Promise<GetNetworkCoachReminder200> => {
+
+  return customFetch<GetNetworkCoachReminder200>(getGetNetworkCoachReminderUrl(role,id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetNetworkCoachReminderQueryKey = (role: 'member' | 'trainer',
+    id: number,) => {
+    return [
+    `/api/network-coach/reminders/${role}/${id}`
+    ] as const;
+    }
+
+
+export const getGetNetworkCoachReminderQueryOptions = <TData = Awaited<ReturnType<typeof getNetworkCoachReminder>>, TError = ErrorType<unknown>>(role: 'member' | 'trainer',
+    id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getNetworkCoachReminder>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetNetworkCoachReminderQueryKey(role,id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getNetworkCoachReminder>>> = ({ signal }) => getNetworkCoachReminder(role,id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(role && id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNetworkCoachReminder>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetNetworkCoachReminderQueryResult = NonNullable<Awaited<ReturnType<typeof getNetworkCoachReminder>>>
+export type GetNetworkCoachReminderQueryError = ErrorType<unknown>
+
+
+
+export function useGetNetworkCoachReminder<TData = Awaited<ReturnType<typeof getNetworkCoachReminder>>, TError = ErrorType<unknown>>(
+ role: 'member' | 'trainer',
+    id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getNetworkCoachReminder>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetNetworkCoachReminderQueryOptions(role,id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSetNetworkCoachReminderUrl = (role: 'member' | 'trainer',
+    id: number,) => {
+
+
+
+
+  return `/api/network-coach/reminders/${role}/${id}`
+}
+
+export const setNetworkCoachReminder = async (role: 'member' | 'trainer',
+    id: number,
+    networkCoachReminderInput: NetworkCoachReminderInput, options?: RequestInit): Promise<SetNetworkCoachReminder200> => {
+
+  return customFetch<SetNetworkCoachReminder200>(getSetNetworkCoachReminderUrl(role,id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      networkCoachReminderInput,)
+  }
+);}
+
+
+
+
+export const getSetNetworkCoachReminderMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setNetworkCoachReminder>>, TError,{role: 'member' | 'trainer';id: number;data: BodyType<NetworkCoachReminderInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setNetworkCoachReminder>>, TError,{role: 'member' | 'trainer';id: number;data: BodyType<NetworkCoachReminderInput>}, TContext> => {
+
+const mutationKey = ['setNetworkCoachReminder'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setNetworkCoachReminder>>, {role: 'member' | 'trainer';id: number;data: BodyType<NetworkCoachReminderInput>}> = (props) => {
+          const {role,id,data} = props ?? {};
+
+          return  setNetworkCoachReminder(role,id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetNetworkCoachReminderMutationResult = NonNullable<Awaited<ReturnType<typeof setNetworkCoachReminder>>>
+    export type SetNetworkCoachReminderMutationBody = BodyType<NetworkCoachReminderInput>
+    export type SetNetworkCoachReminderMutationError = ErrorType<unknown>
+
+    export const useSetNetworkCoachReminder = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setNetworkCoachReminder>>, TError,{role: 'member' | 'trainer';id: number;data: BodyType<NetworkCoachReminderInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setNetworkCoachReminder>>,
+        TError,
+        {role: 'member' | 'trainer';id: number;data: BodyType<NetworkCoachReminderInput>},
+        TContext
+      > => {
+      return useMutation(getSetNetworkCoachReminderMutationOptions(options));
+    }
+
+export const getListMyNetworkCoachBookingsUrl = () => {
+
+
+
+
+  return `/api/network-coach/bookings`
+}
+
+export const listMyNetworkCoachBookings = async ( options?: RequestInit): Promise<NetworkCoachBooking[]> => {
+
+  return customFetch<NetworkCoachBooking[]>(getListMyNetworkCoachBookingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyNetworkCoachBookingsQueryKey = () => {
+    return [
+    `/api/network-coach/bookings`
+    ] as const;
+    }
+
+
+export const getListMyNetworkCoachBookingsQueryOptions = <TData = Awaited<ReturnType<typeof listMyNetworkCoachBookings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyNetworkCoachBookings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyNetworkCoachBookingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyNetworkCoachBookings>>> = ({ signal }) => listMyNetworkCoachBookings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyNetworkCoachBookings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMyNetworkCoachBookingsQueryResult = NonNullable<Awaited<ReturnType<typeof listMyNetworkCoachBookings>>>
+export type ListMyNetworkCoachBookingsQueryError = ErrorType<unknown>
+
+
+
+export function useListMyNetworkCoachBookings<TData = Awaited<ReturnType<typeof listMyNetworkCoachBookings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyNetworkCoachBookings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMyNetworkCoachBookingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateNetworkCoachBookingUrl = () => {
+
+
+
+
+  return `/api/network-coach/bookings`
+}
+
+export const createNetworkCoachBooking = async (networkCoachBookingInput: NetworkCoachBookingInput, options?: RequestInit): Promise<NetworkCoachReservation> => {
+
+  return customFetch<NetworkCoachReservation>(getCreateNetworkCoachBookingUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      networkCoachBookingInput,)
+  }
+);}
+
+
+
+
+export const getCreateNetworkCoachBookingMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createNetworkCoachBooking>>, TError,{data: BodyType<NetworkCoachBookingInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createNetworkCoachBooking>>, TError,{data: BodyType<NetworkCoachBookingInput>}, TContext> => {
+
+const mutationKey = ['createNetworkCoachBooking'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createNetworkCoachBooking>>, {data: BodyType<NetworkCoachBookingInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createNetworkCoachBooking(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateNetworkCoachBookingMutationResult = NonNullable<Awaited<ReturnType<typeof createNetworkCoachBooking>>>
+    export type CreateNetworkCoachBookingMutationBody = BodyType<NetworkCoachBookingInput>
+    export type CreateNetworkCoachBookingMutationError = ErrorType<unknown>
+
+    export const useCreateNetworkCoachBooking = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createNetworkCoachBooking>>, TError,{data: BodyType<NetworkCoachBookingInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createNetworkCoachBooking>>,
+        TError,
+        {data: BodyType<NetworkCoachBookingInput>},
+        TContext
+      > => {
+      return useMutation(getCreateNetworkCoachBookingMutationOptions(options));
+    }
+
+export const getCancelNetworkCoachBookingUrl = (id: number,) => {
+
+
+
+
+  return `/api/network-coach/bookings/${id}/cancel`
+}
+
+export const cancelNetworkCoachBooking = async (id: number, options?: RequestInit): Promise<NetworkCoachOk> => {
+
+  return customFetch<NetworkCoachOk>(getCancelNetworkCoachBookingUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getCancelNetworkCoachBookingMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelNetworkCoachBooking>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof cancelNetworkCoachBooking>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['cancelNetworkCoachBooking'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancelNetworkCoachBooking>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  cancelNetworkCoachBooking(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CancelNetworkCoachBookingMutationResult = NonNullable<Awaited<ReturnType<typeof cancelNetworkCoachBooking>>>
+
+    export type CancelNetworkCoachBookingMutationError = ErrorType<unknown>
+
+    export const useCancelNetworkCoachBooking = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelNetworkCoachBooking>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof cancelNetworkCoachBooking>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getCancelNetworkCoachBookingMutationOptions(options));
+    }
+
+export const getReviewNetworkCoachBookingUrl = (id: number,) => {
+
+
+
+
+  return `/api/network-coach/bookings/${id}/review`
+}
+
+export const reviewNetworkCoachBooking = async (id: number,
+    networkCoachReviewInput: NetworkCoachReviewInput, options?: RequestInit): Promise<NetworkCoachOk> => {
+
+  return customFetch<NetworkCoachOk>(getReviewNetworkCoachBookingUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      networkCoachReviewInput,)
+  }
+);}
+
+
+
+
+export const getReviewNetworkCoachBookingMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewNetworkCoachBooking>>, TError,{id: number;data: BodyType<NetworkCoachReviewInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reviewNetworkCoachBooking>>, TError,{id: number;data: BodyType<NetworkCoachReviewInput>}, TContext> => {
+
+const mutationKey = ['reviewNetworkCoachBooking'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reviewNetworkCoachBooking>>, {id: number;data: BodyType<NetworkCoachReviewInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  reviewNetworkCoachBooking(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReviewNetworkCoachBookingMutationResult = NonNullable<Awaited<ReturnType<typeof reviewNetworkCoachBooking>>>
+    export type ReviewNetworkCoachBookingMutationBody = BodyType<NetworkCoachReviewInput>
+    export type ReviewNetworkCoachBookingMutationError = ErrorType<unknown>
+
+    export const useReviewNetworkCoachBooking = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewNetworkCoachBooking>>, TError,{id: number;data: BodyType<NetworkCoachReviewInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reviewNetworkCoachBooking>>,
+        TError,
+        {id: number;data: BodyType<NetworkCoachReviewInput>},
+        TContext
+      > => {
+      return useMutation(getReviewNetworkCoachBookingMutationOptions(options));
+    }
+
+export const getJoinNetworkCoachCallUrl = (id: number,) => {
+
+
+
+
+  return `/api/network-coach/bookings/${id}/join`
+}
+
+export const joinNetworkCoachCall = async (id: number, options?: RequestInit): Promise<NetworkCoachCallToken> => {
+
+  return customFetch<NetworkCoachCallToken>(getJoinNetworkCoachCallUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getJoinNetworkCoachCallMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinNetworkCoachCall>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof joinNetworkCoachCall>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['joinNetworkCoachCall'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof joinNetworkCoachCall>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  joinNetworkCoachCall(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type JoinNetworkCoachCallMutationResult = NonNullable<Awaited<ReturnType<typeof joinNetworkCoachCall>>>
+
+    export type JoinNetworkCoachCallMutationError = ErrorType<unknown>
+
+    export const useJoinNetworkCoachCall = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinNetworkCoachCall>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof joinNetworkCoachCall>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getJoinNetworkCoachCallMutationOptions(options));
+    }
+
+export const getGetAdminNetworkCoachSettingsUrl = () => {
+
+
+
+
+  return `/api/admin/network-coach/settings`
+}
+
+export const getAdminNetworkCoachSettings = async ( options?: RequestInit): Promise<NetworkCoachAdminSettings> => {
+
+  return customFetch<NetworkCoachAdminSettings>(getGetAdminNetworkCoachSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAdminNetworkCoachSettingsQueryKey = () => {
+    return [
+    `/api/admin/network-coach/settings`
+    ] as const;
+    }
+
+
+export const getGetAdminNetworkCoachSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getAdminNetworkCoachSettings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminNetworkCoachSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminNetworkCoachSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminNetworkCoachSettings>>> = ({ signal }) => getAdminNetworkCoachSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminNetworkCoachSettings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAdminNetworkCoachSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminNetworkCoachSettings>>>
+export type GetAdminNetworkCoachSettingsQueryError = ErrorType<unknown>
+
+
+
+export function useGetAdminNetworkCoachSettings<TData = Awaited<ReturnType<typeof getAdminNetworkCoachSettings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminNetworkCoachSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAdminNetworkCoachSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListAdminNetworkCoachSlotsUrl = () => {
+
+
+
+
+  return `/api/admin/network-coach/slots`
+}
+
+export const listAdminNetworkCoachSlots = async ( options?: RequestInit): Promise<AdminNetworkCoachSlot[]> => {
+
+  return customFetch<AdminNetworkCoachSlot[]>(getListAdminNetworkCoachSlotsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdminNetworkCoachSlotsQueryKey = () => {
+    return [
+    `/api/admin/network-coach/slots`
+    ] as const;
+    }
+
+
+export const getListAdminNetworkCoachSlotsQueryOptions = <TData = Awaited<ReturnType<typeof listAdminNetworkCoachSlots>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminNetworkCoachSlots>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdminNetworkCoachSlotsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminNetworkCoachSlots>>> = ({ signal }) => listAdminNetworkCoachSlots({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminNetworkCoachSlots>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAdminNetworkCoachSlotsQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminNetworkCoachSlots>>>
+export type ListAdminNetworkCoachSlotsQueryError = ErrorType<unknown>
+
+
+
+export function useListAdminNetworkCoachSlots<TData = Awaited<ReturnType<typeof listAdminNetworkCoachSlots>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminNetworkCoachSlots>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAdminNetworkCoachSlotsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateAdminNetworkCoachSlotsUrl = () => {
+
+
+
+
+  return `/api/admin/network-coach/slots`
+}
+
+export const createAdminNetworkCoachSlots = async (adminNetworkCoachSlotInput: AdminNetworkCoachSlotInput, options?: RequestInit): Promise<CreateAdminNetworkCoachSlots201> => {
+
+  return customFetch<CreateAdminNetworkCoachSlots201>(getCreateAdminNetworkCoachSlotsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      adminNetworkCoachSlotInput,)
+  }
+);}
+
+
+
+
+export const getCreateAdminNetworkCoachSlotsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdminNetworkCoachSlots>>, TError,{data: BodyType<AdminNetworkCoachSlotInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAdminNetworkCoachSlots>>, TError,{data: BodyType<AdminNetworkCoachSlotInput>}, TContext> => {
+
+const mutationKey = ['createAdminNetworkCoachSlots'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAdminNetworkCoachSlots>>, {data: BodyType<AdminNetworkCoachSlotInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createAdminNetworkCoachSlots(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAdminNetworkCoachSlotsMutationResult = NonNullable<Awaited<ReturnType<typeof createAdminNetworkCoachSlots>>>
+    export type CreateAdminNetworkCoachSlotsMutationBody = BodyType<AdminNetworkCoachSlotInput>
+    export type CreateAdminNetworkCoachSlotsMutationError = ErrorType<unknown>
+
+    export const useCreateAdminNetworkCoachSlots = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdminNetworkCoachSlots>>, TError,{data: BodyType<AdminNetworkCoachSlotInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createAdminNetworkCoachSlots>>,
+        TError,
+        {data: BodyType<AdminNetworkCoachSlotInput>},
+        TContext
+      > => {
+      return useMutation(getCreateAdminNetworkCoachSlotsMutationOptions(options));
+    }
+
+export const getDeleteAdminNetworkCoachSlotUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/network-coach/slots/${id}`
+}
+
+export const deleteAdminNetworkCoachSlot = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteAdminNetworkCoachSlotUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteAdminNetworkCoachSlotMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminNetworkCoachSlot>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAdminNetworkCoachSlot>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteAdminNetworkCoachSlot'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAdminNetworkCoachSlot>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteAdminNetworkCoachSlot(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAdminNetworkCoachSlotMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAdminNetworkCoachSlot>>>
+
+    export type DeleteAdminNetworkCoachSlotMutationError = ErrorType<unknown>
+
+    export const useDeleteAdminNetworkCoachSlot = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminNetworkCoachSlot>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAdminNetworkCoachSlot>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteAdminNetworkCoachSlotMutationOptions(options));
+    }
+
+export const getUpdateAdminNetworkCoachPricesUrl = () => {
+
+
+
+
+  return `/api/admin/network-coach/prices`
+}
+
+export const updateAdminNetworkCoachPrices = async (networkCoachPricesInput: NetworkCoachPricesInput, options?: RequestInit): Promise<NetworkCoachPrices> => {
+
+  return customFetch<NetworkCoachPrices>(getUpdateAdminNetworkCoachPricesUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      networkCoachPricesInput,)
+  }
+);}
+
+
+
+
+export const getUpdateAdminNetworkCoachPricesMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminNetworkCoachPrices>>, TError,{data: BodyType<NetworkCoachPricesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAdminNetworkCoachPrices>>, TError,{data: BodyType<NetworkCoachPricesInput>}, TContext> => {
+
+const mutationKey = ['updateAdminNetworkCoachPrices'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAdminNetworkCoachPrices>>, {data: BodyType<NetworkCoachPricesInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateAdminNetworkCoachPrices(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAdminNetworkCoachPricesMutationResult = NonNullable<Awaited<ReturnType<typeof updateAdminNetworkCoachPrices>>>
+    export type UpdateAdminNetworkCoachPricesMutationBody = BodyType<NetworkCoachPricesInput>
+    export type UpdateAdminNetworkCoachPricesMutationError = ErrorType<unknown>
+
+    export const useUpdateAdminNetworkCoachPrices = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminNetworkCoachPrices>>, TError,{data: BodyType<NetworkCoachPricesInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateAdminNetworkCoachPrices>>,
+        TError,
+        {data: BodyType<NetworkCoachPricesInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateAdminNetworkCoachPricesMutationOptions(options));
+    }
+
+export const getCreateAdminNetworkCoachPlanUrl = () => {
+
+
+
+
+  return `/api/admin/network-coach/plans`
+}
+
+export const createAdminNetworkCoachPlan = async (networkCoachPlanInput: NetworkCoachPlanInput, options?: RequestInit): Promise<NetworkCoachPlan> => {
+
+  return customFetch<NetworkCoachPlan>(getCreateAdminNetworkCoachPlanUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      networkCoachPlanInput,)
+  }
+);}
+
+
+
+
+export const getCreateAdminNetworkCoachPlanMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdminNetworkCoachPlan>>, TError,{data: BodyType<NetworkCoachPlanInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAdminNetworkCoachPlan>>, TError,{data: BodyType<NetworkCoachPlanInput>}, TContext> => {
+
+const mutationKey = ['createAdminNetworkCoachPlan'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAdminNetworkCoachPlan>>, {data: BodyType<NetworkCoachPlanInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createAdminNetworkCoachPlan(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAdminNetworkCoachPlanMutationResult = NonNullable<Awaited<ReturnType<typeof createAdminNetworkCoachPlan>>>
+    export type CreateAdminNetworkCoachPlanMutationBody = BodyType<NetworkCoachPlanInput>
+    export type CreateAdminNetworkCoachPlanMutationError = ErrorType<unknown>
+
+    export const useCreateAdminNetworkCoachPlan = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAdminNetworkCoachPlan>>, TError,{data: BodyType<NetworkCoachPlanInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createAdminNetworkCoachPlan>>,
+        TError,
+        {data: BodyType<NetworkCoachPlanInput>},
+        TContext
+      > => {
+      return useMutation(getCreateAdminNetworkCoachPlanMutationOptions(options));
+    }
+
+export const getUpdateAdminNetworkCoachPlanUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/network-coach/plans/${id}`
+}
+
+export const updateAdminNetworkCoachPlan = async (id: number,
+    networkCoachPlanInput: NetworkCoachPlanInput, options?: RequestInit): Promise<NetworkCoachPlan> => {
+
+  return customFetch<NetworkCoachPlan>(getUpdateAdminNetworkCoachPlanUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      networkCoachPlanInput,)
+  }
+);}
+
+
+
+
+export const getUpdateAdminNetworkCoachPlanMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminNetworkCoachPlan>>, TError,{id: number;data: BodyType<NetworkCoachPlanInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAdminNetworkCoachPlan>>, TError,{id: number;data: BodyType<NetworkCoachPlanInput>}, TContext> => {
+
+const mutationKey = ['updateAdminNetworkCoachPlan'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAdminNetworkCoachPlan>>, {id: number;data: BodyType<NetworkCoachPlanInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateAdminNetworkCoachPlan(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAdminNetworkCoachPlanMutationResult = NonNullable<Awaited<ReturnType<typeof updateAdminNetworkCoachPlan>>>
+    export type UpdateAdminNetworkCoachPlanMutationBody = BodyType<NetworkCoachPlanInput>
+    export type UpdateAdminNetworkCoachPlanMutationError = ErrorType<unknown>
+
+    export const useUpdateAdminNetworkCoachPlan = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminNetworkCoachPlan>>, TError,{id: number;data: BodyType<NetworkCoachPlanInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateAdminNetworkCoachPlan>>,
+        TError,
+        {id: number;data: BodyType<NetworkCoachPlanInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateAdminNetworkCoachPlanMutationOptions(options));
+    }
+
+export const getDeleteAdminNetworkCoachPlanUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/network-coach/plans/${id}`
+}
+
+export const deleteAdminNetworkCoachPlan = async (id: number, options?: RequestInit): Promise<DeleteAdminNetworkCoachPlan200> => {
+
+  return customFetch<DeleteAdminNetworkCoachPlan200>(getDeleteAdminNetworkCoachPlanUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteAdminNetworkCoachPlanMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminNetworkCoachPlan>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAdminNetworkCoachPlan>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteAdminNetworkCoachPlan'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAdminNetworkCoachPlan>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteAdminNetworkCoachPlan(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAdminNetworkCoachPlanMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAdminNetworkCoachPlan>>>
+
+    export type DeleteAdminNetworkCoachPlanMutationError = ErrorType<unknown>
+
+    export const useDeleteAdminNetworkCoachPlan = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminNetworkCoachPlan>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAdminNetworkCoachPlan>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteAdminNetworkCoachPlanMutationOptions(options));
+    }
+
+export const getSetAdminNetworkCoachCategoryUrl = (categoryId: string,) => {
+
+
+
+
+  return `/api/admin/network-coach/categories/${categoryId}`
+}
+
+export const setAdminNetworkCoachCategory = async (categoryId: string,
+    networkCoachCapabilityInput: NetworkCoachCapabilityInput, options?: RequestInit): Promise<NetworkCoachCategoryCapability> => {
+
+  return customFetch<NetworkCoachCategoryCapability>(getSetAdminNetworkCoachCategoryUrl(categoryId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      networkCoachCapabilityInput,)
+  }
+);}
+
+
+
+
+export const getSetAdminNetworkCoachCategoryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setAdminNetworkCoachCategory>>, TError,{categoryId: string;data: BodyType<NetworkCoachCapabilityInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setAdminNetworkCoachCategory>>, TError,{categoryId: string;data: BodyType<NetworkCoachCapabilityInput>}, TContext> => {
+
+const mutationKey = ['setAdminNetworkCoachCategory'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setAdminNetworkCoachCategory>>, {categoryId: string;data: BodyType<NetworkCoachCapabilityInput>}> = (props) => {
+          const {categoryId,data} = props ?? {};
+
+          return  setAdminNetworkCoachCategory(categoryId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetAdminNetworkCoachCategoryMutationResult = NonNullable<Awaited<ReturnType<typeof setAdminNetworkCoachCategory>>>
+    export type SetAdminNetworkCoachCategoryMutationBody = BodyType<NetworkCoachCapabilityInput>
+    export type SetAdminNetworkCoachCategoryMutationError = ErrorType<unknown>
+
+    export const useSetAdminNetworkCoachCategory = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setAdminNetworkCoachCategory>>, TError,{categoryId: string;data: BodyType<NetworkCoachCapabilityInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setAdminNetworkCoachCategory>>,
+        TError,
+        {categoryId: string;data: BodyType<NetworkCoachCapabilityInput>},
+        TContext
+      > => {
+      return useMutation(getSetAdminNetworkCoachCategoryMutationOptions(options));
+    }
+
+export const getListAdminNetworkCoachBookingsUrl = () => {
+
+
+
+
+  return `/api/admin/network-coach/bookings`
+}
+
+export const listAdminNetworkCoachBookings = async ( options?: RequestInit): Promise<NetworkCoachBooking[]> => {
+
+  return customFetch<NetworkCoachBooking[]>(getListAdminNetworkCoachBookingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdminNetworkCoachBookingsQueryKey = () => {
+    return [
+    `/api/admin/network-coach/bookings`
+    ] as const;
+    }
+
+
+export const getListAdminNetworkCoachBookingsQueryOptions = <TData = Awaited<ReturnType<typeof listAdminNetworkCoachBookings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminNetworkCoachBookings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdminNetworkCoachBookingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminNetworkCoachBookings>>> = ({ signal }) => listAdminNetworkCoachBookings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminNetworkCoachBookings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAdminNetworkCoachBookingsQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminNetworkCoachBookings>>>
+export type ListAdminNetworkCoachBookingsQueryError = ErrorType<unknown>
+
+
+
+export function useListAdminNetworkCoachBookings<TData = Awaited<ReturnType<typeof listAdminNetworkCoachBookings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminNetworkCoachBookings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAdminNetworkCoachBookingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListAdminNetworkCoachPlanPurchasesUrl = () => {
+
+
+
+
+  return `/api/admin/network-coach/plan-purchases`
+}
+
+export const listAdminNetworkCoachPlanPurchases = async ( options?: RequestInit): Promise<NetworkCoachPlanPurchase[]> => {
+
+  return customFetch<NetworkCoachPlanPurchase[]>(getListAdminNetworkCoachPlanPurchasesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdminNetworkCoachPlanPurchasesQueryKey = () => {
+    return [
+    `/api/admin/network-coach/plan-purchases`
+    ] as const;
+    }
+
+
+export const getListAdminNetworkCoachPlanPurchasesQueryOptions = <TData = Awaited<ReturnType<typeof listAdminNetworkCoachPlanPurchases>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminNetworkCoachPlanPurchases>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdminNetworkCoachPlanPurchasesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminNetworkCoachPlanPurchases>>> = ({ signal }) => listAdminNetworkCoachPlanPurchases({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminNetworkCoachPlanPurchases>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAdminNetworkCoachPlanPurchasesQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminNetworkCoachPlanPurchases>>>
+export type ListAdminNetworkCoachPlanPurchasesQueryError = ErrorType<unknown>
+
+
+
+export function useListAdminNetworkCoachPlanPurchases<TData = Awaited<ReturnType<typeof listAdminNetworkCoachPlanPurchases>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminNetworkCoachPlanPurchases>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAdminNetworkCoachPlanPurchasesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getResolveAdminNetworkCoachPlanRefundUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/network-coach/plan-purchases/${id}/refund-resolved`
+}
+
+export const resolveAdminNetworkCoachPlanRefund = async (id: number,
+    networkCoachRefundInput: NetworkCoachRefundInput, options?: RequestInit): Promise<NetworkCoachOk> => {
+
+  return customFetch<NetworkCoachOk>(getResolveAdminNetworkCoachPlanRefundUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      networkCoachRefundInput,)
+  }
+);}
+
+
+
+
+export const getResolveAdminNetworkCoachPlanRefundMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resolveAdminNetworkCoachPlanRefund>>, TError,{id: number;data: BodyType<NetworkCoachRefundInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof resolveAdminNetworkCoachPlanRefund>>, TError,{id: number;data: BodyType<NetworkCoachRefundInput>}, TContext> => {
+
+const mutationKey = ['resolveAdminNetworkCoachPlanRefund'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resolveAdminNetworkCoachPlanRefund>>, {id: number;data: BodyType<NetworkCoachRefundInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  resolveAdminNetworkCoachPlanRefund(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResolveAdminNetworkCoachPlanRefundMutationResult = NonNullable<Awaited<ReturnType<typeof resolveAdminNetworkCoachPlanRefund>>>
+    export type ResolveAdminNetworkCoachPlanRefundMutationBody = BodyType<NetworkCoachRefundInput>
+    export type ResolveAdminNetworkCoachPlanRefundMutationError = ErrorType<unknown>
+
+    export const useResolveAdminNetworkCoachPlanRefund = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resolveAdminNetworkCoachPlanRefund>>, TError,{id: number;data: BodyType<NetworkCoachRefundInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof resolveAdminNetworkCoachPlanRefund>>,
+        TError,
+        {id: number;data: BodyType<NetworkCoachRefundInput>},
+        TContext
+      > => {
+      return useMutation(getResolveAdminNetworkCoachPlanRefundMutationOptions(options));
+    }
+
+export const getResolveAdminNetworkCoachRefundUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/network-coach/bookings/${id}/refund-resolved`
+}
+
+export const resolveAdminNetworkCoachRefund = async (id: number,
+    networkCoachRefundInput: NetworkCoachRefundInput, options?: RequestInit): Promise<NetworkCoachOk> => {
+
+  return customFetch<NetworkCoachOk>(getResolveAdminNetworkCoachRefundUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      networkCoachRefundInput,)
+  }
+);}
+
+
+
+
+export const getResolveAdminNetworkCoachRefundMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resolveAdminNetworkCoachRefund>>, TError,{id: number;data: BodyType<NetworkCoachRefundInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof resolveAdminNetworkCoachRefund>>, TError,{id: number;data: BodyType<NetworkCoachRefundInput>}, TContext> => {
+
+const mutationKey = ['resolveAdminNetworkCoachRefund'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resolveAdminNetworkCoachRefund>>, {id: number;data: BodyType<NetworkCoachRefundInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  resolveAdminNetworkCoachRefund(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResolveAdminNetworkCoachRefundMutationResult = NonNullable<Awaited<ReturnType<typeof resolveAdminNetworkCoachRefund>>>
+    export type ResolveAdminNetworkCoachRefundMutationBody = BodyType<NetworkCoachRefundInput>
+    export type ResolveAdminNetworkCoachRefundMutationError = ErrorType<unknown>
+
+    export const useResolveAdminNetworkCoachRefund = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resolveAdminNetworkCoachRefund>>, TError,{id: number;data: BodyType<NetworkCoachRefundInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof resolveAdminNetworkCoachRefund>>,
+        TError,
+        {id: number;data: BodyType<NetworkCoachRefundInput>},
+        TContext
+      > => {
+      return useMutation(getResolveAdminNetworkCoachRefundMutationOptions(options));
+    }
+
+export const getCompleteAdminNetworkCoachBookingUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/network-coach/bookings/${id}/complete`
+}
+
+export const completeAdminNetworkCoachBooking = async (id: number, options?: RequestInit): Promise<NetworkCoachOk> => {
+
+  return customFetch<NetworkCoachOk>(getCompleteAdminNetworkCoachBookingUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getCompleteAdminNetworkCoachBookingMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeAdminNetworkCoachBooking>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof completeAdminNetworkCoachBooking>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['completeAdminNetworkCoachBooking'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof completeAdminNetworkCoachBooking>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  completeAdminNetworkCoachBooking(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CompleteAdminNetworkCoachBookingMutationResult = NonNullable<Awaited<ReturnType<typeof completeAdminNetworkCoachBooking>>>
+
+    export type CompleteAdminNetworkCoachBookingMutationError = ErrorType<unknown>
+
+    export const useCompleteAdminNetworkCoachBooking = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeAdminNetworkCoachBooking>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof completeAdminNetworkCoachBooking>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getCompleteAdminNetworkCoachBookingMutationOptions(options));
     }
 

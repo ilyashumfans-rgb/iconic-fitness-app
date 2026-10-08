@@ -717,6 +717,7 @@ router.delete(
 // route that is added later and left unclassified is denied for staff by
 // default, so mapping drift can never silently widen staff access.
 const STAFF_PERMISSION_PREFIXES: ReadonlyArray<[string, string]> = [
+  ["/partner/online-billing", "bookings"],
   ["/partner/gyms", "gyms"],
   ["/partner/amenities", "gyms"],
   ["/partner/workouts", "gyms"],

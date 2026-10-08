@@ -20,7 +20,7 @@ import { AppText } from "@/components/AppText";
 import { useColors } from "@/hooks/useColors";
 import { resolveImageUrl } from "@/lib/images";
 
-const GOLD = "#FFCC00";
+const GOLD = "#FABB05";
 const LIME = "#0BE607";
 
 type StepState = "done" | "current" | "upcoming";

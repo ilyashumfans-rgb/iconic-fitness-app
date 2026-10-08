@@ -1,8 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { randomUUID } from "node:crypto";
+import { randomUUID, randomBytes } from "node:crypto";
 import pg from "pg";
-import { WhatsappOtpService, OtpError, normalizeOtpPhone, isNewOtpPhoneAssignment, keyedHash, codeMatches, type OtpIdentity, sendWhatsappOtp } from "./whatsappOtp";
+import { WhatsappOtpService, OtpError, normalizeOtpPhone, isNewOtpPhoneAssignment, keyedHash, codeMatches, type OtpIdentity, type OtpDependencies, sendWhatsappOtp } from "./whatsappOtp";
+import { provisionWhatsappClerkUser, whatsappExternalId, type ProvisionedClerkUser, type WhatsappClerkDependencies } from "./whatsappClerkProvisioning";
+import { checkPrivilegedSsoPasswordGate } from "./privilegedSsoPasswordGate";
 
 test("phone normalization is full-number, not suffix matching", () => {
   for (const value of ["9876543210", "+91 98765 43210", "919876543210", "(98765) 43210"]) assert.equal(normalizeOtpPhone(value), "919876543210");
@@ -51,7 +53,7 @@ test("W4U sender contract and sanitized failure, without network sends", async (
   }
 });
 
-test("Postgres OTP lifecycle, concurrency, matching and signup", { skip: !process.env.DATABASE_URL }, async (t) => {
+test("Postgres OTP lifecycle, concurrency, matching and signup", { skip: !process.env.DATABASE_URL || process.env.NODE_ENV !== "development" }, async (t) => {
   // Isolated test-only schema, never real customer rows. All external identity,
   // ticket and WhatsApp operations are mocked. No real messages are sent.
   const schema = `otp_test_${randomUUID().replaceAll("-", "")}`;
@@ -60,13 +62,43 @@ test("Postgres OTP lifecycle, concurrency, matching and signup", { skip: !proces
   const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, options: `-c search_path=${schema}`, max: 10 });
   const sent = new Map<string, string>();
   const identities = new Map<string, OtpIdentity>();
+  const clerkUsers = new Map<string, ProvisionedClerkUser>();
+  const bonuses: number[] = [];
+  let createCount = 0;
+  const clerkDeps: WhatsappClerkDependencies<ProvisionedClerkUser> = {
+    find: async (externalId) => {
+      const user = clerkUsers.get(externalId);
+      return { data: user ? [user] : [], totalCount: user ? 1 : 0 };
+    },
+    create: async (params) => {
+      createCount++;
+      assert.equal(clerkUsers.has(params.externalId), false);
+      const user = { id: `provisioned_${createCount}`, externalId: params.externalId, privateMetadata: params.privateMetadata, banned: false, locked: false };
+      clerkUsers.set(params.externalId, user);
+      identities.set(user.id, { id: user.id, createdAt: Date.now(), email: null, emails: [], name: "Member", avatarUrl: "", disabled: false });
+      return user;
+    },
+  };
   let ticketCount = 0, sendCount = 0, lastTicketUserId: string | null = null;
-  const service = new WhatsappOtpService({
+  const deps: OtpDependencies = {
     pool, secret: "test-only-secret-with-enough-entropy",
     send: async (phone, code) => { sent.set(phone, code); sendCount++; },
     identity: async (id) => { const i = identities.get(id); if (!i) throw new Error("Unknown mock identity"); return i; },
-    ticket: async (id) => { ticketCount++; lastTicketUserId = id; return "mock-ticket"; },
-  });
+    provision: async (phone) => {
+      // The consumed state must already be visible to an independent DB client
+      // before any external Clerk lookup/create, including a failed provision.
+      const row = (await pool.query("SELECT state FROM whatsapp_otp_challenges WHERE phone=$1 ORDER BY created_at DESC LIMIT 1", [phone])).rows[0];
+      assert.equal(row.state, "consumed");
+      const user = await provisionWhatsappClerkUser(phone, clerkDeps);
+      return identities.get(user.id)!;
+    },
+    ticket: async (id) => {
+      assert.equal((await pool.query("SELECT 1 FROM whatsapp_phone_links WHERE clerk_user_id=$1", [id])).rowCount, 1);
+      ticketCount++; lastTicketUserId = id; return "mock-ticket";
+    },
+    signupBonus: async (userId) => { bonuses.push(userId); },
+  };
+  const service = new WhatsappOtpService(deps);
   const identity = (id: string, changes: Partial<OtpIdentity> = {}) => {
     const result = { id, createdAt: Date.now(), email: `${id}@example.test`, emails: [`${id}@example.test`], name: "Test Member", avatarUrl: "", disabled: false, ...changes };
     identities.set(id, result);
@@ -75,6 +107,22 @@ test("Postgres OTP lifecycle, concurrency, matching and signup", { skip: !proces
   const request = async (phone: string, ip: string = randomUUID()) => {
     const result = await service.request(phone, ip);
     return { ...result, code: sent.get(normalizeOtpPhone(phone)!)! };
+  };
+  const rerequest = async (phone: string) => {
+    await pool.query("UPDATE whatsapp_otp_budgets SET last_sent_at=now()-interval '61 seconds' WHERE key=$1", [`phone:${normalizeOtpPhone(phone)}`]);
+    return request(phone);
+  };
+  // Persisted, unexpired continuations from the previous server version must
+  // still support real account ownership proof. New zero-candidate OTPs no
+  // longer issue these; seed only isolated legacy fixtures for complete tests.
+  const legacyContinuation = async (phone: string) => {
+    const c = await request(phone);
+    const token = randomBytes(32).toString("hex");
+    await pool.query("UPDATE whatsapp_otp_challenges SET state='consumed' WHERE id=$1", [c.challengeId]);
+    await pool.query(`INSERT INTO whatsapp_otp_continuations(token_hash,phone,created_at,expires_at)
+      SELECT $1,phone,created_at,expires_at FROM whatsapp_otp_challenges WHERE id=$2`,
+    [keyedHash(deps.secret, "continuation", token), c.challengeId]);
+    return { continuationToken: token };
   };
   const status = (n: number) => (e: unknown) => e instanceof OtpError && e.status === n;
   const addMember = async (id: string, phone: string, email = `${id}@example.test`) => {
@@ -89,7 +137,8 @@ test("Postgres OTP lifecycle, concurrency, matching and signup", { skip: !proces
       CREATE TABLE whatsapp_phone_links(phone text PRIMARY KEY,user_id integer UNIQUE NOT NULL,clerk_user_id text UNIQUE NOT NULL,verified_at timestamptz NOT NULL DEFAULT now());
       CREATE TABLE whatsapp_otp_continuations(token_hash text PRIMARY KEY,phone text NOT NULL,created_at timestamptz NOT NULL,expires_at timestamptz NOT NULL,consumed_at timestamptz);
       CREATE TABLE users(id serial PRIMARY KEY,clerk_user_id text UNIQUE,name text DEFAULT 'Member',email text NOT NULL,mobile text NOT NULL,gender text,age integer,height_cm real,weight_kg real,fitness_goal text,avatar_url text,city text,member_code text);
-      CREATE TABLE fitness_setup(user_id integer UNIQUE NOT NULL,required_for_onboarding boolean NOT NULL,current_step integer NOT NULL);
+      CREATE TABLE fitness_setup(user_id integer UNIQUE NOT NULL,required_for_onboarding boolean NOT NULL,current_step integer NOT NULL,
+        height_cm real,weight_kg real,age integer,goals jsonb,completed_at timestamptz,updated_at timestamptz DEFAULT now());
       CREATE TABLE admins(email text);
       CREATE TABLE staff(email text);
       CREATE TABLE partner_staff(email text);
@@ -118,7 +167,7 @@ test("Postgres OTP lifecycle, concurrency, matching and signup", { skip: !proces
       await pool.query("UPDATE whatsapp_otp_budgets SET last_sent_at=now()-interval '61 seconds' WHERE key=$1", ["phone:919000000003"]);
       const next = await request("9000000003");
       await assert.rejects(service.verify(c.challengeId, c.code), status(401));
-      assert.equal((await service.verify(next.challengeId, next.code)).isNewUser, true);
+      assert.equal((await service.verify(next.challengeId, next.code)).isNewUser, false);
     });
     await t.test("simultaneous issuance sends only once", async () => {
       const before = sendCount;
@@ -142,6 +191,169 @@ test("Postgres OTP lifecycle, concurrency, matching and signup", { skip: !proces
       assert.equal(ticketCount - before, 1);
       assert.equal((await pool.query("SELECT * FROM whatsapp_phone_links WHERE user_id=$1", [userId])).rowCount, 1);
       assert.equal((await pool.query("SELECT * FROM fitness_setup WHERE user_id=$1", [userId])).rowCount, 0);
+    });
+    await t.test("fresh verified OTP directly returns a ticket:false, optional blank setup and one signup bonus", async () => {
+      const c = await request("9000000040");
+      const beforeCreates = createCount, beforeBonuses = bonuses.length;
+      const results = await Promise.allSettled([service.verify(c.challengeId, c.code), service.verify(c.challengeId, c.code)]);
+      const successes = results.filter((r) => r.status === "fulfilled");
+      assert.equal(successes.length, 1);
+      assert.deepEqual((successes[0] as PromiseFulfilledResult<unknown>).value, { ticket: "mock-ticket", isNewUser: false });
+      assert.equal(createCount - beforeCreates, 1);
+      const member = (await pool.query("SELECT * FROM users WHERE mobile='9000000040'")).rows[0];
+      assert.equal(member.name, "Member"); assert.equal(member.email, "");
+      for (const field of ["age", "height_cm", "weight_kg", "fitness_goal"]) assert.equal(member[field], null);
+      const setup = (await pool.query("SELECT * FROM fitness_setup WHERE user_id=$1", [member.id])).rows[0];
+      assert.equal(setup.required_for_onboarding, false); assert.equal(setup.current_step, 1);
+      for (const field of ["height_cm", "weight_kg", "age", "goals", "completed_at"]) assert.equal(setup[field], null);
+      assert.deepEqual(bonuses.slice(beforeBonuses), [member.id]);
+      assert.equal((await pool.query("SELECT * FROM whatsapp_otp_continuations WHERE phone='919000000040'")).rowCount, 0);
+      const gate = await checkPrivilegedSsoPasswordGate(member.clerk_user_id, (sql, values) => pool.query(sql, values));
+      assert.equal(gate.allowed, false);
+      if (!gate.allowed) assert.equal(gate.code, "PASSWORD_REQUIRED");
+      const next = await rerequest("9000000040");
+      assert.deepEqual(await service.verify(next.challengeId, next.code), { ticket: "mock-ticket", isNewUser: false });
+      assert.equal(createCount - beforeCreates, 1);
+      assert.equal(bonuses.length - beforeBonuses, 1);
+    });
+    await t.test("safely resolved single and canonical users lose only the required setup gate", async () => {
+      const uid = await addMember("setup41", "9000000041");
+      await pool.query("UPDATE users SET name='Keep profile',age=39,height_cm=181,weight_kg=82,fitness_goal='Keep goal' WHERE id=$1", [uid]);
+      await pool.query(`INSERT INTO fitness_setup(user_id,required_for_onboarding,current_step,height_cm,weight_kg,age,goals,completed_at)
+        VALUES($1,true,4,180,81,38,'["strength"]',NULL)`, [uid]);
+      const profile = (await pool.query("SELECT * FROM users WHERE id=$1", [uid])).rows[0];
+      const setup = (await pool.query("SELECT * FROM fitness_setup WHERE user_id=$1", [uid])).rows[0];
+      let c = await request("9000000041");
+      await service.verify(c.challengeId, c.code);
+      assert.deepEqual((await pool.query("SELECT * FROM users WHERE id=$1", [uid])).rows[0], profile);
+      assert.deepEqual((await pool.query("SELECT * FROM fitness_setup WHERE user_id=$1", [uid])).rows[0], { ...setup, required_for_onboarding: false });
+      // A legacy duplicate must not prevent an already-canonical owner login.
+      await addMember("setup41_duplicate", "+91 9000000041");
+      await pool.query("UPDATE fitness_setup SET required_for_onboarding=true,completed_at='2025-01-01' WHERE user_id=$1", [uid]);
+      const canonicalSetup = (await pool.query("SELECT * FROM fitness_setup WHERE user_id=$1", [uid])).rows[0];
+      c = await rerequest("9000000041");
+      await service.verify(c.challengeId, c.code);
+      assert.equal(lastTicketUserId, "setup41");
+      assert.deepEqual((await pool.query("SELECT * FROM fitness_setup WHERE user_id=$1", [uid])).rows[0], { ...canonicalSetup, required_for_onboarding: false });
+    });
+    await t.test("ambiguous and disabled existing identities retain required setup and never provision", async () => {
+      const beforeCreates = createCount, beforeTickets = ticketCount;
+      const a = await addMember("ambiguous42_a", "9000000042");
+      await addMember("ambiguous42_b", "+91 9000000042");
+      await pool.query("INSERT INTO fitness_setup(user_id,required_for_onboarding,current_step) VALUES($1,true,3)", [a]);
+      let c = await request("9000000042");
+      const result = await service.verify(c.challengeId, c.code);
+      assert.ok("continuationToken" in result);
+      assert.equal((await pool.query("SELECT required_for_onboarding FROM fitness_setup WHERE user_id=$1", [a])).rows[0].required_for_onboarding, true);
+      const disabledId = await addMember("disabled43", "9000000043");
+      await pool.query("INSERT INTO fitness_setup(user_id,required_for_onboarding,current_step) VALUES($1,true,2)", [disabledId]);
+      identities.get("disabled43")!.disabled = true;
+      c = await request("9000000043");
+      await assert.rejects(service.verify(c.challengeId, c.code), status(403));
+      assert.equal((await pool.query("SELECT required_for_onboarding FROM fitness_setup WHERE user_id=$1", [disabledId])).rows[0].required_for_onboarding, true);
+      assert.equal(createCount, beforeCreates); assert.equal(ticketCount, beforeTickets);
+    });
+    await t.test("Clerk creation failure consumes OTP; a fresh OTP retries without a duplicate identity", async () => {
+      const c = await request("9000000044"), beforeCreates = createCount;
+      const failing = new WhatsappOtpService({ ...deps, provision: async (phone) => {
+        const user = await provisionWhatsappClerkUser(phone, { ...clerkDeps, create: async () => { throw new Error("fake Clerk unavailable"); } });
+        return identities.get(user.id)!;
+      } });
+      await assert.rejects(failing.verify(c.challengeId, c.code));
+      assert.equal((await pool.query("SELECT state FROM whatsapp_otp_challenges WHERE id=$1", [c.challengeId])).rows[0].state, "consumed");
+      await assert.rejects(service.verify(c.challengeId, c.code), status(401));
+      assert.equal(clerkUsers.has(whatsappExternalId("919000000044")), false);
+      const next = await rerequest("9000000044");
+      assert.equal((await service.verify(next.challengeId, next.code)).isNewUser, false);
+      assert.equal(createCount - beforeCreates, 1);
+    });
+    await t.test("lost Clerk create response plus DB failure recovers only provenanced identity and atomically retries", async () => {
+      const c = await request("9000000045"), beforeCreates = createCount, beforeBonuses = bonuses.length;
+      const lostResponse = new WhatsappOtpService({ ...deps, provision: async (phone) => {
+        const user = await provisionWhatsappClerkUser(phone, { ...clerkDeps, create: async (params) => {
+          await clerkDeps.create(params);
+          throw new Error("fake lost successful Clerk response");
+        } });
+        return identities.get(user.id)!;
+      } });
+      await pool.query("ALTER TABLE fitness_setup ADD CONSTRAINT reject_fixture CHECK (current_step<>1) NOT VALID");
+      try { await assert.rejects(lostResponse.verify(c.challengeId, c.code)); }
+      finally { await pool.query("ALTER TABLE fitness_setup DROP CONSTRAINT reject_fixture"); }
+      assert.equal(createCount - beforeCreates, 1);
+      assert.equal((await pool.query("SELECT * FROM users WHERE mobile='9000000045'")).rowCount, 0);
+      assert.equal((await pool.query("SELECT * FROM whatsapp_phone_links WHERE phone='919000000045'")).rowCount, 0);
+      assert.equal(bonuses.length, beforeBonuses);
+      await assert.rejects(service.verify(c.challengeId, c.code), status(401));
+      const next = await rerequest("9000000045");
+      assert.deepEqual(await service.verify(next.challengeId, next.code), { ticket: "mock-ticket", isNewUser: false });
+      const user = clerkUsers.get(whatsappExternalId("919000000045"))!;
+      assert.equal((await pool.query("SELECT * FROM users WHERE clerk_user_id=$1", [user.id])).rowCount, 1);
+      assert.equal(createCount - beforeCreates, 1); assert.equal(bonuses.length - beforeBonuses, 1);
+    });
+    await t.test("ticket failure leaves canonical link/optional setup/bonus committed; new OTP logs in without reprovision", async () => {
+      const c = await request("9000000046"), beforeCreates = createCount, beforeBonuses = bonuses.length;
+      const failing = new WhatsappOtpService({ ...deps, ticket: async (id) => {
+        assert.equal((await pool.query("SELECT * FROM whatsapp_phone_links WHERE clerk_user_id=$1", [id])).rowCount, 1);
+        throw new Error("fake ticket unavailable");
+      } });
+      await assert.rejects(failing.verify(c.challengeId, c.code));
+      await assert.rejects(service.verify(c.challengeId, c.code), status(401));
+      const member = (await pool.query("SELECT * FROM users WHERE mobile='9000000046'")).rows[0];
+      assert.equal((await pool.query("SELECT required_for_onboarding FROM fitness_setup WHERE user_id=$1", [member.id])).rows[0].required_for_onboarding, false);
+      assert.deepEqual(bonuses.slice(beforeBonuses), [member.id]);
+      const next = await rerequest("9000000046");
+      assert.equal((await service.verify(next.challengeId, next.code)).isNewUser, false);
+      assert.equal(createCount - beforeCreates, 1); assert.equal(bonuses.length - beforeBonuses, 1);
+    });
+    await t.test("provenance collision cannot be adopted, merged or ticketed; a banned orphan also rejects", async () => {
+      const externalId = whatsappExternalId("919000000047");
+      clerkUsers.set(externalId, { id: "unrelated47", externalId, privateMetadata: {}, banned: false, locked: false });
+      const beforeCreates = createCount, beforeTickets = ticketCount;
+      let c = await request("9000000047");
+      await assert.rejects(service.verify(c.challengeId, c.code), status(409));
+      await assert.rejects(service.verify(c.challengeId, c.code), status(401));
+      assert.equal((await pool.query("SELECT * FROM users WHERE mobile='9000000047'")).rowCount, 0);
+      const disabled = await provisionWhatsappClerkUser("919000000048", clerkDeps);
+      disabled.banned = true;
+      c = await request("9000000048");
+      await assert.rejects(service.verify(c.challengeId, c.code), status(403));
+      assert.equal((await pool.query("SELECT * FROM users WHERE mobile='9000000048'")).rowCount, 0);
+      assert.equal(createCount - beforeCreates, 1); assert.equal(ticketCount, beforeTickets);
+    });
+    await t.test("a provenanced identity with another local mobile/link cannot be repurposed", async () => {
+      const orphan = await provisionWhatsappClerkUser("919000000049", clerkDeps);
+      const uid = (await pool.query("INSERT INTO users(clerk_user_id,mobile,email,name) VALUES($1,'9000000098','','Keep') RETURNING id", [orphan.id])).rows[0].id;
+      await pool.query("INSERT INTO whatsapp_phone_links(phone,user_id,clerk_user_id) VALUES('919000000098',$1,$2)", [uid, orphan.id]);
+      const before = (await pool.query("SELECT * FROM users WHERE id=$1", [uid])).rows[0];
+      const c = await request("9000000049");
+      await assert.rejects(service.verify(c.challengeId, c.code), status(409));
+      assert.deepEqual((await pool.query("SELECT * FROM users WHERE id=$1", [uid])).rows[0], before);
+      assert.equal((await pool.query("SELECT * FROM whatsapp_phone_links WHERE phone='919000000049'")).rowCount, 0);
+    });
+    await t.test("provenanced JIT winner with no mobile preserves profile and setup progress", async () => {
+      const orphan = await provisionWhatsappClerkUser("919000000050", clerkDeps);
+      const uid = (await pool.query("INSERT INTO users(clerk_user_id,mobile,email,name,age) VALUES($1,'','','Keep name',33) RETURNING id", [orphan.id])).rows[0].id;
+      await pool.query("INSERT INTO fitness_setup(user_id,required_for_onboarding,current_step,height_cm,weight_kg) VALUES($1,true,3,175,76)", [uid]);
+      const setup = (await pool.query("SELECT * FROM fitness_setup WHERE user_id=$1", [uid])).rows[0];
+      const beforeCreates = createCount, beforeBonuses = bonuses.length;
+      const c = await request("9000000050");
+      assert.deepEqual(await service.verify(c.challengeId, c.code), { ticket: "mock-ticket", isNewUser: false });
+      const member = (await pool.query("SELECT * FROM users WHERE id=$1", [uid])).rows[0];
+      assert.equal(member.name, "Keep name"); assert.equal(member.age, 33); assert.equal(member.mobile, "9000000050");
+      assert.deepEqual((await pool.query("SELECT * FROM fitness_setup WHERE user_id=$1", [uid])).rows[0], { ...setup, required_for_onboarding: false });
+      assert.equal(createCount, beforeCreates); assert.equal(bonuses.length, beforeBonuses);
+    });
+    await t.test("other canonical phone on a blank provenanced profile rejects and rolls back all updates", async () => {
+      const orphan = await provisionWhatsappClerkUser("919000000051", clerkDeps);
+      const uid = (await pool.query("INSERT INTO users(clerk_user_id,mobile,email) VALUES($1,'','') RETURNING id", [orphan.id])).rows[0].id;
+      await pool.query("INSERT INTO fitness_setup(user_id,required_for_onboarding,current_step) VALUES($1,true,4)", [uid]);
+      await pool.query("INSERT INTO whatsapp_phone_links(phone,user_id,clerk_user_id) VALUES('919000000097',$1,$2)", [uid, orphan.id]);
+      const c = await request("9000000051");
+      await assert.rejects(service.verify(c.challengeId, c.code), status(409));
+      assert.equal((await pool.query("SELECT mobile FROM users WHERE id=$1", [uid])).rows[0].mobile, "");
+      assert.equal((await pool.query("SELECT required_for_onboarding FROM fitness_setup WHERE user_id=$1", [uid])).rows[0].required_for_onboarding, true);
+      assert.equal((await pool.query("SELECT * FROM whatsapp_phone_links WHERE phone='919000000051'")).rowCount, 0);
+      assert.equal((await pool.query("SELECT phone FROM whatsapp_phone_links WHERE user_id=$1", [uid])).rows[0].phone, "919000000097");
     });
     await t.test("legacy duplicates and unlinked profiles receive account-proof continuations; staff and admin members can sign in", async () => {
       await addMember("dup1", "9000000007"); await addMember("dup2", "+91 9000000007");
@@ -176,8 +388,7 @@ test("Postgres OTP lifecycle, concurrency, matching and signup", { skip: !proces
       assert.equal(ticketCount, beforeTickets);
       assert.equal((await pool.query("SELECT * FROM whatsapp_phone_links WHERE user_id=$1", [disabledMemberId])).rowCount, 0);
 
-      challenge = await request("9000000032");
-      const verified = await service.verify(challenge.challengeId, challenge.code);
+      const verified = await legacyContinuation("9000000032");
       assert.ok("continuationToken" in verified);
       identity("disabled32", { disabled: true });
       await assert.rejects(service.complete(verified.continuationToken!, "disabled32"), (error: unknown) =>
@@ -189,19 +400,18 @@ test("Postgres OTP lifecycle, concurrency, matching and signup", { skip: !proces
       await addMember("expected33", "9000000033");
       const challenge = await request("9000000033");
       const mixingService = new WhatsappOtpService({
-        pool, secret: "test-only-secret-with-enough-entropy", send: async () => {},
+        ...deps,
         identity: async () => ({ ...identities.get("expected33")!, id: "other33" }),
         ticket: async () => { throw new Error("ticket must not be created"); },
       });
       await assert.rejects(mixingService.verify(challenge.challengeId, challenge.code), status(409));
       assert.equal((await pool.query("SELECT * FROM whatsapp_phone_links WHERE phone='919000000033'")).rowCount, 0);
 
-      const signup = await request("9000000034");
-      const continuation = await service.verify(signup.challengeId, signup.code);
+      const continuation = await legacyContinuation("9000000034");
       assert.ok("continuationToken" in continuation);
       identity("expected34");
       const completionMixingService = new WhatsappOtpService({
-        pool, secret: "test-only-secret-with-enough-entropy", send: async () => {},
+        ...deps,
         identity: async () => ({ ...identities.get("expected34")!, id: "other34" }),
         ticket: async () => "unused",
       });
@@ -283,11 +493,10 @@ test("Postgres OTP lifecycle, concurrency, matching and signup", { skip: !proces
     await t.test("foreign suffix never authenticates Indian mobile", async () => {
       await addMember("foreign", "+44 9000000011");
       const c = await request("9000000011");
-      assert.equal((await service.verify(c.challengeId, c.code)).isNewUser, true);
+      assert.equal((await service.verify(c.challengeId, c.code)).isNewUser, false);
     });
-    await t.test("new signup continuation creates atomic member/setup/link once", async () => {
-      const c = await request("9000000012");
-      const result = await service.verify(c.challengeId, c.code);
+    await t.test("persisted legacy signup continuation creates atomic member/setup/link once", async () => {
+      const result = await legacyContinuation("9000000012");
       assert.ok("continuationToken" in result);
       const token = result.continuationToken!;
       assert.equal((await pool.query("SELECT * FROM users WHERE mobile='9000000012'")).rowCount, 0);
@@ -303,20 +512,19 @@ test("Postgres OTP lifecycle, concurrency, matching and signup", { skip: !proces
       assert.equal((await pool.query("SELECT * FROM whatsapp_phone_links WHERE user_id=$1", [member.id])).rowCount, 1);
     });
     await t.test("JIT winner keeps setup progress and profile without overwrites", async () => {
-      const c = await request("9000000013");
-      const result = await service.verify(c.challengeId, c.code);
+      const result = await legacyContinuation("9000000013");
       assert.ok("continuationToken" in result);
       const uid = await addMember("jit13", "");
       await pool.query("UPDATE users SET name='Keep Name',age=28 WHERE id=$1", [uid]);
-      await pool.query("INSERT INTO fitness_setup VALUES($1,true,3)", [uid]);
+      await pool.query("INSERT INTO fitness_setup(user_id,required_for_onboarding,current_step) VALUES($1,true,3)", [uid]);
       await service.complete(result.continuationToken!, "jit13");
       const member = (await pool.query("SELECT * FROM users WHERE id=$1", [uid])).rows[0];
       assert.equal(member.name, "Keep Name"); assert.equal(member.age, 28); assert.equal(member.mobile, "9000000013");
       assert.equal((await pool.query("SELECT current_step FROM fitness_setup WHERE user_id=$1", [uid])).rows[0].current_step, 3);
+      assert.equal((await pool.query("SELECT required_for_onboarding FROM fitness_setup WHERE user_id=$1", [uid])).rows[0].required_for_onboarding, false);
     });
     await t.test("unverified email, mismatched mobile, and expired continuation rejected", async () => {
-      const c = await request("9000000014");
-      const result = await service.verify(c.challengeId, c.code);
+      const result = await legacyContinuation("9000000014");
       assert.ok("continuationToken" in result);
       identity("unverified", { email: null });
       await assert.rejects(service.complete(result.continuationToken!, "unverified"), status(401));
@@ -329,8 +537,7 @@ test("Postgres OTP lifecycle, concurrency, matching and signup", { skip: !proces
     await t.test("verified email account with no mobile can finish an interrupted setup", async () => {
       const uid = await addMember("returning", "");
       identity("returning", { createdAt: Date.now() - 86_400_000 });
-      const c = await request("9000000018");
-      const result = await service.verify(c.challengeId, c.code);
+      const result = await legacyContinuation("9000000018");
       assert.ok("continuationToken" in result);
       assert.equal((await service.complete(result.continuationToken!, "returning")).isNewUser, false);
       assert.equal((await service.complete(result.continuationToken!, "returning").catch((error) => error)).status, 401);
@@ -338,8 +545,7 @@ test("Postgres OTP lifecycle, concurrency, matching and signup", { skip: !proces
       assert.equal((await pool.query("SELECT * FROM fitness_setup WHERE user_id=$1", [uid])).rowCount, 0);
     });
     await t.test("resend revokes previously issued signup continuation", async () => {
-      const c = await request("9000000015");
-      const result = await service.verify(c.challengeId, c.code);
+      const result = await legacyContinuation("9000000015");
       assert.ok("continuationToken" in result);
       await pool.query("UPDATE whatsapp_otp_budgets SET last_sent_at=now()-interval '61 seconds' WHERE key='phone:919000000015'");
       await request("9000000015");
@@ -347,14 +553,13 @@ test("Postgres OTP lifecycle, concurrency, matching and signup", { skip: !proces
       await assert.rejects(service.complete(result.continuationToken!, "revoked"), status(401));
     });
     await t.test("sender failure leaves no usable OTP and still spends budget", async () => {
-      const failing = new WhatsappOtpService({ pool, secret: "test", send: async () => { throw new Error("private"); }, identity: async () => identity("unused"), ticket: async () => "unused" });
+      const failing = new WhatsappOtpService({ ...deps, send: async () => { throw new Error("private"); } });
       await assert.rejects(failing.request("9000000016", "failed-ip"), status(502));
       assert.equal((await pool.query("SELECT state FROM whatsapp_otp_challenges WHERE phone='919000000016'")).rows[0].state, "failed");
       await assert.rejects(failing.request("9000000016", "failed-ip"), status(429));
     });
     await t.test("database failure rolls back member, setup, link and continuation consumption", async () => {
-      const c = await request("9000000017");
-      const result = await service.verify(c.challengeId, c.code);
+      const result = await legacyContinuation("9000000017");
       assert.ok("continuationToken" in result);
       identity("atomic17");
       await pool.query("ALTER TABLE fitness_setup ADD CONSTRAINT reject_fixture CHECK (current_step<>1) NOT VALID");
@@ -375,7 +580,7 @@ test("Postgres OTP lifecycle, concurrency, matching and signup", { skip: !proces
       await addMember("ticketFail19", "9000000019");
       const c = await request("9000000019");
       const failing = new WhatsappOtpService({
-        pool, secret: "test-only-secret-with-enough-entropy", send: async () => {},
+        ...deps,
         identity: async () => identities.get("ticketFail19")!,
         ticket: async () => { throw new Error("Mock Clerk outage"); },
       });
@@ -386,7 +591,7 @@ test("Postgres OTP lifecycle, concurrency, matching and signup", { skip: !proces
       let unblock!: () => void, sentFirst!: () => void;
       const started = new Promise<void>((resolve) => { sentFirst = resolve; });
       const delayed = new WhatsappOtpService({
-        pool, secret: "test-only-secret-with-enough-entropy",
+        ...deps,
         send: async () => { sentFirst(); await new Promise<void>((resolve) => { unblock = resolve; }); },
         identity: async () => identity("unused20"), ticket: async () => "unused",
       });
@@ -398,35 +603,34 @@ test("Postgres OTP lifecycle, concurrency, matching and signup", { skip: !proces
       const newer = await request("9000000020");
       unblock();
       await rejected;
-      assert.equal((await service.verify(newer.challengeId, newer.code)).isNewUser, true);
+      assert.equal((await service.verify(newer.challengeId, newer.code)).isNewUser, false);
       const states = (await pool.query("SELECT state FROM whatsapp_otp_challenges WHERE phone='919000000020'")).rows.map((r) => r.state).sort();
       assert.deepEqual(states, ["consumed", "superseded"]);
     });
     await t.test("signup cannot overwrite a different account claiming phone after OTP", async () => {
-      const c = await request("9000000021");
-      const result = await service.verify(c.challengeId, c.code);
+      const result = await legacyContinuation("9000000021");
       assert.ok("continuationToken" in result);
       identity("new21");
       await addMember("other21", "9000000021");
       await assert.rejects(service.complete(result.continuationToken!, "new21"), status(409));
       assert.equal((await pool.query("SELECT * FROM users WHERE clerk_user_id='new21'")).rowCount, 0);
     });
-    await t.test("partner phone and admin identity may create a separate member without associating role records", async () => {
+    await t.test("privileged role collisions never select those identities; dual-role members stay password-gated", async () => {
       await pool.query("INSERT INTO partners(email,phone) VALUES('partner@example.test','+91 9000000022')");
+      identity("partner22", { email: "partner@example.test", emails: ["partner@example.test"] });
       const c = await request("9000000022");
       const partnerResult = await service.verify(c.challengeId, c.code);
-      assert.ok("continuationToken" in partnerResult);
-      identity("partner22", { email: "partner@example.test", emails: ["partner@example.test"] });
-      const partnerMember = await service.complete(partnerResult.continuationToken!, "partner22");
-      assert.equal(partnerMember.isNewUser, true);
-      assert.equal((await pool.query("SELECT clerk_user_id FROM users WHERE id=$1", [partnerMember.userId])).rows[0].clerk_user_id, "partner22");
+      assert.deepEqual(partnerResult, { ticket: "mock-ticket", isNewUser: false });
+      assert.notEqual(lastTicketUserId, "partner22");
+      assert.equal((await pool.query("SELECT email FROM users WHERE mobile='9000000022'")).rows[0].email, "");
+      assert.deepEqual((await pool.query("SELECT * FROM partners")).rows, [{ email: "partner@example.test", phone: "+91 9000000022" }]);
 
-      const next = await request("9000000023");
-      const result = await service.verify(next.challengeId, next.code);
-      assert.ok("continuationToken" in result);
       identity("new23");
       await pool.query("INSERT INTO admins(email) VALUES('new23@example.test')");
-      assert.equal((await service.complete(result.continuationToken!, "new23")).isNewUser, true);
+      const next = await request("9000000023");
+      const result = await service.verify(next.challengeId, next.code);
+      assert.deepEqual(result, { ticket: "mock-ticket", isNewUser: false });
+      assert.notEqual(lastTicketUserId, "new23");
 
       await addMember("secondary29", "9000000029");
       identity("secondary29", {
@@ -436,12 +640,14 @@ test("Postgres OTP lifecycle, concurrency, matching and signup", { skip: !proces
       await pool.query("INSERT INTO admins(email) VALUES('admin-secondary29@example.test')");
       const secondary = await request("9000000029");
       assert.ok("ticket" in await service.verify(secondary.challengeId, secondary.code));
+      const gate = await checkPrivilegedSsoPasswordGate("secondary29", (sql, values) => pool.query(sql, values));
+      assert.equal(gate.allowed, false);
+      if (!gate.allowed) assert.equal(gate.code, "PASSWORD_REQUIRED");
 
       const localId = await addMember("local30", "", "staff-local30@example.test");
       identity("local30", { email: "customer30@example.test", emails: ["customer30@example.test"] });
       await pool.query("INSERT INTO staff(email) VALUES('staff-local30@example.test')");
-      const local = await request("9000000030");
-      const localContinuation = await service.verify(local.challengeId, local.code);
+      const localContinuation = await legacyContinuation("9000000030");
       assert.ok("continuationToken" in localContinuation);
       assert.equal((await service.complete(localContinuation.continuationToken!, "local30")).isNewUser, false);
       assert.equal((await pool.query("SELECT mobile FROM users WHERE id=$1", [localId])).rows[0].mobile, "9000000030");

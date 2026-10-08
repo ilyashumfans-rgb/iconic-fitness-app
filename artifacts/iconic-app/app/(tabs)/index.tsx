@@ -77,6 +77,7 @@ import { AutomaticMembershipSyncNotice } from "@/components/AutomaticMembershipS
 import { FitnessJourneyCard } from "@/components/FitnessJourneyCard";
 import { WelcomeCelebration } from "@/components/WelcomeCelebration";
 import { AppText } from "@/components/AppText";
+import { RatingDisplay } from "@/components/RatingDisplay";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { CoachFab } from "@/components/CoachFab";
@@ -84,6 +85,7 @@ import { CommunityFeed } from "@/components/Community";
 import { NotificationBell } from "@/components/NotificationBell";
 import { MemberMobileVerify } from "@/components/MemberMobileVerify";
 import { HomeMembershipCard } from "@/components/HomeMembershipCard";
+import { PtValidityPanel } from "@/components/PtValidityPanel";
 import { PackageCard } from "@/components/PackageCard";
 import { Screen } from "@/components/Screen";
 import { ReviewSection } from "@/components/ReviewSection";
@@ -557,7 +559,7 @@ export default function HomeScreen() {
   );
   const membershipsQuery = useListMemberships({
     query: {
-      enabled: showDiscovery && secondaryReady,
+      enabled: !!isSignedIn && secondaryReady,
       queryKey: getListMembershipsQueryKey(),
     },
   });
@@ -600,6 +602,11 @@ export default function HomeScreen() {
   // React Query can retain the previous account's result after logout even
   // while this query is disabled. Never let cached personal data reach guest UI.
   const membership = isSignedIn ? (myMembershipQuery.data ?? null) : null;
+  // Never flash acquisition content while membership sync/loading is unresolved.
+  const showPackages = !!isSignedIn &&
+    myMembershipQuery.isSuccess && !myMembershipQuery.isFetching &&
+    !syncPending && (automaticSyncState === "synced" || automaticSyncState === "confirmation_required") &&
+    membership?.status !== "active";
   const homeShortcuts = useMemo(
     () =>
       (homeContentQuery.data ?? []).filter((item) => {
@@ -785,7 +792,7 @@ export default function HomeScreen() {
   // Package categories — shown as a compact 3D tile row on Home.
   const packageCategoriesQuery = useListPackageCategories({
     query: {
-      enabled: showDiscovery && secondaryReady,
+      enabled: showPackages && secondaryReady,
       queryKey: getListPackageCategoriesQueryKey(),
     },
   });
@@ -1049,6 +1056,7 @@ export default function HomeScreen() {
         </View>
       ) : isSignedIn ? (
         <View style={{ gap: 8, marginBottom: 16 }}>
+          <PtValidityPanel />
           <Button label="Scan to check in" icon="maximize" onPress={() => router.push("/check-in")} />
           <Button label="Attendance" variant="secondary" onPress={() => router.push("/attendance")} />
         </View>
@@ -1435,8 +1443,8 @@ export default function HomeScreen() {
       </Pressable>
 
       {/* Explore packages — swipeable category cards (falls back to plan
-          cards when no categories are configured). Guests only. */}
-      {showDiscovery &&
+          cards when no categories are configured). Non-active members only. */}
+      {showPackages &&
       secondaryReady &&
       packageCategoriesSettled &&
       (packageCategories.length > 0 || packages.length > 0) ? (
@@ -2156,10 +2164,7 @@ function HeroSlider({
                       <View />
                     )}
                     <View style={styles.ratingPill}>
-                      <Feather name="star" size={11} color={colors.primary} />
-                      <AppText weight="700" size={11} color={colors.foreground}>
-                        {g.rating.toFixed(1)}
-                      </AppText>
+                      <RatingDisplay rating={g.rating} count={g.reviewsCount} size={11} />
                     </View>
                   </View>
                   <View style={styles.slideContent}>

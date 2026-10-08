@@ -4,9 +4,11 @@ import {
   ScrollView,
   ScrollViewProps,
   StyleSheet,
+  type StyleProp,
+  type ViewStyle,
 } from "react-native";
 
-type Props = ScrollViewProps;
+type Props = ScrollViewProps & { keyboardContainerStyle?: StyleProp<ViewStyle> };
 
 /**
  * ScrollView that keeps the focused text input visible above the keyboard.
@@ -17,6 +19,7 @@ type Props = ScrollViewProps;
 export function KeyboardAwareScrollViewCompat({
   children,
   keyboardShouldPersistTaps = "handled",
+  keyboardContainerStyle,
   ...props
 }: Props) {
   const scrollView = (
@@ -29,7 +32,7 @@ export function KeyboardAwareScrollViewCompat({
   );
   if (Platform.OS === "web") return scrollView;
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior="padding">
+    <KeyboardAvoidingView style={[styles.flex, keyboardContainerStyle]} behavior="padding">
       {scrollView}
     </KeyboardAvoidingView>
   );

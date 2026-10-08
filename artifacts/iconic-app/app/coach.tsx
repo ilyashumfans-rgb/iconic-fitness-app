@@ -9,9 +9,10 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -20,7 +21,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/AppText";
 import { ModalHeader } from "@/components/ModalHeader";
@@ -72,6 +73,20 @@ export default function CoachScreen() {
   const [messages, setMessages] = useState<AiChatMessage[]>([]);
   const [input, setInput] = useState("");
   const scrollRef = useRef<ScrollView>(null);
+  const insets = useSafeAreaInsets();
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const show = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      () => setKeyboardVisible(true),
+    );
+    const hide = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      () => setKeyboardVisible(false),
+    );
+    return () => { show.remove(); hide.remove(); };
+  }, []);
 
   // Default to "assessed" until we know, so we never wrongly nudge an existing
   // member to redo their assessment while /me is loading.
@@ -137,10 +152,12 @@ export default function CoachScreen() {
   };
 
   return (
-    <SafeAreaView
-      edges={["top"]}
+    <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: colors.background }}
+      behavior={Platform.OS === "web" ? undefined : "padding"}
+      keyboardVerticalOffset={0}
     >
+      <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
       <View
         style={{
           paddingHorizontal: 20,
@@ -150,11 +167,6 @@ export default function CoachScreen() {
         <ModalHeader title="AI Coach" />
       </View>
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={8}
-      >
         <ScrollView
           ref={scrollRef}
           style={{ flex: 1 }}
@@ -165,6 +177,7 @@ export default function CoachScreen() {
           }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          onLayout={() => scrollRef.current?.scrollToEnd({ animated: false })}
           onContentSizeChange={() =>
             scrollRef.current?.scrollToEnd({ animated: true })
           }
@@ -217,13 +230,15 @@ export default function CoachScreen() {
             gap: 10,
             paddingHorizontal: 16,
             paddingTop: 10,
-            paddingBottom: 12,
+            paddingBottom: keyboardVisible ? 12 : Math.max(insets.bottom, 12),
             borderTopWidth: 1,
             borderTopColor: colors.border,
             backgroundColor: colors.background,
           }}
         >
           <TextInput
+            accessibilityLabel="Message your AI coach"
+            testID="coach-message-input"
             value={input}
             onChangeText={setInput}
             placeholder="Ask your coach anything…"
@@ -243,9 +258,14 @@ export default function CoachScreen() {
               color: colors.foreground,
               fontFamily: "Inter_500Medium",
               fontSize: 15,
+              lineHeight: 21,
+              textAlignVertical: "top",
             }}
           />
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Send message"
+            testID="coach-send-message"
             onPress={() => send()}
             disabled={!input.trim() || active.isPending}
             style={{
@@ -267,8 +287,8 @@ export default function CoachScreen() {
             <Feather name="arrow-up" size={20} color="#FFFFFF" />
           </Pressable>
         </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 

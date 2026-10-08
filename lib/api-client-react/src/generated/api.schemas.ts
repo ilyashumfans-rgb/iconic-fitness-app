@@ -5,6 +5,45 @@
  * GYMCO customer API — multi-gym memberships, classes, bookings, check-ins, and fitness tracking.
  * OpenAPI spec version: 0.1.0
  */
+export type OnlineBillKind = typeof OnlineBillKind[keyof typeof OnlineBillKind];
+
+
+export const OnlineBillKind = {
+  session: 'session',
+  plan: 'plan',
+} as const;
+
+export interface OnlineBill {
+  id: number;
+  kind: OnlineBillKind;
+  description: string;
+  memberName: string;
+  trainerName: string;
+  branchName: string;
+  status: string;
+  amountInr: number;
+  subtotalInr?: number;
+  cgstInr?: number;
+  sgstInr?: number;
+  cgstPercent?: number;
+  sgstPercent?: number;
+  paid: boolean;
+  planCovered: boolean;
+  createdAt: string;
+  /** @nullable */
+  invoiceNumber: string | null;
+  /** @nullable */
+  paidAt: string | null;
+  /** @nullable */
+  paymentReference: string | null;
+  /** @nullable */
+  refundStatus: string | null;
+  /** @nullable */
+  startsAt: string | null;
+  /** @nullable */
+  endsAt: string | null;
+}
+
 export interface WhatsappOtpRequest {
   /**
      * @minLength 10
@@ -1300,6 +1339,407 @@ export interface MyMembership {
   expiryKnown?: boolean;
 }
 
+export interface CoachCategoryInput {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  title: string;
+  /** @maxLength 500 */
+  summary: string;
+  /** @maxItems 12 */
+  benefits: string[];
+  /** @maxLength 5000 */
+  details: string;
+  /** @maxLength 2000 */
+  imageUrl: string;
+  published: boolean;
+}
+
+export interface CoachCategory {
+  id: string;
+  title: string;
+  summary: string;
+  benefits: string[];
+  details: string;
+  imageUrl: string;
+  published: boolean;
+  sortOrder: number;
+  /** Assigned eligible coaches at the requested branch (public list only) */
+  coachCount?: number | null;
+  /** Explicit Iconic Network Coach online-sessions capability */
+  networkCoach?: boolean | null;
+}
+
+/**
+ * Admin-managed INR price per session length. null = length not offered.
+ */
+export interface NetworkCoachPrices {
+  '30': number | null;
+  '45': number | null;
+  '60': number | null;
+  /**
+     * @minimum 0
+     * @maximum 50
+     */
+  cgstPercent?: number;
+  /**
+     * @minimum 0
+     * @maximum 50
+     */
+  sgstPercent?: number;
+}
+
+export interface NetworkCoachPricesInput {
+  /** @minLength 1 */
+  categoryId: string;
+  prices: NetworkCoachPrices;
+}
+
+export interface NetworkCoachBranch {
+  id: number;
+  name: string;
+}
+
+export interface NetworkCoachTrainer {
+  categoryId?: string;
+  id: string;
+  name: string;
+  gymId: number;
+  branchName: string;
+  photoUrl: string | null;
+  openSlots: number;
+  rating: number | null;
+  reviewCount: number;
+}
+
+export type NetworkCoachOverviewCategory = {
+  id: string;
+  title: string;
+  summary: string;
+} | null;
+
+export interface NetworkCoachCategoryCapability {
+  id: string;
+  title: string;
+  published: boolean;
+  networkCoach: boolean;
+}
+
+export interface NetworkCoachOverview {
+  categories?: NetworkCoachCategoryCapability[];
+  category: NetworkCoachOverviewCategory;
+  branches: NetworkCoachBranch[];
+  prices: NetworkCoachPrices;
+  trainers: NetworkCoachTrainer[];
+  partial: boolean;
+}
+
+export interface NetworkCoachSlot {
+  /** Unavailable due to a reservation or booking. No member details are exposed. */
+  booked: boolean;
+  id: number;
+  startsAt: string;
+  endsAt: string;
+  durationMinutes: number;
+  priceInr: number | null;
+}
+
+export interface NetworkCoachReview {
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
+export type NetworkCoachSlotListTrainer = {
+  id: string;
+  name: string;
+  gymId: number;
+  /** @nullable */
+  rating: number | null;
+  reviewCount: number;
+};
+
+export interface NetworkCoachSlotList {
+  trainer: NetworkCoachSlotListTrainer;
+  slots: NetworkCoachSlot[];
+  reviews: NetworkCoachReview[];
+  timezone: string;
+}
+
+export interface NetworkCoachBookingInput {
+  /** @minLength 1 */
+  categoryId?: string;
+  /** @minimum 1 */
+  slotId: number;
+}
+
+export interface NetworkCoachReservation {
+  bookingId: number;
+  amountInr: number;
+  currency: string;
+  holdExpiresAt: string | null;
+  paymentUrl: string | null;
+  planCovered: boolean;
+}
+
+export type NetworkCoachReminderInputPlatform = typeof NetworkCoachReminderInputPlatform[keyof typeof NetworkCoachReminderInputPlatform];
+
+
+export const NetworkCoachReminderInputPlatform = {
+  ios: 'ios',
+  android: 'android',
+} as const;
+
+export interface NetworkCoachReminderInput {
+  enabled: boolean;
+  token?: string;
+  platform?: NetworkCoachReminderInputPlatform;
+}
+
+export type NetworkCoachBookingReview = {
+  rating: number;
+  comment: string;
+} | null;
+
+export interface NetworkCoachBooking {
+  id: number;
+  /** held | paid | completed | cancelled | expired | payment_failed | paid_conflict */
+  status: string;
+  gymId: number;
+  branchName: string;
+  trainerId: string;
+  trainerName: string;
+  memberName: string | null;
+  startsAt: string;
+  endsAt: string;
+  amountInr: number;
+  currency: string;
+  holdExpiresAt: string | null;
+  /** pending_admin | refunded_manual */
+  refundStatus: string | null;
+  adminNote: string | null;
+  paymentReference: string | null;
+  canJoin: boolean;
+  planCovered: boolean;
+  canReview: boolean;
+  review: NetworkCoachBookingReview;
+}
+
+export interface NetworkCoachReviewInput {
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  /** @maxLength 1000 */
+  comment?: string;
+}
+
+export interface NetworkCoachOk {
+  ok: boolean;
+}
+
+export interface NetworkCoachCallToken {
+  token: string;
+  url: string;
+  roomName: string;
+  expiresInSeconds: number;
+  endsAt: string;
+}
+
+export interface NetworkCoachCapabilityInput {
+  enabled: boolean;
+}
+
+export type NetworkCoachAdminSettingsCategoryPrices = {[key: string]: NetworkCoachPrices};
+
+export type NetworkCoachPlanDurationUnit = typeof NetworkCoachPlanDurationUnit[keyof typeof NetworkCoachPlanDurationUnit];
+
+
+export const NetworkCoachPlanDurationUnit = {
+  day: 'day',
+  week: 'week',
+  month: 'month',
+  year: 'year',
+} as const;
+
+export interface NetworkCoachPlan {
+  categoryId?: string | null;
+  id: number;
+  name: string;
+  /** @minimum 1 */
+  duration: number;
+  durationUnit: NetworkCoachPlanDurationUnit;
+  /** @minimum 1 */
+  priceInr: number;
+  published: boolean;
+  sortOrder: number;
+}
+
+export interface NetworkCoachAdminSettings {
+  categoryPrices?: NetworkCoachAdminSettingsCategoryPrices;
+  prices: NetworkCoachPrices;
+  plans: NetworkCoachPlan[];
+  categories: NetworkCoachCategoryCapability[];
+}
+
+export type NetworkCoachPlanInputDurationUnit = typeof NetworkCoachPlanInputDurationUnit[keyof typeof NetworkCoachPlanInputDurationUnit];
+
+
+export const NetworkCoachPlanInputDurationUnit = {
+  day: 'day',
+  week: 'week',
+  month: 'month',
+  year: 'year',
+} as const;
+
+export interface NetworkCoachPlanInput {
+  /** @minLength 1 */
+  categoryId: string;
+  /**
+     * @minLength 2
+     * @maxLength 80
+     */
+  name: string;
+  /**
+     * @minimum 1
+     * @maximum 3650
+     */
+  duration: number;
+  durationUnit: NetworkCoachPlanInputDurationUnit;
+  /**
+     * @minimum 1
+     * @maximum 1000000
+     */
+  priceInr: number;
+  published: boolean;
+}
+
+export type NetworkCoachPlanListEntitlement = null | {
+  id: number;
+  planName: string;
+  startsAt: string;
+  endsAt: string;
+};
+
+export interface NetworkCoachPlanList {
+  plans: NetworkCoachPlan[];
+  entitlement: NetworkCoachPlanListEntitlement;
+}
+
+export interface NetworkCoachPlanPurchaseInput {
+  /** @minLength 1 */
+  categoryId?: string;
+  /** @minLength 1 */
+  trainerId: string;
+  /** @minimum 1 */
+  gymId: number;
+  /** @minimum 1 */
+  planId: number;
+}
+
+export interface NetworkCoachPlanReservation {
+  purchaseId: number;
+  amountInr: number;
+  holdExpiresAt: string;
+  paymentUrl: string;
+}
+
+export interface NetworkCoachPlanPurchase {
+  id: number;
+  planName: string;
+  duration: number;
+  durationUnit: string;
+  amountInr: number;
+  trainerId: string;
+  status: string;
+  refundStatus: string;
+  paymentReference: string;
+  startsAt: string | null;
+  endsAt: string | null;
+  memberName: string;
+  adminNote: string;
+}
+
+export type NetworkCoachMemberPlanStatus = typeof NetworkCoachMemberPlanStatus[keyof typeof NetworkCoachMemberPlanStatus];
+
+
+export const NetworkCoachMemberPlanStatus = {
+  active: 'active',
+  expired: 'expired',
+  paid_conflict: 'paid_conflict',
+} as const;
+
+export interface NetworkCoachMemberPlan {
+  id: number;
+  planName: string;
+  duration: number;
+  durationUnit: string;
+  amountInr: number;
+  trainerId: string;
+  trainerName: string | null;
+  branchName: string | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  status: NetworkCoachMemberPlanStatus;
+}
+
+export type AdminNetworkCoachSlotInputDurationMinutes = typeof AdminNetworkCoachSlotInputDurationMinutes[keyof typeof AdminNetworkCoachSlotInputDurationMinutes];
+
+
+export const AdminNetworkCoachSlotInputDurationMinutes = {
+  NUMBER_30: 30,
+  NUMBER_45: 45,
+  NUMBER_60: 60,
+} as const;
+
+export interface AdminNetworkCoachSlotInput {
+  /** @minLength 1 */
+  trainerId: string;
+  /** @minimum 1 */
+  gymId: number;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  date: string;
+  startTime: string;
+  durationMinutes: AdminNetworkCoachSlotInputDurationMinutes;
+  /**
+     * @minimum 0
+     * @maximum 12
+     */
+  repeatWeeks?: number;
+}
+
+export interface AdminNetworkCoachSlot {
+  id: number;
+  gymId: number;
+  trainerId: string;
+  staffId: number;
+  startsAt: string;
+  endsAt: string;
+  branchName: string;
+  trainerName: string;
+  bookingStatus: string | null;
+  locked: boolean;
+}
+
+export interface NetworkCoachRefundInput {
+  /**
+     * @minLength 3
+     * @maxLength 500
+     */
+  note: string;
+}
+
+export interface CoachCategoryReorder {
+  ids: string[];
+}
+
+export interface TrainerCategoryAssignment {
+  /** @maxItems 50 */
+  categoryIds: string[];
+}
+
 export interface LiveTrainer {
   id: string;
   name: string;
@@ -1343,6 +1783,167 @@ export interface CreateTrainerBookingRequest {
      * @minimum 0
      */
   redeemPoints?: number;
+  /** Renew the caller's existing local PT plan; the server sets the start date to the day after the current plan ends */
+  renewal?: boolean;
+}
+
+export type PushTokenRequestPlatform = typeof PushTokenRequestPlatform[keyof typeof PushTokenRequestPlatform];
+
+
+export const PushTokenRequestPlatform = {
+  ios: 'ios',
+  android: 'android',
+} as const;
+
+export interface PushTokenRequest {
+  /**
+     * @minLength 10
+     * @maxLength 200
+     */
+  token: string;
+  platform?: PushTokenRequestPlatform;
+}
+
+export interface PushTokenResult {
+  ok: boolean;
+}
+
+/**
+ * renew = same plan; upgrade = a different plan on the same branch
+ */
+export type MembershipRenewalRequestMode = typeof MembershipRenewalRequestMode[keyof typeof MembershipRenewalRequestMode];
+
+
+export const MembershipRenewalRequestMode = {
+  renew: 'renew',
+  upgrade: 'upgrade',
+} as const;
+
+export interface MembershipRenewalRequest {
+  /** renew = same plan; upgrade = a different plan on the same branch */
+  mode?: MembershipRenewalRequestMode;
+  /** Required for upgrade; must be a visible non-PT package on the source plan's branch */
+  packageId?: number;
+}
+
+export type RenewalProgressStatus = typeof RenewalProgressStatus[keyof typeof RenewalProgressStatus];
+
+
+export const RenewalProgressStatus = {
+  none: 'none',
+  pending: 'pending',
+  paid: 'paid',
+  failed: 'failed',
+} as const;
+
+export interface RenewalProgress {
+  status: RenewalProgressStatus;
+  /** @nullable */
+  bookingId: number | null;
+  packageName: string;
+  /** @nullable */
+  startDate: string | null;
+  startsInFuture: boolean;
+}
+
+export type MembershipRenewalInfoSource = typeof MembershipRenewalInfoSource[keyof typeof MembershipRenewalInfoSource];
+
+
+export const MembershipRenewalInfoSource = {
+  yoactiv: 'yoactiv',
+  local: 'local',
+  none: 'none',
+} as const;
+
+export interface MembershipRenewalInfo {
+  source: MembershipRenewalInfoSource;
+  planName: string;
+  branchName: string;
+  /** @nullable */
+  gymId: number | null;
+  /** @nullable */
+  expiryDate: string | null;
+  /** @nullable */
+  daysLeft: number | null;
+  expired: boolean;
+  /** Inside the renewal window (10 days before expiry through expiry day, IST) */
+  eligible: boolean;
+  /** @nullable */
+  nextStartDate: string | null;
+  canRenewOnline: boolean;
+  unavailableReason: string;
+  renewal: RenewalProgress;
+}
+
+/**
+ * local = account-linked in-app plan; local_manual = staff-added plan matched by phone; yoactiv = billed at the branch system
+ */
+export type PtRenewalInfoSource = typeof PtRenewalInfoSource[keyof typeof PtRenewalInfoSource];
+
+
+export const PtRenewalInfoSource = {
+  local: 'local',
+  local_manual: 'local_manual',
+  yoactiv: 'yoactiv',
+} as const;
+
+/**
+ * The only action the app can genuinely perform for this source
+ */
+export type PtRenewalInfoAction = typeof PtRenewalInfoAction[keyof typeof PtRenewalInfoAction];
+
+
+export const PtRenewalInfoAction = {
+  renew_online: 'renew_online',
+  request_renewal: 'request_renewal',
+  none: 'none',
+} as const;
+
+export interface PtRenewalInfo {
+  /** local = account-linked in-app plan; local_manual = staff-added plan matched by phone; yoactiv = billed at the branch system */
+  source: PtRenewalInfoSource;
+  /** The only action the app can genuinely perform for this source */
+  action: PtRenewalInfoAction;
+  /** @nullable */
+  gymId: number | null;
+  packageName: string;
+  trainerName: string;
+  gymName: string;
+  /** @nullable */
+  startDate: string | null;
+  /** @nullable */
+  endDate: string | null;
+  /** @nullable */
+  totalSessions: number | null;
+  /**
+     * Sessions actually attended (attendance records)
+     * @nullable
+     */
+  sessionsDelivered: number | null;
+  /**
+     * Time-based remaining sessions per the PT dashboard rule
+     * @nullable
+     */
+  timeBasedRemaining: number | null;
+  /** @nullable */
+  daysLeft: number | null;
+  expired: boolean;
+  eligible: boolean;
+  /** @nullable */
+  nextStartDate: string | null;
+  canRenewOnline: boolean;
+  explanation: string;
+  renewalPaid: boolean;
+}
+
+export interface MembershipRenewalStatus {
+  membership: MembershipRenewalInfo;
+  pt: PtRenewalInfo | null;
+  /** Server push channel (Expo) is enabled */
+  pushSupported: boolean;
+  /** At least one device is registered for push for this account */
+  pushRegistered: boolean;
+  reminderMilestones: number[];
 }
 
 export type TrainerBookingCreatedStatus = typeof TrainerBookingCreatedStatus[keyof typeof TrainerBookingCreatedStatus];
@@ -1419,6 +2020,62 @@ export type PtProgramPlan = {
   expired: boolean;
 } | null;
 
+/**
+ * Newest paid in-app PT purchase not yet converted into a paid plan. Validity is NOT known yet; requestedStartDate is the member's requested date, not an authoritative start.
+ */
+export type PtProgramPendingPurchase = {
+  bookingId: number;
+  packageName: string;
+  serviceName: string;
+  /** Trainer chosen at checkout ('' when none) */
+  trainerName: string;
+  gymName: string;
+  /** When the booking was placed (not the payment timestamp) */
+  bookedAt: string;
+  /** Requested YYYY-MM-DD; not authoritative */
+  requestedStartDate: string | null;
+  /** Package duration snapshot */
+  durationDays: number | null;
+  /** Package sessions snapshot */
+  sessions: number | null;
+} | null;
+
+export type PtProgramExternalPlanStatus = typeof PtProgramExternalPlanStatus[keyof typeof PtProgramExternalPlanStatus];
+
+
+export const PtProgramExternalPlanStatus = {
+  active: 'active',
+  paused: 'paused',
+  expired: 'expired',
+} as const;
+
+/**
+ * PT membership from the gym-management system, only from an explicitly mapped dedicated PT-sales branch with a PT-classified name
+ */
+export type PtProgramExternalPlan = {
+  packageName: string;
+  branchName: string;
+  status: PtProgramExternalPlanStatus;
+  /** YYYY-MM-DD */
+  startDate: string | null;
+  /** YYYY-MM-DD */
+  endDate: string | null;
+  sessionsTotal: number | null;
+  sessionsUsed: number | null;
+} | null;
+
+/**
+ * ok = provider checked; unavailable = provider lookup failed (externalPlan unknown); not_configured = no dedicated PT-sales branch or no mobile
+ */
+export type PtProgramExternalPlanSource = typeof PtProgramExternalPlanSource[keyof typeof PtProgramExternalPlanSource];
+
+
+export const PtProgramExternalPlanSource = {
+  ok: 'ok',
+  unavailable: 'unavailable',
+  not_configured: 'not_configured',
+} as const;
+
 export interface PtProgram {
   /** True when the caller has a PT enrolment with an assigned trainer */
   active: boolean;
@@ -1428,6 +2085,12 @@ export interface PtProgram {
   hasPaidPlan?: boolean;
   /** The caller's paid PT plan — present only after the plan payment landed */
   plan?: PtProgramPlan;
+  /** Newest paid in-app PT purchase not yet converted into a paid plan. Validity is NOT known yet; requestedStartDate is the member's requested date, not an authoritative start. */
+  pendingPurchase?: PtProgramPendingPurchase;
+  /** PT membership from the gym-management system, only from an explicitly mapped dedicated PT-sales branch with a PT-classified name */
+  externalPlan?: PtProgramExternalPlan;
+  /** ok = provider checked; unavailable = provider lookup failed (externalPlan unknown); not_configured = no dedicated PT-sales branch or no mobile */
+  externalPlanSource?: PtProgramExternalPlanSource;
   /** Branch of the current PT enrolment (for booking a paid plan) */
   gymId?: number | null;
   trainerName: string;
@@ -2206,6 +2869,34 @@ export type ReviewUnauthorizedResponse = ReviewError;
  */
 export type ReviewNotFoundResponse = ReviewError;
 
+export type ListCoachCategoriesParams = {
+/**
+ * @minimum 1
+ */
+gymId: number;
+};
+
+export type ListCoachCategoryTrainersParams = {
+/**
+ * @minimum 1
+ */
+gymId: number;
+};
+
+export type GetAdminTrainerCategoriesParams = {
+/**
+ * @minimum 1
+ */
+gymId: number;
+};
+
+export type UpdateAdminTrainerCategoriesParams = {
+/**
+ * @minimum 1
+ */
+gymId: number;
+};
+
 export type GetAdminLiveTrainerProfileParams = {
 /**
  * @minimum 1
@@ -2512,5 +3203,46 @@ export type ListCommunityTrainersParams = {
  * @minimum 1
  */
 gymId: number;
+};
+
+export type GetNetworkCoachOverviewParams = {
+categoryId?: string;
+/**
+ * @minimum 1
+ */
+gymId?: number;
+};
+
+export type ListNetworkCoachSlotsParams = {
+categoryId?: string;
+/**
+ * @minimum 1
+ */
+gymId: number;
+};
+
+export type ListNetworkCoachPlansParams = {
+categoryId?: string;
+/**
+ * @minimum 1
+ */
+gymId: number;
+};
+
+export type GetNetworkCoachReminder200 = {
+  enabled: boolean;
+};
+
+export type SetNetworkCoachReminder200 = {
+  enabled: boolean;
+};
+
+export type CreateAdminNetworkCoachSlots201 = {
+  created: number;
+  skipped: string[];
+};
+
+export type DeleteAdminNetworkCoachPlan200 = {
+  ok: boolean;
 };
 

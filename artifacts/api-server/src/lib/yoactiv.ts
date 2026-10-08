@@ -351,7 +351,7 @@ export function invalidateYoactivMemberCache(
  */
 export async function fetchYoactivMemberByMobile(
   rawMobile: string | null | undefined,
-  options: { requireComplete?: boolean } = {},
+  options: { requireComplete?: boolean; throwOnError?: boolean } = {},
 ): Promise<YoactivMemberProfile | null> {
   const mobile = normalizeMobile(rawMobile);
   if (!mobile) return null;
@@ -359,7 +359,8 @@ export async function fetchYoactivMemberByMobile(
   if (configs.length === 0) return null;
 
   const key = memberLookupContextKey("mobile", mobile, configs) +
-    (options.requireComplete ? ":complete" : "");
+    (options.requireComplete ? ":complete" : "") +
+    (options.throwOnError ? ":strict" : "");
   return shareMemberLookup(memberLookupsInFlight, key, async () => {
     try {
       return await withDeadline(
@@ -368,6 +369,7 @@ export async function fetchYoactivMemberByMobile(
       );
     } catch (err) {
       logger.warn({ err, mobile: `…${mobile.slice(-4)}` }, "yoactiv lookup failed");
+      if (options.throwOnError) throw err;
       return null;
     }
   });
@@ -507,6 +509,36 @@ export function pickPrimaryMembership(
     return (b.expiryDate ?? "").localeCompare(a.expiryDate ?? "");
   });
   return rows[0] ?? null;
+}
+
+/** IST calendar date (YYYY-MM-DD). Local copy keeps this module dependency-free. */
+function istToday(now = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+}
+
+/**
+ * Current-term selection: rows starting after today (an early renewal or
+ * upgrade already paid) never replace the running term before their start.
+ * `notStarted` is true only when EVERY row starts in the future; callers must
+ * then grant no entitlement (start <= today guard).
+ */
+export function pickCurrentMembership(
+  profile: YoactivMemberProfile,
+  today: string = istToday(),
+): { membership: YoactivMembership; notStarted: boolean } | null {
+  const started = profile.memberships.filter((m) => !m.startDate || m.startDate <= today);
+  if (started.length > 0) {
+    const m = pickPrimaryMembership({ ...profile, memberships: started });
+    return m ? { membership: m, notStarted: false } : null;
+  }
+  const future = [...profile.memberships].sort((a, b) => (a.startDate ?? "").localeCompare(b.startDate ?? ""));
+  return future[0] ? { membership: future[0], notStarted: true } : null;
+}
+
+/** Entitlement view: started terms only; null if nothing has started yet. */
+export function pickEntitledMembership(profile: YoactivMemberProfile, today?: string): YoactivMembership | null {
+  const c = pickCurrentMembership(profile, today);
+  return c && !c.notStarted ? c.membership : null;
 }
 
 // ─── Personal trainer roster ─────────────────────────────────────────────────

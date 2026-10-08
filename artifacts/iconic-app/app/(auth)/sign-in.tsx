@@ -64,7 +64,7 @@ function SignInContent() {
   const { signIn, fetchStatus } = useSignIn();
   const { startSSOFlow } = useSSO();
   const { startAppleAuthenticationFlow } = useSignInWithApple();
-  const { enterGuest, exitGuest } = useGuest();
+  const { exitGuest } = useGuest();
   const params = useLocalSearchParams<{ returnTo?: string | string[] }>();
   const [whatsapp, setWhatsapp] = useState(true);
   const [whatsappBusy, setWhatsappBusy] = useState(false);
@@ -489,11 +489,6 @@ function SignInContent() {
     }
   }, [ssoLoading, signIn, startAppleAuthenticationFlow, router, exitGuest]);
 
-  const onContinueWithoutLogin = useCallback(() => {
-    enterGuest();
-    router.replace("/(tabs)");
-  }, [enterGuest, router]);
-
   const scrim = colors.background;
 
   return (
@@ -863,20 +858,6 @@ function SignInContent() {
               </View>
             ) : null}
 
-            <Pressable
-              onPress={onContinueWithoutLogin}
-              hitSlop={8}
-              style={styles.skip}
-            >
-              <AppText weight="600" size={14} color={colors.mutedForeground}>
-                Continue without login
-              </AppText>
-              <Feather
-                name="arrow-right"
-                size={16}
-                color={colors.mutedForeground}
-              />
-            </Pressable>
 
             <Pressable
               onPress={() => void openExternal(websiteUrl)}

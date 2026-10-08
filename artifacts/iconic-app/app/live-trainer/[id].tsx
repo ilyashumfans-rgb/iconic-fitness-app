@@ -23,6 +23,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
+import { RatingDisplay, RatingStars, STAR_YELLOW } from "@/components/RatingDisplay";
 import { ModalHeader } from "@/components/ModalHeader";
 import { Screen, WEB_NOTCH_TOP } from "@/components/Screen";
 import { EmptyState, ErrorView, LoadingView } from "@/components/ui-bits";
@@ -248,14 +249,7 @@ function MemberReviewSection({ trainerId, gymId, afterTrial }: { trainerId: stri
             </View>
           )}
           <View style={styles.starRow}>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Ionicons
-                key={star}
-                name={star <= existingReview.rating ? "star" : "star-outline"}
-                size={16}
-                color={colors.foreground}
-              />
-            ))}
+            <RatingStars rating={existingReview.rating} size={16} gap={2} />
           </View>
           <AppText size={14} style={{ marginBottom: 12 }}>{existingReview.reviewText}</AppText>
           <Button label="Edit Review" variant="secondary" size="sm" onPress={() => setIsEditing(true)} />
@@ -278,7 +272,7 @@ function MemberReviewSection({ trainerId, gymId, afterTrial }: { trainerId: stri
                 <Ionicons
                   name={star <= rating ? "star" : "star-outline"}
                   size={32}
-                  color={star <= rating ? colors.primary : colors.muted}
+                  color={star <= rating ? STAR_YELLOW : colors.mutedForeground}
                 />
               </Pressable>
             ))}
@@ -519,15 +513,17 @@ export default function LiveTrainerProfileScreen() {
              {/* Rating Summary Card */}
              <View style={[styles.ratingCard, { backgroundColor: colors.elevated, borderColor: colors.border }]}>
                  <View style={[styles.ratingIcon, { backgroundColor: colors.secondary }]}>
-                    <Ionicons name="star" color={colors.primary} size={20} />
+                    <Ionicons name="star" color={STAR_YELLOW} size={20} />
                  </View>
                  <View style={styles.ratingTextWrapper}>
-                    <AppText weight="700" size={16}>
-                       {profile.rating ? `${profile.rating.toFixed(1)} Rating` : "No ratings yet"}
-                    </AppText>
-                    <AppText muted size={13}>
-                       {profile.reviewCount > 0 ? `${profile.reviewCount} ${profile.reviewCount === 1 ? "review" : "reviews"}` : "Be the first to review"}
-                    </AppText>
+                    {profile.rating != null && profile.reviewCount > 0 ? (
+                       <RatingDisplay rating={profile.rating} count={profile.reviewCount} size={16} />
+                    ) : (
+                       <>
+                         <AppText weight="700" size={16}>No ratings yet</AppText>
+                         <AppText muted size={13}>Be the first to review</AppText>
+                       </>
+                    )}
                  </View>
              </View>
 
@@ -636,14 +632,7 @@ export default function LiveTrainerProfileScreen() {
                          accessibilityLabel={`${review.isSample ? "Sample rating" : "Rating"}: ${review.rating} out of 5 stars`}
                          style={styles.stars}
                        >
-                         {[1, 2, 3, 4, 5].map((star) => (
-                           <Ionicons
-                             key={star}
-                             name={star <= review.rating ? "star" : "star-outline"}
-                             size={16}
-                             color={colors.foreground}
-                           />
-                         ))}
+                         <RatingStars rating={review.rating} size={16} gap={2} />
                        </View>
                        <AppText size={14} style={styles.reviewTextBody}>{review.reviewText}</AppText>
                      </Card>

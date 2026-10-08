@@ -75,6 +75,8 @@ export default defineConfig({
           updateAdminLiveTrainerProfile: { zod: { generate: { param: false } } },
           getOwnTrainerReview: { zod: { generate: { param: false } } },
           saveOwnTrainerReview: { zod: { generate: { param: false } } },
+          listNetworkCoachSlots: { zod: { generate: { param: false } } },
+          listNetworkCoachPlans: { zod: { generate: { param: false } } },
         },
       },
     },

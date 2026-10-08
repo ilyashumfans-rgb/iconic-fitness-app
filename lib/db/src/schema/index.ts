@@ -13,6 +13,7 @@ import {
 import { sql } from "drizzle-orm";
 export * from "./branchReviews";
 export * from "./whatsappOtp";
+export * from "./networkCoach";
 
 export const usersTable = pgTable(
   "users",

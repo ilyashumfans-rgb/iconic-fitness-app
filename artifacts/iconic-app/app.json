@@ -57,7 +57,7 @@
         "expo-camera",
         {
           "cameraPermission": "Iconic Fitness uses your camera to scan your gym attendance QR code.",
-          "microphonePermission": false,
+          "microphonePermission": "Iconic Fitness uses your microphone for private online coaching video calls.",
           "recordAudioAndroid": false
         }
       ],
@@ -94,7 +94,15 @@
           }
         }
       ],
-      "expo-audio"
+      "expo-audio",
+      "@livekit/react-native-expo-plugin",
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          "cameraPermission": "Iconic Fitness uses your camera for private online coaching video calls.",
+          "microphonePermission": "Iconic Fitness uses your microphone for private online coaching video calls."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

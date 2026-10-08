@@ -2,10 +2,23 @@ import { Router, type IRouter, type Response } from "express";
 import { clerkClient, getAuth } from "@clerk/express";
 import { pool } from "@workspace/db";
 import { RequestWhatsappOtpBody, VerifyWhatsappOtpBody, CompleteWhatsappOtpBody } from "@workspace/api-zod";
-import { OtpError, sendWhatsappOtp, WhatsappOtpService } from "../lib/whatsappOtp";
+import { OtpError, sendWhatsappOtp, WhatsappOtpService, type OtpIdentity } from "../lib/whatsappOtp";
+import { provisionWhatsappClerkUser } from "../lib/whatsappClerkProvisioning";
 import { grantSignupBonus } from "../lib/signupBonus";
 
 const router: IRouter = Router();
+type ClerkUser = Awaited<ReturnType<typeof clerkClient.users.getUser>>;
+function otpIdentity(user: ClerkUser): OtpIdentity {
+  const primary = user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId && e.verification?.status === "verified");
+  return {
+    id: user.id, createdAt: user.createdAt,
+    email: primary?.emailAddress.toLowerCase() ?? null,
+    emails: user.emailAddresses.map((e) => e.emailAddress.toLowerCase()),
+    name: [user.firstName, user.lastName].filter(Boolean).join(" ") || "Member",
+    avatarUrl: user.imageUrl ?? "",
+    disabled: user.banned || user.locked,
+  };
+}
 function service() {
   // Domain-separated HMAC derives from an existing high-entropy server secret;
   // no plaintext OTP or separate unmanaged persistent key is needed. Rotating
@@ -14,19 +27,13 @@ function service() {
   if (!secret || secret.length < 16) throw new OtpError(503, "WhatsApp sign-in is temporarily unavailable.");
   return new WhatsappOtpService({
     pool, secret, send: sendWhatsappOtp,
-    identity: async (id) => {
-      const user = await clerkClient.users.getUser(id);
-      const primary = user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId && e.verification?.status === "verified");
-      return {
-        id: user.id, createdAt: user.createdAt,
-        email: primary?.emailAddress.toLowerCase() ?? null,
-        emails: user.emailAddresses.map((e) => e.emailAddress.toLowerCase()),
-        name: [user.firstName, user.lastName].filter(Boolean).join(" ") || "Member",
-        avatarUrl: user.imageUrl ?? "",
-        disabled: user.banned || user.locked,
-      };
-    },
+    identity: async (id) => otpIdentity(await clerkClient.users.getUser(id)),
+    provision: async (phone) => otpIdentity(await provisionWhatsappClerkUser(phone, {
+      find: (externalId) => clerkClient.users.getUserList({ externalId: [externalId], limit: 2 }),
+      create: (params) => clerkClient.users.createUser(params),
+    })),
     ticket: async (id) => (await clerkClient.signInTokens.createSignInToken({ userId: id, expiresInSeconds: 300 })).token,
+    signupBonus: grantSignupBonus,
   });
 }
 function fail(res: Response, error: unknown) {

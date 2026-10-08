@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import { RatingStars } from "@/components/RatingDisplay";
 import { useForm } from "react-hook-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, Star } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import { AdminCard, AdminLayout } from "@/components/admin/AdminLayout";
 import { request } from "@/lib/adminApi";
 import { Button } from "@/components/ui/button";
@@ -233,7 +234,7 @@ function ReviewsContent() {
               <span className={`rounded-full px-2 py-1 text-xs ${review.isPublished ? "bg-lime-100 text-lime-800" : "bg-slate-100 text-slate-600"}`}>{review.isPublished ? "Published" : "Hidden"}</span>
             </div>
             <p className="mt-2 break-words text-sm text-muted-foreground">{review.branchName} · {trainerLabel(review)} · Order {review.sortOrder}</p>
-            <div aria-label={`${review.rating} out of 5 stars`} className="my-2 flex items-center gap-1 text-amber-500">{[1, 2, 3, 4, 5].map((star) => <Star key={star} aria-hidden className={`h-4 w-4 ${star <= review.rating ? "fill-current" : ""}`} />)}<span className="ml-1 text-xs text-muted-foreground">{review.rating}/5</span></div>
+            <div aria-label={`${review.rating} out of 5 stars`} className="my-2 flex items-center gap-1"><RatingStars rating={review.rating} starClassName="h-4 w-4" /><span className="ml-1 text-xs text-muted-foreground">{review.rating}/5</span></div>
             <blockquote className="whitespace-pre-wrap break-words text-sm leading-relaxed">“{review.reviewText}”</blockquote>
           </div>
           <div className="flex flex-wrap items-start gap-2">

@@ -6,6 +6,7 @@ import { AppState, View } from "react-native";
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
 import { MembershipStatusCard } from "@/components/MembershipStatusCard";
+import { PtValidityPanel } from "@/components/PtValidityPanel";
 import { istDateStr } from "@/lib/dates";
 import { membershipGreeting } from "@/lib/membershipHome";
 
@@ -34,6 +35,7 @@ export function HomeMembershipCard(props: {
       gap: 8, marginTop: 10, backgroundColor: "#000000",
       marginHorizontal: -14, marginBottom: -14, padding: 14, paddingTop: 10,
     }}>
+      <PtValidityPanel tone="onDark" />
       {history.isError ? <AppText size={12} muted>Attendance status unavailable. You can still scan and choose check in or check out.</AppText> : null}
       <View style={{ flexDirection: "row", gap: 8 }}>
       <View style={{ flex: 1 }}>

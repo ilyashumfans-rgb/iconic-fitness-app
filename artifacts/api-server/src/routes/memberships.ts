@@ -16,7 +16,9 @@ import {
   ListPackageCategoriesResponse,
   GetMyMembershipResponse,
   ListMyMembershipPaymentsResponse,
+  CreateMembershipRenewalBody,
   CreateMembershipRenewalResponse,
+  GetMyRenewalStatusResponse,
   LookupMembershipBody,
   LookupMembershipResponse,
 } from "@workspace/api-zod";
@@ -25,6 +27,28 @@ import { normalizeMemberUsername } from "../lib/memberUsername";
 import { yoactivBranchName } from "../lib/yoactivBranchNames";
 import { microCache } from "../lib/microCache";
 import fitnessJourneyRouter from "./fitnessJourney";
+import { isPackageVisible, packagePrefs } from "../lib/yoactivPackagePrefs";
+import {
+  REMINDER_MILESTONES,
+  classifySourceBookings,
+  decideCheckout,
+  istDateOf,
+  sourceLockKey,
+  renewalWindow,
+  resolveCheckoutPackage,
+} from "../lib/renewalPolicy";
+import {
+  latestMembershipRenewal,
+  listSourceBookings,
+  pickCurrentYoactivTerm,
+  rememberRenewalCandidate,
+  saveRenewalSnapshot,
+  settleStaleCheckouts,
+  withSourceLock,
+  yoactivSourceKey,
+} from "../lib/renewalStore";
+import { ptRenewalInfo } from "../lib/ptRenewal";
+import { userHasPushToken } from "../lib/pushNotifications";
 import {
   createYoactivPaymentUrl,
   ensureYoactivMemberId,
@@ -32,7 +56,7 @@ import {
   fetchYoactivMemberByVerifiedEmail,
   fetchYoactivPackages,
   normalizeMobile,
-  pickPrimaryMembership,
+  pickCurrentMembership,
   resolveBranchTarget,
   yoactivConfigured,
 } from "../lib/yoactiv";
@@ -156,7 +180,7 @@ router.post("/membership-lookup", async (req, res): Promise<void> => {
     res.json(LookupMembershipResponse.parse(notFound));
     return;
   }
-  const primary = pickPrimaryMembership(profile);
+  const primary = pickCurrentMembership(profile)?.membership ?? null;
   res.json(
     LookupMembershipResponse.parse({
       found: true,
@@ -318,18 +342,19 @@ router.get("/memberships/mine", requireUser, async (req, res): Promise<void> => 
       .from(usersTable)
       .where(eq(usersTable.id, req.userId!));
     let profile = await fetchYoactivMemberByMobile(user?.mobile);
-    let primary = profile ? pickPrimaryMembership(profile) : null;
+    let current = profile ? pickCurrentMembership(profile) : null;
+    let primary = current?.membership ?? null;
     if (!primary) {
       const email = await verifiedClerkEmail(req.clerkUserId);
       const emailProfile = email
         ? await fetchYoactivMemberByVerifiedEmail(email)
         : null;
-      const emailPrimary = emailProfile
-        ? pickPrimaryMembership(emailProfile)
-        : null;
+      const emailCurrent = emailProfile ? pickCurrentMembership(emailProfile) : null;
+      const emailPrimary = emailCurrent?.membership ?? null;
       if (emailProfile && emailPrimary) {
         profile = emailProfile;
         primary = emailPrimary;
+        current = emailCurrent;
         // Save a missing phone only after a unique match to a Clerk-verified
         // email. Never overwrite a different phone entered by the user.
         if (!normalizeMobile(user?.mobile)) {
@@ -366,7 +391,8 @@ router.get("/memberships/mine", requireUser, async (req, res): Promise<void> => 
           classesUsed: primary.sessionsUsed ?? 0,
           classesIncluded: primary.sessionsTotal ?? 0,
           gymsAccessed: profile!.branchCount,
-          status: primary.status,
+          // Entitlement guard: a term that hasn't started yet is never active.
+          status: current?.notStarted && primary.status === "active" ? "paused" : primary.status,
           source: "yoactiv",
           photoUrl: profile!.photoUrl,
           startedOn: primary.startDate,
@@ -419,17 +445,6 @@ function publicBaseUrl(req: Request): string {
   return `https://${domain}`;
 }
 
-/** Today's date (YYYY-MM-DD) in IST. */
-function istTodayStr(): string {
-  return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
-}
-
-/** The day after `isoDate` (YYYY-MM-DD), computed in UTC (safe for date-only). */
-function dayAfter(isoDate: string): string {
-  const t = Date.parse(`${isoDate}T00:00:00Z`) + 86_400_000;
-  return new Date(t).toISOString().slice(0, 10);
-}
-
 // One-tap plan renewal: find the member's current YoActiv plan, match it to
 // the live package catalog on their home branch, and hand back YoActiv's
 // hosted Razorpay payment link. Reuses the package-purchase pipeline (pending
@@ -451,7 +466,7 @@ router.post(
       .from(usersTable)
       .where(eq(usersTable.id, req.userId!));
     const profile = await fetchYoactivMemberByMobile(user?.mobile);
-    const primary = profile ? pickPrimaryMembership(profile) : null;
+    const primary = profile ? pickCurrentYoactivTerm(profile, istDateOf(new Date())) : null;
     if (!primary) {
       res.status(409).json({
         error: "We couldn't find your plan in the gym system",
@@ -467,28 +482,53 @@ router.post(
       });
       return;
     }
-    // Re-find the member's plan in the live catalog for the live price. The
-    // member is already on this plan, so admin visibility prefs don't apply.
-    // Names come back from two different YoActiv endpoints, so match exactly
-    // first and fall back to a whitespace/case-insensitive comparison.
-    const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
-    const packages = await fetchYoactivPackages(primary.branchId);
-    const pkg =
-      packages.find(
-        (p) =>
-          p.serviceName === primary.serviceName && p.name === primary.planName,
-      ) ??
-      packages.find(
-        (p) =>
-          norm(p.serviceName) === norm(primary.serviceName) &&
-          norm(p.name) === norm(primary.planName),
-      );
+    // Mode is validated server-side; anything else falls back to an error.
+    const bodyParsed = CreateMembershipRenewalBody.safeParse(req.body ?? {});
+    if (!bodyParsed.success) {
+      res.status(400).json({ error: bodyParsed.error.message });
+      return;
+    }
+    const mode = bodyParsed.data.mode ?? "renew";
+    // Only the source plan's branch catalog is searched, so a package id
+    // from another gym can never be charged here.
+    const [packages, prefs] = await Promise.all([
+      fetchYoactivPackages(primary.branchId),
+      packagePrefs(primary.branchId),
+    ]);
+    const pkg = resolveCheckoutPackage({
+      mode,
+      packages,
+      source: { serviceName: primary.serviceName, planName: primary.planName },
+      packageId: bodyParsed.data.packageId ?? null,
+      // The member is already on their own plan, so visibility prefs only
+      // gate upgrade targets.
+      isVisible: (id) => isPackageVisible(id, prefs),
+    });
     if (!pkg) {
       res.status(409).json({
-        error: "Your plan can't be renewed online — please contact your branch",
+        error:
+          mode === "upgrade"
+            ? "That plan isn't available as an upgrade for your branch"
+            : "Your plan can't be renewed online — please contact your branch",
       });
       return;
     }
+    const today = istDateOf(new Date());
+    const sourceIdentity = yoactivSourceKey(primary);
+    const decision = decideCheckout({
+      mode,
+      expiry: primary.expiryDate,
+      today,
+      listedPriceInr: pkg.amountInr,
+      alreadyPaidForNextStart: false, // checked again under the source lock
+    });
+    if (!decision.ok) {
+      res.status(decision.status).json({ error: decision.error });
+      return;
+    }
+    const sourceExpiry = primary.expiryDate!;
+    const startDate = decision.startDate;
+    const chargeInr = decision.amountInr;
     const memberId = await ensureYoactivMemberId(
       target,
       profile!.mobile,
@@ -502,66 +542,224 @@ router.post(
       return;
     }
 
-    // Renewal starts the day after expiry when the plan is still running,
-    // otherwise today (IST).
-    const today = istTodayStr();
-    const startDate =
-      primary.expiryDate && primary.expiryDate >= today
-        ? dayAfter(primary.expiryDate)
-        : today;
-
     // Map the branch back to a gym for display; plain-int reference, 0 = none.
     const [gym] = await db
       .select({ id: gymsTable.id, name: gymsTable.name })
       .from(gymsTable)
       .where(eq(gymsTable.yoactivBranchId, primary.branchId));
-
-    const token = randomBytes(24).toString("hex");
-    const [booking] = await db
-      .insert(packageBookingsTable)
-      .values({
-        token,
-        userId: req.userId!,
-        gymId: gym?.id ?? 0,
-        gymName: gym?.name || primary.branchName,
-        branchId: target.branchId,
-        memberName: profile!.name || user?.name || "Member",
-        mobile: profile!.mobile,
-        packageName: pkg.name,
-        serviceName: pkg.serviceName,
-        amountInr: Math.round(pkg.amountInr),
-        startDate,
-        status: "pending",
-      })
-      .returning();
-
     const base = publicBaseUrl(req);
-    const paymentUrl = await createYoactivPaymentUrl({
-      target,
-      memberId,
-      variationId: pkg.id,
-      amountInr: Math.round(pkg.amountInr),
-      startDateIso: startDate,
-      successUrl: `${base}/api/pay/package/${token}/success`,
-      failedUrl: `${base}/api/pay/package/${token}/failed`,
-    });
-    if (!paymentUrl) {
-      await db
-        .update(packageBookingsTable)
-        .set({ status: "failed" })
-        .where(eq(packageBookingsTable.id, booking!.id));
-      res.status(502).json({
-        error: "Could not start the payment. Please try again.",
-      });
+    const userId = req.userId!;
+
+    // Create-or-resume is serialised per exact source term until the booking,
+    // its snapshot and the hosted link state are all persisted.
+    type Outcome =
+      | { kind: "error"; status: number; error: string }
+      | { kind: "ok"; id: number; token: string; paymentUrl: string };
+    const outcome: Outcome = await withSourceLock(
+      sourceLockKey("membership", userId, sourceIdentity, sourceExpiry),
+      async (tx): Promise<Outcome> => {
+        const existing = await listSourceBookings("membership", userId, sourceIdentity, sourceExpiry, tx);
+        const c = classifySourceBookings(existing, { userId, mode, packageId: pkg.id, now: Date.now() });
+        if (c.paid) return { kind: "error", status: 409, error: "Your renewal is already paid" };
+        await settleStaleCheckouts("membership", c.expireIds, c.orphanIds, tx);
+        if (c.reuse) {
+          return { kind: "ok", id: c.reuse.booking.id, token: c.reuse.booking.token, paymentUrl: c.reuse.snap.paymentUrl! };
+        }
+        const token = randomBytes(24).toString("hex");
+        const [booking] = await tx
+          .insert(packageBookingsTable)
+          .values({
+            token,
+            userId,
+            gymId: gym?.id ?? 0,
+            gymName: gym?.name || primary.branchName,
+            branchId: target.branchId,
+            memberName: profile!.name || user?.name || "Member",
+            mobile: profile!.mobile,
+            packageName: pkg.name,
+            serviceName: pkg.serviceName,
+            amountInr: chargeInr,
+            startDate,
+            status: "pending",
+          })
+          .returning();
+        const snap = {
+          kind: "membership" as const,
+          mode,
+          userId,
+          bookingId: booking!.id,
+          sourceIdentity,
+          sourceExpiry,
+          nextStartDate: startDate,
+          packageId: pkg.id,
+          listedPriceInr: chargeInr,
+          createdAt: new Date().toISOString(),
+        };
+        await saveRenewalSnapshot({ ...snap, urlState: "creating" }, tx);
+        const paymentUrl = await createYoactivPaymentUrl({
+          target,
+          memberId,
+          variationId: pkg.id,
+          amountInr: chargeInr,
+          startDateIso: startDate,
+          successUrl: `${base}/api/pay/package/${token}/success`,
+          failedUrl: `${base}/api/pay/package/${token}/failed`,
+        });
+        if (!paymentUrl) {
+          // Tracked failure: no link exists, so the row can never be paid.
+          await tx
+            .update(packageBookingsTable)
+            .set({ status: "failed" })
+            .where(eq(packageBookingsTable.id, booking!.id));
+          await saveRenewalSnapshot({ ...snap, urlState: "gateway_failed" }, tx);
+          return { kind: "error", status: 502, error: "Could not start the payment. Please try again." };
+        }
+        await saveRenewalSnapshot(
+          { ...snap, urlState: "ready", paymentUrl, urlCreatedAt: new Date().toISOString() },
+          tx,
+        );
+        return { kind: "ok", id: booking!.id, token, paymentUrl };
+      },
+    );
+    if (outcome.kind === "error") {
+      res.status(outcome.status).json({ error: outcome.error });
       return;
     }
     res.json(
       CreateMembershipRenewalResponse.parse({
-        id: booking!.id,
+        id: outcome.id,
         status: "pending",
-        amountInr: Math.round(pkg.amountInr),
-        paymentUrl,
-        token,
+        amountInr: chargeInr,
+        paymentUrl: outcome.paymentUrl,
+        token: outcome.token,
+      }),
+    );
+  },
+);
+
+router.get(
+  "/memberships/mine/renewal",
+  requireUser,
+  async (req, res): Promise<void> => {
+    const today = istDateOf(new Date());
+    const [user] = await db
+      .select({ mobile: usersTable.mobile })
+      .from(usersTable)
+      .where(eq(usersTable.id, req.userId!));
+    const mobile = normalizeMobile(user?.mobile ?? "") ?? "";
+    const none = { status: "none" as const, bookingId: null, packageName: "", startDate: null, startsInFuture: false };
+    let membership = {
+      source: "none" as "yoactiv" | "local" | "none",
+      planName: "",
+      branchName: "",
+      gymId: null as number | null,
+      expiryDate: null as string | null,
+      daysLeft: null as number | null,
+      expired: false,
+      eligible: false,
+      nextStartDate: null as string | null,
+      canRenewOnline: false,
+      unavailableReason: "No linked plan found.",
+      renewal: none as {
+        status: "none" | "pending" | "paid" | "failed";
+        bookingId: number | null;
+        packageName: string;
+        startDate: string | null;
+        startsInFuture: boolean;
+      },
+    };
+    const profile = yoactivConfigured() && mobile ? await fetchYoactivMemberByMobile(mobile) : null;
+    const primary = profile ? pickCurrentYoactivTerm(profile, istDateOf(new Date())) : null;
+    if (primary) {
+      const w = renewalWindow(primary.expiryDate, today);
+      const [gym] = await db
+        .select({ id: gymsTable.id })
+        .from(gymsTable)
+        .where(eq(gymsTable.yoactivBranchId, primary.branchId));
+      const target = await resolveBranchTarget(primary.branchId);
+      const latestRow = primary.expiryDate
+        ? await latestMembershipRenewal(req.userId!, yoactivSourceKey(primary), primary.expiryDate)
+        : null;
+      const latest = latestRow?.booking;
+      const renewal = latest
+        ? {
+            status: latest.status === "paid" ? ("paid" as const) : latest.status === "failed" ? ("failed" as const) : ("pending" as const),
+            bookingId: latest.id,
+            packageName: latest.packageName,
+            startDate: latest.startDate,
+            startsInFuture: latest.startDate > today,
+          }
+        : none;
+      const paid = renewal.status === "paid";
+      membership = {
+        source: "yoactiv",
+        planName: primary.planName,
+        branchName: primary.branchName,
+        gymId: gym?.id ?? null,
+        expiryDate: primary.expiryDate,
+        daysLeft: w.daysLeft,
+        expired: w.expired,
+        eligible: w.eligible,
+        nextStartDate: w.nextStartDate,
+        canRenewOnline: !w.expired && w.daysLeft !== null && !paid && !!target,
+        unavailableReason: !primary.expiryDate
+          ? "Your plan's expiry date isn't available from the branch system."
+          : w.expired
+            ? "Your plan has expired. Buy a new plan to continue."
+            : !target
+              ? "Online renewal isn't available for your branch yet."
+              : paid
+                  ? "Your renewal is paid."
+                  : "",
+        renewal,
+      };
+      // Keep the background reminder sweep's candidate list fresh.
+      if (primary.expiryDate) {
+        await rememberRenewalCandidate(
+          req.userId!,
+          w.expired
+            ? null
+            : {
+                source: "yoactiv",
+                sourceKey: yoactivSourceKey(primary),
+                planName: primary.planName,
+                expiry: primary.expiryDate,
+                checkedAt: Date.now(),
+              },
+        ).catch(() => undefined);
+      }
+    } else {
+      const [um] = await db
+        .select()
+        .from(userMembershipsTable)
+        .where(eq(userMembershipsTable.userId, req.userId!));
+      if (um) {
+        const [plan] = await db.select().from(membershipsTable).where(eq(membershipsTable.id, um.planId));
+        const expiry = String(um.renewsOn).slice(0, 10);
+        const w = renewalWindow(expiry, today);
+        membership = {
+          ...membership,
+          source: "local",
+          planName: plan?.name ?? "Membership",
+          expiryDate: w.daysLeft === null ? null : expiry,
+          daysLeft: w.daysLeft,
+          expired: w.expired,
+          eligible: w.eligible,
+          nextStartDate: w.nextStartDate,
+          canRenewOnline: false,
+          unavailableReason: "This plan isn't linked to your branch billing system, so it can't be renewed in the app. Please renew at your branch.",
+        };
+      }
+    }
+    const pt = await ptRenewalInfo(req.userId!, mobile, today);
+    res.setHeader("Cache-Control", "no-store");
+    res.json(
+      GetMyRenewalStatusResponse.parse({
+        membership,
+        pt,
+        pushSupported: process.env.PUSH_SEND !== "off",
+        pushRegistered: await userHasPushToken(req.userId!),
+        reminderMilestones: [...REMINDER_MILESTONES].sort((x, y) => y - x),
       }),
     );
   },

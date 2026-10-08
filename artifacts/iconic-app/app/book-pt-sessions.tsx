@@ -6,6 +6,7 @@ import {
   getListLiveTrainersQueryKey,
   getGetMyPtProgramQueryKey,
   getGetMyReferralInfoQueryKey,
+  getGetMyRenewalStatusQueryKey,
   useGetMyMembership,
   useListLiveTrainers,
   useGetMyPtProgram,
@@ -45,7 +46,10 @@ export default function BookPtSessionsScreen({ afterTrial = false }: { afterTria
   const router = useRouter();
   const colors = useColors();
   const { isLoaded, isSignedIn } = useAuth();
-  const params = useLocalSearchParams<{ gymId?: string; gymName?: string; trainerId?: string }>();
+  const params = useLocalSearchParams<{ gymId?: string; gymName?: string; trainerId?: string; renew?: string }>();
+  // PT renewal: the server sets the start date to the day after the current
+  // plan ends; the picker below is hidden and any client date is ignored.
+  const isRenewal = params.renew === "1";
   const queryClient = useQueryClient();
   const membershipQuery = useGetMyMembership({
     query: { enabled: isLoaded && !!isSignedIn, queryKey: getGetMyMembershipQueryKey() },
@@ -168,6 +172,7 @@ export default function BookPtSessionsScreen({ afterTrial = false }: { afterTria
   }, [gymId, selectedTrainer?.id]);
   useEffect(() => {
     if (status === "paid") {
+      void queryClient.invalidateQueries({ queryKey: getGetMyRenewalStatusQueryKey() });
       void queryClient.invalidateQueries({ queryKey: getGetMyPtProgramQueryKey() });
       void queryClient.invalidateQueries({ queryKey: getGetMyReferralInfoQueryKey() });
     }
@@ -209,6 +214,7 @@ export default function BookPtSessionsScreen({ afterTrial = false }: { afterTria
           name: name.trim(),
           mobile: phone.trim(),
           preferredDate: date,
+          ...(isRenewal ? { renewal: true } : {}),
           ...(coupon ? { couponCode: coupon.code } : {}),
           ...(pointsDiscount > 0 ? { redeemPoints: pointsDiscount } : {}),
         },
@@ -257,7 +263,9 @@ export default function BookPtSessionsScreen({ afterTrial = false }: { afterTria
                   : "Waiting for payment…"}
             </AppText>
             <AppText muted size={14} style={{ textAlign: "center" }}>
-              {paid
+              {paid && isRenewal
+                ? `Your PT renewal is paid. ${selectedPkg?.name ?? "The new plan"} starts the day after your current plan ends.`
+                : paid
                 ? `Your ${selectedPkg?.name ?? "PT"} package with ${selectedTrainer?.name ?? "your selected trainer"} is booked${gymName ? ` at ${gymName}` : ""}. Your invoice will appear under Invoices.`
                 : failedPay
                   ? "Payment was not confirmed. If you were charged, contact the front desk before trying again."
@@ -524,17 +532,25 @@ export default function BookPtSessionsScreen({ afterTrial = false }: { afterTria
             keyboardType="phone-pad"
           />
 
-          <AppText
-            weight="600"
-            size={13}
-            style={{ marginTop: 18, marginBottom: 8 }}
-          >
-            Start date
-          </AppText>
-          <CalendarPicker value={date} onChange={setDate} />
-          <AppText muted size={11} style={{ marginTop: 6 }}>
-            Selected: {istDateLabel(date)}
-          </AppText>
+          {isRenewal ? (
+            <AppText muted size={12} style={{ marginTop: 18 }}>
+              Renewal: your new PT plan starts the day after your current plan ends.
+            </AppText>
+          ) : (
+            <>
+              <AppText
+                weight="600"
+                size={13}
+                style={{ marginTop: 18, marginBottom: 8 }}
+              >
+                Start date
+              </AppText>
+              <CalendarPicker value={date} onChange={setDate} />
+              <AppText muted size={11} style={{ marginTop: 6 }}>
+                Selected: {istDateLabel(date)}
+              </AppText>
+            </>
+          )}
 
           <CouponInput
             amountInr={selectedPkg ? selectedPkg.amountInr : null}

@@ -19,6 +19,7 @@ import { ActivityIndicator, Alert, AppState, Platform, Pressable, StyleSheet, Te
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
+import { RatingDisplay, RatingStars, STAR_YELLOW } from "@/components/RatingDisplay";
 import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/hooks/useGuest";
 import { memberAuthHref } from "@/lib/memberAuth";
@@ -146,9 +147,7 @@ function BranchReviewsContent({ gymId, fullList }: { gymId: number; fullList: bo
         </View>
         {publicReviews.data && publicReviews.data.reviewCount > 0 && publicReviews.data.averageRating !== null ? (
           <View style={styles.aggregate}>
-            <Ionicons name="star" size={17} color={colors.primary} />
-            <AppText weight="700" size={18}>{publicReviews.data.averageRating.toFixed(1)}</AppText>
-            <AppText muted size={12}>({publicReviews.data.reviewCount} real)</AppText>
+            <RatingDisplay rating={publicReviews.data.averageRating} count={publicReviews.data.reviewCount} size={15} />
           </View>
         ) : null}
       </View>
@@ -181,9 +180,7 @@ function BranchReviewsContent({ gymId, fullList }: { gymId: number; fullList: bo
               </View>
               <AppText muted size={12}>{review.branchName}{review.createdAt ? ` · ${new Date(review.createdAt).toLocaleDateString()}` : ""}</AppText>
               <View style={styles.stars} accessibilityLabel={`${review.isSample ? "Sample rating" : "Rating"}: ${review.rating} out of 5 stars`}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Ionicons key={star} name={star <= review.rating ? "star" : "star-outline"} size={16} color={colors.primary} />
-                ))}
+                <RatingStars rating={review.rating} size={16} gap={3} />
               </View>
               <AppText size={14} style={styles.body}>{review.reviewText}</AppText>
             </Card>
@@ -244,7 +241,7 @@ function BranchReviewsContent({ gymId, fullList }: { gymId: number; fullList: bo
           {(!editing || !eligible) && own ? (
             <>
               <View style={styles.stars}>
-                {[1, 2, 3, 4, 5].map((star) => <Ionicons key={star} name={star <= own.rating ? "star" : "star-outline"} size={17} color={colors.primary} />)}
+                <RatingStars rating={own.rating} size={17} gap={3} />
               </View>
               <AppText size={14} style={styles.body}>{own.reviewText}</AppText>
               <View style={styles.actions}>
@@ -258,7 +255,7 @@ function BranchReviewsContent({ gymId, fullList }: { gymId: number; fullList: bo
               <View style={styles.picker}>
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Pressable key={star} testID={`branch-rating-${star}`} accessibilityRole="button" accessibilityLabel={`Rate ${star} stars`} accessibilityState={{ selected: rating === star }} disabled={busy} onPress={() => setRating(star)} hitSlop={8}>
-                    <Ionicons name={star <= rating ? "star" : "star-outline"} size={30} color={star <= rating ? colors.primary : colors.mutedForeground} />
+                    <Ionicons name={star <= rating ? "star" : "star-outline"} size={30} color={star <= rating ? STAR_YELLOW : colors.mutedForeground} />
                   </Pressable>
                 ))}
               </View>
@@ -279,7 +276,7 @@ function BranchReviewsContent({ gymId, fullList }: { gymId: number; fullList: bo
                 <AppText color={colors.destructive} size={13} style={styles.note}>{validation || errorMessage(save.error)}</AppText>
               ) : null}
               <View style={styles.actions}>
-                <Button label={own ? "Resubmit review" : "Submit for approval"} size="sm" loading={save.isPending} disabled={busy || !rating || !text.trim()} onPress={submit} />
+                <Button label="Submit" size="sm" loading={save.isPending} disabled={busy || !rating || !text.trim()} onPress={submit} />
                 {own ? <Button label="Cancel" variant="ghost" size="sm" disabled={busy} onPress={() => setEditing(false)} /> : null}
               </View>
             </>

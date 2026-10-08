@@ -6,11 +6,9 @@ import { StyleSheet, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
-import { MemberMobileVerify } from "@/components/MemberMobileVerify";
 import { useColors } from "@/hooks/useColors";
 import {
   autoSyncAndRefresh,
-  automaticMobileSyncKey,
   useAutomaticMobileSyncState,
   useMobileSyncPending,
 } from "@/lib/syncMemberMobile";
@@ -80,16 +78,8 @@ export function AutomaticMembershipSyncNotice({ accountId }: { accountId: string
     state === "idle" || state === "pending" || state === "synced") return null;
 
   if (state === "confirmation_required" || state === "mobile_conflict") {
-    return (
-      <View style={styles.wrapper}>
-        <MemberMobileVerify
-          syncMode
-          onSynced={() => {
-            queryClient.setQueryData(automaticMobileSyncKey(accountId), "synced");
-          }}
-        />
-      </View>
-    );
+    // Manual syncing lives in the membership card, not a duplicate home form.
+    return null;
   }
 
   return (
@@ -107,7 +97,6 @@ export function AutomaticMembershipSyncNotice({ accountId }: { accountId: string
 }
 
 const styles = StyleSheet.create({
-  wrapper: { marginBottom: 16 },
   notice: {
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 16,

@@ -200,12 +200,13 @@ export function MembershipStatusCard({
         >
           {/* Tappable avatar: Camera / Gallery chooser to change the photo */}
           <Pressable
-            onPress={photo.busy ? undefined : photo.choosePhoto}
+            onPress={photo.canUpload ? photo.choosePhoto : undefined}
+            disabled={!photo.canUpload}
             style={[styles.premiumAvatarRing, { borderColor: PREMIUM.gold },
               compact ? { width: 44, height: 44, borderRadius: 22 } : null]}
             hitSlop={6}
-            accessibilityRole="button"
-            accessibilityLabel="Change profile photo"
+            accessibilityRole={photo.canUpload ? "button" : "image"}
+            accessibilityLabel={photo.locked ? "Saved member face photo" : "Add face photo"}
           >
             {photo.localUrl || memberPhotoUrl || membershipPhotoUrl ? (
               <Image
@@ -250,7 +251,7 @@ export function MembershipStatusCard({
               >
                 <ActivityIndicator color="#fff" size="small" />
               </View>
-            ) : (
+            ) : photo.canUpload ? (
               <View
                 style={[
                   styles.premiumAvatarCamBadge,
@@ -259,7 +260,7 @@ export function MembershipStatusCard({
               >
                 <Feather name="camera" size={10} color="#0B0B0F" />
               </View>
-            )}
+            ) : null}
           </Pressable>
           <View style={{ flex: 1 }}>
             <AppText

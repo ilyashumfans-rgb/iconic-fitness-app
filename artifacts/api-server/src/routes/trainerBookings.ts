@@ -47,12 +47,23 @@ import {
 import {
   createYoactivPaymentUrl,
   ensureYoactivMemberId,
+  fetchYoactivMemberByMobile,
   fetchYoactivPackages,
   normalizeMobile,
   resolveBranchTarget,
   yoactivConfigured,
 } from "../lib/yoactiv";
 import { quoteCoupon, recordCouponRedemption } from "../lib/coupons";
+import { findRenewablePtPlan } from "../lib/ptRenewal";
+import { listSourceBookings, saveRenewalSnapshot, settleStaleCheckouts, withSourceLock } from "../lib/renewalStore";
+import { classifySourceBookings, decideCheckout, istDateOf, pickCurrentTerm, sourceLockKey } from "../lib/renewalPolicy";
+import {
+  dedicatedPtBranches,
+  pickExternalPtPlan,
+  pickPendingPtPurchase,
+  type ExternalPtPlan,
+  type PendingPtPurchase,
+} from "../lib/ptPurchaseSummary";
 
 const router: IRouter = Router();
 
@@ -165,7 +176,16 @@ async function autoEnrolPtMembership(
         .orderBy(desc(ptProgramsTable.acceptedAt))
         .limit(1);
     }
-    if (!program) return; // no kick-starter trainer — staff accepts manually
+    let owner: { staffId: number; staffName: string } | undefined = program;
+    if (!owner && booking.userId) {
+      // Renewal of an existing account-linked PT plan: the previous plan's
+      // trainer keeps the member (no kick-starter row is required).
+      const prev = await findRenewablePtPlan(booking.userId);
+      if (prev && prev.m.endDate < booking.preferredDate) {
+        owner = { staffId: prev.m.staffId, staffName: prev.m.staffName };
+      }
+    }
+    if (!owner) return; // no kick-starter trainer — staff accepts manually
     const startDate = /^\d{4}-\d{2}-\d{2}$/.test(booking.preferredDate)
       ? booking.preferredDate
       : istTodayStr();
@@ -176,8 +196,8 @@ async function autoEnrolPtMembership(
       .values({
         source: "yoactiv",
         bookingId: booking.id,
-        staffId: program.staffId,
-        staffName: program.staffName,
+        staffId: owner.staffId,
+        staffName: owner.staffName,
         memberName: booking.memberName,
         mobile: booking.mobile,
         gymId: booking.gymId,
@@ -242,9 +262,12 @@ async function fetchMyPtPlan(
       ),
     )
     .orderBy(desc(ptMembershipsTable.createdAt));
-  // Newest paid row, preferring an account-linked one over a phone match.
+  // Current term (a paid future-start renewal doesn't replace it before its
+  // start date), preferring account-linked rows over a phone match.
+  const today = istTodayStr();
+  const linked = rows.filter((r) => r.bookingUserId === userId).map((r) => r.m);
   const pick =
-    rows.find((r) => r.bookingUserId === userId)?.m ?? rows[0]?.m;
+    pickCurrentTerm(linked, today) ?? pickCurrentTerm(rows.map((r) => r.m), today);
   if (!pick) return null;
   const [att] = await db
     .select({ count: sql<number>`count(*)::int` })
@@ -260,6 +283,56 @@ async function fetchMyPtPlan(
     endDate: pick.endDate,
     expired: istTodayStr() > pick.endDate,
   };
+}
+
+// Separate PT purchase summaries for /pt/mine: an in-app paid purchase still
+// awaiting conversion into a plan, and an externally billed YoActiv PT
+// membership (dedicated PT-sales branches only). Both are caller-scoped.
+async function fetchPtPurchaseExtras(
+  userId: number,
+  mobile: string,
+): Promise<{
+  pendingPurchase: PendingPtPurchase | null;
+  externalPlan: ExternalPtPlan | null;
+  externalPlanSource: "ok" | "unavailable" | "not_configured";
+}> {
+  const paid = await db
+    .select()
+    .from(trainerBookingsTable)
+    .where(and(eq(trainerBookingsTable.userId, userId), eq(trainerBookingsTable.status, "paid")))
+    .orderBy(desc(trainerBookingsTable.createdAt));
+  const converted = paid.length
+    ? await db
+        .select({ bookingId: ptMembershipsTable.bookingId })
+        .from(ptMembershipsTable)
+        .where(and(
+          eq(ptMembershipsTable.paymentStatus, "paid"),
+          or(...paid.map((b) => eq(ptMembershipsTable.bookingId, b.id))),
+        ))
+    : [];
+  const pendingPurchase = pickPendingPtPurchase(
+    userId,
+    paid,
+    new Set(converted.map((c) => c.bookingId).filter((id): id is number => id !== null)),
+  );
+
+  const gyms = await db
+    .select({ yoactivBranchId: gymsTable.yoactivBranchId, yoactivPtBranchId: gymsTable.yoactivPtBranchId })
+    .from(gymsTable);
+  const ptBranches = dedicatedPtBranches(gyms);
+  if (!mobile || ptBranches.size === 0 || !yoactivConfigured()) {
+    return { pendingPurchase, externalPlan: null, externalPlanSource: "not_configured" };
+  }
+  try {
+    const profile = await fetchYoactivMemberByMobile(mobile, { requireComplete: true, throwOnError: true });
+    return {
+      pendingPurchase,
+      externalPlan: profile ? pickExternalPtPlan(profile.memberships, ptBranches) : null,
+      externalPlanSource: "ok",
+    };
+  } catch {
+    return { pendingPurchase, externalPlan: null, externalPlanSource: "unavailable" };
+  }
 }
 
 // Start a paid booking: verify the package server-side, register the member in
@@ -298,6 +371,31 @@ router.post(
     if (!/^\d{4}-\d{2}-\d{2}$/.test(body.preferredDate)) {
       res.status(400).json({ error: "Invalid preferred date" });
       return;
+    }
+    // PT renewal: the start date is authoritative server-side (day after the
+    // caller's own account-linked plan ends), whatever the client sent.
+    let preferredDate = body.preferredDate;
+    let renewalSource: { id: number; endDate: string } | null = null;
+    if (body.renewal) {
+      const prev = await findRenewablePtPlan(req.userId!);
+      if (!prev) {
+        res.status(409).json({ error: "No PT plan on your account can be renewed online" });
+        return;
+      }
+      const today = istDateOf(new Date());
+      const gate = decideCheckout({
+        mode: "renew",
+        expiry: prev.m.endDate,
+        today,
+        listedPriceInr: 1,
+        alreadyPaidForNextStart: false, // re-checked under the source lock
+      });
+      if (!gate.ok) {
+        res.status(gate.status).json({ error: gate.error.replace("plan", "PT plan") });
+        return;
+      }
+      preferredDate = gate.startDate;
+      renewalSource = { id: prev.m.id, endDate: prev.m.endDate };
     }
     const [gym] = await db
       .select({
@@ -400,60 +498,112 @@ router.post(
       chargeInr -= pointsRedeemedInr;
     }
 
-    const token = randomBytes(24).toString("hex");
-    const [booking] = await db
-      .insert(trainerBookingsTable)
-      .values({
-        token,
-        userId: req.userId!,
-        gymId: gym.id,
-        gymName: gym.name,
-        branchId: target.branchId,
-        trainerId: selectedTrainer.id,
-        trainerName: selectedTrainer.name,
-        memberName: body.name.trim(),
-        mobile,
-        packageName: pkg.name,
-        serviceName: pkg.serviceName,
-        amountInr: chargeInr,
-        couponId,
-        couponCode,
-        couponDiscountInr,
-        pointsRedeemedInr,
-        // Snapshot for the staff PT dashboard auto-enrol once payment lands.
-        sessions: pkg.sessions ?? 0,
-        durationDays: durationToDays(pkg.duration),
-        preferredDate: body.preferredDate,
-        status: "pending",
-      })
-      .returning();
-
     const base = publicBaseUrl(req);
-    const paymentUrl = await createYoactivPaymentUrl({
-      target,
-      memberId,
-      variationId: pkg.id,
-      amountInr: chargeInr,
-      startDateIso: body.preferredDate,
-      successUrl: `${base}/api/pay/trainer/${token}/success`,
-      failedUrl: `${base}/api/pay/trainer/${token}/failed`,
-    });
-    if (!paymentUrl) {
-      await db
-        .update(trainerBookingsTable)
-        .set({ status: "failed" })
-        .where(eq(trainerBookingsTable.id, booking!.id));
-      res.status(502).json({
-        error: "Could not start the payment. Please try again.",
+    type Outcome =
+      | { kind: "error"; status: number; error: string }
+      | { kind: "ok"; id: number; paymentUrl: string };
+    type Exec = Parameters<typeof saveRenewalSnapshot>[1];
+    const createAndLink = async (exec: NonNullable<Exec>): Promise<Outcome> => {
+      const token = randomBytes(24).toString("hex");
+      const [booking] = await exec
+        .insert(trainerBookingsTable)
+        .values({
+          token,
+          userId: req.userId!,
+          gymId: gym.id,
+          gymName: gym.name,
+          branchId: target.branchId,
+          trainerId: selectedTrainer.id,
+          trainerName: selectedTrainer.name,
+          memberName: body.name.trim(),
+          mobile,
+          packageName: pkg.name,
+          serviceName: pkg.serviceName,
+          amountInr: chargeInr,
+          couponId,
+          couponCode,
+          couponDiscountInr,
+          pointsRedeemedInr,
+          // Snapshot for the staff PT dashboard auto-enrol once payment lands.
+          sessions: pkg.sessions ?? 0,
+          durationDays: durationToDays(pkg.duration),
+          preferredDate,
+          status: "pending",
+        })
+        .returning();
+      const snap = renewalSource
+        ? {
+            kind: "pt" as const,
+            mode: "renew" as const,
+            userId: req.userId!,
+            bookingId: booking!.id,
+            sourceIdentity: `pt-local:${renewalSource.id}`,
+            sourceExpiry: renewalSource.endDate,
+            nextStartDate: preferredDate,
+            packageId: pkg.id,
+            // Amount actually charged for this checkout (reuse must match it).
+            listedPriceInr: chargeInr,
+            createdAt: new Date().toISOString(),
+          }
+        : null;
+      if (snap) await saveRenewalSnapshot({ ...snap, urlState: "creating" }, exec);
+      const paymentUrl = await createYoactivPaymentUrl({
+        target,
+        memberId,
+        variationId: pkg.id,
+        amountInr: chargeInr,
+        startDateIso: preferredDate,
+        successUrl: `${base}/api/pay/trainer/${token}/success`,
+        failedUrl: `${base}/api/pay/trainer/${token}/failed`,
       });
+      if (!paymentUrl) {
+        await exec
+          .update(trainerBookingsTable)
+          .set({ status: "failed" })
+          .where(eq(trainerBookingsTable.id, booking!.id));
+        if (snap) await saveRenewalSnapshot({ ...snap, urlState: "gateway_failed" }, exec);
+        return { kind: "error", status: 502, error: "Could not start the payment. Please try again." };
+      }
+      if (snap) {
+        await saveRenewalSnapshot({ ...snap, urlState: "ready", paymentUrl, urlCreatedAt: new Date().toISOString() }, exec);
+      }
+      return { kind: "ok", id: booking!.id, paymentUrl };
+    };
+
+    let outcome: Outcome;
+    if (renewalSource) {
+      const src = renewalSource;
+      const sourceIdentity = `pt-local:${src.id}`;
+      outcome = await withSourceLock(
+        sourceLockKey("pt", req.userId!, sourceIdentity, src.endDate),
+        async (tx): Promise<Outcome> => {
+          const existing = await listSourceBookings("pt", req.userId!, sourceIdentity, src.endDate, tx);
+          const c = classifySourceBookings(existing, {
+            userId: req.userId!,
+            mode: "renew",
+            packageId: pkg.id,
+            now: Date.now(),
+            amountInr: chargeInr,
+          });
+          if (c.paid) return { kind: "error", status: 409, error: "Your PT renewal is already paid" };
+          await settleStaleCheckouts("pt", c.expireIds, c.orphanIds, tx);
+          if (c.reuse) return { kind: "ok", id: c.reuse.booking.id, paymentUrl: c.reuse.snap.paymentUrl! };
+          return createAndLink(tx);
+        },
+      );
+    } else {
+      outcome = await createAndLink(db);
+    }
+    if (outcome.kind === "error") {
+      res.status(outcome.status).json({ error: outcome.error });
       return;
     }
     res.json(
       CreateTrainerBookingResponse.parse({
-        id: booking!.id,
+        id: outcome.id,
         status: "pending",
         amountInr: chargeInr,
-        paymentUrl,
+        paymentUrl: outcome.paymentUrl,
       }),
     );
   },
@@ -692,26 +842,28 @@ router.get(
 
     // Paid plan from the staff PT dashboard — the member's monthly sessions
     // start only once this exists (i.e. after the plan payment landed).
-    const plan = await fetchMyPtPlan(req.userId!, mobile ?? "");
+    const planOrNull = await fetchMyPtPlan(req.userId!, mobile ?? "");
+    const extras = await fetchPtPurchaseExtras(req.userId!, mobile ?? "");
 
     const current = candidates[0];
     if (!current) {
-      if (plan) {
+      if (planOrNull) {
         res.json(
           GetMyPtProgramResponse.parse({
             ...empty,
+            ...extras,
             active: true,
             hasPaidPlan: true,
-            plan,
-            trainerName: plan.trainerName,
-            gymName: plan.gymName,
-            packageName: plan.packageName,
-            totalSessions: plan.totalSessions,
+            plan: planOrNull,
+            trainerName: planOrNull.trainerName,
+            gymName: planOrNull.gymName,
+            packageName: planOrNull.packageName,
+            totalSessions: planOrNull.totalSessions,
           }),
         );
         return;
       }
-      res.json(GetMyPtProgramResponse.parse(empty));
+      res.json(GetMyPtProgramResponse.parse({ ...empty, ...extras }));
       return;
     }
     const sessions = await listPtSessions(current.refType, current.refId);
@@ -757,10 +909,11 @@ router.get(
         // "Book your PT plan" CTA: the free kick-starter is done and the
         // member hasn't bought a paid plan yet.
         kickstarterCompleted: program?.status === "completed",
-        hasPaidPlan: bookings.length > 0 || plan !== null,
+        hasPaidPlan: bookings.length > 0 || planOrNull !== null,
         gymId: current.gymId,
-        plan,
-        trainerName: plan?.trainerName || current.trainerName,
+        plan: planOrNull,
+        ...extras,
+        trainerName: planOrNull?.trainerName || current.trainerName,
         trainerPhotoUrl: photos.get(current.trainerId) ?? "",
         gymName: current.gymName,
         packageName: current.packageName,

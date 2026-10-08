@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
+import { RatingDisplay } from "@/components/RatingDisplay";
 import { useListGymCategories, useListFeaturedGyms, useListGyms, getListGymCategoriesQueryKey, getListFeaturedGymsQueryKey, getListGymsQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Star, ChevronRight, LayoutGrid, List, Clock } from "lucide-react";
+import { Search, MapPin, ChevronRight, LayoutGrid, List, Clock } from "lucide-react";
 import { Link, useSearch } from "wouter";
 import { cn } from "@/lib/utils";
 import NearbyGyms from "@/components/NearbyGyms";
@@ -124,10 +125,7 @@ export default function Explore() {
                           <MapPin className="h-3 w-3 mr-1 text-primary" />
                           {gym.area}, {gym.city}
                         </div>
-                        <div className="flex items-center">
-                          <Star className="h-3 w-3 mr-1 text-yellow-400 fill-current" />
-                          {gym.rating} ({gym.reviewsCount})
-                        </div>
+                        <RatingDisplay rating={gym.rating} count={gym.reviewsCount} size="xs" />
                       </div>
                     </div>
                   </div>
@@ -230,10 +228,7 @@ export default function Explore() {
                       <span className="inline-flex items-center text-[10px] uppercase tracking-wider font-bold text-primary bg-lime-50 border border-lime-100 px-2 py-1 rounded">
                         Included with plan
                       </span>
-                      <div className="flex items-center text-sm font-bold">
-                        <Star className="h-4 w-4 mr-1 text-yellow-400 fill-current" />
-                        {gym.rating}
-                      </div>
+                      <RatingDisplay rating={gym.rating} count={gym.reviewsCount} className="text-sm" countClassName="text-muted-foreground font-normal" />
                     </div>
                   </CardContent>
                 </Card>
@@ -266,10 +261,7 @@ export default function Explore() {
                           <h3 className="font-black text-lg md:text-xl truncate group-hover:text-primary transition-colors">
                             {gym.name}
                           </h3>
-                          <span className="inline-flex items-center text-xs font-bold bg-secondary px-2 py-0.5 rounded">
-                            <Star className="h-3 w-3 mr-1 text-yellow-400 fill-current" />
-                            {gym.rating}
-                          </span>
+                          <RatingDisplay rating={gym.rating} count={gym.reviewsCount} size="xs" className="text-xs" countClassName="text-muted-foreground" />
                         </div>
                         <div className="flex items-center text-sm text-muted-foreground mb-2.5">
                           <MapPin className="h-3.5 w-3.5 mr-1 text-primary shrink-0" />

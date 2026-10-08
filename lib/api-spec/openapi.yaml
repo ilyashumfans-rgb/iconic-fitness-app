@@ -26,9 +26,38 @@ tags:
     description: Member gym check-ins
   - name: ai
     description: Iconic Fitness AI assistant
+  - name: network-coach
+    description: Iconic Network Coach online 1:1 sessions (category-only)
   - name: community
     description: Member transformation stories. Photos remain private until an admin approves a consented submission.
 paths:
+  /admin/online-billing:
+    get:
+      operationId: listAdminOnlineBilling
+      responses:
+        "200":
+          description: Online coaching bookings and payment records
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: "#/components/schemas/OnlineBill"}}
+  /partner/online-billing:
+    get:
+      operationId: listPartnerOnlineBilling
+      responses:
+        "200":
+          description: Owned branch online coaching bookings and payments
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: "#/components/schemas/OnlineBill"}}
+  /network-coach/billing:
+    get:
+      operationId: listMyOnlineBilling
+      responses:
+        "200":
+          description: Member online coaching payment records
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: "#/components/schemas/OnlineBill"}}
   /auth/whatsapp/request:
     post:
       operationId: requestWhatsappOtp
@@ -107,6 +136,141 @@ paths:
           description: Account or phone conflict
         '503':
           description: Authentication unavailable
+  /coach-categories:
+    get:
+      operationId: listCoachCategories
+      tags: [trainers]
+      summary: Published coach categories with branch-scoped assigned coach counts
+      parameters:
+        - {in: query, name: gymId, required: true, schema: {type: integer, minimum: 1}}
+      responses:
+        "200":
+          description: Published categories in display order
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: "#/components/schemas/CoachCategory"}
+  /coach-categories/{categoryId}/trainers:
+    parameters:
+      - {in: path, name: categoryId, required: true, schema: {type: string}}
+    get:
+      operationId: listCoachCategoryTrainers
+      parameters:
+        - {in: query, name: gymId, required: true, schema: {type: integer, minimum: 1}}
+      tags: [trainers]
+      summary: Eligible coaches at this branch assigned to this published category
+      responses:
+        "200":
+          description: Filtered live roster
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: "#/components/schemas/LiveTrainer"}
+  /admin/coach-categories:
+    get:
+      operationId: listAdminCoachCategories
+      tags: [trainers]
+      security: [{adminSession: []}]
+      responses:
+        "200":
+          description: All categories including hidden
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: "#/components/schemas/CoachCategory"}
+    post:
+      operationId: createAdminCoachCategory
+      tags: [trainers]
+      security: [{adminSession: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CoachCategoryInput"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CoachCategory"}
+  /admin/coach-categories/reorder:
+    post:
+      operationId: reorderAdminCoachCategories
+      tags: [trainers]
+      security: [{adminSession: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CoachCategoryReorder"}
+      responses:
+        "200":
+          description: Reordered categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: "#/components/schemas/CoachCategory"}
+  /admin/coach-categories/{categoryId}:
+    parameters:
+      - {in: path, name: categoryId, required: true, schema: {type: string}}
+    put:
+      operationId: updateAdminCoachCategory
+      tags: [trainers]
+      security: [{adminSession: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CoachCategoryInput"}
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CoachCategory"}
+    delete:
+      operationId: deleteAdminCoachCategory
+      tags: [trainers]
+      security: [{adminSession: []}]
+      responses:
+        "204":
+          description: Deleted and assignments cleaned
+  /admin/trainers/live/{trainerId}/categories:
+    parameters:
+      - {in: path, name: trainerId, required: true, schema: {type: string}}
+    get:
+      operationId: getAdminTrainerCategories
+      parameters:
+        - {in: query, name: gymId, required: true, schema: {type: integer, minimum: 1}}
+      tags: [trainers]
+      security: [{adminSession: []}]
+      responses:
+        "200":
+          description: Category assignment for this trainer at this branch
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/TrainerCategoryAssignment"}
+    put:
+      operationId: updateAdminTrainerCategories
+      parameters:
+        - {in: query, name: gymId, required: true, schema: {type: integer, minimum: 1}}
+      tags: [trainers]
+      security: [{adminSession: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/TrainerCategoryAssignment"}
+      responses:
+        "200":
+          description: Saved assignment
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/TrainerCategoryAssignment"}
   /admin/trainers/live/{trainerId}/profile:
     parameters:
       - {in: path, name: trainerId, required: true, schema: {type: string}}
@@ -1092,7 +1256,12 @@ paths:
     post:
       operationId: createMembershipRenewal
       tags: [memberships]
-      summary: Start an online renewal payment for the member's current YoActiv plan
+      summary: Start an online renewal or upgrade payment for the member's current YoActiv plan (starts the day after current expiry, full listed price)
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MembershipRenewalRequest" }
       responses:
         "200":
           description: Pending renewal purchase created; pay via paymentUrl
@@ -1108,6 +1277,49 @@ paths:
                 required: [error]
                 properties:
                   error: { type: string }
+  /memberships/mine/renewal:
+    get:
+      operationId: getMyRenewalStatus
+      tags: [memberships]
+      summary: Renewal/upgrade eligibility, paid renewal evidence, and PT renewal context for the caller
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipRenewalStatus" }
+  /me/push-tokens:
+    post:
+      operationId: registerPushToken
+      tags: [notifications]
+      summary: Register this device's Expo push token for the signed-in member (moves it from any previous account)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PushTokenRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PushTokenResult" }
+  /me/push-tokens/remove:
+    post:
+      operationId: removePushToken
+      tags: [notifications]
+      summary: Remove this device's push token (sign-out / shared phone); possession of the token is required
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PushTokenRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PushTokenResult" }
   /memberships/mine/payments:
     get:
       operationId: listMyMembershipPayments
@@ -2109,6 +2321,386 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/CommunityPostCreated" }
 
+  /network-coach/overview:
+    get:
+      operationId: getNetworkCoachOverview
+      tags: [network-coach]
+      summary: Iconic Network Coach roster across all branches (optional branch filter)
+      parameters:
+        - {in: query, name: categoryId, required: false, schema: {type: string}}
+        - {in: query, name: gymId, required: false, schema: {type: integer, minimum: 1}}
+      responses:
+        "200":
+          description: Overview
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/NetworkCoachOverview"}
+  /network-coach/trainers/{trainerId}/slots:
+    parameters:
+      - {in: path, name: trainerId, required: true, schema: {type: string}}
+    get:
+      operationId: listNetworkCoachSlots
+      tags: [network-coach]
+      parameters:
+        - {in: query, name: categoryId, required: false, schema: {type: string}}
+        - {in: query, name: gymId, required: true, schema: {type: integer, minimum: 1}}
+      responses:
+        "200":
+          description: Open priced slots (IST) and reviews
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/NetworkCoachSlotList"}
+  /network-coach/trainers/{trainerId}/plans:
+    parameters:
+      - {in: query, name: categoryId, required: false, schema: {type: string}}
+      - {in: path, name: trainerId, required: true, schema: {type: string}}
+      - {in: query, name: gymId, required: true, schema: {type: integer, minimum: 1}}
+    get:
+      operationId: listNetworkCoachPlans
+      tags: [network-coach]
+      security: [{bearerAuth: []}]
+      responses:
+        "200":
+          description: Published plans and the current trainer-specific entitlement
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/NetworkCoachPlanList"}
+  /network-coach/plans/purchase:
+    post:
+      operationId: purchaseNetworkCoachPlan
+      tags: [network-coach]
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/NetworkCoachPlanPurchaseInput"}
+      responses:
+        "201":
+          description: Plan payment hold
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/NetworkCoachPlanReservation"}
+  /network-coach/plans:
+    get:
+      operationId: listMyNetworkCoachPlans
+      tags: [network-coach]
+      security: [{bearerAuth: []}]
+      responses:
+        "200":
+          description: The signed-in member's plan terms, including expired terms
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: "#/components/schemas/NetworkCoachMemberPlan"}}
+  /network-coach/reminders/{role}/{id}:
+    parameters:
+      - {name: role, in: path, required: true, schema: {type: string, enum: [member, trainer]}}
+      - {name: id, in: path, required: true, schema: {type: integer}}
+    get:
+      operationId: getNetworkCoachReminder
+      tags: [network-coach]
+      responses:
+        "200":
+          description: Own session reminder preference
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [enabled]
+                properties:
+                  enabled: {type: boolean}
+    put:
+      operationId: setNetworkCoachReminder
+      tags: [network-coach]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/NetworkCoachReminderInput"}
+      responses:
+        "200":
+          description: Saved own session reminder preference
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [enabled]
+                properties:
+                  enabled: {type: boolean}
+  /network-coach/bookings:
+    get:
+      operationId: listMyNetworkCoachBookings
+      tags: [network-coach]
+      security: [{memberBearer: []}]
+      responses:
+        "200":
+          description: My online sessions
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: "#/components/schemas/NetworkCoachBooking"}}
+    post:
+      operationId: createNetworkCoachBooking
+      tags: [network-coach]
+      security: [{memberBearer: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/NetworkCoachBookingInput"}
+      responses:
+        "201":
+          description: Slot held; pay via paymentUrl
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/NetworkCoachReservation"}
+  /network-coach/bookings/{id}/cancel:
+    parameters:
+      - {in: path, name: id, required: true, schema: {type: integer, minimum: 1}}
+    post:
+      operationId: cancelNetworkCoachBooking
+      tags: [network-coach]
+      security: [{memberBearer: []}]
+      responses:
+        "200":
+          description: Cancelled
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/NetworkCoachOk"}
+  /network-coach/bookings/{id}/review:
+    parameters:
+      - {in: path, name: id, required: true, schema: {type: integer, minimum: 1}}
+    post:
+      operationId: reviewNetworkCoachBooking
+      tags: [network-coach]
+      security: [{memberBearer: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/NetworkCoachReviewInput"}
+      responses:
+        "201":
+          description: Review saved
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/NetworkCoachOk"}
+  /network-coach/bookings/{id}/join:
+    parameters:
+      - {in: path, name: id, required: true, schema: {type: integer, minimum: 1}}
+    post:
+      operationId: joinNetworkCoachCall
+      tags: [network-coach]
+      security: [{memberBearer: []}]
+      responses:
+        "200":
+          description: Short-lived LiveKit token for this private room
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/NetworkCoachCallToken"}
+  /admin/network-coach/settings:
+    get:
+      operationId: getAdminNetworkCoachSettings
+      tags: [network-coach]
+      security: [{adminSession: []}]
+      responses:
+        "200":
+          description: Prices and category capability
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/NetworkCoachAdminSettings"}
+  /admin/network-coach/slots:
+    get:
+      operationId: listAdminNetworkCoachSlots
+      tags: [network-coach]
+      security: [{adminSession: []}]
+      responses:
+        "200":
+          description: Future online slots across eligible trainers
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: "#/components/schemas/AdminNetworkCoachSlot"}}
+    post:
+      operationId: createAdminNetworkCoachSlots
+      tags: [network-coach]
+      security: [{adminSession: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/AdminNetworkCoachSlotInput"}
+      responses:
+        "201":
+          description: Slots created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [created, skipped]
+                properties:
+                  created: {type: integer}
+                  skipped: {type: array, items: {type: string}}
+  /admin/network-coach/slots/{id}:
+    parameters:
+      - {in: path, name: id, required: true, schema: {type: integer, minimum: 1}}
+    delete:
+      operationId: deleteAdminNetworkCoachSlot
+      tags: [network-coach]
+      security: [{adminSession: []}]
+      responses:
+        "204": {description: Deleted}
+  /admin/network-coach/prices:
+    put:
+      operationId: updateAdminNetworkCoachPrices
+      tags: [network-coach]
+      security: [{adminSession: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/NetworkCoachPricesInput"}
+      responses:
+        "200":
+          description: Saved prices
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/NetworkCoachPrices"}
+  /admin/network-coach/plans:
+    post:
+      operationId: createAdminNetworkCoachPlan
+      tags: [network-coach]
+      security: [{adminSession: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/NetworkCoachPlanInput"}
+      responses:
+        "201":
+          description: Plan created
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/NetworkCoachPlan"}
+  /admin/network-coach/plans/{id}:
+    parameters:
+      - {in: path, name: id, required: true, schema: {type: integer, minimum: 1}}
+    put:
+      operationId: updateAdminNetworkCoachPlan
+      tags: [network-coach]
+      security: [{adminSession: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/NetworkCoachPlanInput"}
+      responses:
+        "200":
+          description: Plan updated
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/NetworkCoachPlan"}
+    delete:
+      operationId: deleteAdminNetworkCoachPlan
+      tags: [network-coach]
+      security: [{adminSession: []}]
+      responses:
+        "200":
+          description: Plan deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties: {ok: {type: boolean}}
+  /admin/network-coach/categories/{categoryId}:
+    parameters:
+      - {in: path, name: categoryId, required: true, schema: {type: string}}
+    put:
+      operationId: setAdminNetworkCoachCategory
+      tags: [network-coach]
+      security: [{adminSession: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/NetworkCoachCapabilityInput"}
+      responses:
+        "200":
+          description: Updated capability
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/NetworkCoachCategoryCapability"}
+  /admin/network-coach/bookings:
+    get:
+      operationId: listAdminNetworkCoachBookings
+      tags: [network-coach]
+      security: [{adminSession: []}]
+      responses:
+        "200":
+          description: All bookings, refund-review first
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: "#/components/schemas/NetworkCoachBooking"}}
+  /admin/network-coach/plan-purchases:
+    get:
+      operationId: listAdminNetworkCoachPlanPurchases
+      tags: [network-coach]
+      security: [{adminSession: []}]
+      responses:
+        "200":
+          description: Purchases and terms
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: "#/components/schemas/NetworkCoachPlanPurchase"}}
+  /admin/network-coach/plan-purchases/{id}/refund-resolved:
+    parameters:
+      - {in: path, name: id, required: true, schema: {type: integer, minimum: 1}}
+    post:
+      operationId: resolveAdminNetworkCoachPlanRefund
+      tags: [network-coach]
+      security: [{adminSession: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/NetworkCoachRefundInput"}
+      responses:
+        "200":
+          description: Manual refund noted
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/NetworkCoachOk"}
+  /admin/network-coach/bookings/{id}/refund-resolved:
+    parameters:
+      - {in: path, name: id, required: true, schema: {type: integer, minimum: 1}}
+    post:
+      operationId: resolveAdminNetworkCoachRefund
+      tags: [network-coach]
+      security: [{adminSession: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/NetworkCoachRefundInput"}
+      responses:
+        "200":
+          description: Marked refunded (manual)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/NetworkCoachOk"}
+  /admin/network-coach/bookings/{id}/complete:
+    parameters:
+      - {in: path, name: id, required: true, schema: {type: integer, minimum: 1}}
+    post:
+      operationId: completeAdminNetworkCoachBooking
+      tags: [network-coach]
+      security: [{adminSession: []}]
+      responses:
+        "200":
+          description: Marked completed
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/NetworkCoachOk"}
+
 components:
   securitySchemes:
     memberBearer:
@@ -2146,6 +2738,32 @@ components:
       required: true
       schema: {type: integer, minimum: 1}
   schemas:
+    OnlineBill:
+      type: object
+      required: [id, kind, description, memberName, trainerName, branchName, status, amountInr, paid, planCovered, createdAt, invoiceNumber, paidAt, paymentReference, refundStatus, startsAt, endsAt]
+      properties:
+        id: {type: integer}
+        kind: {type: string, enum: [session, plan]}
+        description: {type: string}
+        memberName: {type: string}
+        trainerName: {type: string}
+        branchName: {type: string}
+        status: {type: string}
+        amountInr: {type: integer}
+        subtotalInr: {type: integer}
+        cgstInr: {type: integer}
+        sgstInr: {type: integer}
+        cgstPercent: {type: number}
+        sgstPercent: {type: number}
+        paid: {type: boolean}
+        planCovered: {type: boolean}
+        createdAt: {type: string}
+        invoiceNumber: {type: [string, "null"]}
+        paidAt: {type: [string, "null"]}
+        paymentReference: {type: [string, "null"]}
+        refundStatus: {type: [string, "null"]}
+        startsAt: {type: [string, "null"]}
+        endsAt: {type: [string, "null"]}
     WhatsappOtpRequest:
       type: object
       required: [mobile]
@@ -3049,6 +3667,334 @@ components:
             type: boolean,
             description: "False when the upstream system reported no expiry date (renewsOn is then a placeholder)",
           }
+    CoachCategoryInput:
+      type: object
+      required: [title, summary, benefits, details, imageUrl, published]
+      properties:
+        title: {type: string, minLength: 1, maxLength: 80}
+        summary: {type: string, maxLength: 500}
+        benefits: {type: array, maxItems: 12, items: {type: string, minLength: 1, maxLength: 160}}
+        details: {type: string, maxLength: 5000}
+        imageUrl: {type: string, maxLength: 2000}
+        published: {type: boolean}
+    CoachCategory:
+      type: object
+      required: [id, title, summary, benefits, details, imageUrl, published, sortOrder]
+      properties:
+        id: {type: string}
+        title: {type: string}
+        summary: {type: string}
+        benefits: {type: array, items: {type: string}}
+        details: {type: string}
+        imageUrl: {type: string}
+        published: {type: boolean}
+        sortOrder: {type: integer}
+        coachCount: {type: integer, nullable: true, description: "Assigned eligible coaches at the requested branch (public list only)"}
+        networkCoach: {type: boolean, nullable: true, description: "Explicit Iconic Network Coach online-sessions capability"}
+    NetworkCoachPrices:
+      type: object
+      description: Admin-managed INR price per session length. null = length not offered.
+      required: ["30", "45", "60"]
+      properties:
+        cgstPercent: {type: number, minimum: 0, maximum: 50}
+        sgstPercent: {type: number, minimum: 0, maximum: 50}
+        "30": {type: integer, nullable: true}
+        "45": {type: integer, nullable: true}
+        "60": {type: integer, nullable: true}
+    NetworkCoachPricesInput:
+      type: object
+      required: [prices, categoryId]
+      properties:
+        categoryId: {type: string, minLength: 1}
+        prices: {$ref: "#/components/schemas/NetworkCoachPrices"}
+    NetworkCoachBranch:
+      type: object
+      required: [id, name]
+      properties:
+        id: {type: integer}
+        name: {type: string}
+    NetworkCoachTrainer:
+      type: object
+      required: [id, name, gymId, branchName, photoUrl, openSlots, rating, reviewCount]
+      properties:
+        categoryId: {type: string}
+        id: {type: string}
+        name: {type: string}
+        gymId: {type: integer}
+        branchName: {type: string}
+        photoUrl: {type: string, nullable: true}
+        openSlots: {type: integer}
+        rating: {type: number, nullable: true}
+        reviewCount: {type: integer}
+    NetworkCoachOverview:
+      type: object
+      required: [category, branches, prices, trainers, partial]
+      properties:
+        categories: {type: array, items: {$ref: "#/components/schemas/NetworkCoachCategoryCapability"}}
+        category:
+          type: object
+          nullable: true
+          required: [id, title, summary]
+          properties:
+            id: {type: string}
+            title: {type: string}
+            summary: {type: string}
+        branches: {type: array, items: {$ref: "#/components/schemas/NetworkCoachBranch"}}
+        prices: {$ref: "#/components/schemas/NetworkCoachPrices"}
+        trainers: {type: array, items: {$ref: "#/components/schemas/NetworkCoachTrainer"}}
+        partial: {type: boolean}
+    NetworkCoachSlot:
+      type: object
+      required: [id, startsAt, endsAt, durationMinutes, priceInr, booked]
+      properties:
+        booked: {type: boolean, description: "Unavailable due to a reservation or booking. No member details are exposed."}
+        id: {type: integer}
+        startsAt: {type: string}
+        endsAt: {type: string}
+        durationMinutes: {type: integer}
+        priceInr: {type: integer, nullable: true}
+    NetworkCoachReview:
+      type: object
+      required: [rating, comment, createdAt]
+      properties:
+        rating: {type: integer}
+        comment: {type: string}
+        createdAt: {type: string}
+    NetworkCoachSlotList:
+      type: object
+      required: [trainer, slots, reviews, timezone]
+      properties:
+        trainer:
+          type: object
+          required: [id, name, gymId, rating, reviewCount]
+          properties:
+            id: {type: string}
+            name: {type: string}
+            gymId: {type: integer}
+            rating: {type: ["number", "null"]}
+            reviewCount: {type: integer}
+        slots: {type: array, items: {$ref: "#/components/schemas/NetworkCoachSlot"}}
+        reviews: {type: array, items: {$ref: "#/components/schemas/NetworkCoachReview"}}
+        timezone: {type: string}
+    NetworkCoachBookingInput:
+      type: object
+      required: [slotId]
+      properties:
+        categoryId: {type: string, minLength: 1}
+        slotId: {type: integer, minimum: 1}
+    NetworkCoachReservation:
+      type: object
+      required: [bookingId, amountInr, currency, holdExpiresAt, paymentUrl, planCovered]
+      properties:
+        bookingId: {type: integer}
+        amountInr: {type: integer}
+        currency: {type: string}
+        holdExpiresAt: {type: string, nullable: true}
+        paymentUrl: {type: string, nullable: true}
+        planCovered: {type: boolean}
+    NetworkCoachReminderInput:
+      type: object
+      required: [enabled]
+      properties:
+        enabled: {type: boolean}
+        token: {type: string}
+        platform: {type: string, enum: [ios, android]}
+    NetworkCoachBooking:
+      type: object
+      required: [id, status, gymId, branchName, trainerId, trainerName, memberName, startsAt, endsAt, amountInr, currency, holdExpiresAt, refundStatus, adminNote, paymentReference, canJoin, canReview, review, planCovered]
+      properties:
+        id: {type: integer}
+        status: {type: string, description: "held | paid | completed | cancelled | expired | payment_failed | paid_conflict"}
+        gymId: {type: integer}
+        branchName: {type: string}
+        trainerId: {type: string}
+        trainerName: {type: string}
+        memberName: {type: string, nullable: true}
+        startsAt: {type: string}
+        endsAt: {type: string}
+        amountInr: {type: integer}
+        currency: {type: string}
+        holdExpiresAt: {type: string, nullable: true}
+        refundStatus: {type: string, nullable: true, description: "pending_admin | refunded_manual"}
+        adminNote: {type: string, nullable: true}
+        paymentReference: {type: string, nullable: true}
+        canJoin: {type: boolean}
+        planCovered: {type: boolean}
+        canReview: {type: boolean}
+        review:
+          type: object
+          nullable: true
+          required: [rating, comment]
+          properties:
+            rating: {type: integer}
+            comment: {type: string}
+    NetworkCoachReviewInput:
+      type: object
+      required: [rating]
+      properties:
+        rating: {type: integer, minimum: 1, maximum: 5}
+        comment: {type: string, maxLength: 1000}
+    NetworkCoachOk:
+      type: object
+      required: [ok]
+      properties:
+        ok: {type: boolean}
+    NetworkCoachCallToken:
+      type: object
+      required: [token, url, roomName, expiresInSeconds, endsAt]
+      properties:
+        token: {type: string}
+        url: {type: string}
+        roomName: {type: string}
+        expiresInSeconds: {type: integer}
+        endsAt: {type: string}
+    NetworkCoachCategoryCapability:
+      type: object
+      required: [id, title, published, networkCoach]
+      properties:
+        id: {type: string}
+        title: {type: string}
+        published: {type: boolean}
+        networkCoach: {type: boolean}
+    NetworkCoachCapabilityInput:
+      type: object
+      required: [enabled]
+      properties:
+        enabled: {type: boolean}
+    NetworkCoachAdminSettings:
+      type: object
+      required: [prices, plans, categories]
+      properties:
+        categoryPrices:
+          type: object
+          additionalProperties: {$ref: "#/components/schemas/NetworkCoachPrices"}
+        prices: {$ref: "#/components/schemas/NetworkCoachPrices"}
+        plans: {type: array, items: {$ref: "#/components/schemas/NetworkCoachPlan"}}
+        categories: {type: array, items: {$ref: "#/components/schemas/NetworkCoachCategoryCapability"}}
+    NetworkCoachPlan:
+      type: object
+      required: [id, name, duration, durationUnit, priceInr, published, sortOrder]
+      properties:
+        categoryId: {type: string, nullable: true}
+        id: {type: integer}
+        name: {type: string}
+        duration: {type: integer, minimum: 1}
+        durationUnit: {type: string, enum: [day, week, month, year]}
+        priceInr: {type: integer, minimum: 1}
+        published: {type: boolean}
+        sortOrder: {type: integer}
+    NetworkCoachPlanInput:
+      type: object
+      required: [name, duration, durationUnit, priceInr, published, categoryId]
+      properties:
+        categoryId: {type: string, minLength: 1}
+        name: {type: string, minLength: 2, maxLength: 80}
+        duration: {type: integer, minimum: 1, maximum: 3650}
+        durationUnit: {type: string, enum: [day, week, month, year]}
+        priceInr: {type: integer, minimum: 1, maximum: 1000000}
+        published: {type: boolean}
+    NetworkCoachPlanList:
+      type: object
+      required: [plans, entitlement]
+      properties:
+        plans: {type: array, items: {$ref: "#/components/schemas/NetworkCoachPlan"}}
+        entitlement:
+          oneOf:
+            - {type: "null"}
+            - type: object
+              required: [id, planName, startsAt, endsAt]
+              properties:
+                id: {type: integer}
+                planName: {type: string}
+                startsAt: {type: string, format: date-time}
+                endsAt: {type: string, format: date-time}
+    NetworkCoachPlanPurchaseInput:
+      type: object
+      required: [trainerId, gymId, planId]
+      properties:
+        categoryId: {type: string, minLength: 1}
+        trainerId: {type: string, minLength: 1}
+        gymId: {type: integer, minimum: 1}
+        planId: {type: integer, minimum: 1}
+    NetworkCoachPlanReservation:
+      type: object
+      required: [purchaseId, amountInr, holdExpiresAt, paymentUrl]
+      properties:
+        purchaseId: {type: integer}
+        amountInr: {type: integer}
+        holdExpiresAt: {type: string, format: date-time}
+        paymentUrl: {type: string}
+    NetworkCoachPlanPurchase:
+      type: object
+      required: [id, planName, duration, durationUnit, amountInr, trainerId, status, refundStatus, paymentReference, startsAt, endsAt, memberName, adminNote]
+      properties:
+        id: {type: integer}
+        planName: {type: string}
+        duration: {type: integer}
+        durationUnit: {type: string}
+        amountInr: {type: integer}
+        trainerId: {type: string}
+        status: {type: string}
+        refundStatus: {type: string}
+        paymentReference: {type: string}
+        startsAt: {type: string, nullable: true}
+        endsAt: {type: string, nullable: true}
+        memberName: {type: string}
+        adminNote: {type: string}
+    NetworkCoachMemberPlan:
+      type: object
+      required: [id, planName, duration, durationUnit, amountInr, trainerId, trainerName, branchName, startsAt, endsAt, status]
+      properties:
+        id: {type: integer}
+        planName: {type: string}
+        duration: {type: integer}
+        durationUnit: {type: string}
+        amountInr: {type: integer}
+        trainerId: {type: string}
+        trainerName: {type: string, nullable: true}
+        branchName: {type: string, nullable: true}
+        startsAt: {type: string, format: date-time, nullable: true}
+        endsAt: {type: string, format: date-time, nullable: true}
+        status: {type: string, enum: [active, expired, paid_conflict]}
+    AdminNetworkCoachSlotInput:
+      type: object
+      required: [trainerId, gymId, date, startTime, durationMinutes]
+      properties:
+        trainerId: {type: string, minLength: 1}
+        gymId: {type: integer, minimum: 1}
+        date: {type: string, pattern: "^\\d{4}-\\d{2}-\\d{2}$"}
+        startTime: {type: string}
+        durationMinutes: {type: integer, enum: [30, 45, 60]}
+        repeatWeeks: {type: integer, minimum: 0, maximum: 12}
+    AdminNetworkCoachSlot:
+      type: object
+      required: [id, gymId, trainerId, staffId, startsAt, endsAt, branchName, trainerName, bookingStatus, locked]
+      properties:
+        id: {type: integer}
+        gymId: {type: integer}
+        trainerId: {type: string}
+        staffId: {type: integer}
+        startsAt: {type: string, format: date-time}
+        endsAt: {type: string, format: date-time}
+        branchName: {type: string}
+        trainerName: {type: string}
+        bookingStatus: {type: string, nullable: true}
+        locked: {type: boolean}
+    NetworkCoachRefundInput:
+      type: object
+      required: [note]
+      properties:
+        note: {type: string, minLength: 3, maxLength: 500}
+    CoachCategoryReorder:
+      type: object
+      required: [ids]
+      properties:
+        ids: {type: array, items: {type: string}}
+    TrainerCategoryAssignment:
+      type: object
+      required: [categoryIds]
+      properties:
+        categoryIds: {type: array, maxItems: 50, items: {type: string}}
     LiveTrainer:
       type: object
       required: [id, name]
@@ -3087,6 +4033,84 @@ components:
           type: integer
           minimum: 0
           description: "Wallet points (₹) to apply as a discount — clamped server-side, at least ₹1 stays payable"
+        renewal:
+          type: boolean
+          description: "Renew the caller's existing local PT plan; the server sets the start date to the day after the current plan ends"
+    PushTokenRequest:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string, minLength: 10, maxLength: 200 }
+        platform: { type: string, enum: [ios, android] }
+    PushTokenResult:
+      type: object
+      required: [ok]
+      properties:
+        ok: { type: boolean }
+    MembershipRenewalRequest:
+      type: object
+      properties:
+        mode: { type: string, enum: [renew, upgrade], description: "renew = same plan; upgrade = a different plan on the same branch" }
+        packageId: { type: integer, description: "Required for upgrade; must be a visible non-PT package on the source plan's branch" }
+    RenewalProgress:
+      type: object
+      required: [status, bookingId, packageName, startDate, startsInFuture]
+      properties:
+        status: { type: string, enum: [none, pending, paid, failed] }
+        bookingId: { type: [integer, "null"] }
+        packageName: { type: string }
+        startDate: { type: [string, "null"] }
+        startsInFuture: { type: boolean }
+    MembershipRenewalInfo:
+      type: object
+      required: [source, planName, branchName, gymId, expiryDate, daysLeft, expired, eligible, nextStartDate, canRenewOnline, unavailableReason, renewal]
+      properties:
+        source: { type: string, enum: [yoactiv, local, none] }
+        planName: { type: string }
+        branchName: { type: string }
+        gymId: { type: [integer, "null"] }
+        expiryDate: { type: [string, "null"] }
+        daysLeft: { type: [integer, "null"] }
+        expired: { type: boolean }
+        eligible: { type: boolean, description: "Inside the renewal window (10 days before expiry through expiry day, IST)" }
+        nextStartDate: { type: [string, "null"] }
+        canRenewOnline: { type: boolean }
+        unavailableReason: { type: string }
+        renewal: { $ref: "#/components/schemas/RenewalProgress" }
+    PtRenewalInfo:
+      type: object
+      required: [source, action, gymId, packageName, trainerName, gymName, startDate, endDate, totalSessions, sessionsDelivered, timeBasedRemaining, daysLeft, expired, eligible, nextStartDate, canRenewOnline, explanation, renewalPaid]
+      properties:
+        source: { type: string, enum: [local, local_manual, yoactiv], description: "local = account-linked in-app plan; local_manual = staff-added plan matched by phone; yoactiv = billed at the branch system" }
+        action: { type: string, enum: [renew_online, request_renewal, none], description: "The only action the app can genuinely perform for this source" }
+        gymId: { type: [integer, "null"] }
+        packageName: { type: string }
+        trainerName: { type: string }
+        gymName: { type: string }
+        startDate: { type: [string, "null"] }
+        endDate: { type: [string, "null"] }
+        totalSessions: { type: [integer, "null"] }
+        sessionsDelivered: { type: [integer, "null"], description: "Sessions actually attended (attendance records)" }
+        timeBasedRemaining: { type: [integer, "null"], description: "Time-based remaining sessions per the PT dashboard rule" }
+        daysLeft: { type: [integer, "null"] }
+        expired: { type: boolean }
+        eligible: { type: boolean }
+        nextStartDate: { type: [string, "null"] }
+        canRenewOnline: { type: boolean }
+        explanation: { type: string }
+        renewalPaid: { type: boolean }
+    MembershipRenewalStatus:
+      type: object
+      required: [membership, pt, pushSupported, pushRegistered, reminderMilestones]
+      properties:
+        membership: { $ref: "#/components/schemas/MembershipRenewalInfo" }
+        pt:
+          oneOf:
+            - $ref: "#/components/schemas/PtRenewalInfo"
+            - type: "null"
+        pushSupported: { type: boolean, description: "Server push channel (Expo) is enabled" }
+        pushRegistered: { type: boolean, description: "At least one device is registered for push for this account" }
+        reminderMilestones: { type: array, items: { type: integer } }
     TrainerBookingCreated:
       type: object
       required: [id, status, amountInr, paymentUrl]
@@ -3136,6 +4160,38 @@ components:
             startDate: { type: string, description: "YYYY-MM-DD" }
             endDate: { type: string, description: "YYYY-MM-DD" }
             expired: { type: boolean }
+        pendingPurchase:
+          type: object
+          nullable: true
+          description: "Newest paid in-app PT purchase not yet converted into a paid plan. Validity is NOT known yet; requestedStartDate is the member's requested date, not an authoritative start."
+          required: [bookingId, packageName, serviceName, trainerName, gymName, bookedAt, requestedStartDate, durationDays, sessions]
+          properties:
+            bookingId: { type: integer }
+            packageName: { type: string }
+            serviceName: { type: string }
+            trainerName: { type: string, description: "Trainer chosen at checkout ('' when none)" }
+            gymName: { type: string }
+            bookedAt: { type: string, format: date-time, description: "When the booking was placed (not the payment timestamp)" }
+            requestedStartDate: { type: string, nullable: true, description: "Requested YYYY-MM-DD; not authoritative" }
+            durationDays: { type: integer, nullable: true, description: "Package duration snapshot" }
+            sessions: { type: integer, nullable: true, description: "Package sessions snapshot" }
+        externalPlan:
+          type: object
+          nullable: true
+          description: "PT membership from the gym-management system, only from an explicitly mapped dedicated PT-sales branch with a PT-classified name"
+          required: [packageName, branchName, status, startDate, endDate, sessionsTotal, sessionsUsed]
+          properties:
+            packageName: { type: string }
+            branchName: { type: string }
+            status: { type: string, enum: [active, paused, expired] }
+            startDate: { type: string, nullable: true, description: "YYYY-MM-DD" }
+            endDate: { type: string, nullable: true, description: "YYYY-MM-DD" }
+            sessionsTotal: { type: integer, nullable: true }
+            sessionsUsed: { type: integer, nullable: true }
+        externalPlanSource:
+          type: string
+          enum: [ok, unavailable, not_configured]
+          description: "ok = provider checked; unavailable = provider lookup failed (externalPlan unknown); not_configured = no dedicated PT-sales branch or no mobile"
         gymId: { type: integer, nullable: true, description: "Branch of the current PT enrolment (for booking a paid plan)" }
         trainerName: { type: string }
         trainerPhotoUrl: { type: string, description: "Staff-uploaded photo of the assigned trainer ('' when none)" }

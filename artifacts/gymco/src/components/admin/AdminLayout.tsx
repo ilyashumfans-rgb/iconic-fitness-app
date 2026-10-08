@@ -35,6 +35,8 @@ import {
   TicketPercent,
   X,
   Images,
+  LayoutGrid,
+  Video,
 } from "lucide-react";
 import { adminApi, type AdminUser } from "@/lib/adminApi";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -88,7 +90,7 @@ const SECTIONS: Section[] = [
       {
         label: "Featured Gyms",
         href: "/admin/featured-gyms",
-        icon: <Star className="h-4 w-4" />,
+        icon: <Star className="h-4 w-4 text-[#FABB05]" />,
       },
       {
         label: "Gym Verification",
@@ -248,12 +250,27 @@ const SECTIONS: Section[] = [
       {
         label: "Reviews",
         href: "/admin/reviews",
-        icon: <Star className="h-4 w-4" />,
+        icon: <Star className="h-4 w-4 text-[#FABB05]" />,
       },
       {
         label: "Trainer Profiles",
         href: "/admin/trainer-profiles",
         icon: <UserCog className="h-4 w-4" />,
+      },
+      {
+        label: "Coach Categories",
+        href: "/admin/coach-categories",
+        icon: <LayoutGrid className="h-4 w-4" />,
+      },
+      {
+        label: "Network Coach (Online)",
+        href: "/admin/network-coach",
+        icon: <Video className="h-4 w-4" />,
+      },
+      {
+        label: "Billing · Online coaching",
+        href: "/admin/online-billing",
+        icon: <CreditCard className="h-4 w-4" />,
       },
       {
         label: "Coupons",

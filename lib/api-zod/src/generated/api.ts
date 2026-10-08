@@ -8,6 +8,87 @@
 import * as zod from 'zod';
 
 
+export const ListAdminOnlineBillingResponseItem = zod.object({
+  "id": zod.number(),
+  "kind": zod.enum(['session', 'plan']),
+  "description": zod.string(),
+  "memberName": zod.string(),
+  "trainerName": zod.string(),
+  "branchName": zod.string(),
+  "status": zod.string(),
+  "amountInr": zod.number(),
+  "subtotalInr": zod.number().optional(),
+  "cgstInr": zod.number().optional(),
+  "sgstInr": zod.number().optional(),
+  "cgstPercent": zod.number().optional(),
+  "sgstPercent": zod.number().optional(),
+  "paid": zod.boolean(),
+  "planCovered": zod.boolean(),
+  "createdAt": zod.string(),
+  "invoiceNumber": zod.string().nullable(),
+  "paidAt": zod.string().nullable(),
+  "paymentReference": zod.string().nullable(),
+  "refundStatus": zod.string().nullable(),
+  "startsAt": zod.string().nullable(),
+  "endsAt": zod.string().nullable()
+})
+export const ListAdminOnlineBillingResponse = zod.array(ListAdminOnlineBillingResponseItem)
+
+
+export const ListPartnerOnlineBillingResponseItem = zod.object({
+  "id": zod.number(),
+  "kind": zod.enum(['session', 'plan']),
+  "description": zod.string(),
+  "memberName": zod.string(),
+  "trainerName": zod.string(),
+  "branchName": zod.string(),
+  "status": zod.string(),
+  "amountInr": zod.number(),
+  "subtotalInr": zod.number().optional(),
+  "cgstInr": zod.number().optional(),
+  "sgstInr": zod.number().optional(),
+  "cgstPercent": zod.number().optional(),
+  "sgstPercent": zod.number().optional(),
+  "paid": zod.boolean(),
+  "planCovered": zod.boolean(),
+  "createdAt": zod.string(),
+  "invoiceNumber": zod.string().nullable(),
+  "paidAt": zod.string().nullable(),
+  "paymentReference": zod.string().nullable(),
+  "refundStatus": zod.string().nullable(),
+  "startsAt": zod.string().nullable(),
+  "endsAt": zod.string().nullable()
+})
+export const ListPartnerOnlineBillingResponse = zod.array(ListPartnerOnlineBillingResponseItem)
+
+
+export const ListMyOnlineBillingResponseItem = zod.object({
+  "id": zod.number(),
+  "kind": zod.enum(['session', 'plan']),
+  "description": zod.string(),
+  "memberName": zod.string(),
+  "trainerName": zod.string(),
+  "branchName": zod.string(),
+  "status": zod.string(),
+  "amountInr": zod.number(),
+  "subtotalInr": zod.number().optional(),
+  "cgstInr": zod.number().optional(),
+  "sgstInr": zod.number().optional(),
+  "cgstPercent": zod.number().optional(),
+  "sgstPercent": zod.number().optional(),
+  "paid": zod.boolean(),
+  "planCovered": zod.boolean(),
+  "createdAt": zod.string(),
+  "invoiceNumber": zod.string().nullable(),
+  "paidAt": zod.string().nullable(),
+  "paymentReference": zod.string().nullable(),
+  "refundStatus": zod.string().nullable(),
+  "startsAt": zod.string().nullable(),
+  "endsAt": zod.string().nullable()
+})
+export const ListMyOnlineBillingResponse = zod.array(ListMyOnlineBillingResponseItem)
+
+
 export const requestWhatsappOtpBodyMobileMin = 10;
 export const requestWhatsappOtpBodyMobileMax = 20;
 
@@ -55,6 +136,205 @@ export const CompleteWhatsappOtpBody = zod.object({
 
 export const CompleteWhatsappOtpResponse = zod.object({
   "isNewUser": zod.boolean()
+})
+
+
+/**
+ * @summary Published coach categories with branch-scoped assigned coach counts
+ */
+
+
+
+export const ListCoachCategoriesQueryParams = zod.object({
+  "gymId": zod.coerce.number().min(1)
+})
+
+export const ListCoachCategoriesResponseItem = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "summary": zod.string(),
+  "benefits": zod.array(zod.string()),
+  "details": zod.string(),
+  "imageUrl": zod.string(),
+  "published": zod.boolean(),
+  "sortOrder": zod.number(),
+  "coachCount": zod.number().nullish().describe('Assigned eligible coaches at the requested branch (public list only)'),
+  "networkCoach": zod.boolean().nullish().describe('Explicit Iconic Network Coach online-sessions capability')
+})
+export const ListCoachCategoriesResponse = zod.array(ListCoachCategoriesResponseItem)
+
+
+/**
+ * @summary Eligible coaches at this branch assigned to this published category
+ */
+export const ListCoachCategoryTrainersParams = zod.object({
+  "categoryId": zod.coerce.string()
+})
+
+
+
+
+export const ListCoachCategoryTrainersQueryParams = zod.object({
+  "gymId": zod.coerce.number().min(1)
+})
+
+export const ListCoachCategoryTrainersResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "photoUrl": zod.string().nullish()
+})
+export const ListCoachCategoryTrainersResponse = zod.array(ListCoachCategoryTrainersResponseItem)
+
+
+export const ListAdminCoachCategoriesResponseItem = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "summary": zod.string(),
+  "benefits": zod.array(zod.string()),
+  "details": zod.string(),
+  "imageUrl": zod.string(),
+  "published": zod.boolean(),
+  "sortOrder": zod.number(),
+  "coachCount": zod.number().nullish().describe('Assigned eligible coaches at the requested branch (public list only)'),
+  "networkCoach": zod.boolean().nullish().describe('Explicit Iconic Network Coach online-sessions capability')
+})
+export const ListAdminCoachCategoriesResponse = zod.array(ListAdminCoachCategoriesResponseItem)
+
+
+export const createAdminCoachCategoryBodyTitleMax = 80;
+
+export const createAdminCoachCategoryBodySummaryMax = 500;
+
+export const createAdminCoachCategoryBodyBenefitsItemMax = 160;
+
+export const createAdminCoachCategoryBodyBenefitsMax = 12;
+
+export const createAdminCoachCategoryBodyDetailsMax = 5000;
+
+export const createAdminCoachCategoryBodyImageUrlMax = 2000;
+
+
+
+export const CreateAdminCoachCategoryBody = zod.object({
+  "title": zod.string().min(1).max(createAdminCoachCategoryBodyTitleMax),
+  "summary": zod.string().max(createAdminCoachCategoryBodySummaryMax),
+  "benefits": zod.array(zod.string().min(1).max(createAdminCoachCategoryBodyBenefitsItemMax)).max(createAdminCoachCategoryBodyBenefitsMax),
+  "details": zod.string().max(createAdminCoachCategoryBodyDetailsMax),
+  "imageUrl": zod.string().max(createAdminCoachCategoryBodyImageUrlMax),
+  "published": zod.boolean()
+})
+
+
+export const ReorderAdminCoachCategoriesBody = zod.object({
+  "ids": zod.array(zod.string())
+})
+
+export const ReorderAdminCoachCategoriesResponseItem = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "summary": zod.string(),
+  "benefits": zod.array(zod.string()),
+  "details": zod.string(),
+  "imageUrl": zod.string(),
+  "published": zod.boolean(),
+  "sortOrder": zod.number(),
+  "coachCount": zod.number().nullish().describe('Assigned eligible coaches at the requested branch (public list only)'),
+  "networkCoach": zod.boolean().nullish().describe('Explicit Iconic Network Coach online-sessions capability')
+})
+export const ReorderAdminCoachCategoriesResponse = zod.array(ReorderAdminCoachCategoriesResponseItem)
+
+
+export const UpdateAdminCoachCategoryParams = zod.object({
+  "categoryId": zod.coerce.string()
+})
+
+export const updateAdminCoachCategoryBodyTitleMax = 80;
+
+export const updateAdminCoachCategoryBodySummaryMax = 500;
+
+export const updateAdminCoachCategoryBodyBenefitsItemMax = 160;
+
+export const updateAdminCoachCategoryBodyBenefitsMax = 12;
+
+export const updateAdminCoachCategoryBodyDetailsMax = 5000;
+
+export const updateAdminCoachCategoryBodyImageUrlMax = 2000;
+
+
+
+export const UpdateAdminCoachCategoryBody = zod.object({
+  "title": zod.string().min(1).max(updateAdminCoachCategoryBodyTitleMax),
+  "summary": zod.string().max(updateAdminCoachCategoryBodySummaryMax),
+  "benefits": zod.array(zod.string().min(1).max(updateAdminCoachCategoryBodyBenefitsItemMax)).max(updateAdminCoachCategoryBodyBenefitsMax),
+  "details": zod.string().max(updateAdminCoachCategoryBodyDetailsMax),
+  "imageUrl": zod.string().max(updateAdminCoachCategoryBodyImageUrlMax),
+  "published": zod.boolean()
+})
+
+export const UpdateAdminCoachCategoryResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "summary": zod.string(),
+  "benefits": zod.array(zod.string()),
+  "details": zod.string(),
+  "imageUrl": zod.string(),
+  "published": zod.boolean(),
+  "sortOrder": zod.number(),
+  "coachCount": zod.number().nullish().describe('Assigned eligible coaches at the requested branch (public list only)'),
+  "networkCoach": zod.boolean().nullish().describe('Explicit Iconic Network Coach online-sessions capability')
+})
+
+
+export const DeleteAdminCoachCategoryParams = zod.object({
+  "categoryId": zod.coerce.string()
+})
+
+
+export const GetAdminTrainerCategoriesParams = zod.object({
+  "trainerId": zod.coerce.string()
+})
+
+
+
+
+export const GetAdminTrainerCategoriesQueryParams = zod.object({
+  "gymId": zod.coerce.number().min(1)
+})
+
+export const getAdminTrainerCategoriesResponseCategoryIdsMax = 50;
+
+
+
+export const GetAdminTrainerCategoriesResponse = zod.object({
+  "categoryIds": zod.array(zod.string()).max(getAdminTrainerCategoriesResponseCategoryIdsMax)
+})
+
+
+export const UpdateAdminTrainerCategoriesParams = zod.object({
+  "trainerId": zod.coerce.string()
+})
+
+
+
+
+export const UpdateAdminTrainerCategoriesQueryParams = zod.object({
+  "gymId": zod.coerce.number().min(1)
+})
+
+export const updateAdminTrainerCategoriesBodyCategoryIdsMax = 50;
+
+
+
+export const UpdateAdminTrainerCategoriesBody = zod.object({
+  "categoryIds": zod.array(zod.string()).max(updateAdminTrainerCategoriesBodyCategoryIdsMax)
+})
+
+export const updateAdminTrainerCategoriesResponseCategoryIdsMax = 50;
+
+
+
+export const UpdateAdminTrainerCategoriesResponse = zod.object({
+  "categoryIds": zod.array(zod.string()).max(updateAdminTrainerCategoriesResponseCategoryIdsMax)
 })
 
 
@@ -2192,8 +2472,13 @@ export const GetMyMembershipResponse = zod.union([zod.object({
 
 
 /**
- * @summary Start an online renewal payment for the member's current YoActiv plan
+ * @summary Start an online renewal or upgrade payment for the member's current YoActiv plan (starts the day after current expiry, full listed price)
  */
+export const CreateMembershipRenewalBody = zod.object({
+  "mode": zod.enum(['renew', 'upgrade']).optional().describe('renew = same plan; upgrade = a different plan on the same branch'),
+  "packageId": zod.number().optional().describe('Required for upgrade; must be a visible non-PT package on the source plan\'s branch')
+})
+
 export const CreateMembershipRenewalResponse = zod.object({
   "id": zod.number(),
   "status": zod.enum(['pending', 'paid', 'failed']),
@@ -2201,6 +2486,92 @@ export const CreateMembershipRenewalResponse = zod.object({
   "redeemedInr": zod.number().optional().describe('Wallet points actually applied (₹)'),
   "paymentUrl": zod.string(),
   "token": zod.string().optional().describe('Access token for guest status polling (only returned to the purchase creator)')
+})
+
+
+/**
+ * @summary Renewal/upgrade eligibility, paid renewal evidence, and PT renewal context for the caller
+ */
+export const GetMyRenewalStatusResponse = zod.object({
+  "membership": zod.object({
+  "source": zod.enum(['yoactiv', 'local', 'none']),
+  "planName": zod.string(),
+  "branchName": zod.string(),
+  "gymId": zod.number().nullable(),
+  "expiryDate": zod.string().nullable(),
+  "daysLeft": zod.number().nullable(),
+  "expired": zod.boolean(),
+  "eligible": zod.boolean().describe('Inside the renewal window (10 days before expiry through expiry day, IST)'),
+  "nextStartDate": zod.string().nullable(),
+  "canRenewOnline": zod.boolean(),
+  "unavailableReason": zod.string(),
+  "renewal": zod.object({
+  "status": zod.enum(['none', 'pending', 'paid', 'failed']),
+  "bookingId": zod.number().nullable(),
+  "packageName": zod.string(),
+  "startDate": zod.string().nullable(),
+  "startsInFuture": zod.boolean()
+})
+}),
+  "pt": zod.union([zod.object({
+  "source": zod.enum(['local', 'local_manual', 'yoactiv']).describe('local = account-linked in-app plan; local_manual = staff-added plan matched by phone; yoactiv = billed at the branch system'),
+  "action": zod.enum(['renew_online', 'request_renewal', 'none']).describe('The only action the app can genuinely perform for this source'),
+  "gymId": zod.number().nullable(),
+  "packageName": zod.string(),
+  "trainerName": zod.string(),
+  "gymName": zod.string(),
+  "startDate": zod.string().nullable(),
+  "endDate": zod.string().nullable(),
+  "totalSessions": zod.number().nullable(),
+  "sessionsDelivered": zod.number().nullable().describe('Sessions actually attended (attendance records)'),
+  "timeBasedRemaining": zod.number().nullable().describe('Time-based remaining sessions per the PT dashboard rule'),
+  "daysLeft": zod.number().nullable(),
+  "expired": zod.boolean(),
+  "eligible": zod.boolean(),
+  "nextStartDate": zod.string().nullable(),
+  "canRenewOnline": zod.boolean(),
+  "explanation": zod.string(),
+  "renewalPaid": zod.boolean()
+}),zod.null()]),
+  "pushSupported": zod.boolean().describe('Server push channel (Expo) is enabled'),
+  "pushRegistered": zod.boolean().describe('At least one device is registered for push for this account'),
+  "reminderMilestones": zod.array(zod.number())
+})
+
+
+/**
+ * @summary Register this device's Expo push token for the signed-in member (moves it from any previous account)
+ */
+export const registerPushTokenBodyTokenMin = 10;
+export const registerPushTokenBodyTokenMax = 200;
+
+
+
+export const RegisterPushTokenBody = zod.object({
+  "token": zod.string().min(registerPushTokenBodyTokenMin).max(registerPushTokenBodyTokenMax),
+  "platform": zod.enum(['ios', 'android']).optional()
+})
+
+export const RegisterPushTokenResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Remove this device's push token (sign-out / shared phone); possession of the token is required
+ */
+export const removePushTokenBodyTokenMin = 10;
+export const removePushTokenBodyTokenMax = 200;
+
+
+
+export const RemovePushTokenBody = zod.object({
+  "token": zod.string().min(removePushTokenBodyTokenMin).max(removePushTokenBodyTokenMax),
+  "platform": zod.enum(['ios', 'android']).optional()
+})
+
+export const RemovePushTokenResponse = zod.object({
+  "ok": zod.boolean()
 })
 
 
@@ -2391,7 +2762,8 @@ export const CreateTrainerBookingBody = zod.object({
   "mobile": zod.string().min(createTrainerBookingBodyMobileMin),
   "preferredDate": zod.string().describe('ISO date (YYYY-MM-DD)'),
   "couponCode": zod.string().optional().describe('Optional coupon code — validated and applied server-side'),
-  "redeemPoints": zod.number().min(createTrainerBookingBodyRedeemPointsMin).optional().describe('Wallet points (₹) to apply as a discount — clamped server-side, at least ₹1 stays payable')
+  "redeemPoints": zod.number().min(createTrainerBookingBodyRedeemPointsMin).optional().describe('Wallet points (₹) to apply as a discount — clamped server-side, at least ₹1 stays payable'),
+  "renewal": zod.boolean().optional().describe('Renew the caller\'s existing local PT plan; the server sets the start date to the day after the current plan ends')
 })
 
 export const CreateTrainerBookingResponse = zod.object({
@@ -2454,6 +2826,27 @@ export const GetMyPtProgramResponse = zod.object({
   "endDate": zod.string().describe('YYYY-MM-DD'),
   "expired": zod.boolean()
 }).nullish().describe('The caller\'s paid PT plan — present only after the plan payment landed'),
+  "pendingPurchase": zod.object({
+  "bookingId": zod.number(),
+  "packageName": zod.string(),
+  "serviceName": zod.string(),
+  "trainerName": zod.string().describe('Trainer chosen at checkout (\'\' when none)'),
+  "gymName": zod.string(),
+  "bookedAt": zod.coerce.date().describe('When the booking was placed (not the payment timestamp)'),
+  "requestedStartDate": zod.string().nullable().describe('Requested YYYY-MM-DD; not authoritative'),
+  "durationDays": zod.number().nullable().describe('Package duration snapshot'),
+  "sessions": zod.number().nullable().describe('Package sessions snapshot')
+}).nullish().describe('Newest paid in-app PT purchase not yet converted into a paid plan. Validity is NOT known yet; requestedStartDate is the member\'s requested date, not an authoritative start.'),
+  "externalPlan": zod.object({
+  "packageName": zod.string(),
+  "branchName": zod.string(),
+  "status": zod.enum(['active', 'paused', 'expired']),
+  "startDate": zod.string().nullable().describe('YYYY-MM-DD'),
+  "endDate": zod.string().nullable().describe('YYYY-MM-DD'),
+  "sessionsTotal": zod.number().nullable(),
+  "sessionsUsed": zod.number().nullable()
+}).nullish().describe('PT membership from the gym-management system, only from an explicitly mapped dedicated PT-sales branch with a PT-classified name'),
+  "externalPlanSource": zod.enum(['ok', 'unavailable', 'not_configured']).optional().describe('ok = provider checked; unavailable = provider lookup failed (externalPlan unknown); not_configured = no dedicated PT-sales branch or no mobile'),
   "gymId": zod.number().nullish().describe('Branch of the current PT enrolment (for booking a paid plan)'),
   "trainerName": zod.string(),
   "trainerPhotoUrl": zod.string().optional().describe('Staff-uploaded photo of the assigned trainer (\'\' when none)'),
@@ -3562,6 +3955,585 @@ export const WithdrawCommunityPostResponse = zod.object({
   "id": zod.number(),
   "status": zod.enum(['pending', 'withdrawn']),
   "submittedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Iconic Network Coach roster across all branches (optional branch filter)
+ */
+
+
+
+export const GetNetworkCoachOverviewQueryParams = zod.object({
+  "categoryId": zod.coerce.string().optional(),
+  "gymId": zod.coerce.number().min(1).optional()
+})
+
+export const getNetworkCoachOverviewResponsePricesCgstPercentMin = 0;
+export const getNetworkCoachOverviewResponsePricesCgstPercentMax = 50;
+
+export const getNetworkCoachOverviewResponsePricesSgstPercentMin = 0;
+export const getNetworkCoachOverviewResponsePricesSgstPercentMax = 50;
+
+
+
+export const GetNetworkCoachOverviewResponse = zod.object({
+  "categories": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "published": zod.boolean(),
+  "networkCoach": zod.boolean()
+})).optional(),
+  "category": zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "summary": zod.string()
+}).nullable(),
+  "branches": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string()
+})),
+  "prices": zod.object({
+  "30": zod.number().nullable(),
+  "45": zod.number().nullable(),
+  "60": zod.number().nullable(),
+  "cgstPercent": zod.number().min(getNetworkCoachOverviewResponsePricesCgstPercentMin).max(getNetworkCoachOverviewResponsePricesCgstPercentMax).optional(),
+  "sgstPercent": zod.number().min(getNetworkCoachOverviewResponsePricesSgstPercentMin).max(getNetworkCoachOverviewResponsePricesSgstPercentMax).optional()
+}).describe('Admin-managed INR price per session length. null = length not offered.'),
+  "trainers": zod.array(zod.object({
+  "categoryId": zod.string().optional(),
+  "id": zod.string(),
+  "name": zod.string(),
+  "gymId": zod.number(),
+  "branchName": zod.string(),
+  "photoUrl": zod.string().nullable(),
+  "openSlots": zod.number(),
+  "rating": zod.number().nullable(),
+  "reviewCount": zod.number()
+})),
+  "partial": zod.boolean()
+})
+
+
+
+
+
+export const ListNetworkCoachSlotsQueryParams = zod.object({
+  "categoryId": zod.string().optional(),
+  "gymId": zod.number().min(1)
+})
+
+export const ListNetworkCoachSlotsResponse = zod.object({
+  "trainer": zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "gymId": zod.number(),
+  "rating": zod.number().nullable(),
+  "reviewCount": zod.number()
+}),
+  "slots": zod.array(zod.object({
+  "booked": zod.boolean().describe('Unavailable due to a reservation or booking. No member details are exposed.'),
+  "id": zod.number(),
+  "startsAt": zod.string(),
+  "endsAt": zod.string(),
+  "durationMinutes": zod.number(),
+  "priceInr": zod.number().nullable()
+})),
+  "reviews": zod.array(zod.object({
+  "rating": zod.number(),
+  "comment": zod.string(),
+  "createdAt": zod.string()
+})),
+  "timezone": zod.string()
+})
+
+
+
+
+
+export const ListNetworkCoachPlansQueryParams = zod.object({
+  "categoryId": zod.string().optional(),
+  "gymId": zod.number().min(1)
+})
+
+
+
+
+
+export const ListNetworkCoachPlansResponse = zod.object({
+  "plans": zod.array(zod.object({
+  "categoryId": zod.string().nullish(),
+  "id": zod.number(),
+  "name": zod.string(),
+  "duration": zod.number().min(1),
+  "durationUnit": zod.enum(['day', 'week', 'month', 'year']),
+  "priceInr": zod.number().min(1),
+  "published": zod.boolean(),
+  "sortOrder": zod.number()
+})),
+  "entitlement": zod.union([zod.null(),zod.object({
+  "id": zod.number(),
+  "planName": zod.string(),
+  "startsAt": zod.date(),
+  "endsAt": zod.date()
+})])
+})
+
+
+
+
+
+
+
+
+export const PurchaseNetworkCoachPlanBody = zod.object({
+  "categoryId": zod.string().min(1).optional(),
+  "trainerId": zod.string().min(1),
+  "gymId": zod.number().min(1),
+  "planId": zod.number().min(1)
+})
+
+
+export const ListMyNetworkCoachPlansResponseItem = zod.object({
+  "id": zod.number(),
+  "planName": zod.string(),
+  "duration": zod.number(),
+  "durationUnit": zod.string(),
+  "amountInr": zod.number(),
+  "trainerId": zod.string(),
+  "trainerName": zod.string().nullable(),
+  "branchName": zod.string().nullable(),
+  "startsAt": zod.coerce.date().nullable(),
+  "endsAt": zod.coerce.date().nullable(),
+  "status": zod.enum(['active', 'expired', 'paid_conflict'])
+})
+export const ListMyNetworkCoachPlansResponse = zod.array(ListMyNetworkCoachPlansResponseItem)
+
+
+export const GetNetworkCoachReminderParams = zod.object({
+  "role": zod.enum(['member', 'trainer']),
+  "id": zod.coerce.number()
+})
+
+export const GetNetworkCoachReminderResponse = zod.object({
+  "enabled": zod.boolean()
+})
+
+
+export const SetNetworkCoachReminderParams = zod.object({
+  "role": zod.enum(['member', 'trainer']),
+  "id": zod.coerce.number()
+})
+
+export const SetNetworkCoachReminderBody = zod.object({
+  "enabled": zod.boolean(),
+  "token": zod.string().optional(),
+  "platform": zod.enum(['ios', 'android']).optional()
+})
+
+export const SetNetworkCoachReminderResponse = zod.object({
+  "enabled": zod.boolean()
+})
+
+
+export const ListMyNetworkCoachBookingsResponseItem = zod.object({
+  "id": zod.number(),
+  "status": zod.string().describe('held | paid | completed | cancelled | expired | payment_failed | paid_conflict'),
+  "gymId": zod.number(),
+  "branchName": zod.string(),
+  "trainerId": zod.string(),
+  "trainerName": zod.string(),
+  "memberName": zod.string().nullable(),
+  "startsAt": zod.string(),
+  "endsAt": zod.string(),
+  "amountInr": zod.number(),
+  "currency": zod.string(),
+  "holdExpiresAt": zod.string().nullable(),
+  "refundStatus": zod.string().nullable().describe('pending_admin | refunded_manual'),
+  "adminNote": zod.string().nullable(),
+  "paymentReference": zod.string().nullable(),
+  "canJoin": zod.boolean(),
+  "planCovered": zod.boolean(),
+  "canReview": zod.boolean(),
+  "review": zod.object({
+  "rating": zod.number(),
+  "comment": zod.string()
+}).nullable()
+})
+export const ListMyNetworkCoachBookingsResponse = zod.array(ListMyNetworkCoachBookingsResponseItem)
+
+
+
+
+
+
+export const CreateNetworkCoachBookingBody = zod.object({
+  "categoryId": zod.string().min(1).optional(),
+  "slotId": zod.number().min(1)
+})
+
+
+
+
+
+export const CancelNetworkCoachBookingParams = zod.object({
+  "id": zod.coerce.number().min(1)
+})
+
+export const CancelNetworkCoachBookingResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+
+
+
+export const ReviewNetworkCoachBookingParams = zod.object({
+  "id": zod.coerce.number().min(1)
+})
+
+export const reviewNetworkCoachBookingBodyRatingMax = 5;
+
+export const reviewNetworkCoachBookingBodyCommentMax = 1000;
+
+
+
+export const ReviewNetworkCoachBookingBody = zod.object({
+  "rating": zod.number().min(1).max(reviewNetworkCoachBookingBodyRatingMax),
+  "comment": zod.string().max(reviewNetworkCoachBookingBodyCommentMax).optional()
+})
+
+
+
+
+
+export const JoinNetworkCoachCallParams = zod.object({
+  "id": zod.coerce.number().min(1)
+})
+
+export const JoinNetworkCoachCallResponse = zod.object({
+  "token": zod.string(),
+  "url": zod.string(),
+  "roomName": zod.string(),
+  "expiresInSeconds": zod.number(),
+  "endsAt": zod.string()
+})
+
+
+export const getAdminNetworkCoachSettingsResponseCategoryPricesCgstPercentMin = 0;
+export const getAdminNetworkCoachSettingsResponseCategoryPricesCgstPercentMax = 50;
+
+export const getAdminNetworkCoachSettingsResponseCategoryPricesSgstPercentMin = 0;
+export const getAdminNetworkCoachSettingsResponseCategoryPricesSgstPercentMax = 50;
+
+export const getAdminNetworkCoachSettingsResponsePricesCgstPercentMin = 0;
+export const getAdminNetworkCoachSettingsResponsePricesCgstPercentMax = 50;
+
+export const getAdminNetworkCoachSettingsResponsePricesSgstPercentMin = 0;
+export const getAdminNetworkCoachSettingsResponsePricesSgstPercentMax = 50;
+
+
+
+
+
+export const GetAdminNetworkCoachSettingsResponse = zod.object({
+  "categoryPrices": zod.record(zod.string(), zod.object({
+  "30": zod.number().nullable(),
+  "45": zod.number().nullable(),
+  "60": zod.number().nullable(),
+  "cgstPercent": zod.number().min(getAdminNetworkCoachSettingsResponseCategoryPricesCgstPercentMin).max(getAdminNetworkCoachSettingsResponseCategoryPricesCgstPercentMax).optional(),
+  "sgstPercent": zod.number().min(getAdminNetworkCoachSettingsResponseCategoryPricesSgstPercentMin).max(getAdminNetworkCoachSettingsResponseCategoryPricesSgstPercentMax).optional()
+}).describe('Admin-managed INR price per session length. null = length not offered.')).optional(),
+  "prices": zod.object({
+  "30": zod.number().nullable(),
+  "45": zod.number().nullable(),
+  "60": zod.number().nullable(),
+  "cgstPercent": zod.number().min(getAdminNetworkCoachSettingsResponsePricesCgstPercentMin).max(getAdminNetworkCoachSettingsResponsePricesCgstPercentMax).optional(),
+  "sgstPercent": zod.number().min(getAdminNetworkCoachSettingsResponsePricesSgstPercentMin).max(getAdminNetworkCoachSettingsResponsePricesSgstPercentMax).optional()
+}).describe('Admin-managed INR price per session length. null = length not offered.'),
+  "plans": zod.array(zod.object({
+  "categoryId": zod.string().nullish(),
+  "id": zod.number(),
+  "name": zod.string(),
+  "duration": zod.number().min(1),
+  "durationUnit": zod.enum(['day', 'week', 'month', 'year']),
+  "priceInr": zod.number().min(1),
+  "published": zod.boolean(),
+  "sortOrder": zod.number()
+})),
+  "categories": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "published": zod.boolean(),
+  "networkCoach": zod.boolean()
+}))
+})
+
+
+export const ListAdminNetworkCoachSlotsResponseItem = zod.object({
+  "id": zod.number(),
+  "gymId": zod.number(),
+  "trainerId": zod.string(),
+  "staffId": zod.number(),
+  "startsAt": zod.coerce.date(),
+  "endsAt": zod.coerce.date(),
+  "branchName": zod.string(),
+  "trainerName": zod.string(),
+  "bookingStatus": zod.string().nullable(),
+  "locked": zod.boolean()
+})
+export const ListAdminNetworkCoachSlotsResponse = zod.array(ListAdminNetworkCoachSlotsResponseItem)
+
+
+
+
+export const createAdminNetworkCoachSlotsBodyDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const createAdminNetworkCoachSlotsBodyRepeatWeeksMin = 0;
+export const createAdminNetworkCoachSlotsBodyRepeatWeeksMax = 12;
+
+
+
+export const CreateAdminNetworkCoachSlotsBody = zod.object({
+  "trainerId": zod.string().min(1),
+  "gymId": zod.number().min(1),
+  "date": zod.string().regex(createAdminNetworkCoachSlotsBodyDateRegExp),
+  "startTime": zod.string(),
+  "durationMinutes": zod.union([zod.literal(30),zod.literal(45),zod.literal(60)]),
+  "repeatWeeks": zod.number().min(createAdminNetworkCoachSlotsBodyRepeatWeeksMin).max(createAdminNetworkCoachSlotsBodyRepeatWeeksMax).optional()
+})
+
+
+
+
+
+export const DeleteAdminNetworkCoachSlotParams = zod.object({
+  "id": zod.coerce.number().min(1)
+})
+
+
+
+export const updateAdminNetworkCoachPricesBodyPricesCgstPercentMin = 0;
+export const updateAdminNetworkCoachPricesBodyPricesCgstPercentMax = 50;
+
+export const updateAdminNetworkCoachPricesBodyPricesSgstPercentMin = 0;
+export const updateAdminNetworkCoachPricesBodyPricesSgstPercentMax = 50;
+
+
+
+export const UpdateAdminNetworkCoachPricesBody = zod.object({
+  "categoryId": zod.string().min(1),
+  "prices": zod.object({
+  "30": zod.number().nullable(),
+  "45": zod.number().nullable(),
+  "60": zod.number().nullable(),
+  "cgstPercent": zod.number().min(updateAdminNetworkCoachPricesBodyPricesCgstPercentMin).max(updateAdminNetworkCoachPricesBodyPricesCgstPercentMax).optional(),
+  "sgstPercent": zod.number().min(updateAdminNetworkCoachPricesBodyPricesSgstPercentMin).max(updateAdminNetworkCoachPricesBodyPricesSgstPercentMax).optional()
+}).describe('Admin-managed INR price per session length. null = length not offered.')
+})
+
+export const updateAdminNetworkCoachPricesResponseCgstPercentMin = 0;
+export const updateAdminNetworkCoachPricesResponseCgstPercentMax = 50;
+
+export const updateAdminNetworkCoachPricesResponseSgstPercentMin = 0;
+export const updateAdminNetworkCoachPricesResponseSgstPercentMax = 50;
+
+
+
+export const UpdateAdminNetworkCoachPricesResponse = zod.object({
+  "30": zod.number().nullable(),
+  "45": zod.number().nullable(),
+  "60": zod.number().nullable(),
+  "cgstPercent": zod.number().min(updateAdminNetworkCoachPricesResponseCgstPercentMin).max(updateAdminNetworkCoachPricesResponseCgstPercentMax).optional(),
+  "sgstPercent": zod.number().min(updateAdminNetworkCoachPricesResponseSgstPercentMin).max(updateAdminNetworkCoachPricesResponseSgstPercentMax).optional()
+}).describe('Admin-managed INR price per session length. null = length not offered.')
+
+
+
+export const createAdminNetworkCoachPlanBodyNameMin = 2;
+export const createAdminNetworkCoachPlanBodyNameMax = 80;
+
+export const createAdminNetworkCoachPlanBodyDurationMax = 3650;
+
+export const createAdminNetworkCoachPlanBodyPriceInrMax = 1000000;
+
+
+
+export const CreateAdminNetworkCoachPlanBody = zod.object({
+  "categoryId": zod.string().min(1),
+  "name": zod.string().min(createAdminNetworkCoachPlanBodyNameMin).max(createAdminNetworkCoachPlanBodyNameMax),
+  "duration": zod.number().min(1).max(createAdminNetworkCoachPlanBodyDurationMax),
+  "durationUnit": zod.enum(['day', 'week', 'month', 'year']),
+  "priceInr": zod.number().min(1).max(createAdminNetworkCoachPlanBodyPriceInrMax),
+  "published": zod.boolean()
+})
+
+
+
+
+
+export const UpdateAdminNetworkCoachPlanParams = zod.object({
+  "id": zod.coerce.number().min(1)
+})
+
+
+export const updateAdminNetworkCoachPlanBodyNameMin = 2;
+export const updateAdminNetworkCoachPlanBodyNameMax = 80;
+
+export const updateAdminNetworkCoachPlanBodyDurationMax = 3650;
+
+export const updateAdminNetworkCoachPlanBodyPriceInrMax = 1000000;
+
+
+
+export const UpdateAdminNetworkCoachPlanBody = zod.object({
+  "categoryId": zod.string().min(1),
+  "name": zod.string().min(updateAdminNetworkCoachPlanBodyNameMin).max(updateAdminNetworkCoachPlanBodyNameMax),
+  "duration": zod.number().min(1).max(updateAdminNetworkCoachPlanBodyDurationMax),
+  "durationUnit": zod.enum(['day', 'week', 'month', 'year']),
+  "priceInr": zod.number().min(1).max(updateAdminNetworkCoachPlanBodyPriceInrMax),
+  "published": zod.boolean()
+})
+
+
+
+
+
+export const UpdateAdminNetworkCoachPlanResponse = zod.object({
+  "categoryId": zod.string().nullish(),
+  "id": zod.number(),
+  "name": zod.string(),
+  "duration": zod.number().min(1),
+  "durationUnit": zod.enum(['day', 'week', 'month', 'year']),
+  "priceInr": zod.number().min(1),
+  "published": zod.boolean(),
+  "sortOrder": zod.number()
+})
+
+
+
+
+
+export const DeleteAdminNetworkCoachPlanParams = zod.object({
+  "id": zod.coerce.number().min(1)
+})
+
+export const DeleteAdminNetworkCoachPlanResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+export const SetAdminNetworkCoachCategoryParams = zod.object({
+  "categoryId": zod.coerce.string()
+})
+
+export const SetAdminNetworkCoachCategoryBody = zod.object({
+  "enabled": zod.boolean()
+})
+
+export const SetAdminNetworkCoachCategoryResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "published": zod.boolean(),
+  "networkCoach": zod.boolean()
+})
+
+
+export const ListAdminNetworkCoachBookingsResponseItem = zod.object({
+  "id": zod.number(),
+  "status": zod.string().describe('held | paid | completed | cancelled | expired | payment_failed | paid_conflict'),
+  "gymId": zod.number(),
+  "branchName": zod.string(),
+  "trainerId": zod.string(),
+  "trainerName": zod.string(),
+  "memberName": zod.string().nullable(),
+  "startsAt": zod.string(),
+  "endsAt": zod.string(),
+  "amountInr": zod.number(),
+  "currency": zod.string(),
+  "holdExpiresAt": zod.string().nullable(),
+  "refundStatus": zod.string().nullable().describe('pending_admin | refunded_manual'),
+  "adminNote": zod.string().nullable(),
+  "paymentReference": zod.string().nullable(),
+  "canJoin": zod.boolean(),
+  "planCovered": zod.boolean(),
+  "canReview": zod.boolean(),
+  "review": zod.object({
+  "rating": zod.number(),
+  "comment": zod.string()
+}).nullable()
+})
+export const ListAdminNetworkCoachBookingsResponse = zod.array(ListAdminNetworkCoachBookingsResponseItem)
+
+
+export const ListAdminNetworkCoachPlanPurchasesResponseItem = zod.object({
+  "id": zod.number(),
+  "planName": zod.string(),
+  "duration": zod.number(),
+  "durationUnit": zod.string(),
+  "amountInr": zod.number(),
+  "trainerId": zod.string(),
+  "status": zod.string(),
+  "refundStatus": zod.string(),
+  "paymentReference": zod.string(),
+  "startsAt": zod.string().nullable(),
+  "endsAt": zod.string().nullable(),
+  "memberName": zod.string(),
+  "adminNote": zod.string()
+})
+export const ListAdminNetworkCoachPlanPurchasesResponse = zod.array(ListAdminNetworkCoachPlanPurchasesResponseItem)
+
+
+
+
+
+export const ResolveAdminNetworkCoachPlanRefundParams = zod.object({
+  "id": zod.coerce.number().min(1)
+})
+
+export const resolveAdminNetworkCoachPlanRefundBodyNoteMin = 3;
+export const resolveAdminNetworkCoachPlanRefundBodyNoteMax = 500;
+
+
+
+export const ResolveAdminNetworkCoachPlanRefundBody = zod.object({
+  "note": zod.string().min(resolveAdminNetworkCoachPlanRefundBodyNoteMin).max(resolveAdminNetworkCoachPlanRefundBodyNoteMax)
+})
+
+export const ResolveAdminNetworkCoachPlanRefundResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+
+
+
+export const ResolveAdminNetworkCoachRefundParams = zod.object({
+  "id": zod.coerce.number().min(1)
+})
+
+export const resolveAdminNetworkCoachRefundBodyNoteMin = 3;
+export const resolveAdminNetworkCoachRefundBodyNoteMax = 500;
+
+
+
+export const ResolveAdminNetworkCoachRefundBody = zod.object({
+  "note": zod.string().min(resolveAdminNetworkCoachRefundBodyNoteMin).max(resolveAdminNetworkCoachRefundBodyNoteMax)
+})
+
+export const ResolveAdminNetworkCoachRefundResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+
+
+
+export const CompleteAdminNetworkCoachBookingParams = zod.object({
+  "id": zod.coerce.number().min(1)
+})
+
+export const CompleteAdminNetworkCoachBookingResponse = zod.object({
+  "ok": zod.boolean()
 })
 
 

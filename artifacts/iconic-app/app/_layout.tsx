@@ -15,13 +15,13 @@ import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setAuthTokenGetter, setBaseUrl } from "@workspace/api-client-react";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import * as Notifications from "expo-notifications";
 import * as WebBrowser from "expo-web-browser";
 import { ensureDefaultReminders } from "@/lib/notifications";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -33,6 +33,8 @@ import { PendingUsernameLink } from "@/components/PendingUsernameLink";
 import { useColors } from "@/hooks/useColors";
 import { GuestProvider, useGuest } from "@/hooks/useGuest";
 import { WatchHealthProvider } from "@/hooks/useWatchHealth";
+import { refreshPushRegistration, setPushViewer } from "@/lib/pushRegistration";
+import { safeInternalLink } from "@/lib/safeLink";
 import { AuthClientResetContext } from "@/hooks/useAuthClientReset";
 import { ThemeProvider, useTheme } from "@/hooks/useTheme";
 import { completeSsoWebCallback } from "@/lib/ssoRedirect";
@@ -143,8 +145,35 @@ function MemberReminderInitializer() {
   useEffect(() => {
     if (!isLoaded || !isSignedIn || isGuest || !userId) return;
     void ensureDefaultReminders(userId);
+    void refreshPushRegistration(userId);
   }, [isLoaded, isSignedIn, isGuest, userId]);
 
+  // Push registration must always target the CURRENT viewer.
+  useEffect(() => {
+    setPushViewer(isLoaded && isSignedIn && !isGuest && userId ? userId : null);
+  }, [isLoaded, isSignedIn, isGuest, userId]);
+
+  return null;
+}
+
+/** Push taps carry data.link (e.g. /my-membership?section=renewal). */
+function PushLinkHandler() {
+  return Platform.OS === "web" ? null : <NativePushLinkHandler />;
+}
+
+function NativePushLinkHandler() {
+  const response = Notifications.useLastNotificationResponse();
+  const router = useRouter();
+  const handled = useRef<string | null>(null);
+  useEffect(() => {
+    if (!response) return;
+    const id = response.notification.request.identifier;
+    if (handled.current === id) return;
+    handled.current = id;
+    const data = response.notification.request.content.data as { link?: unknown; url?: unknown } | undefined;
+    const link = safeInternalLink(data?.link) ?? safeInternalLink(data?.url);
+    if (link) router.push(link as never);
+  }, [response, router]);
   return null;
 }
 
@@ -175,6 +204,7 @@ function RootLayoutNav() {
         <Stack.Screen name="meal-plan/[id]" />
         <Stack.Screen name="trainer/[id]" />
         <Stack.Screen name="live-trainer/[id]" />
+        <Stack.Screen name="coach-category/[id]" />
         <Stack.Screen name="community-post/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="community-coach/[id]" options={{ headerShown: false }} />
         <Stack.Screen
@@ -476,6 +506,7 @@ export default function RootLayout() {
                 <GuestProvider>
                   <WatchHealthProvider>
                   <MemberReminderInitializer />
+                  <PushLinkHandler />
                   <GestureHandlerRootView style={{ flex: 1 }}>
                     <RootLayoutNav />
                     {!splashDone ? (

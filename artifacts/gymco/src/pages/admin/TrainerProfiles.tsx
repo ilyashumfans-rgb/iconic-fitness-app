@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileText, Loader2, Plus, RefreshCw, Save, Trash2, UserRound } from "lucide-react";
 import { AdminCard, AdminLayout } from "@/components/admin/AdminLayout";
 import FileUpload from "@/components/FileUpload";
+import { TrainerCategoryAssignment } from "@/components/admin/coach-categories/TrainerCategoryAssignment";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -185,7 +186,9 @@ function TrainerProfilesContent() {
       : trainers.length === 0 ? <AdminCard className="p-10 text-center text-muted-foreground" data-testid="text-trainers-empty">No live trainers are available to edit.</AdminCard>
       : profileQuery.isLoading ? <AdminCard className="flex items-center justify-center gap-2 p-12" data-testid="status-trainer-profile-loading"><Loader2 className="h-5 w-5 animate-spin" />Loading profile…</AdminCard>
       : profileQuery.isError ? <AdminCard className="space-y-3 p-8 text-center"><p role="alert" data-testid="error-trainer-profile">{errorMessage(profileQuery.error)}</p><Button data-testid="button-retry-trainer-profile" variant="outline" onClick={() => void profileQuery.refetch()}><RefreshCw className="mr-2 h-4 w-4" />Retry</Button></AdminCard>
-      : selected && <Form {...form}>
+      : selected && <>
+      <TrainerCategoryAssignment key={selectedKey} trainerId={selected.id} gymId={selected.gymId} trainerName={selected.name} branchName={selected.branchName} />
+      <Form {...form}>
         <form onSubmit={form.handleSubmit(save)} className="space-y-5">
           <AdminCard className="overflow-hidden">
             <div className="relative min-h-44 bg-lime-50">
@@ -240,6 +243,7 @@ function TrainerProfilesContent() {
             <Button data-testid="button-save-trainer-profile" type="submit" disabled={saving || !form.formState.isDirty} className="shadow-lg">{saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}{saving ? "Saving…" : "Save profile"}</Button>
           </div>
         </form>
-      </Form>}
+      </Form>
+      </>}
   </div>;
 }

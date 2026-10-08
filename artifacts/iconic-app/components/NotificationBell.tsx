@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/AppText";
 import { presentLocalNotification } from "@/lib/notifications";
+import { presentSessionReminder } from "@/lib/sessionReminderAlerts";
 
 const LAST_SEEN_KEY = "iconic.lastSeenNotificationId";
 
@@ -78,6 +79,12 @@ export function NotificationBell() {
             .filter((n) => n.id > seen)
             .sort((a, b) => a.id - b.id);
           for (const n of fresh) {
+            // Session reminders already dispatch a remote push. Keep the feed
+            // row, but don't alert a second time when polling catches up.
+            if (n.link?.startsWith("/network-coach/call?")) {
+              await presentSessionReminder(n);
+              continue;
+            }
             await presentLocalNotification(n.title, n.body);
           }
         }

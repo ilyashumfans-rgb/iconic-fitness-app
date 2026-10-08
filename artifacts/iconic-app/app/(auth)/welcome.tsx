@@ -1,17 +1,16 @@
 import { useSignIn, useSSO } from "@clerk/expo";
 import { useSignInWithApple } from "@clerk/expo/apple";
 import * as AuthSession from "expo-auth-session";
-import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Platform,
   Pressable,
   StyleSheet,
   View,
-  ScrollView,
   useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -22,10 +21,8 @@ import {
   SsoRequirementsPopup,
   type SsoRequirementValues,
 } from "@/components/SsoRequirementsPopup";
-import { useColors } from "@/hooks/useColors";
 import { useGuest } from "@/hooks/useGuest";
 import { ThemeContext } from "@/hooks/useTheme";
-import { GoogleIcon } from "@/components/GoogleIcon";
 import { memberAuthDestination } from "@/lib/memberAuth";
 import { ssoRedirectOptions } from "@/lib/ssoRedirect";
 import {
@@ -33,6 +30,8 @@ import {
 } from "@/lib/ssoCompletion";
 
 const LOGIN_LIME = "#85F12C";
+const ART_W = 734;
+const ART_H = 1600;
 type SsoFlowResult = Awaited<
   ReturnType<ReturnType<typeof useSSO>["startSSOFlow"]>
 >;
@@ -60,14 +59,11 @@ export default function WelcomeScreen() {
 }
 
 function WelcomeContent() {
-  const colors = useColors();
   const router = useRouter();
   const params = useLocalSearchParams<{ returnTo?: string | string[] }>();
   const insets = useSafeAreaInsets();
   const { height, width } = useWindowDimensions();
-  const topPadding = Math.max(insets.top + 8, Platform.OS === "web" ? 44 : 24);
-  const artworkHeight = Math.min(Math.min(width, 480) * 1252 / 982, Math.max(300, height - topPadding - 330));
-  const { enterGuest, exitGuest } = useGuest();
+  const { exitGuest } = useGuest();
   const memberDestination = memberAuthDestination(params.returnTo);
 
   const finishMemberAuth = useCallback(() => {
@@ -81,6 +77,7 @@ function WelcomeContent() {
   const [ssoLoading, setSsoLoading] = useState<"google" | "apple" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [emailAuthOpen, setEmailAuthOpen] = useState(false);
+  const [focusedAction, setFocusedAction] = useState<string | null>(null);
   const [pendingGoogleSignUp, setPendingGoogleSignUp] =
     useState<PendingGoogleSignUp | null>(null);
 
@@ -397,148 +394,126 @@ function WelcomeContent() {
     exitGuest,
   ]);
 
+  const onAppleWeb = useCallback(async () => {
+    if (ssoLoading) return;
+    setError(null);
+    setSsoLoading("apple");
+    try {
+      if (signIn?.status !== null && signIn?.status !== undefined) {
+        await signIn.reset();
+      }
+      const result = await startSSOFlow({
+        strategy: "oauth_apple",
+        ...ssoRedirectOptions(Platform.OS, () => AuthSession.makeRedirectUri()),
+      });
+      if (result.createdSessionId && result.setActive) {
+        exitGuest();
+        await result.setActive({ session: result.createdSessionId });
+        finishMemberAuth();
+      } else if (result.authSessionResult?.type === "cancel" || result.authSessionResult?.type === "dismiss") {
+        setError("Apple sign-in was cancelled.");
+      } else {
+        setError("Apple sign-in needs more account details. Please continue with OTP or Google.");
+      }
+    } catch (err: unknown) {
+      setError(clerkError(err));
+    } finally {
+      setSsoLoading(null);
+    }
+  }, [ssoLoading, signIn, startSSOFlow, exitGuest, finishMemberAuth]);
+
+  // Use the supplied artwork at its original aspect ratio without cropping or distortion.
+  const availH = height;
+  const scale = Math.min(width / ART_W, availH / ART_H);
+  const artW = ART_W * scale;
+  const artH = ART_H * scale;
+  const artLeft = (width - artW) / 2;
+  const artTop = (availH - artH) / 2;
+
+  const hotspots: {
+    key: string;
+    rect: [number, number, number, number];
+    label: string;
+    testID: string;
+    onPress: () => void;
+    loading?: boolean;
+    disabled?: boolean;
+  }[] = [
+    { key: "otp", rect: [78, 1088, 657, 1163], label: "Login with OTP", testID: "welcome-continue-email", onPress: () => setEmailAuthOpen(true), disabled: ssoLoading !== null },
+    { key: "google", rect: [78, 1179, 657, 1257], label: "Continue with Google", testID: "welcome-google", onPress: onGoogle, loading: ssoLoading === "google", disabled: ssoLoading !== null },
+    { key: "apple", rect: [78, 1270, 657, 1348], label: "Continue with Apple", testID: "welcome-apple", onPress: Platform.OS === "ios" ? onApple : onAppleWeb, loading: ssoLoading === "apple", disabled: ssoLoading !== null },
+    { key: "staff", rect: [78, 1431, 657, 1510], label: "Staff Login", testID: "welcome-staff", onPress: () => router.push("/staff-login"), disabled: ssoLoading !== null },
+  ];
+
   return (
-    <View style={[styles.flex, { backgroundColor: colors.background }]}>
-      <ScrollView 
-        contentContainerStyle={[
-          styles.content,
-          {
-            paddingTop: topPadding,
-            paddingBottom: Math.max(insets.bottom, 16),
-          },
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
+    <View style={[styles.flex, { backgroundColor: "#07090A" }]}>
+      <Image
+        source={require("@/assets/images/login-all-club-screen.jpg")}
+        style={StyleSheet.absoluteFill}
+        resizeMode="cover"
+        blurRadius={24}
+        accessible={false}
+        importantForAccessibility="no-hide-descendants"
+      />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(4,6,5,0.55)" }]} />
+      <View style={{ position: "absolute", left: artLeft, top: artTop, width: artW, height: artH }}>
         <Image
-          source={require("@/assets/images/login-original-artwork.jpg")}
-          style={{ width: "100%", height: artworkHeight, marginBottom: 12 }}
+          source={require("@/assets/images/login-all-club-screen.jpg")}
+          style={{ width: artW, height: artH }}
           resizeMode="contain"
-          accessible
-          accessibilityLabel="Iconic Fitness. The Fitness Company. A stronger, healthier, happier you."
+          accessible={false}
+          importantForAccessibility="no-hide-descendants"
         />
-
-        <View style={styles.bottom}>
-          {error ? (
-            <AppText size={13} color={colors.destructive} style={styles.errorText}>
-              {error}
-            </AppText>
-          ) : null}
-
-          {/* Email Login */}
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Login with OTP"
-            testID="welcome-continue-email"
-            onPress={() => setEmailAuthOpen(true)}
-            style={({ pressed }) => [
-              styles.primaryOption,
-              { backgroundColor: LOGIN_LIME, opacity: pressed ? 0.88 : 1 },
-            ]}
-          >
-            <View style={styles.iconBox}>
-              <Feather name="mail" size={20} color="#0A0C08" />
-            </View>
-            <AppText weight="700" size={16} color="#0A0C08" style={styles.optionTextCenter}>
-              Login with OTP
-            </AppText>
-            <View style={styles.iconBox}>
-              <Feather name="arrow-right" size={20} color="#0A0C08" />
-            </View>
-          </Pressable>
-
-          {/* Google Login */}
-          <Pressable
-            accessibilityRole="button"
-            onPress={onGoogle}
-            disabled={ssoLoading !== null}
-            style={({ pressed }) => [
-              styles.outlineOption,
-              { opacity: pressed || ssoLoading === "google" ? 0.7 : 1 },
-            ]}
-          >
-            <View style={styles.iconBox}>
-              <GoogleIcon />
-            </View>
-            <AppText weight="700" size={16} color="#FFF" style={styles.optionTextCenter}>
-              {ssoLoading === "google" ? "Connecting…" : "Continue with Google"}
-            </AppText>
-            <View style={styles.iconBox}>
-              <Feather name="arrow-right" size={20} color="#FFF" />
-            </View>
-          </Pressable>
-
-          {/* Apple Login (iOS only) */}
-          {Platform.OS === "ios" ? (
+        <AppText accessibilityRole="header" style={styles.srOnly}>
+          Iconic Fitness. One membership. All club access. 17+ premium gyms. One pass. Train anywhere. Anytime.
+        </AppText>
+        {hotspots.map((h) => {
+          const [x1, y1, x2, y2] = h.rect;
+          return (
             <Pressable
+              key={h.key}
               accessibilityRole="button"
-              onPress={onApple}
-              disabled={ssoLoading !== null}
+              accessibilityLabel={h.label}
+              accessibilityState={{ disabled: !!h.disabled, busy: !!h.loading }}
+              testID={h.testID}
+              onPress={h.onPress}
+              onFocus={() => setFocusedAction(h.key)}
+              onBlur={() => setFocusedAction(null)}
+              hitSlop={{ top: 3, bottom: 3 }}
+              disabled={h.disabled}
               style={({ pressed }) => [
-                styles.outlineOption,
-                { opacity: pressed || ssoLoading === "apple" ? 0.7 : 1 },
+                styles.hotspot,
+                {
+                  left: x1 * scale,
+                  top: y1 * scale,
+                  width: (x2 - x1) * scale,
+                  height: (y2 - y1) * scale,
+                  backgroundColor: pressed ? "rgba(255,255,255,0.14)" : "transparent",
+                  borderColor: focusedAction === h.key ? LOGIN_LIME : "transparent",
+                },
               ]}
             >
-              <View style={styles.iconBox}>
-                <FontAwesome5 name="apple" size={22} color="#FFF" />
-              </View>
-              <AppText weight="700" size={16} color="#FFF" style={styles.optionTextCenter}>
-                {ssoLoading === "apple" ? "Connecting…" : "Continue with Apple"}
-              </AppText>
-              <View style={styles.iconBox}>
-                <Feather name="arrow-right" size={20} color="#FFF" />
-              </View>
+              {h.loading ? (
+                <View style={styles.loadingVeil}>
+                  <ActivityIndicator color={LOGIN_LIME} />
+                </View>
+              ) : null}
             </Pressable>
-          ) : null}
-
-          {/* Guest Login */}
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => {
-              enterGuest();
-              router.replace("/(tabs)");
-            }}
-            style={({ pressed }) => [
-              styles.outlineOption,
-              { opacity: pressed ? 0.7 : 1 },
-            ]}
-          >
-            <View style={styles.iconBox}>
-              <Feather name="user" size={22} color="#FFF" />
-            </View>
-            <AppText weight="700" size={16} color="#FFF" style={styles.optionTextCenter}>
-              Continue as Guest
-            </AppText>
-            <View style={styles.iconBox}>
-              <Feather name="arrow-right" size={20} color="#FFF" />
-            </View>
-          </Pressable>
-
-          {/* Staff Login */}
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.push("/staff-login")}
-            style={({ pressed }) => [
-              styles.outlineOption,
-              { opacity: pressed ? 0.7 : 1 },
-            ]}
-          >
-            <View style={styles.iconBox}>
-              <Feather name="users" size={22} color="#FFF" />
-            </View>
-            <AppText weight="700" size={16} color="#FFF" style={styles.optionTextCenter}>
-              Staff Login
-            </AppText>
-            <View style={styles.iconBox}>
-              <Feather name="arrow-right" size={20} color="#FFF" />
-            </View>
-          </Pressable>
-
-
-          <AppText weight="700" size={11} color="#666" style={styles.motto}>
-            DISCIPLINE  BUILDS  FREEDOM
+          );
+        })}
+      </View>
+      {error && !pendingGoogleSignUp ? (
+        <Pressable
+          accessibilityRole="alert"
+          accessibilityLabel={`${error} Tap to dismiss.`}
+          onPress={() => setError(null)}
+          style={[styles.errorBanner, { top: Math.max(insets.top, 12) + 8 }]}
+        >
+          <AppText size={13} color="#FFF" style={{ textAlign: "center" }}>
+            {error}
           </AppText>
-        </View>
-      </ScrollView>
+        </Pressable>
+      ) : null}
       {emailAuthOpen ? (
         <AuthPopup
           onClose={() => setEmailAuthOpen(false)}
@@ -584,47 +559,12 @@ function isAppleCancellation(err: unknown): boolean {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  content: { flexGrow: 1, width: "100%", maxWidth: 480, alignSelf: "center" },
-  bottom: { 
-    marginHorizontal: 24,
-    marginTop: 0,
-    gap: 9
-  },
-  errorText: {
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  primaryOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 999,
-    paddingVertical: 13,
-    paddingHorizontal: 8,
-  },
-  outlineOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: "#FFF",
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    backgroundColor: "rgba(0,0,0,0.48)",
-  },
-  iconBox: {
-    width: 44,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  optionTextCenter: {
-    flex: 1,
-    textAlign: "center",
-  },
-  motto: {
-    textAlign: "center",
-    letterSpacing: 2,
-    marginBottom: 0,
+  flex: { flex: 1, overflow: "hidden" },
+  hotspot: { position: "absolute", borderRadius: 999, borderWidth: 2, overflow: "hidden" },
+  loadingVeil: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.6)" },
+  srOnly: { position: "absolute", width: 1, height: 1, opacity: 0, overflow: "hidden" },
+  errorBanner: {
+    position: "absolute", left: 16, right: 16, padding: 12, borderRadius: 14,
+    backgroundColor: "rgba(150,30,30,0.92)", maxWidth: 440, alignSelf: "center",
   },
 });
-

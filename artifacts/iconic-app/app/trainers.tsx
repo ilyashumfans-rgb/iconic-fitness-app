@@ -2,11 +2,11 @@ import { useAuth } from "@clerk/expo";
 import { Feather } from "@expo/vector-icons";
 import {
   getGetMyMembershipQueryKey,
-  getListLiveTrainersQueryKey,
+  getListCoachCategoriesQueryKey,
   getListMyTrainerBookingsQueryKey,
   useGetMyMembership,
+  useListCoachCategories,
   useListGyms,
-  useListLiveTrainers,
   useListMyTrainerBookings,
   type Gym,
 } from "@workspace/api-client-react";
@@ -20,7 +20,7 @@ import { ModalHeader } from "@/components/ModalHeader";
 import { Screen } from "@/components/Screen";
 import { EmptyState, ErrorView, LoadingView } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
-import { LiveTrainerCard } from "@/components/LiveTrainerCard";
+import { CoachCategoryCard } from "@/components/CoachCategoryCard";
 
 export default function TrainersScreen() {
   const router = useRouter();
@@ -63,17 +63,19 @@ export default function TrainersScreen() {
   const gyms = useMemo(() => gymsQuery.data ?? [], [gymsQuery.data]);
   const selectedGym = gyms.find((g) => g.id === gymId) ?? null;
 
-  // Live roster from the gym-management system only — no local fallback, so
-  // members never see stale or hand-entered trainer profiles.
-  const liveParams = gymId !== null ? { gymId } : undefined;
-  const liveQuery = useListLiveTrainers(liveParams, {
+  // Published coach categories for this branch; counts only include coaches
+  // linked to the category at THIS branch (server-side, exact upstream IDs).
+  const catParams = { gymId: gymId ?? 0 };
+  const liveQuery = useListCoachCategories(catParams, {
     query: {
       enabled: gymId !== null,
-      queryKey: getListLiveTrainersQueryKey(liveParams),
+      queryKey: getListCoachCategoriesQueryKey(catParams),
     },
   });
-
-  const liveTrainers = useMemo(() => liveQuery.data ?? [], [liveQuery.data]);
+  const categories = useMemo(() => liveQuery.data ?? [], [liveQuery.data]);
+  const branchLabel = selectedGym?.name ?? membershipQuery.data?.branchName ?? "";
+  const openCategory = (id: string) =>
+    router.push({ pathname: "/coach-category/[id]", params: { id, gymId: String(gymId), gymName: branchLabel } });
 
   if (!membershipSettled) {
     return (
@@ -97,7 +99,7 @@ export default function TrainersScreen() {
         onRefresh={() => void gymsQuery.refetch()}
       >
         <ModalHeader title="Personal Trainers" />
-        <AppText muted size={14} style={{ marginBottom: 16 }}>
+        <AppText muted size={13} style={{ marginBottom: 12 }}>
           Pick your branch to see its coaches.
         </AppText>
         {gymsQuery.isLoading ? (
@@ -111,7 +113,7 @@ export default function TrainersScreen() {
             message="Check back soon."
           />
         ) : (
-          <View style={{ gap: 12 }}>
+          <View style={{ gap: 10 }}>
             {gyms.map((g) => (
               <BranchCard key={g.id} gym={g} onPress={() => setPickedGymId(g.id)} />
             ))}
@@ -121,7 +123,7 @@ export default function TrainersScreen() {
     );
   }
 
-  // Step 2 — live trainers at the chosen branch.
+  // Step 2 — coach categories at the chosen branch.
   return (
     <Screen
       contentContainerStyle={{ paddingTop: 8 }}
@@ -129,170 +131,103 @@ export default function TrainersScreen() {
       onRefresh={() => void liveQuery.refetch()}
     >
       <ModalHeader title="Personal Trainers" />
-      <Pressable
-        onPress={locked ? undefined : () => setPickedGymId(null)}
-        disabled={locked}
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 6,
-          marginBottom: 16,
-        }}
-      >
-        <Feather name="map-pin" size={14} color={colors.primary} />
-        <AppText weight="600" size={14} color={colors.primary}>
-          {selectedGym?.name ?? membershipQuery.data?.branchName ?? "Branch"}
-        </AppText>
-        {locked ? (
-          <AppText muted size={13}>
-            · your branch
-          </AppText>
-        ) : (
-          <AppText muted size={13}>
-            · change
-          </AppText>
-        )}
-      </Pressable>
 
       {/* Booking is members-only: tell guests/inactive users how to unlock it. */}
       {!isActiveMember ? (
         <View
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 10,
-            borderWidth: 1,
-            borderColor: colors.border,
-            borderRadius: 14,
-            paddingHorizontal: 14,
-            paddingVertical: 12,
-            marginBottom: 18,
+            flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 12,
+            backgroundColor: colors.elevated, borderWidth: 1, borderColor: colors.border,
+            paddingHorizontal: 12, paddingVertical: 10, marginBottom: 14,
           }}
         >
-          <Feather name="lock" size={16} color={colors.primary} />
-          <AppText muted size={13} style={{ flex: 1 }}>
-            Personal training booking is for active members. Get a membership
-            to book your coach.
+          <Feather name="lock" size={14} color={colors.primary} />
+          <AppText muted size={12} style={{ flex: 1, lineHeight: 17 }}>
+            PT booking is for active members. Get a membership to book your coach.
           </AppText>
         </View>
       ) : null}
 
-      {/* Prominent kick-starter trial CTA — shown FIRST, no need to pick a
-          coach. Hidden once the member has already sent a trial request. */}
+      {/* Kick-starter trial CTA — hidden once the member has sent a trial request. */}
       {!isActiveMember || trialRequested ? null : (
         <Pressable
           onPress={() =>
             router.push({
               pathname: "/book-trainer",
-              params: {
-                trial: "1",
-                gymId: String(gymId),
-                gymName: selectedGym?.name ?? membershipQuery.data?.branchName ?? "",
-              },
+              params: { trial: "1", gymId: String(gymId), gymName: branchLabel },
             })
           }
-          style={{ marginBottom: 12 }}
+          accessibilityRole="button"
+          accessibilityLabel="Book your free trial session"
+          testID="button-book-trial"
+          style={{ marginBottom: 16 }}
         >
           {({ pressed }) => (
             <View
               style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 12,
-                backgroundColor: "#C7F000",
-                borderRadius: 16,
-                paddingHorizontal: 18,
-                paddingVertical: 16,
-                opacity: pressed ? 0.85 : 1,
+                flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56,
+                backgroundColor: "#0F140C", borderRadius: 14, borderWidth: 1, borderColor: colors.primary,
+                paddingHorizontal: 12, paddingVertical: 10, opacity: pressed ? 0.85 : 1,
+                transform: [{ scale: pressed ? 0.985 : 1 }],
               }}
             >
-              <Feather name="zap" size={20} color="#0A0C08" />
-              <View style={{ flex: 1 }}>
-                <AppText weight="700" size={16} color="#0A0C08">
-                  Book your trial session
-                </AppText>
-                <AppText size={12} color="#0A0C08" style={{ opacity: 0.7 }}>
-                  Free kick-starter PT trial — we'll match you with a coach
-                </AppText>
+              <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" }}>
+                <Feather name="zap" size={16} color={colors.primaryForeground} />
               </View>
-              <Feather name="arrow-right" size={20} color="#0A0C08" />
+              <View style={{ flex: 1 }}>
+                <AppText weight="700" size={14} color="#F4F6F0">Book your trial session</AppText>
+                <AppText size={12} color="#A9B3A2">Free kick-starter PT trial</AppText>
+              </View>
+              <Feather name="arrow-right" size={17} color={colors.primary} />
             </View>
           )}
         </Pressable>
       )}
 
-      {/* Paid PT packages for this branch — live prices + online payment. */}
-      {!isActiveMember ? null : (
-      <Pressable
-        onPress={() =>
-          router.push({
-            pathname: "/book-pt-sessions",
-            params: {
-              gymId: String(gymId),
-              gymName: selectedGym?.name ?? membershipQuery.data?.branchName ?? "",
-            },
-          })
-        }
-        style={{ marginBottom: 18 }}
-      >
-        {({ pressed }) => (
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-              backgroundColor: colors.primary,
-              borderRadius: 16,
-              paddingHorizontal: 18,
-              paddingVertical: 16,
-              opacity: pressed ? 0.85 : 1,
-            }}
-          >
-            <Feather name="credit-card" size={20} color="#fff" />
-            <View style={{ flex: 1 }}>
-              <AppText weight="700" size={16} color="#fff">
-                Book your PT sessions
-              </AppText>
-              <AppText size={12} color="#fff" style={{ opacity: 0.8 }}>
-                Choose your trainer, then a PT package
-              </AppText>
-            </View>
-            <Feather name="arrow-right" size={20} color="#fff" />
-          </View>
-        )}
-      </Pressable>
-      )}
-
+      <AppText weight="700" size={15} style={{ marginBottom: 10 }} accessibilityRole="header">
+        Find your kind of coach
+      </AppText>
       {liveQuery.isLoading ? (
         <LoadingView />
       ) : liveQuery.isError ? (
         <ErrorView onRetry={() => void liveQuery.refetch()} />
-      ) : liveTrainers.length === 0 ? (
+      ) : categories.length === 0 ? (
         <EmptyState
-          icon="users"
-          title="No coaches listed"
-          message="This branch hasn't published its trainer roster yet — check back soon or ask at the front desk."
+          icon="grid"
+          title="Coach categories coming soon"
+          message="This branch hasn't listed its coaching categories yet. You can still browse every coach below."
         />
       ) : (
-        // Single column: one big photo tile per row, name underneath.
-        <View style={{ gap: 14 }}>
-          {liveTrainers.map((t) => (
-            <LiveTrainerCard
-              key={t.id}
-              trainer={t}
-              onPress={() =>
-                router.push({
-                  pathname: "/live-trainer/[id]",
-                  params: {
-                    id: t.id,
-                    gymId: String(gymId),
-                  },
-                })
-              }
-            />
+        <View style={{ gap: 12 }}>
+          {categories.map((c) => (
+            <CoachCategoryCard key={c.id} category={c} onSeeCoaches={() => openCategory(c.id)} />
           ))}
         </View>
       )}
+      {/* Branch-wide coach browsing belongs after the coaching categories. */}
+      <Pressable
+        onPress={() => openCategory("all")}
+        accessibilityRole="button"
+        accessibilityLabel="Browse all coaches at this branch"
+        testID="button-all-coaches"
+        style={{ marginTop: 16 }}
+      >
+        {({ pressed }) => (
+          <View
+            style={{
+              flexDirection: "row", alignItems: "center", gap: 10, minHeight: 52,
+              backgroundColor: colors.primary, borderRadius: 14, paddingHorizontal: 14,
+              opacity: pressed ? 0.88 : 1, transform: [{ scale: pressed ? 0.985 : 1 }],
+            }}
+          >
+            <Feather name="users" size={17} color={colors.primaryForeground} />
+            <AppText weight="700" size={14} color={colors.primaryForeground} style={{ flex: 1 }}>
+              Browse all coaches at this branch
+            </AppText>
+            <Feather name="arrow-right" size={17} color={colors.primaryForeground} />
+          </View>
+        )}
+      </Pressable>
     </Screen>
   );
 }
@@ -300,7 +235,7 @@ export default function TrainersScreen() {
 function BranchCard({ gym, onPress }: { gym: Gym; onPress: () => void }) {
   const colors = useColors();
   return (
-    <Pressable onPress={onPress}>
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`Choose ${gym.name}`} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
       <Card>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
           <View
@@ -316,7 +251,7 @@ function BranchCard({ gym, onPress }: { gym: Gym; onPress: () => void }) {
             <Feather name="map-pin" size={18} color={colors.primary} />
           </View>
           <View style={{ flex: 1 }}>
-            <AppText weight="700" size={15}>
+            <AppText weight="600" size={14}>
               {gym.name}
             </AppText>
             <AppText muted size={13} style={{ marginTop: 1 }}>

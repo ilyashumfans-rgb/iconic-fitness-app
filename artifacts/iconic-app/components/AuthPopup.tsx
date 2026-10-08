@@ -584,9 +584,13 @@ export function AuthPopup({ onClose, returnTo }: Props) {
       ? signupStage === "verify"
         ? `We sent a 6-digit code to ${signupEmail}.`
         : "Start tracking, training and winning."
-      : loginMode === "otp" && otpSent
+      : whatsapp
+        ? "Log in with a code sent to WhatsApp."
+        : loginMode === "otp" && otpSent
         ? `We sent a 6-digit code to ${email}.`
-        : "Sign in to continue your fitness journey.";
+        : loginMode === "password"
+          ? "Log in with your password or a reset code."
+          : "Log in with a code sent to your email.";
 
   return (
     <Modal
@@ -617,10 +621,10 @@ export function AuthPopup({ onClose, returnTo }: Props) {
         >
           <View style={styles.header}>
             <View style={styles.headerCopy}>
-              <AppText weight="700" size={25} color={colors.foreground}>
+              <AppText accessibilityRole="header" weight="700" size={20} color={colors.foreground}>
                 {title}
               </AppText>
-              <AppText size={13} color={colors.mutedForeground}>
+              <AppText size={12} color={colors.mutedForeground}>
                 {subtitle}
               </AppText>
             </View>
@@ -638,11 +642,12 @@ export function AuthPopup({ onClose, returnTo }: Props) {
                 },
               ]}
             >
-              <Feather name="x" size={21} color={colors.foreground} />
+              <Feather name="x" size={18} color={colors.foreground} />
             </Pressable>
           </View>
 
           <KeyboardAwareScrollViewCompat
+            keyboardContainerStyle={{ flexGrow: 0, flexShrink: 1, flexBasis: "auto" }}
             style={styles.scroll}
             contentContainerStyle={[
               styles.scrollContent,
@@ -653,7 +658,7 @@ export function AuthPopup({ onClose, returnTo }: Props) {
             showsVerticalScrollIndicator={false}
           >
             {whatsapp ? (
-              <>
+              <View style={styles.form}>
                 <WhatsappOtpForm
                   onBusyChange={setWhatsappBusy}
                   onComplete={(isNewUser) => {
@@ -663,6 +668,7 @@ export function AuthPopup({ onClose, returnTo }: Props) {
                   }}
                 />
                 <Pressable
+                  accessibilityRole="button"
                   onPress={() => {
                     setWhatsapp(false);
                     setView("login");
@@ -677,23 +683,25 @@ export function AuthPopup({ onClose, returnTo }: Props) {
                   </AppText>
                 </Pressable>
                 <View style={styles.footer}>
-                  <AppText size={14} color={colors.mutedForeground}>
+                  <AppText size={13} color={colors.mutedForeground}>
                     New here?{" "}
                   </AppText>
                   <Pressable
+                    accessibilityRole="button"
                     onPress={() => {
                       setWhatsapp(false);
                       void openSignup();
                     }}
                     disabled={loading}
                     hitSlop={8}
+                    style={styles.linkButton}
                   >
-                    <AppText weight="700" size={14} color={colors.primary}>
+                    <AppText weight="700" size={13} color={colors.primary}>
                       Create account
                     </AppText>
                   </Pressable>
                 </View>
-              </>
+              </View>
             ) : view === "login" ? (
               <LoginContent
                 colors={colors}
@@ -754,9 +762,11 @@ export function AuthPopup({ onClose, returnTo }: Props) {
                 openLogin={openLogin}
               />
             )}
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
             <Button
-              label={whatsapp ? "Use email or password instead" : "Login with OTP"}
-              variant="ghost"
+              label={whatsapp ? "Use email instead" : "Use WhatsApp code instead"}
+              variant="secondary"
+              size="sm"
               disabled={loading}
               onPress={() => {
                 setWhatsapp(!whatsapp);
@@ -946,7 +956,7 @@ function LoginContent({
             onPress={onSendOtp}
             loading={loading}
             disabled={loading}
-            size="lg"
+            size="md"
           />
         ) : (
           <>
@@ -955,9 +965,10 @@ function LoginContent({
               onPress={onVerifyOtp}
               loading={loading}
               disabled={loading}
-              size="lg"
+              size="md"
             />
             <Pressable
+              accessibilityRole="button"
               onPress={onSendOtp}
               disabled={loading}
               hitSlop={8}
@@ -968,6 +979,7 @@ function LoginContent({
               </AppText>
             </Pressable>
             <Pressable
+              accessibilityRole="button"
               onPress={onChangeEmail}
               disabled={loading}
               hitSlop={8}
@@ -986,9 +998,10 @@ function LoginContent({
             onPress={onPasswordLogin}
             loading={loading}
             disabled={loading}
-            size="lg"
+            size="md"
           />
           <Pressable
+            accessibilityRole="button"
             onPress={() => {
               clearError();
               setPwInfo(null);
@@ -1010,9 +1023,10 @@ function LoginContent({
             onPress={onStartPasswordReset}
             loading={loading}
             disabled={loading}
-            size="lg"
+            size="md"
           />
           <Pressable
+            accessibilityRole="button"
             onPress={() => {
               clearError();
               setPwInfo(null);
@@ -1034,9 +1048,10 @@ function LoginContent({
             onPress={onSubmitPasswordReset}
             loading={loading}
             disabled={loading}
-            size="lg"
+            size="md"
           />
           <Pressable
+            accessibilityRole="button"
             onPress={onResendReset}
             disabled={loading}
             hitSlop={8}
@@ -1050,6 +1065,7 @@ function LoginContent({
       )}
 
       <Pressable
+        accessibilityRole="button"
         onPress={() => void switchLoginMode(loginMode === "otp" ? "password" : "otp")}
         disabled={loading}
         hitSlop={8}
@@ -1063,11 +1079,11 @@ function LoginContent({
       </Pressable>
 
       <View style={styles.footer}>
-        <AppText size={14} color={colors.mutedForeground}>
+        <AppText size={13} color={colors.mutedForeground}>
           New here?{" "}
         </AppText>
-        <Pressable onPress={() => void openSignup()} hitSlop={8}>
-          <AppText weight="700" size={14} color={colors.primary}>
+        <Pressable accessibilityRole="button" onPress={() => void openSignup()} hitSlop={8} style={styles.linkButton}>
+          <AppText weight="700" size={13} color={colors.primary}>
             Create account
           </AppText>
         </Pressable>
@@ -1169,7 +1185,7 @@ function SignupContent({
             onPress={onCreateAccount}
             loading={loading}
             disabled={loading}
-            size="lg"
+            size="md"
           />
         </>
       ) : (
@@ -1194,9 +1210,10 @@ function SignupContent({
             onPress={onVerifySignup}
             loading={loading}
             disabled={loading}
-            size="lg"
+            size="md"
           />
           <Pressable
+            accessibilityRole="button"
             onPress={() => void onResendSignup()}
             disabled={loading}
             hitSlop={8}
@@ -1207,6 +1224,7 @@ function SignupContent({
             </AppText>
           </Pressable>
           <Pressable
+            accessibilityRole="button"
             onPress={() => void onChangeEmail()}
             disabled={loading}
             hitSlop={8}
@@ -1220,11 +1238,11 @@ function SignupContent({
       )}
 
       <View style={styles.footer}>
-        <AppText size={14} color={colors.mutedForeground}>
+        <AppText size={13} color={colors.mutedForeground}>
           Already a member?{" "}
         </AppText>
-        <Pressable onPress={() => void openLogin()} hitSlop={8}>
-          <AppText weight="700" size={14} color={colors.primary}>
+        <Pressable accessibilityRole="button" onPress={() => void openLogin()} hitSlop={8} style={styles.linkButton}>
+          <AppText weight="700" size={13} color={colors.primary}>
             Log in
           </AppText>
         </Pressable>
@@ -1255,10 +1273,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   card: {
-    borderRadius: 28,
+    borderRadius: 24,
     borderWidth: StyleSheet.hairlineWidth,
     elevation: 16,
-    height: "90%",
+    maxHeight: "88%",
     maxWidth: 520,
     overflow: "hidden",
     shadowColor: "#000",
@@ -1271,30 +1289,31 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: 22,
-    paddingTop: 22,
-    paddingBottom: 15,
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 10,
   },
   headerCopy: { flex: 1, gap: 3, paddingRight: 16 },
   close: {
     alignItems: "center",
     borderRadius: 999,
-    height: 38,
+    height: 44,
     justifyContent: "center",
-    width: 38,
+    width: 44,
   },
-  scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 22, paddingTop: 5 },
-  form: { gap: 15 },
+  scroll: { flexGrow: 0, flexShrink: 1 },
+  scrollContent: { gap: 12, paddingHorizontal: 20, paddingTop: 4 },
+  divider: { height: StyleSheet.hairlineWidth, marginTop: 2 },
+  form: { gap: 12 },
   linkButton: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 2,
+    minHeight: 44,
   },
   footer: {
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 3,
+    minHeight: 44,
   },
 });

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ClerkProvider, Show } from "@clerk/react";
@@ -12,113 +12,120 @@ import { ThemeProvider } from "@/lib/theme";
 import NotFound from "@/pages/not-found";
 
 import Landing from "@/pages/Landing";
-import Dashboard from "@/pages/Dashboard";
-import Explore from "@/pages/Explore";
-import GymDetail from "@/pages/GymDetail";
-import Classes from "@/pages/Classes";
-import ClassDetail from "@/pages/ClassDetail";
-import Bookings from "@/pages/Bookings";
-import Memberships from "@/pages/Memberships";
-import Offers from "@/pages/Offers";
-import Trainers from "@/pages/Trainers";
-import TrainerDetail from "@/pages/TrainerDetail";
-import Wallet from "@/pages/Wallet";
-import Profile from "@/pages/Profile";
-import Invoices from "@/pages/Invoices";
-import Orders from "@/pages/Orders";
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const Explore = lazy(() => import("@/pages/Explore"));
+const GymDetail = lazy(() => import("@/pages/GymDetail"));
+const Classes = lazy(() => import("@/pages/Classes"));
+const ClassDetail = lazy(() => import("@/pages/ClassDetail"));
+const Bookings = lazy(() => import("@/pages/Bookings"));
+const Memberships = lazy(() => import("@/pages/Memberships"));
+const Offers = lazy(() => import("@/pages/Offers"));
+const Trainers = lazy(() => import("@/pages/Trainers"));
+const TrainerDetail = lazy(() => import("@/pages/TrainerDetail"));
+const Wallet = lazy(() => import("@/pages/Wallet"));
+const Profile = lazy(() => import("@/pages/Profile"));
+const Invoices = lazy(() => import("@/pages/Invoices"));
+const Orders = lazy(() => import("@/pages/Orders"));
 import SignInPage from "@/pages/SignInPage";
 import SignUpPage from "@/pages/SignUpPage";
 
 import AdminLogin from "@/pages/admin/Login";
 import PartnerLogin from "@/pages/partner/Login";
-import PartnerDashboard from "@/pages/partner/Dashboard";
-import PartnerGyms from "@/pages/partner/Gyms";
-import PartnerBookings from "@/pages/partner/Bookings";
-import PartnerClasses from "@/pages/partner/Classes";
-import PartnerTrainers from "@/pages/partner/Trainers";
-import PartnerSchedule from "@/pages/partner/Schedule";
-import PartnerGxBookings from "@/pages/partner/GxBookings";
-import PartnerLeads from "@/pages/partner/Leads";
-import PartnerTrainerBookings from "@/pages/partner/TrainerBookings";
-import PartnerPackageBookings from "@/pages/partner/PackageBookings";
-import PartnerMembers from "@/pages/partner/Members";
-import PartnerProducts from "@/pages/partner/PartnerProducts";
-import PartnerSettings from "@/pages/partner/Settings";
-import PartnerTeam from "@/pages/partner/Team";
+const PartnerDashboard = lazy(() => import("@/pages/partner/Dashboard"));
+const PartnerGyms = lazy(() => import("@/pages/partner/Gyms"));
+const PartnerBookings = lazy(() => import("@/pages/partner/Bookings"));
+const PartnerClasses = lazy(() => import("@/pages/partner/Classes"));
+const PartnerTrainers = lazy(() => import("@/pages/partner/Trainers"));
+const PartnerSchedule = lazy(() => import("@/pages/partner/Schedule"));
+const PartnerGxBookings = lazy(() => import("@/pages/partner/GxBookings"));
+const PartnerLeads = lazy(() => import("@/pages/partner/Leads"));
+const PartnerTrainerBookings = lazy(() => import("@/pages/partner/TrainerBookings"));
+const PartnerPackageBookings = lazy(() => import("@/pages/partner/PackageBookings"));
+const PartnerMembers = lazy(() => import("@/pages/partner/Members"));
+const PartnerProducts = lazy(() => import("@/pages/partner/PartnerProducts"));
+const PartnerSettings = lazy(() => import("@/pages/partner/Settings"));
+const PartnerTeam = lazy(() => import("@/pages/partner/Team"));
 import VendorLogin from "@/pages/vendor/Login";
-import VendorDashboard from "@/pages/vendor/Dashboard";
+const VendorDashboard = lazy(() => import("@/pages/vendor/Dashboard"));
 import AgencyLogin from "@/pages/agency/Login";
-import { StaffMemberJourney, PartnerMemberJourney, AgencyMemberJourney } from "@/pages/MemberJourney";
-import AgencyDashboard from "@/pages/agency/Dashboard";
-import VendorProducts from "@/pages/vendor/Products";
-import VendorOrders from "@/pages/vendor/Orders";
-import VendorSettings from "@/pages/vendor/Settings";
+const StaffMemberJourney = lazy(() => import("@/pages/MemberJourney").then(m => ({ default: m.StaffMemberJourney })));
+const PartnerMemberJourney = lazy(() => import("@/pages/MemberJourney").then(m => ({ default: m.PartnerMemberJourney })));
+const AgencyMemberJourney = lazy(() => import("@/pages/MemberJourney").then(m => ({ default: m.AgencyMemberJourney })));
+const AgencyDashboard = lazy(() => import("@/pages/agency/Dashboard"));
+const VendorProducts = lazy(() => import("@/pages/vendor/Products"));
+const VendorOrders = lazy(() => import("@/pages/vendor/Orders"));
+const VendorSettings = lazy(() => import("@/pages/vendor/Settings"));
 import Blog from "@/pages/Blog";
 import BlogDetail from "@/pages/BlogDetail";
 import InfoPage from "@/pages/InfoPage";
+import Download from "@/pages/Download";
 import Store from "@/pages/Store";
 import StoreDetail from "@/pages/StoreDetail";
 import BeAMember from "@/pages/BeAMember";
 import BookGxClass from "@/pages/BookGxClass";
 import Cart from "@/pages/Cart";
 import Checkout from "@/pages/Checkout";
-import AdminDashboard from "@/pages/admin/Dashboard";
-import AdminPartners from "@/pages/admin/Partners";
-import AdminPartnerOnboarding from "@/pages/admin/PartnerOnboarding";
-import AdminResetPartnerPassword from "@/pages/admin/ResetPartnerPassword";
-import AdminGymManagement from "@/pages/admin/GymManagement";
-import AdminFeaturedGyms from "@/pages/admin/FeaturedGyms";
-import AdminGymVerification from "@/pages/admin/GymVerification";
-import AdminAmenityCatalog from "@/pages/admin/AmenityCatalog";
-import AdminCityAreaManagement from "@/pages/admin/CityAreaManagement";
-import AdminWorkoutCatalog from "@/pages/admin/WorkoutCatalog";
-import AdminUsers from "@/pages/admin/Users";
-import AdminUserManagement from "@/pages/admin/UserManagement";
-import AdminMemberships from "@/pages/admin/Memberships";
-import AdminMembershipManagement from "@/pages/admin/MembershipManagement";
-import AdminAnnualPlans from "@/pages/admin/AnnualPlans";
-import AdminProducts from "@/pages/admin/Products";
-import AdminCategories from "@/pages/admin/Categories";
-import AdminOrders from "@/pages/admin/Orders";
-import AdminVendors from "@/pages/admin/Vendors";
+const AdminDashboard = lazy(() => import("@/pages/admin/Dashboard"));
+const AdminPartners = lazy(() => import("@/pages/admin/Partners"));
+const AdminPartnerOnboarding = lazy(() => import("@/pages/admin/PartnerOnboarding"));
+const AdminResetPartnerPassword = lazy(() => import("@/pages/admin/ResetPartnerPassword"));
+const AdminGymManagement = lazy(() => import("@/pages/admin/GymManagement"));
+const AdminFeaturedGyms = lazy(() => import("@/pages/admin/FeaturedGyms"));
+const AdminGymVerification = lazy(() => import("@/pages/admin/GymVerification"));
+const AdminAmenityCatalog = lazy(() => import("@/pages/admin/AmenityCatalog"));
+const AdminCityAreaManagement = lazy(() => import("@/pages/admin/CityAreaManagement"));
+const AdminWorkoutCatalog = lazy(() => import("@/pages/admin/WorkoutCatalog"));
+const AdminUsers = lazy(() => import("@/pages/admin/Users"));
+const AdminUserManagement = lazy(() => import("@/pages/admin/UserManagement"));
+const AdminMemberships = lazy(() => import("@/pages/admin/Memberships"));
+const AdminMembershipManagement = lazy(() => import("@/pages/admin/MembershipManagement"));
+const AdminAnnualPlans = lazy(() => import("@/pages/admin/AnnualPlans"));
+const AdminProducts = lazy(() => import("@/pages/admin/Products"));
+const AdminCategories = lazy(() => import("@/pages/admin/Categories"));
+const AdminOrders = lazy(() => import("@/pages/admin/Orders"));
+const AdminVendors = lazy(() => import("@/pages/admin/Vendors"));
 import AdminSsoCallback from "@/pages/admin/SsoCallback";
-import AdminStaffManagement from "@/pages/admin/StaffManagement";
-import AdminTeam from "@/pages/admin/AdminUsers";
-import AdminAgencies from "@/pages/admin/Agencies";
-import AdminReferrals from "@/pages/admin/Referrals";
-import AdminTrainerBookings from "@/pages/admin/TrainerBookings";
-import AdminPackageBookings from "@/pages/admin/PackageBookings";
-import AdminYoactivMembers from "@/pages/admin/YoactivMembers";
-import AdminYoactivPlans from "@/pages/admin/YoactivPlans";
-import AdminHomeSlides from "@/pages/admin/HomeSlides";
-import AdminFaqs from "@/pages/admin/Faqs";
-import AdminReviews from "@/pages/admin/Reviews";
-import AdminTrainerProfiles from "@/pages/admin/TrainerProfiles";
-import AdminCoupons from "@/pages/admin/Coupons";
-import AdminNotifications from "@/pages/admin/Notifications";
-import AdminLeads from "@/pages/admin/Leads";
-import AdminBlogManagement from "@/pages/admin/BlogManagement";
-import AdminPtManager from "@/pages/admin/PtManager";
-import AdminMemberEngagement from "@/pages/admin/MemberEngagement";
-import AdminMessagingSettings from "@/pages/admin/MessagingSettings";
-import AdminCommunity from "@/pages/admin/Community";
+const AdminStaffManagement = lazy(() => import("@/pages/admin/StaffManagement"));
+const AdminTeam = lazy(() => import("@/pages/admin/AdminUsers"));
+const AdminAgencies = lazy(() => import("@/pages/admin/Agencies"));
+const AdminReferrals = lazy(() => import("@/pages/admin/Referrals"));
+const AdminTrainerBookings = lazy(() => import("@/pages/admin/TrainerBookings"));
+const AdminPackageBookings = lazy(() => import("@/pages/admin/PackageBookings"));
+const AdminYoactivMembers = lazy(() => import("@/pages/admin/YoactivMembers"));
+const AdminYoactivPlans = lazy(() => import("@/pages/admin/YoactivPlans"));
+const AdminHomeSlides = lazy(() => import("@/pages/admin/HomeSlides"));
+const AdminFaqs = lazy(() => import("@/pages/admin/Faqs"));
+const AdminReviews = lazy(() => import("@/pages/admin/Reviews"));
+const AdminTrainerProfiles = lazy(() => import("@/pages/admin/TrainerProfiles"));
+const AdminCoachCategories = lazy(() => import("@/pages/admin/CoachCategories"));
+const AdminNetworkCoach = lazy(() => import("@/pages/admin/NetworkCoach"));
+const AdminOnlineBilling = lazy(() => import("@/pages/admin/OnlineBilling"));
+const PartnerOnlineBilling = lazy(() => import("@/pages/partner/OnlineBilling"));
+const AdminCoupons = lazy(() => import("@/pages/admin/Coupons"));
+const AdminNotifications = lazy(() => import("@/pages/admin/Notifications"));
+const AdminLeads = lazy(() => import("@/pages/admin/Leads"));
+const AdminBlogManagement = lazy(() => import("@/pages/admin/BlogManagement"));
+const AdminPtManager = lazy(() => import("@/pages/admin/PtManager"));
+const AdminMemberEngagement = lazy(() => import("@/pages/admin/MemberEngagement"));
+const AdminMessagingSettings = lazy(() => import("@/pages/admin/MessagingSettings"));
+const AdminCommunity = lazy(() => import("@/pages/admin/Community"));
 import StaffLogin from "@/pages/staff/Login";
-import StaffDashboard from "@/pages/staff/Dashboard";
-import StaffPartnerOnboarding from "@/pages/staff/PartnerOnboarding";
-import StaffPartners from "@/pages/staff/Partners";
-import StaffPartnerDocuments from "@/pages/staff/PartnerDocuments";
-import StaffResetPartnerPassword from "@/pages/staff/ResetPartnerPassword";
-import StaffGymManagement from "@/pages/staff/GymManagement";
-import StaffLeads from "@/pages/staff/Leads";
-import StaffBlogManagement from "@/pages/staff/BlogManagement";
-import StaffPtDashboard from "@/pages/staff/PtDashboard";
+const StaffDashboard = lazy(() => import("@/pages/staff/Dashboard"));
+const StaffPartnerOnboarding = lazy(() => import("@/pages/staff/PartnerOnboarding"));
+const StaffPartners = lazy(() => import("@/pages/staff/Partners"));
+const StaffPartnerDocuments = lazy(() => import("@/pages/staff/PartnerDocuments"));
+const StaffResetPartnerPassword = lazy(() => import("@/pages/staff/ResetPartnerPassword"));
+const StaffGymManagement = lazy(() => import("@/pages/staff/GymManagement"));
+const StaffLeads = lazy(() => import("@/pages/staff/Leads"));
+const StaffBlogManagement = lazy(() => import("@/pages/staff/BlogManagement"));
+const StaffPtDashboard = lazy(() => import("@/pages/staff/PtDashboard"));
 import Support from "@/pages/Support";
-import AdminTickets from "@/pages/admin/Tickets";
-import StaffTickets from "@/pages/staff/Tickets";
-import PartnerTickets from "@/pages/partner/Tickets";
-import PartnerComplaints from "@/pages/partner/Complaints";
-import PartnerAttendanceQr from "@/pages/partner/AttendanceQr";
-import AdminComplaints from "@/pages/admin/Complaints";
+const AdminTickets = lazy(() => import("@/pages/admin/Tickets"));
+const StaffTickets = lazy(() => import("@/pages/staff/Tickets"));
+const PartnerTickets = lazy(() => import("@/pages/partner/Tickets"));
+const PartnerComplaints = lazy(() => import("@/pages/partner/Complaints"));
+const PartnerAttendanceQr = lazy(() => import("@/pages/partner/AttendanceQr"));
+const AdminComplaints = lazy(() => import("@/pages/admin/Complaints"));
 
 const queryClient = new QueryClient();
 
@@ -226,6 +233,7 @@ const PUBLIC_ROUTES = [
   "/privacy",
   "/terms",
   "/cookies",
+  "/download",
 ];
 
 function isPublicPath(path: string) {
@@ -289,6 +297,7 @@ function MemberShellRoutes() {
         <Route path="/refund" component={() => <InfoPage slug="refund" />} />
         <Route path="/privacy" component={() => <InfoPage slug="privacy" />} />
         <Route path="/terms" component={() => <InfoPage slug="terms" />} />
+        <Route path="/download" component={Download} />
         <Route path="/cookies" component={() => <InfoPage slug="cookies" />} />
         <Route component={NotFound} />
       </Switch>
@@ -346,6 +355,7 @@ function AppShell() {
         <Route path="/partner/leads" component={PartnerLeads} />
         <Route path="/partner/trainer-bookings" component={PartnerTrainerBookings} />
         <Route path="/partner/package-bookings" component={PartnerPackageBookings} />
+        <Route path="/partner/online-billing" component={PartnerOnlineBilling} />
         <Route path="/partner/products" component={PartnerProducts} />
         <Route path="/partner/staff" component={PartnerTeam} />
         <Route path="/partner/tickets" component={PartnerTickets} />
@@ -410,6 +420,9 @@ function AppShell() {
         <Route path="/admin/faqs" component={AdminFaqs} />
         <Route path="/admin/reviews" component={AdminReviews} />
         <Route path="/admin/trainer-profiles" component={AdminTrainerProfiles} />
+        <Route path="/admin/coach-categories" component={AdminCoachCategories} />
+        <Route path="/admin/network-coach" component={AdminNetworkCoach} />
+        <Route path="/admin/online-billing" component={AdminOnlineBilling} />
         <Route path="/admin/coupons" component={AdminCoupons} />
         <Route path="/admin/blogs" component={AdminBlogManagement} />
         <Route path="/admin/pt" component={AdminPtManager} />
@@ -503,7 +516,9 @@ function App() {
           <WouterRouter base={basePath}>
             <ScrollToTop />
             <ClerkRouterBridge>
-              <AppShell />
+              <Suspense fallback={<div role="status" className="flex min-h-[50vh] items-center justify-center text-muted-foreground">Loading…</div>}>
+                <AppShell />
+              </Suspense>
             </ClerkRouterBridge>
           </WouterRouter>
           <Toaster />

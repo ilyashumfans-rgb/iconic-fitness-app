@@ -174,15 +174,15 @@ export default function Profile() {
             </div>
             <div className="flex flex-col sm:flex-row gap-6 items-start">
               <div className="h-20 w-20 rounded-full bg-secondary overflow-hidden shrink-0">
-                {membership.photoUrl ? (
+                {user.avatarUrl ? (
                   <img
-                    src={membership.photoUrl}
+                    src={user.avatarUrl}
                     alt={user.name}
                     className="h-full w-full object-cover"
                   />
-                ) : user.avatarUrl ? (
+                ) : membership.photoUrl ? (
                   <img
-                    src={user.avatarUrl}
+                    src={membership.photoUrl}
                     alt={user.name}
                     className="h-full w-full object-cover"
                   />

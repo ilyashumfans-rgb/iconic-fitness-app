@@ -27,6 +27,7 @@ declare module "express-session" {
     staffEmail?: string;
     staffName?: string;
     staffPermissions?: string[];
+    networkCoachPushToken?: string;
   }
 }
 

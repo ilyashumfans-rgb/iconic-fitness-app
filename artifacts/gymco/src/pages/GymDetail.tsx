@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { RatingDisplay, RatingStars } from "@/components/RatingDisplay";
 import { useForm } from "react-hook-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@clerk/react";
@@ -19,7 +20,6 @@ import { Label } from "@/components/ui/label";
 import * as LucideIcons from "lucide-react";
 import {
   MapPin,
-  Star,
   Clock,
   Info,
   Calendar,
@@ -131,7 +131,7 @@ function BranchRatingBadge({ gymId }: { gymId: number }) {
     staleTime: 30_000,
   });
   return <span data-testid="text-gym-real-rating" className="inline-flex items-center">
-    {data?.averageRating != null ? <><Star className="h-3 w-3 mr-1 text-yellow-400 fill-current" />{data.averageRating.toFixed(1)} ({data.reviewCount})</> : "No ratings yet"}
+    {data?.averageRating != null ? <a href="#branch-reviews-heading" className="hover:underline"><RatingDisplay rating={data.averageRating} count={data.reviewCount} size="xs" /></a> : "No ratings yet"}
   </span>;
 }
 
@@ -207,7 +207,7 @@ function BranchReviews({ gymId }: { gymId: number }) {
     <div>
       <h2 id="branch-reviews-heading" className="text-xl font-bold">Branch reviews</h2>
       {reviews.data && <p data-testid="text-branch-rating" className="mt-1 text-sm text-muted-foreground">
-        {reviews.data.averageRating === null ? "No genuine ratings yet" : <><Star aria-hidden className="inline h-4 w-4 fill-amber-500 text-amber-500" /> {reviews.data.averageRating.toFixed(1)} / 5 · {reviews.data.reviewCount} genuine {reviews.data.reviewCount === 1 ? "rating" : "ratings"}</>}
+        {reviews.data.averageRating === null ? "No genuine ratings yet" : <RatingDisplay rating={reviews.data.averageRating} count={reviews.data.reviewCount} size="md" className="text-foreground align-middle" />}
         {" "}· Illustrative samples are not counted.
       </p>}
     </div>
@@ -221,7 +221,7 @@ function BranchReviews({ gymId }: { gymId: number }) {
               {review.isSample && <Badge variant="secondary">Illustrative sample · not customer feedback</Badge>}
               <span className="text-xs text-muted-foreground">{review.branchName}</span>
             </div>
-            <div aria-label={`${review.rating} out of 5 stars`} className="flex gap-0.5 my-2 text-amber-500">{[1, 2, 3, 4, 5].map((star) => <Star key={star} aria-hidden className={`h-4 w-4 ${star <= review.rating ? "fill-current" : ""}`} />)}</div>
+            <div aria-label={`${review.rating} out of 5 stars`} className="my-2"><RatingStars rating={review.rating} starClassName="h-4 w-4" /></div>
             <p className="whitespace-pre-wrap break-words text-sm">{review.reviewText}</p>
             <time className="mt-2 block text-xs text-muted-foreground" dateTime={review.createdAt}>{new Date(review.createdAt).toLocaleDateString()}</time>
           </CardContent>

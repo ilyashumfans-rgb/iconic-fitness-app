@@ -217,7 +217,7 @@ export default function CityAreaManagement() {
                       }`}
                     >
                       <Star
-                        className={`h-4 w-4 ${c.isDefault ? "fill-green-400" : ""}`}
+                        className={`h-4 w-4 text-[#FABB05] ${c.isDefault ? "fill-[#FABB05]" : ""}`}
                       />
                     </button>
                     <label className="flex items-center gap-2 text-xs text-slate-300">

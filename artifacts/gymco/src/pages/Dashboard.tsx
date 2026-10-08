@@ -1,7 +1,8 @@
 import { useGetDashboard, getGetDashboardQueryKey, useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
+import { RatingDisplay } from "@/components/RatingDisplay";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
-import { MapPin, ChevronRight, Clock, Star } from "lucide-react";
+import { MapPin, ChevronRight, Clock } from "lucide-react";
 import { Link } from "wouter";
 import { BlogTeaserSection } from "@/components/BlogTeaserSection";
 import { WowHeroSlider } from "@/components/WowHeroSlider";
@@ -93,10 +94,7 @@ export default function Dashboard() {
                       </div>
                       <h3 className="font-bold text-lg leading-tight">{g.name}</h3>
                       <div className="flex items-center gap-3 text-sm opacity-90 mt-1">
-                        <span className="inline-flex items-center gap-1">
-                          <Star className="h-3.5 w-3.5 fill-green-400 text-green-400" />
-                          {g.rating?.toFixed?.(1) ?? g.rating}
-                        </span>
+                        <RatingDisplay rating={Number(g.rating)} count={g.reviewsCount} size="xs" />
                       </div>
                     </div>
                   </div>

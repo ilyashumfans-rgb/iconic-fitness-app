@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { RatingDisplay } from "@/components/RatingDisplay";
 import { Link } from "wouter";
 import {
   useListGyms,
@@ -8,7 +9,6 @@ import { locationsApi, type City } from "@/lib/locationsApi";
 import { useUserLocation } from "@/hooks/use-user-location";
 import {
   MapPin,
-  Star,
   Navigation,
   Loader2,
   Search,
@@ -303,9 +303,8 @@ export default function NearbyGyms({
                       />
                     </div>
                   ) : null}
-                  <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 text-[11px] font-bold text-green-700 shadow">
-                    <Star className="h-3 w-3 fill-green-500 text-green-500" />
-                    {g.rating.toFixed(1)}
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/95 text-[11px] text-slate-900 shadow">
+                    <RatingDisplay rating={g.rating} count={g.reviewsCount} size="xs" />
                   </div>
                   {coords && (
                     <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-lime-500 text-white text-[11px] font-bold shadow">

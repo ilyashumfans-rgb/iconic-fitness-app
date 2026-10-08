@@ -7,6 +7,7 @@ import { ActivityIndicator, AppState, Pressable, StyleSheet, View } from "react-
 
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
+import { RatingStars } from "@/components/RatingDisplay";
 import { SectionHeader } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
 
@@ -102,14 +103,7 @@ export function ReviewSection() {
                 accessibilityLabel={`${review.isSample ? "Sample rating" : "Rating"}: ${review.rating} out of 5 stars`}
                 style={styles.stars}
               >
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Ionicons
-                    key={star}
-                    name={star <= review.rating ? "star" : "star-outline"}
-                    size={16}
-                    color={colors.foreground}
-                  />
-                ))}
+                <RatingStars rating={review.rating} size={16} gap={2} />
               </View>
               <AppText size={14}>{review.reviewText}</AppText>
             </Card>

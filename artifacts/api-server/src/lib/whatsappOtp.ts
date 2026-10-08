@@ -66,7 +66,9 @@ export type OtpDependencies = {
   secret: string;
   send: (phone: string, code: string) => Promise<void>;
   identity: (id: string) => Promise<OtpIdentity>;
+  provision: (phone: string) => Promise<OtpIdentity>;
   ticket: (id: string) => Promise<string>;
+  signupBonus: (userId: number) => Promise<void>;
 };
 type Member = { id: number; clerk_user_id: string | null; mobile: string; email: string };
 type PhoneLink = { phone: string; user_id: number; clerk_user_id: string };
@@ -117,6 +119,11 @@ export class WhatsappOtpService {
     const persisted = await tx.query<PhoneLink>("SELECT phone,user_id,clerk_user_id FROM whatsapp_phone_links WHERE phone=$1", [phone]);
     const link = persisted.rows[0];
     if (!link || link.user_id !== member.id || link.clerk_user_id !== clerkId) throw conflict();
+  }
+  private async optionalSetup(tx: PoolClient, userId: number) {
+    // Only the gate changes. No guessed measurements, progress reset, or
+    // fabricated completion (including for existing required setup rows).
+    await tx.query("UPDATE fitness_setup SET required_for_onboarding=false WHERE user_id=$1 AND required_for_onboarding=true", [userId]);
   }
   async request(mobile: string, ip: string) {
     const phone = normalizeOtpPhone(mobile);
@@ -175,7 +182,7 @@ export class WhatsappOtpService {
       return challenge.phone as string;
     });
     if (!phone) throw invalid();
-    return this.tx(async (tx) => {
+    const resolved = await this.tx(async (tx) => {
       await this.lock(tx, `phone:${phone}`);
       const newer = await tx.query(`SELECT 1 FROM whatsapp_otp_challenges WHERE phone=$1 AND created_at>
         (SELECT created_at FROM whatsapp_otp_challenges WHERE id=$2) LIMIT 1`, [phone, id]);
@@ -188,8 +195,8 @@ export class WhatsappOtpService {
         const identity = await this.deps.identity(canonical.clerk_user_id);
         if (identity.id !== canonical.clerk_user_id) throw conflict();
         this.assertEnabledIdentity(identity);
-        const ticket = await this.deps.ticket(identity.id);
-        return { ticket, isNewUser: false as const };
+        await this.optionalSetup(tx, member.id);
+        return { clerkId: identity.id, userId: member.id, inserted: false };
       }
       if (members.length === 1) {
         const member = members[0]!;
@@ -198,9 +205,35 @@ export class WhatsappOtpService {
           if (identity.id !== member.clerk_user_id) throw conflict();
           this.assertEnabledIdentity(identity);
           await this.link(tx, phone, member, identity.id);
-          const ticket = await this.deps.ticket(identity.id);
-          return { ticket, isNewUser: false as const };
+          await this.optionalSetup(tx, member.id);
+          return { clerkId: identity.id, userId: member.id, inserted: false };
         }
+      }
+      if (members.length === 0) {
+        const identity = await this.deps.provision(phone);
+        this.assertEnabledIdentity(identity);
+        // Match JIT's member lock. Only private-provenance-validated Clerk
+        // identities can enter this branch; usernames/emails are never matched.
+        await tx.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [`member:${identity.id}`]);
+        const existing = await tx.query<Member>("SELECT id,clerk_user_id,mobile,email FROM users WHERE clerk_user_id=$1 FOR UPDATE", [identity.id]);
+        let member = existing.rows[0];
+        let inserted = false;
+        if (member) {
+          if (member.mobile.trim() && normalizeOtpPhone(member.mobile) !== phone) throw conflict();
+          await tx.query("UPDATE users SET mobile=$1 WHERE id=$2 AND btrim(mobile)=''", [phone.slice(2), member.id]);
+          await this.optionalSetup(tx, member.id);
+        } else {
+          const created = await tx.query<Member>(`INSERT INTO users
+            (clerk_user_id,name,email,mobile,gender,age,height_cm,weight_kg,fitness_goal,avatar_url,city,member_code)
+            VALUES($1,'Member','',$2,'prefer_not_to_say',NULL,NULL,NULL,NULL,$3,'Bengaluru',$4)
+            RETURNING id,clerk_user_id,mobile,email`,
+          [identity.id, phone.slice(2), identity.avatarUrl, `GYM-${randomBytes(6).toString("hex").toUpperCase()}`]);
+          member = created.rows[0]!;
+          await tx.query("INSERT INTO fitness_setup(user_id,required_for_onboarding,current_step) VALUES($1,false,1)", [member.id]);
+          inserted = true;
+        }
+        await this.link(tx, phone, member, identity.id);
+        return { clerkId: identity.id, userId: member.id, inserted };
       }
       const continuationToken = randomBytes(32).toString("hex");
       await tx.query(`INSERT INTO whatsapp_otp_continuations(token_hash,phone,created_at,expires_at)
@@ -209,9 +242,16 @@ export class WhatsappOtpService {
         continuationToken,
         isNewUser: true as const,
         requiresEmailVerification: true as const,
-        ...(members.length ? { requiresAccountSignIn: true as const } : {}),
+        requiresAccountSignIn: true as const,
       };
     });
+    if ("continuationToken" in resolved) return resolved;
+    // Commit the member, optional setup and persistent privileged-bridge gate
+    // before issuing a ticket. Ticket failures never undo identity ownership,
+    // and a fresh OTP safely retries against the canonical link.
+    if (resolved.inserted) await this.deps.signupBonus(resolved.userId);
+    const ticket = await this.deps.ticket(resolved.clerkId);
+    return { ticket, isNewUser: false as const };
   }
   async complete(token: string, clerkId: string) {
     const identity = await this.deps.identity(clerkId);
@@ -271,6 +311,7 @@ export class WhatsappOtpService {
         await tx.query("UPDATE users SET mobile=$1 WHERE id=$2 AND btrim(mobile)=''", [phone.slice(2), member.id]);
       }
       await this.link(tx, phone, member, clerkId);
+      if (!inserted) await this.optionalSetup(tx, member.id);
       await tx.query("UPDATE whatsapp_otp_continuations SET consumed_at=clock_timestamp() WHERE token_hash=$1", [hash]);
       return { isNewUser: inserted, userId: member.id };
     });

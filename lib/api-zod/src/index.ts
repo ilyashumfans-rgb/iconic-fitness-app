@@ -5,3 +5,4 @@ export * from "./generated/types";
 // Zod schema, so re-export that one explicitly to resolve the ambiguity.
 export { GetPackageBookingParams, ApplyReferralCodeBody, StoreCheckoutResponse, SetNotificationSoundBody } from "./generated/api";
 export { EnrollMemberJourneyBody, SubmitMyMemberJourneyFeedbackBody } from "./generated/api";
+export { GetAdminTrainerCategoriesParams, ListCoachCategoryTrainersParams, UpdateAdminTrainerCategoriesParams } from "./generated/api";

@@ -7,6 +7,7 @@ import { Alert, Image, View } from "react-native";
 import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
+import { RatingDisplay } from "@/components/RatingDisplay";
 import { Field } from "@/components/Field";
 import { ModalHeader } from "@/components/ModalHeader";
 import { Screen } from "@/components/Screen";
@@ -145,14 +146,7 @@ export default function TrainerDetailScreen() {
                 marginTop: 8,
               }}
             >
-              <View
-                style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
-              >
-                <Feather name="star" size={14} color={colors.primary} />
-                <AppText size={14} weight="600">
-                  {trainer.rating.toFixed(1)}
-                </AppText>
-              </View>
+              <RatingDisplay rating={trainer.rating} size={14} />
               <AppText muted size={13}>
                 {trainer.sessionsCount} sessions
               </AppText>

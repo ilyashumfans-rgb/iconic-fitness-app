@@ -1,4 +1,5 @@
 import { useAuth } from "@clerk/expo";
+import { safeInternalLink } from "@/lib/safeLink";
 import { Feather } from "@expo/vector-icons";
 import {
   getListMyNotificationsQueryKey,
@@ -7,9 +8,9 @@ import {
   type Notification as AppNotification,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Redirect } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
@@ -101,8 +102,16 @@ export default function NotificationsScreen() {
 
 function NotificationRow({ notification }: { notification: AppNotification }) {
   const colors = useColors();
+  const router = useRouter();
   const unread = !notification.readAt;
+  // Only in-app routes are followed (e.g. renewal reminders).
+  const link = safeInternalLink(notification.link) ?? "";
   return (
+    <Pressable
+      disabled={!link}
+      accessibilityRole={link ? "link" : undefined}
+      onPress={() => link && router.push(link as never)}
+    >
     <Card>
       <View style={{ flexDirection: "row", gap: 12 }}>
         <View
@@ -150,5 +159,6 @@ function NotificationRow({ notification }: { notification: AppNotification }) {
         </View>
       </View>
     </Card>
+    </Pressable>
   );
 }

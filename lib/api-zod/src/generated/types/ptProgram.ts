@@ -5,6 +5,9 @@
  * GYMCO customer API — multi-gym memberships, classes, bookings, check-ins, and fitness tracking.
  * OpenAPI spec version: 0.1.0
  */
+import type { PtProgramExternalPlan } from './ptProgramExternalPlan';
+import type { PtProgramExternalPlanSource } from './ptProgramExternalPlanSource';
+import type { PtProgramPendingPurchase } from './ptProgramPendingPurchase';
 import type { PtProgramPlan } from './ptProgramPlan';
 import type { PtSession } from './ptSession';
 
@@ -17,6 +20,12 @@ export interface PtProgram {
   hasPaidPlan?: boolean;
   /** The caller's paid PT plan — present only after the plan payment landed */
   plan?: PtProgramPlan;
+  /** Newest paid in-app PT purchase not yet converted into a paid plan. Validity is NOT known yet; requestedStartDate is the member's requested date, not an authoritative start. */
+  pendingPurchase?: PtProgramPendingPurchase;
+  /** PT membership from the gym-management system, only from an explicitly mapped dedicated PT-sales branch with a PT-classified name */
+  externalPlan?: PtProgramExternalPlan;
+  /** ok = provider checked; unavailable = provider lookup failed (externalPlan unknown); not_configured = no dedicated PT-sales branch or no mobile */
+  externalPlanSource?: PtProgramExternalPlanSource;
   /** Branch of the current PT enrolment (for booking a paid plan) */
   gymId?: number | null;
   trainerName: string;

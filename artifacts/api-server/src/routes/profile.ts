@@ -3,6 +3,7 @@ import { and, eq, gte, sql } from "drizzle-orm";
 import { db, usersTable, bookingsTable, classSessionsTable, gymsTable, uploadedImagesTable, whatsappPhoneLinksTable } from "@workspace/db";
 import { GetMeResponse, UpdateMeBody, UpdateMeResponse } from "@workspace/api-zod";
 import { requireUser } from "../lib/currentUser";
+import { canSaveMemberPhoto } from "../lib/memberPhotoPolicy";
 import { computeHealthMetrics } from "../lib/healthMetrics";
 import { sendMemberWelcome } from "../lib/messaging";
 import { isNewOtpPhoneAssignment, normalizeOtpPhone, OtpError } from "../lib/whatsappOtp";
@@ -155,8 +156,11 @@ router.patch("/me", requireUser, async (req, res): Promise<void> => {
       if (requestedPhone) {
         await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${"whatsapp:phone:" + requestedPhone}, 0))`);
       }
-      const [lockedUser] = await tx.select({ id: usersTable.id, mobile: usersTable.mobile })
+      const [lockedUser] = await tx.select({ id: usersTable.id, mobile: usersTable.mobile, avatarUrl: usersTable.avatarUrl })
         .from(usersTable).where(eq(usersTable.id, req.userId!)).for("update");
+      if (lockedUser && !canSaveMemberPhoto(lockedUser.avatarUrl, avatarUrl)) {
+        throw new OtpError(409, "Your face photo has already been saved and cannot be changed or removed.");
+      }
       if (parsed.data.mobile !== undefined) {
         const phone = requestedPhone;
         const [link] = await tx.select().from(whatsappPhoneLinksTable).where(eq(whatsappPhoneLinksTable.userId, req.userId!));

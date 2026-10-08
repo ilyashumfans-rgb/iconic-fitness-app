@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { RatingDisplay } from "@/components/RatingDisplay";
 import { useListTrainers, getListTrainersQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Star, MapPin } from "lucide-react";
+import { Search, MapPin } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Trainers() {
@@ -57,9 +58,9 @@ export default function Trainers() {
                     <MapPin className="h-4 w-4 mr-1 text-foreground/50" />
                     {trainer.city}
                   </div>
-                  <div className="flex items-center font-bold text-foreground">
-                    <Star className="h-4 w-4 mr-1 text-yellow-400 fill-current" />
-                    {trainer.rating} <span className="text-muted-foreground font-normal ml-1">({trainer.sessionsCount})</span>
+                  <div className="flex items-center gap-2 text-foreground">
+                    <RatingDisplay rating={trainer.rating} />
+                    <span className="text-muted-foreground font-normal text-xs">· {trainer.sessionsCount} sessions</span>
                   </div>
                 </div>
                 <div className="pt-4 border-t border-border flex justify-between items-end">

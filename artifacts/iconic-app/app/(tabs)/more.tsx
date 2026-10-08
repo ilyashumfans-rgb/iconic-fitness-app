@@ -1,4 +1,5 @@
 import { useAuth, useClerk } from "@clerk/expo";
+import { releasePushOnSignOut } from "@/lib/pushRegistration";
 import { Feather } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -131,6 +132,9 @@ export default function MoreScreen() {
 
   const doSignOut = async () => {
     try {
+      // Release this device's push token first so a shared phone never
+      // receives the previous member's alerts.
+      await releasePushOnSignOut();
       await signOut();
     } finally {
       exitGuest();
@@ -169,7 +173,7 @@ export default function MoreScreen() {
   const initials = profileName.split(/\s+/).map((w) => w[0] ?? "").join("").slice(0, 2).toUpperCase();
 
   const coreLinks: MoreLink[] = [
-    { title: "My fitness journey", icon: "activity", action: () => router.push("/fitness-journey"), hideGuest: true },
+    { title: "Kickstart · My fitness journey", icon: "activity", action: () => router.push("/fitness-journey"), hideGuest: true },
     { title: "Connect watch", icon: "watch", action: () => router.push("/connect-watch") },
     { title: "Attendance", icon: "calendar", action: () => router.push("/attendance") },
     { title: "Scan gym QR", icon: "maximize", action: () => router.push("/check-in") },

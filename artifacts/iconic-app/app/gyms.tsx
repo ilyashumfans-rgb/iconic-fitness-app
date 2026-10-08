@@ -22,6 +22,7 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { AppText } from "@/components/AppText";
 import { Card } from "@/components/Card";
 import { Screen } from "@/components/Screen";
+import { RatingDisplay } from "@/components/RatingDisplay";
 import { LoadingView } from "@/components/ui-bits";
 import { useColors } from "@/hooks/useColors";
 import { useUserLocation } from "@/hooks/useUserLocation";
@@ -107,10 +108,18 @@ function BranchCard({ gym, index, near }: { gym: Gym; index: number; near: boole
 
         <View style={styles.body}>
           <View style={styles.metaRow}>
-            <Feather name="star" size={13} color={colors.primary} />
-            <AppText weight="700" size={13}>
-              {gym.rating.toFixed(1)}
-            </AppText>
+            <Pressable
+              accessibilityRole="link"
+              accessibilityLabel={`Reviews for ${gym.name}`}
+              onPress={(e) => {
+                e.stopPropagation();
+                router.push(`/gym/${gym.id}/reviews`);
+              }}
+              hitSlop={6}
+              style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+            >
+              <RatingDisplay rating={gym.rating} count={gym.reviewsCount} />
+            </Pressable>
             {gym.openNow ? (
               <>
                 <View style={[styles.dot, { backgroundColor: colors.success }]} />
@@ -120,22 +129,6 @@ function BranchCard({ gym, index, near }: { gym: Gym; index: number; near: boole
               </>
             ) : null}
             <View style={{ flex: 1 }} />
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Reviews for ${gym.name}`}
-              onPress={(e) => {
-                e.stopPropagation();
-                router.push(`/gym/${gym.id}/reviews`);
-              }}
-              hitSlop={8}
-              style={({ pressed }) => [
-                styles.reviews,
-                { borderColor: colors.border, opacity: pressed ? 0.7 : 1 },
-              ]}
-            >
-              <Feather name="message-circle" size={13} color={colors.foreground} />
-              <AppText weight="700" size={12}>Reviews</AppText>
-            </Pressable>
             <Pressable
               onPress={(e) => {
                 e.stopPropagation();
@@ -364,15 +357,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  reviews: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 10,
     paddingVertical: 6,
   },
 });

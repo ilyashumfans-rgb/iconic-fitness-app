@@ -242,6 +242,7 @@ function StaffHomeContent() {
               { icon: "users", label: "My PT members", href: "/staff-pt/members" },
               { icon: "activity", label: "Member engagement", href: "/staff-pt/engagement" },
               { icon: "clipboard", label: "Fitness assessments", href: "/staff-pt/assessments" },
+              { icon: "video", label: "Online coaching (Network Coach)", href: "/staff-network-coach" },
             ] as const
           ).map((item) => (
             <Pressable

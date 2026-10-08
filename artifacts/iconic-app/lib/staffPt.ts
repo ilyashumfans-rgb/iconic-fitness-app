@@ -7,6 +7,7 @@ import {
   presentLocalNotification,
 } from "@/lib/notifications";
 import { staffFetch } from "@/lib/staffSession";
+import { presentSessionReminder } from "@/lib/sessionReminderAlerts";
 
 /**
  * Trainer workspace API (studio side). All calls ride the staff session
@@ -371,6 +372,7 @@ type StaffNotification = {
   id: number;
   title: string;
   body: string;
+  link?: string;
   createdAt: string;
 };
 
@@ -388,6 +390,9 @@ async function pollOnce(): Promise<void> {
     if (!res.ok) return;
     const rows = (await res.json()) as StaffNotification[];
     if (!Array.isArray(rows) || rows.length === 0) return;
+    // These opt-in alerts must remain visible without native push or OS
+    // permissions, and staff have no separate notification-feed screen.
+    for (const row of rows) await presentSessionReminder(row);
     const maxId = Math.max(...rows.map((r) => r.id));
     const rawSeen = await AsyncStorage.getItem(LAST_SEEN_KEY);
     const seen = rawSeen ? Number(rawSeen) : null;
@@ -402,6 +407,7 @@ async function pollOnce(): Promise<void> {
     await ensureAndroidChannel();
     // Cap the burst so a backlog can't spam the tray.
     for (const n of fresh.slice(0, 3)) {
+      if (n.link?.startsWith("/network-coach/call?")) continue;
       await presentLocalNotification(n.title, n.body, "trainers");
     }
   } catch {

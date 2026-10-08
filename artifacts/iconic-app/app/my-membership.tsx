@@ -3,12 +3,14 @@ import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import {
   getGetMeQueryKey,
   getGetMyMembershipQueryKey,
+  getGetMyRenewalStatusQueryKey,
   useGetMe,
   useGetMyMembership,
+  useGetMyRenewalStatus,
 } from "@workspace/api-client-react";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useRef, useState } from "react";
 import { Image as ExpoImage } from "expo-image";
 import {
   Modal,
@@ -24,6 +26,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/AppText";
 import { MemberMobileVerify } from "@/components/MemberMobileVerify";
 import { MembershipStatusCard } from "@/components/MembershipStatusCard";
+import {
+  MembershipRenewalSection,
+  PtRenewalSection,
+  RenewalSkeleton,
+} from "@/components/RenewalPanel";
 import { Screen } from "@/components/Screen";
 import { ErrorView, LoadingView } from "@/components/ui-bits";
 import { istDateStr, istToday } from "@/lib/dates";
@@ -63,6 +70,16 @@ export default function MyMembershipScreen() {
   const insets = useSafeAreaInsets();
   const [manageOpen, setManageOpen] = useState(false);
   const [freezeOpen, setFreezeOpen] = useState(false);
+  const { section } = useLocalSearchParams<{ section?: string }>();
+  const scrollRef = useRef<ScrollView>(null);
+  const scrolledToRenewal = useRef(false);
+
+  const renewalQuery = useGetMyRenewalStatus({
+    query: {
+      enabled: isLoaded && !!isSignedIn,
+      queryKey: getGetMyRenewalStatusQueryKey(),
+    },
+  });
 
   const myMembershipQuery = useGetMyMembership({
     query: {
@@ -209,10 +226,14 @@ export default function MyMembershipScreen() {
       </View>
 
       <ScrollView
+        ref={scrollRef}
         refreshControl={
           <RefreshControl
             refreshing={myMembershipQuery.isRefetching}
-            onRefresh={() => void myMembershipQuery.refetch()}
+            onRefresh={() => {
+              void myMembershipQuery.refetch();
+              void renewalQuery.refetch();
+            }}
             tintColor={GREEN}
           />
         }
@@ -238,6 +259,48 @@ export default function MyMembershipScreen() {
             isExpired={isExpired}
           />
         )}
+
+        <View
+          onLayout={(e) => {
+            // Reminder notifications deep-link to ?section=renewal.
+            if (section === "renewal" && !scrolledToRenewal.current) {
+              scrolledToRenewal.current = true;
+              const y = e.nativeEvent.layout.y;
+              setTimeout(() => scrollRef.current?.scrollTo({ y: Math.max(0, y - 12), animated: true }), 250);
+            }
+          }}
+          style={{ gap: 16 }}
+        >
+          {renewalQuery.isError ? (
+            <Pressable
+              onPress={() => void renewalQuery.refetch()}
+              accessibilityRole="button"
+              style={styles.renewalError}
+            >
+              <Feather name="alert-circle" size={18} color="#FF9B7A" />
+              <AppText size={13} color={MUTED_WHITE} style={{ flex: 1 }}>
+                Couldn&apos;t load renewal options. Tap to retry.
+              </AppText>
+            </Pressable>
+          ) : !renewalQuery.data ? (
+            <RenewalSkeleton />
+          ) : (
+            <>
+              {renewalQuery.data.membership.source !== "none" ? (
+                <MembershipRenewalSection
+                  info={renewalQuery.data.membership}
+                  milestones={renewalQuery.data.reminderMilestones}
+                  onRefresh={() => void renewalQuery.refetch()}
+                  pushSupported={renewalQuery.data.pushSupported}
+                  pushRegistered={renewalQuery.data.pushRegistered}
+                />
+              ) : null}
+              {renewalQuery.data.pt ? (
+                <PtRenewalSection pt={renewalQuery.data.pt} />
+              ) : null}
+            </>
+          )}
+        </View>
 
         <View style={styles.menuCard}>
           {rows.map((row, index) => (
@@ -580,6 +643,16 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
+  },
+  renewalError: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 16,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: LIST_BORDER,
+    backgroundColor: LIST_BACKGROUND,
   },
   menuCard: {
     width: "100%",

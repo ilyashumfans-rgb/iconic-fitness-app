@@ -7,7 +7,12 @@ import { ensureWhatsappOtpTables } from "./lib/whatsappOtpSchema";
 import { ensureComplaintsSchema } from "./lib/complaintsSchema";
 import { pool } from "@workspace/db";
 import { ensureSchemaAdditions } from "./lib/schemaAdditions";
+import { ensureNetworkCoachSchema } from "./lib/networkCoachSchema";
+import { migrateNetworkPricingOnce } from "./lib/networkCoach";
+import { migrateNetworkCapabilityOnce } from "./lib/coachCategories";
 import { checkSchemaCompatibility } from "./lib/schemaCompatibility";
+import { startRenewalScheduler } from "./lib/renewalStore";
+import { startNetworkCoachReminderScheduler } from "./lib/networkCoachReminders";
 
 const rawPort = process.env["PORT"];
 
@@ -49,11 +54,16 @@ async function main(): Promise<void> {
   }
 
   await ensureSchemaAdditions(pool);
+  await ensureNetworkCoachSchema(pool);
+  await migrateNetworkCapabilityOnce();
+  await migrateNetworkPricingOnce();
   const schemaIssues = await checkSchemaCompatibility(pool);
   if (schemaIssues.length) {
     throw new Error(`Database schema incompatible; refusing API traffic:\n${schemaIssues.join("\n")}`);
   }
 
+  startRenewalScheduler();
+  startNetworkCoachReminderScheduler();
   app.listen(port, (err) => {
     if (err) {
       logger.error({ err }, "Error listening on port");

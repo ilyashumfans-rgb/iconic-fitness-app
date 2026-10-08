@@ -9,10 +9,9 @@ import {
   MapPin,
   Phone,
   ArrowRight,
-  Apple,
-  Smartphone,
 } from "lucide-react";
 import { WhatsAppButton, WhatsAppIcon } from "@/components/WhatsAppButton";
+import { AppStoreButtons } from "@/components/AppStoreButtons";
 import { AiChatWidget } from "@/components/AiChatWidget";
 
 
@@ -23,6 +22,7 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
       { label: "Browse gyms", href: "/explore" },
       { label: "Store", href: "/store" },
       { label: "Memberships", href: "/memberships" },
+      { label: "Download the app", href: "/download" },
       { label: "Iconic Fitness Wallet", href: "/wallet" },
       { label: "Corporate plans", href: "/corporate" },
     ],
@@ -191,32 +191,10 @@ export function SiteFooter() {
             </div>
 
             {/* App store badges */}
-            <div className="mt-6 flex flex-wrap gap-2">
-              <a
-                href="https://apps.apple.com/in/app/iconic-fitness/id6740168035"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-foreground text-background hover:opacity-90 transition-opacity"
-              >
-                <Apple className="h-5 w-5" />
-                <div className="flex flex-col leading-none">
-                  <span className="text-[9px] opacity-80">Download on</span>
-                  <span className="text-sm font-black">App Store</span>
-                </div>
-              </a>
-              <a
-                href="https://play.google.com/store/apps/details?id=com.iconicfitness.member"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-foreground text-background hover:opacity-90 transition-opacity"
-              >
-                <Smartphone className="h-5 w-5" />
-                <div className="flex flex-col leading-none">
-                  <span className="text-[9px] opacity-80">Get it on</span>
-                  <span className="text-sm font-black">Google Play</span>
-                </div>
-              </a>
-            </div>
+            <AppStoreButtons className="mt-6" />
+            <Link href="/download" data-testid="link-footer-download" className="mt-3 inline-block text-xs font-semibold text-primary hover:underline underline-offset-4">
+              Get the app
+            </Link>
           </div>
 
           {/* Link columns */}

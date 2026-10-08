@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { RatingDisplay } from "@/components/RatingDisplay";
 import { Link, useLocation } from "wouter";
 import { AnimatePresence, motion, useInView } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -588,7 +589,7 @@ function Hero() {
             ))}
           </div>
           <div className="text-left">
-            <div className="flex items-center gap-1 text-primary">
+            <div className="flex items-center gap-1 text-[#FABB05]">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star key={i} className="h-4 w-4 fill-current" />
               ))}
@@ -855,9 +856,8 @@ function FeaturedGyms() {
                             {gym.area}, {gym.city}
                           </div>
                         </div>
-                        <div className="flex items-center gap-1 bg-black/50 backdrop-blur px-2 py-1 rounded-full text-white text-xs font-bold">
-                          <Star className="h-3 w-3 fill-primary text-primary" />
-                          {gym.rating.toFixed(1)}
+                        <div className="bg-black/50 backdrop-blur px-2 py-1 rounded-full text-white text-xs">
+                          <RatingDisplay rating={gym.rating} count={gym.reviewsCount} size="xs" />
                         </div>
                       </div>
                     </div>
@@ -1499,7 +1499,7 @@ function GoogleRating() {
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
                     key={i}
-                    className="h-4 w-4 text-amber-400 fill-amber-400"
+                    className="h-4 w-4 text-[#FABB05] fill-[#FABB05]"
                   />
                 ))}
               </div>

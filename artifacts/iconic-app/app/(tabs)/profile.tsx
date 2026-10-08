@@ -1,4 +1,5 @@
 import { useAuth, useClerk, useUser } from "@clerk/expo";
+import { releasePushOnSignOut } from "@/lib/pushRegistration";
 import { Feather } from "@expo/vector-icons";
 import {
   getGetMeQueryKey,
@@ -23,6 +24,7 @@ import { AppText } from "@/components/AppText";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Field } from "@/components/Field";
+import { PtValidityPanel } from "@/components/PtValidityPanel";
 import { ProfilePhotoPicker } from "@/components/ProfilePhotoPicker";
 import { Screen } from "@/components/Screen";
 import { Chip, ChipRow, SectionHeader } from "@/components/ui-bits";
@@ -275,6 +277,9 @@ export default function ProfileScreen() {
 
   const doSignOut = async () => {
     try {
+      // Release this device's push token first so a shared phone never
+      // receives the previous member's alerts.
+      await releasePushOnSignOut();
       await signOut();
     } finally {
       exitGuest();
@@ -490,6 +495,9 @@ export default function ProfileScreen() {
               </>
             )}
           </Card>
+          <View style={{ marginTop: 12 }}>
+            <PtValidityPanel />
+          </View>
 
           {/* Payment / renewal history (from the gym-management system) */}
           {paymentsQuery.data && paymentsQuery.data.length > 0 ? (

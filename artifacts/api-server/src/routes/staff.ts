@@ -13,6 +13,7 @@ import {
 } from "@workspace/db";
 import { hashPassword, verifyPassword } from "../lib/adminAuth";
 import { checkPrivilegedSsoPasswordGate } from "../lib/privilegedSsoPasswordGate";
+import { removePushToken } from "../lib/pushNotifications";
 import {
   STAFF_PERMISSIONS,
   loadStaffOrUnauthorized,
@@ -64,6 +65,10 @@ router.post(
     if (!ok) {
       res.status(401).json({ error: "Invalid credentials" });
       return;
+    }
+    if (req.session.networkCoachPushToken) {
+      await removePushToken(req.session.networkCoachPushToken);
+      delete req.session.networkCoachPushToken;
     }
     req.session.staffId = row.id;
     req.session.staffEmail = row.email;
@@ -144,6 +149,10 @@ router.post(
         .json({ error: "Your staff account has been deactivated." });
       return;
     }
+    if (req.session.networkCoachPushToken) {
+      await removePushToken(req.session.networkCoachPushToken);
+      delete req.session.networkCoachPushToken;
+    }
     req.session.staffId = row.id;
     req.session.staffEmail = row.email;
     req.session.staffName = row.name;
@@ -159,9 +168,13 @@ router.post(
 
 router.post(
   "/staff/logout",
-  (req: Request, res: Response): void => {
+  async (req: Request, res: Response): Promise<void> => {
     // Only clear staff session keys so a shared browser session that's also
     // signed into admin/partner/vendor portals isn't logged out of those.
+    if (req.session.networkCoachPushToken) {
+      await removePushToken(req.session.networkCoachPushToken);
+      delete req.session.networkCoachPushToken;
+    }
     delete req.session.staffId;
     delete req.session.staffEmail;
     delete req.session.staffName;

@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { customFetch, getGetMeQueryKey, useUpdateMe } from "@workspace/api-client-react";
+import { customFetch, getGetMeQueryKey, useGetMe, useUpdateMe } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
@@ -65,6 +65,7 @@ const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
  */
 export function useProfilePhotoUpload() {
   const queryClient = useQueryClient();
+  const meQuery = useGetMe();
   const updateMe = useUpdateMe();
   const [busy, setBusy] = useState(false);
   // Show the fresh photo immediately after upload (before the /me refetch).
@@ -72,6 +73,8 @@ export function useProfilePhotoUpload() {
   // Remember the last picked image if its upload failed, so the member can
   // retry without re-picking the photo (important on flaky gym connections).
   const [failedUri, setFailedUri] = useState<string | null>(null);
+  const locked = !!localUrl || /\/(?:api\/)?storage\/db-images\/[0-9a-f-]{36}(?:$|[?#])/i.test(meQuery.data?.avatarUrl ?? "");
+  const canUpload = meQuery.isSuccess && !locked && !busy;
 
   const UPLOAD_TIMEOUT_MS = 30_000;
 
@@ -79,6 +82,7 @@ export function useProfilePhotoUpload() {
     uri: string,
     dimensions?: { width?: number | null; height?: number | null },
   ) {
+    if (!canUpload) return;
     setBusy(true);
     setFailedUri(null);
     // Abort the upload if it stalls (slow/dead mobile connection) so the
@@ -125,6 +129,7 @@ export function useProfilePhotoUpload() {
   }
 
   async function pickFromGallery() {
+    if (!canUpload) return;
     // Android's system Photo Picker grants access only to the image selected by
     // the user, so broad READ_MEDIA_* permissions are neither needed nor
     // permitted by Google Play for this occasional profile-photo use case.
@@ -141,6 +146,7 @@ export function useProfilePhotoUpload() {
   }
 
   async function takePhoto() {
+    if (!canUpload) return;
     // Camera capture isn't available in web browsers via expo-image-picker;
     // fall back to the file picker there (mobile browsers offer the camera).
     if (Platform.OS === "web") {
@@ -159,11 +165,12 @@ export function useProfilePhotoUpload() {
 
   /** Ask Camera-or-Gallery in one tap (used by tappable avatars). */
   function choosePhoto() {
+    if (!canUpload) return;
     if (Platform.OS === "web") {
       void pickFromGallery();
       return;
     }
-    Alert.alert("Change profile photo", "Where do you want to pick it from?", [
+    Alert.alert("Add your face photo", "This photo is permanent and cannot be changed after saving.", [
       { text: "Camera", onPress: () => void takePhoto() },
       { text: "Gallery", onPress: () => void pickFromGallery() },
       { text: "Cancel", style: "cancel" },
@@ -171,6 +178,8 @@ export function useProfilePhotoUpload() {
   }
 
   return {
+    locked,
+    canUpload,
     busy,
     localUrl,
     failedUri,
@@ -193,6 +202,8 @@ export function ProfilePhotoPicker({
   const colors = useColors();
   const {
     busy,
+    locked,
+    canUpload,
     localUrl,
     failedUri,
     uploadFromUri,
@@ -261,10 +272,13 @@ export function ProfilePhotoPicker({
           </AppText>
         </Pressable>
       ) : null}
+      {locked ? <AppText muted size={12}>Face photo saved. Changes are not allowed.</AppText> : (
+      <>
+      <AppText muted size={12}>Upload once. Your face photo cannot be changed later.</AppText>
       <View style={{ flexDirection: "row", gap: 10 }}>
         <Pressable
           onPress={() => void takePhoto()}
-          disabled={busy}
+          disabled={!canUpload}
           style={{
             flexDirection: "row",
             alignItems: "center",
@@ -285,7 +299,7 @@ export function ProfilePhotoPicker({
         </Pressable>
         <Pressable
           onPress={() => void pickFromGallery()}
-          disabled={busy}
+          disabled={!canUpload}
           style={{
             flexDirection: "row",
             alignItems: "center",
@@ -305,6 +319,8 @@ export function ProfilePhotoPicker({
           </AppText>
         </Pressable>
       </View>
+      </>
+      )}
     </View>
   );
 }

@@ -176,15 +176,11 @@ export function WhatsappOtpForm({ onComplete, onBusyChange }: {
 
   return (
     <View style={styles.form}>
-      <AppText weight="700" size={19}>Login with OTP</AppText>
-      <AppText muted size={13}>
-        Get a login code on WhatsApp. If your number matches more than one account, we’ll help you confirm the right account once.
-      </AppText>
       {challenge ? (
         <>
-          <AppText size={14}>Code sent to {maskMobile(challenge.mobile)}</AppText>
+          <AppText size={13}>Code sent on WhatsApp to <AppText size={13} weight="700">{maskMobile(challenge.mobile)}</AppText></AppText>
           <Field
-            label="6-digit WhatsApp code" accessibilityLabel="6-digit WhatsApp verification code"
+            label="WhatsApp code" accessibilityLabel="6-digit WhatsApp verification code"
             value={code} onChangeText={changeCode}
             placeholder="6-digit code" keyboardType="number-pad" autoComplete="one-time-code"
             textContentType="oneTimeCode" maxLength={6} editable={!busy && remaining > 0}
@@ -193,18 +189,27 @@ export function WhatsappOtpForm({ onComplete, onBusyChange }: {
           <AppText muted size={12}>
             {remaining > 0 ? `Code expires in ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}` : "Code expired. Request a new one."}
           </AppText>
-          <Button label="Verify & continue" onPress={() => void submit()} loading={busy} disabled={busy || remaining === 0 || code.length !== 6} />
-          <Button label={resendIn > 0 ? `Resend code in ${resendIn}s` : "Resend WhatsApp code"} variant="ghost" onPress={() => void send()} disabled={busy || resendIn > 0} />
-          <Button label="Change mobile number" variant="ghost" onPress={changeNumber} disabled={busy} />
+          <Button size="md" label="Verify & continue" onPress={() => void submit()} loading={busy} disabled={busy || remaining === 0 || code.length !== 6} />
+          <Button label={resendIn > 0 ? `Resend in ${resendIn}s` : "Resend code"} variant="secondary" size="sm" onPress={() => void send()} disabled={busy || resendIn > 0} />
+          <Button label="Change number" variant="ghost" size="sm" onPress={changeNumber} disabled={busy} />
         </>
       ) : (
         <>
-          <Field label="Mobile number · India (+91)" accessibilityLabel="Indian mobile number, country code plus 91"
-            value={mobile} onChangeText={setMobile} placeholder="10-digit mobile number"
+          <AppText weight="600" size={13} muted>WhatsApp mobile number</AppText>
+          <View style={styles.phoneRow}>
+            <View accessible accessibilityLabel="Country code India plus 91"
+              style={[styles.prefix, { backgroundColor: colors.input, borderColor: colors.border }]}>
+              <AppText weight="700" size={14}>+91</AppText>
+            </View>
+            <View style={styles.phoneField}>
+          <Field accessibilityLabel="WhatsApp mobile number, India plus 91"
+            value={mobile} onChangeText={setMobile} placeholder="98765 43210"
             keyboardType="phone-pad" autoComplete="tel" textContentType="telephoneNumber"
             editable={!busy} maxLength={16} onSubmitEditing={() => void send()} />
-          <AppText muted size={12}>We&apos;ll send a code to WhatsApp. It expires in 10 minutes.</AppText>
-          <Button label="Send WhatsApp code" loading={busy} disabled={busy} onPress={() => void send()} />
+            </View>
+          </View>
+          <AppText muted size={12}>10-digit Indian number. Code is valid for 10 minutes. Linked to several accounts? We’ll help you pick one.</AppText>
+          <Button size="md" label="Send WhatsApp code" loading={busy} disabled={busy} onPress={() => void send()} />
         </>
       )}
       {error ? <AppText accessibilityRole="alert" accessibilityLiveRegion="polite" size={13} color={colors.destructive}>{error}</AppText> : null}
@@ -212,4 +217,9 @@ export function WhatsappOtpForm({ onComplete, onBusyChange }: {
   );
 }
 
-const styles = StyleSheet.create({ form: { gap: 12 } });
+const styles = StyleSheet.create({
+  form: { gap: 10 },
+  phoneRow: { flexDirection: "row", gap: 8, marginTop: -4 },
+  prefix: { alignItems: "center", borderRadius: 16, borderWidth: 1, justifyContent: "center", minHeight: 48, paddingHorizontal: 14 },
+  phoneField: { flex: 1 },
+});

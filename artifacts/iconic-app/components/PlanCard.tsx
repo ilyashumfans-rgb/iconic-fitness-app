@@ -53,7 +53,7 @@ export function PlanCard({
         </View>
         {plan.popular ? (
           <View style={[styles.pill, { backgroundColor: colors.primary + "22" }]}>
-            <Feather name="star" size={11} color={colors.primary} />
+            <Feather name="star" size={11} color="#FABB05" />
             <AppText size={11} weight="700" color={colors.primary}>
               Popular
             </AppText>

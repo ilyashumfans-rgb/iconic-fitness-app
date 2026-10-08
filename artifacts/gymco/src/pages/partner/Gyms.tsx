@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
+import { RatingDisplay } from "@/components/RatingDisplay";
 import { PartnerLayout, PartnerCard } from "@/components/partner/PartnerLayout";
 import { partnerApi, type PartnerGym } from "@/lib/partnerApi";
 import FileUpload from "@/components/FileUpload";
 import {
   Building2,
   MapPin,
-  Star,
   Edit3,
   X,
   Save,
@@ -115,9 +115,8 @@ export default function PartnerGyms() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/85 via-slate-900/20 to-transparent" />
                 <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur text-[11px] font-bold text-green-700 shadow">
-                    <Star className="h-3 w-3 fill-green-500 text-green-500" />
-                    {g.rating.toFixed(1)}
+                  <div className="px-2.5 py-1 rounded-full bg-white/95 backdrop-blur text-[11px] text-slate-900 shadow">
+                    <RatingDisplay rating={g.rating} count={g.reviewsCount} size="xs" />
                   </div>
                   <div
                     className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold backdrop-blur shadow ${
