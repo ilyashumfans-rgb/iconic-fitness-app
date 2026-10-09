@@ -1,7 +1,7 @@
 import { useSignIn, useSignUp } from "@clerk/expo";
 import { customFetch } from "@workspace/api-client-react";
 import { Feather } from "@expo/vector-icons";
-import { Modal, Pressable, StyleSheet, View } from "react-native";
+import { Modal, Platform, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
@@ -612,6 +612,9 @@ export function AuthPopup({ onClose, returnTo }: Props) {
           accessibilityViewIsModal
           style={[
             styles.card,
+            // Native ScrollView needs a bounded parent; maxHeight alone can
+            // collapse the form below the header inside a centered Modal.
+            Platform.OS !== "web" && styles.nativeCard,
             {
               backgroundColor: colors.card,
               borderColor: colors.border,
@@ -647,8 +650,8 @@ export function AuthPopup({ onClose, returnTo }: Props) {
           </View>
 
           <KeyboardAwareScrollViewCompat
-            keyboardContainerStyle={{ flexGrow: 0, flexShrink: 1, flexBasis: "auto" }}
-            style={styles.scroll}
+            keyboardContainerStyle={{ flex: 1, minHeight: 0 }}
+            style={[styles.scroll, Platform.OS !== "web" && styles.nativeScroll]}
             contentContainerStyle={[
               styles.scrollContent,
               { paddingBottom: Math.max(insets.bottom, 24) },
@@ -1286,6 +1289,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   header: {
+    flexShrink: 0,
     alignItems: "flex-start",
     flexDirection: "row",
     justifyContent: "space-between",
@@ -1302,6 +1306,8 @@ const styles = StyleSheet.create({
     width: 44,
   },
   scroll: { flexGrow: 0, flexShrink: 1 },
+  nativeCard: { height: "88%" },
+  nativeScroll: { flex: 1, minHeight: 0 },
   scrollContent: { gap: 12, paddingHorizontal: 20, paddingTop: 4 },
   divider: { height: StyleSheet.hairlineWidth, marginTop: 2 },
   form: { gap: 12 },
