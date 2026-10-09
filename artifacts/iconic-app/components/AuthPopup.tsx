@@ -651,7 +651,7 @@ export function AuthPopup({ onClose, returnTo }: Props) {
 
           <KeyboardAwareScrollViewCompat
             keyboardContainerStyle={{ flex: 1, minHeight: 0 }}
-            style={[styles.scroll, Platform.OS !== "web" && styles.nativeScroll]}
+            style={Platform.OS === "web" ? styles.scroll : styles.nativeScroll}
             contentContainerStyle={[
               styles.scrollContent,
               { paddingBottom: Math.max(insets.bottom, 24) },
@@ -1307,7 +1307,8 @@ const styles = StyleSheet.create({
   },
   scroll: { flexGrow: 0, flexShrink: 1 },
   nativeCard: { height: "88%" },
-  nativeScroll: { flex: 1, minHeight: 0 },
+  // Do not merge with scroll: Yoga's explicit flexGrow: 0 wins over flex: 1.
+  nativeScroll: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: 0 },
   scrollContent: { gap: 12, paddingHorizontal: 20, paddingTop: 4 },
   divider: { height: StyleSheet.hairlineWidth, marginTop: 2 },
   form: { gap: 12 },
